@@ -59,9 +59,10 @@ async function seedBlog() {
       tags: a.tags,
       keywords: a.keywords,
       read_time_minutes: a.readTimeMinutes,
-      audience: 'public',
-      status: 'published' as const,
       is_published: true,
+      // Optional fields — comment out any line if your `posts` table
+      // doesn't have that column.
+      audience: 'public',
       publish_at: a.publishedAt,
     }
 
