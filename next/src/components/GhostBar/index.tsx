@@ -61,6 +61,12 @@ export function GhostBar() {
         </Link>
 
         <div className="flex items-center gap-3">
+          <Link
+            href="/blog"
+            className="hidden md:inline-flex items-center text-sm font-medium text-fg-2 hover:text-lime-400 transition-colors duration-fast ease-out"
+          >
+            {t('blog')}
+          </Link>
           <LanguageSwitcher />
           <Link
             href="/sign-in"
