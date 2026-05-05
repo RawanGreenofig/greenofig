@@ -70,9 +70,12 @@ export const heroFrames = {
   total: 40,
   word1: 5, // "Nourish"
   word2: 9, // "Better."
-  sub1: 14, // "Personalized nutrition"
-  sub2: 18, // "plans that work"
-  sub3: 22, // "for your body."
+  sub: 14, // single combined subtitle line
+  // Legacy frame triggers — no longer used by HeroSequence but kept so
+  // any older import paths don't break.
+  sub1: 14,
+  sub2: 18,
+  sub3: 22,
   exit: 30, // all words exit
   second1: 35, // "Your healthiest self"
   second2: 35, // "starts here."

@@ -3,7 +3,7 @@
 import Image from 'next/image'
 import { motion } from 'framer-motion'
 import { useLocale, useTranslations } from 'next-intl'
-import { ArrowRight } from 'lucide-react'
+import { Link } from '@/i18n/navigation'
 import { ease, NUTRITIONIST } from '@/lib/tokens'
 
 const EASE_OUT: [number, number, number, number] = [...ease.out]
@@ -16,10 +16,8 @@ export function AboutSection() {
 
   const name = isAr ? NUTRITIONIST.nameAr : NUTRITIONIST.name
   const role = isAr ? NUTRITIONIST.roleAr : NUTRITIONIST.role
-  const bio = t('aboutBioLong')
-  const credentials = isAr
-    ? NUTRITIONIST.credentialsAr
-    : NUTRITIONIST.credentials
+  const bio = isAr ? NUTRITIONIST.bio.longAr : NUTRITIONIST.bio.long
+  const creds = isAr ? NUTRITIONIST.credentialsAr : NUTRITIONIST.credentials
 
   const slideFrom = isAr ? 40 : -40
 
@@ -91,32 +89,95 @@ export function AboutSection() {
             </p>
           </LineReveal>
           <LineReveal delay={0.4}>
-            <div className="flex flex-wrap gap-2.5 pt-2">
-              {credentials.map((credential) => (
-                <span
-                  key={credential}
-                  className="inline-flex items-center rounded-full bg-surface border border-primary/40 text-lime-400 px-4 py-1.5 text-sm"
+            <div
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '10px',
+                margin: '28px 0',
+              }}
+            >
+              {creds.map((cred, i) => (
+                <div
+                  key={i}
+                  style={{ display: 'flex', alignItems: 'center', gap: '10px' }}
                 >
-                  {credential}
-                </span>
+                  <div
+                    style={{
+                      width: '32px',
+                      height: '32px',
+                      borderRadius: '50%',
+                      background: 'rgba(61,122,74,0.15)',
+                      border: '1px solid rgba(61,122,74,0.4)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      flexShrink: 0,
+                    }}
+                  >
+                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                      <path
+                        d="M2 7l3.5 3.5L12 3"
+                        stroke="#84cc16"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  </div>
+                  <span
+                    style={{
+                      fontFamily: 'Inter, sans-serif',
+                      fontSize: '0.9rem',
+                      fontWeight: 500,
+                      color: '#f0ede6',
+                    }}
+                  >
+                    {cred}
+                  </span>
+                </div>
               ))}
             </div>
           </LineReveal>
           <LineReveal delay={0.5}>
-            <button
-              type="button"
-              className="group inline-flex items-center gap-2 rounded-full border border-primary text-primary bg-transparent px-6 py-3 text-base font-medium transition-colors duration-normal ease-out hover:bg-primary hover:text-fg-1 mt-2"
+            <Link
+              href="/dashboard"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '10px',
+                background: 'linear-gradient(135deg, #3d7a4a, #4a9259)',
+                color: '#f0ede6',
+                fontFamily: 'Inter, sans-serif',
+                fontWeight: 600,
+                fontSize: '0.95rem',
+                padding: '14px 28px',
+                borderRadius: '9999px',
+                textDecoration: 'none',
+                boxShadow: '0 0 32px rgba(61,122,74,0.35)',
+                transition: 'all 0.3s ease',
+                marginTop: '8px',
+              }}
+              onMouseOver={(e) => {
+                e.currentTarget.style.boxShadow = '0 0 48px rgba(61,122,74,0.55)'
+                e.currentTarget.style.transform = 'translateY(-2px)'
+              }}
+              onMouseOut={(e) => {
+                e.currentTarget.style.boxShadow = '0 0 32px rgba(61,122,74,0.35)'
+                e.currentTarget.style.transform = 'translateY(0)'
+              }}
             >
               {t('aboutCta')}
-              <ArrowRight
-                strokeWidth={1.75}
-                className={`w-4 h-4 transition-transform duration-normal ease-out ${
-                  isAr
-                    ? 'rotate-180 group-hover:-translate-x-1'
-                    : 'group-hover:translate-x-1'
-                }`}
-              />
-            </button>
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                <path
+                  d={isAr ? 'M13 8H3M7 4L3 8l4 4' : 'M3 8h10M9 4l4 4-4 4'}
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </Link>
           </LineReveal>
         </div>
       </div>

@@ -17,10 +17,9 @@ const STILL_FRAME = heroFrames.reducedMotionStill
 // Light, single-layer shadow for legibility — no halo / backdrop / glow.
 const TEXT_SHADOW = '0 2px 8px rgb(0 0 0 / 0.9)'
 
-// Heavier shadow for the smaller subtitle line so it stays legible over
-// the busiest frames of the explosion sequence.
+// Single legibility shadow for the subtitle — no pill, no backdrop.
 const SUB_TEXT_SHADOW =
-  '0 0 40px rgb(0 0 0 / 1), 0 0 80px rgb(0 0 0 / 0.95), 0 2px 4px rgb(0 0 0 / 1), 0 4px 20px rgb(0 0 0 / 0.9)'
+  '0 2px 12px rgba(0,0,0,0.95), 0 0 40px rgba(0,0,0,0.9)'
 
 const framePath = (i: number) =>
   `/frames/frame${String(i + 1).padStart(3, '0')}.jpg`
@@ -114,9 +113,7 @@ export function HeroSequence() {
   const f = staticMode ? heroFrames.cta : currentFrame
   const showWord1 = f >= heroFrames.word1
   const showWord2 = f >= heroFrames.word2
-  const showSub1 = f >= heroFrames.sub1
-  const showSub2 = f >= heroFrames.sub2
-  const showSub3 = f >= heroFrames.sub3
+  const showSub = f >= heroFrames.sub
   const exitInitial = f >= heroFrames.exit
   const showSecond = f >= heroFrames.second1
   const showCta = f >= heroFrames.cta
@@ -226,7 +223,7 @@ export function HeroSequence() {
               <div
                 className="text-center"
                 style={{
-                  opacity: showSub1 && !exitInitial ? 1 : 0,
+                  opacity: showSub && !exitInitial ? 1 : 0,
                   transition:
                     'opacity 900ms cubic-bezier(0.22, 1, 0.36, 1)',
                 }}
@@ -234,27 +231,16 @@ export function HeroSequence() {
                 <p
                   className="inline-block font-sans"
                   style={{
-                    color: '#f0ede6',
-                    fontSize: 'clamp(1.1rem, 2.2vw, 1.4rem)',
+                    color: 'rgba(240,237,230,0.72)',
+                    fontSize: 'clamp(1rem, 2vw, 1.2rem)',
                     fontWeight: 500,
-                    letterSpacing: '0.02em',
+                    letterSpacing: '0.04em',
                     lineHeight: 1.5,
                     textShadow: SUB_TEXT_SHADOW,
-                    background: 'rgb(0 0 0 / 0.35)',
-                    backdropFilter: 'blur(8px)',
-                    WebkitBackdropFilter: 'blur(8px)',
-                    borderRadius: 9999,
-                    padding: '6px 20px',
                   }}
                 >
-                  <WordReveal show={showSub1} exit={exitInitial}>
-                    {t('heroSub1')}
-                  </WordReveal>{' '}
-                  <WordReveal show={showSub2} exit={exitInitial} delay={120}>
-                    {t('heroSub2')}
-                  </WordReveal>{' '}
-                  <WordReveal show={showSub3} exit={exitInitial} delay={240}>
-                    {t('heroSub3')}
+                  <WordReveal show={showSub} exit={exitInitial}>
+                    {t('heroSub')}
                   </WordReveal>
                 </p>
               </div>
