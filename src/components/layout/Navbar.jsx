@@ -79,10 +79,7 @@ export function Navbar() {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link to="/" className="flex items-center space-x-2">
-            <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
-              <span className="text-primary-foreground font-bold text-xl">G</span>
-            </div>
-            <span className="text-xl font-bold gradient-text">GreenoFig</span>
+            <img src="/logo.png" alt="GreenoFig" className="h-10 w-auto" />
           </Link>
 
           {/* Desktop Navigation */}
