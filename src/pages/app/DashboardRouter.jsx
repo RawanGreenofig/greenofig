@@ -1,31 +1,74 @@
 import React from 'react'
 import { useAuth } from '@/contexts/AuthContext'
-import Dashboard from './Dashboard'
-import NutritionistDashboard from './NutritionistDashboard'
-import AdminDashboard from './AdminDashboard'
+import { isAdmin, isNutritionist, isSuperAdmin } from '@/lib/rbac'
 
-// Smart dashboard router that shows the appropriate dashboard based on user role
+// Lazy load dashboards for better performance
+const UserDashboard = React.lazy(() => import('@/pages/UserDashboard'))
+const NutritionistPanel = React.lazy(() => import('@/pages/NutritionistPanel'))
+const AdminPanel = React.lazy(() => import('@/pages/AdminPanel'))
+
+/**
+ * DashboardRouter - Role-based dashboard routing component
+ *
+ * Routes users to the appropriate dashboard based on their role:
+ * - super_admin / admin -> AdminPanel with 17 tabs
+ * - nutritionist -> NutritionistPanel with 12 tabs
+ * - user / default -> UserDashboard with tier-based features
+ */
 export default function DashboardRouter() {
-  const { profile, loading, isAdmin, isNutritionist } = useAuth()
+  const { profile, loading } = useAuth()
 
+  // Show loading state while fetching user profile
   if (loading) {
     return (
-      <div className="min-h-[400px] flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center">
         <div className="spinner h-8 w-8" />
       </div>
     )
   }
 
-  // Admin gets admin dashboard
-  if (isAdmin || profile?.role === 'admin' || profile?.role === 'super_admin') {
-    return <AdminDashboard />
+  // Create user object for role checks
+  const user = { role: profile?.role }
+
+  // Route to appropriate dashboard based on role
+  if (isAdmin(user) || isSuperAdmin(user)) {
+    return (
+      <React.Suspense
+        fallback={
+          <div className="min-h-screen flex items-center justify-center">
+            <div className="spinner h-8 w-8" />
+          </div>
+        }
+      >
+        <AdminPanel />
+      </React.Suspense>
+    )
   }
 
-  // Nutritionist gets nutritionist dashboard
-  if (isNutritionist || profile?.role === 'nutritionist') {
-    return <NutritionistDashboard />
+  if (isNutritionist(user)) {
+    return (
+      <React.Suspense
+        fallback={
+          <div className="min-h-screen flex items-center justify-center">
+            <div className="spinner h-8 w-8" />
+          </div>
+        }
+      >
+        <NutritionistPanel />
+      </React.Suspense>
+    )
   }
 
-  // Regular users get the standard dashboard
-  return <Dashboard />
+  // Default: Regular user dashboard
+  return (
+    <React.Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="spinner h-8 w-8" />
+        </div>
+      }
+    >
+      <UserDashboard />
+    </React.Suspense>
+  )
 }
