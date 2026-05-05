@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { getBrowserSupabase } from '@/lib/supabase/client'
+import { SendDiscountSection } from '@/components/nutritionist/SendDiscountSection'
 import {
   Plus,
   Search,
@@ -307,6 +308,8 @@ export default function StoreCurationPage() {
           </ul>
         </div>
       )}
+
+      <SendDiscountSection />
     </div>
   )
 }
