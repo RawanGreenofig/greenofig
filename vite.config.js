@@ -13,6 +13,7 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     sourcemap: false,
+    assetsDir: 'static',
     rollupOptions: {
       output: {
         manualChunks: {
