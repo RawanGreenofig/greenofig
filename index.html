@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="GreenoFig - Your Professional Health Companion. Achieve your wellness goals with personalized nutrition, fitness, and lifestyle coaching." />
+    <meta name="keywords" content="health, wellness, nutrition, fitness, diet, meal planning, workout, AI coach" />
+    <meta name="author" content="GreenoFig" />
+    <meta name="theme-color" content="#65a30d" />
+
+    <!-- Open Graph -->
+    <meta property="og:title" content="GreenoFig - Your Professional Health Companion" />
+    <meta property="og:description" content="Achieve your wellness goals with personalized nutrition, fitness, and lifestyle coaching." />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://greenofig.com" />
+    <meta property="og:image" content="/og-image.png" />
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="GreenoFig - Your Professional Health Companion" />
+    <meta name="twitter:description" content="Achieve your wellness goals with personalized nutrition, fitness, and lifestyle coaching." />
+    <meta name="twitter:image" content="/og-image.png" />
+
+    <!-- Favicons -->
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/site.webmanifest" />
+
+    <title>GreenoFig - Your Professional Health Companion</title>
+
+    <!-- Prevent flash of wrong theme -->
+    <script>
+      (function() {
+        const savedTheme = localStorage.getItem('greenofig-theme');
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        const theme = savedTheme || (prefersDark ? 'dark' : 'dark'); // Default to dark
+
+        if (theme === 'dark') {
+          document.documentElement.classList.add('dark');
+        } else {
+          document.documentElement.classList.remove('dark');
+        }
+
+        // Set direction based on saved language
+        const savedLang = localStorage.getItem('greenofig-lang') || 'en';
+        document.documentElement.lang = savedLang;
+        document.documentElement.dir = savedLang === 'ar' ? 'rtl' : 'ltr';
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>
