@@ -1,7 +1,8 @@
 'use client'
 
-import { useState } from 'react'
-import { useTranslations } from 'next-intl'
+import { Suspense, useState } from 'react'
+import { useTranslations, useLocale } from 'next-intl'
+import { useSearchParams } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -14,6 +15,7 @@ import {
   PrimarySubmit,
   OrDivider,
 } from '@/components/auth/AuthControls'
+import { GoogleAuthButton } from '@/components/auth/GoogleAuthButton'
 
 const schema = z.object({
   email: z.string().email(),
@@ -77,6 +79,10 @@ export default function SignInPage() {
         <p className="mt-2 text-sm text-fg-2">{t('signInSub')}</p>
       </header>
 
+      <Suspense fallback={null}>
+        <OAuthErrorBanner />
+      </Suspense>
+
       <form onSubmit={handleSubmit(onSubmit)} noValidate>
         <Field
           label={t('email')}
@@ -121,6 +127,8 @@ export default function SignInPage() {
         )}
       </form>
 
+      <GoogleAuthButton />
+
       <OrDivider label={t('or')} />
 
       <Link
@@ -132,5 +140,40 @@ export default function SignInPage() {
         <span className="text-lime-400 font-medium">{t('signUpCta')}</span>
       </Link>
     </AuthSplitShell>
+  )
+}
+
+const ERROR_LABELS: Record<string, { en: string; ar: string }> = {
+  no_code: {
+    en: 'Google sign-in was cancelled. Please try again.',
+    ar: 'تم إلغاء تسجيل الدخول. حاول مرة أخرى.',
+  },
+  service_unavailable: {
+    en: 'Sign-in service is temporarily unavailable. Please try again shortly.',
+    ar: 'خدمة تسجيل الدخول غير متاحة حالياً. حاول لاحقاً.',
+  },
+  auth_error: {
+    en: "We couldn't complete sign-in. Please try again or use email + password.",
+    ar: 'تعذّر إكمال تسجيل الدخول. حاول مرة أخرى أو استخدم البريد وكلمة السر.',
+  },
+}
+
+function OAuthErrorBanner() {
+  const sp = useSearchParams()
+  const locale = useLocale() as 'en' | 'ar'
+  const error = sp?.get('error')
+  if (!error) return null
+  const meta = ERROR_LABELS[error] ?? ERROR_LABELS.auth_error
+  return (
+    <div
+      role="alert"
+      className="mb-6 rounded-[10px] p-3 text-sm text-red-400"
+      style={{
+        background: 'rgb(127 29 29 / 0.5)',
+        border: '1px solid rgb(153 27 27 / 0.5)',
+      }}
+    >
+      {meta[locale]}
+    </div>
   )
 }

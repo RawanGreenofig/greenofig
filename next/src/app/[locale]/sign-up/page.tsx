@@ -16,6 +16,7 @@ import {
   OrDivider,
   Checkbox,
 } from '@/components/auth/AuthControls'
+import { GoogleAuthButton } from '@/components/auth/GoogleAuthButton'
 
 const schema = z
   .object({
@@ -63,6 +64,7 @@ function PlanBanner() {
 export default function SignUpPage() {
   const t = useTranslations('auth')
   const tErrors = useTranslations('errors')
+  const locale = useLocale() as 'en' | 'ar'
   const router = useRouter()
   const [pending, setPending] = useState(false)
   const [serverError, setServerError] = useState<string | null>(null)
@@ -117,6 +119,12 @@ export default function SignUpPage() {
       <Suspense fallback={null}>
         <PlanBanner />
       </Suspense>
+
+      <GoogleAuthButton
+        withDivider={false}
+        label={locale === 'ar' ? 'إنشاء حساب بـ Google' : 'Sign up with Google'}
+      />
+      <OrDivider label={t('or')} />
 
       <form onSubmit={handleSubmit(onSubmit)} noValidate>
         <Field
