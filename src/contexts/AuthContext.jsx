@@ -1,92 +1,161 @@
-import React, { createContext, useContext, useState, useEffect } from 'react'
-import { supabase, fetchProfile, fetchSubscription } from '@/lib/supabase'
+import { createContext, useContext, useEffect, useState } from 'react'
+import { supabase, isSupabaseConfigured } from '@/lib/supabase'
 
-const AuthContext = createContext(undefined)
+const AuthContext = createContext({})
 
-export function AuthProvider({ children }) {
+export const useAuth = () => {
+  const context = useContext(AuthContext)
+  if (!context) {
+    throw new Error('useAuth must be used within an AuthProvider')
+  }
+  return context
+}
+
+export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null)
-  const [profile, setProfile] = useState(null)
-  const [subscription, setSubscription] = useState(null)
+  const [userProfile, setUserProfile] = useState(null)
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
+
+  const fetchUserProfile = async (userId) => {
+    if (!isSupabaseConfigured()) {
+      // Demo mode - return mock profile
+      setUserProfile({
+        id: userId,
+        full_name: 'Demo User',
+        email: 'demo@greenofig.com',
+        role: 'user',
+        tier: 'Premium',
+      })
+      return
+    }
+
+    try {
+      const { data, error } = await supabase
+        .from('user_profiles')
+        .select('*')
+        .eq('id', userId)
+        .single()
+
+      if (error) throw error
+      setUserProfile(data)
+    } catch (error) {
+      console.error('Error fetching user profile:', error)
+      setUserProfile(null)
+    }
+  }
 
   useEffect(() => {
+    if (!isSupabaseConfigured()) {
+      setLoading(false)
+      return
+    }
+
     // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null)
       if (session?.user) {
-        setUser(session.user)
-        loadUserData(session.user.id)
-      } else {
-        setLoading(false)
+        fetchUserProfile(session.user.id)
       }
+      setLoading(false)
     })
 
     // Listen for auth changes
-    const { data: { subscription: authSubscription } } = supabase.auth.onAuthStateChange(
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        setUser(session?.user ?? null)
         if (session?.user) {
-          setUser(session.user)
-          await loadUserData(session.user.id)
+          await fetchUserProfile(session.user.id)
         } else {
-          setUser(null)
-          setProfile(null)
-          setSubscription(null)
+          setUserProfile(null)
         }
         setLoading(false)
       }
     )
 
-    return () => {
-      authSubscription?.unsubscribe()
-    }
+    return () => subscription.unsubscribe()
   }, [])
 
-  const loadUserData = async (userId) => {
-    try {
-      const [profileResult, subscriptionResult] = await Promise.all([
-        fetchProfile(userId),
-        fetchSubscription(userId),
-      ])
-
-      if (profileResult.data) {
-        setProfile(profileResult.data)
-      }
-
-      if (subscriptionResult.data) {
-        setSubscription(subscriptionResult.data)
-      }
-    } catch (err) {
-      console.error('Error loading user data:', err)
-      setError(err.message)
-    } finally {
-      setLoading(false)
+  const signIn = async (email, password) => {
+    if (!isSupabaseConfigured()) {
+      // Demo mode
+      setUser({ id: 'demo-user', email })
+      setUserProfile({
+        id: 'demo-user',
+        full_name: 'Demo User',
+        email,
+        role: 'user',
+        tier: 'Premium',
+      })
+      return { error: null }
     }
+
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    })
+    return { data, error }
   }
 
-  const refreshUser = async () => {
-    if (user?.id) {
-      await loadUserData(user.id)
+  const signUp = async (email, password, fullName) => {
+    if (!isSupabaseConfigured()) {
+      return { error: { message: 'Supabase not configured' } }
     }
+
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: { full_name: fullName },
+      },
+    })
+    return { data, error }
   }
 
-  const isAuthenticated = !!user
-  const isAdmin = profile?.role === 'admin'
-  const isNutritionist = profile?.role === 'nutritionist'
-  const isPremium = subscription?.tier && subscription.tier !== 'base'
-  const tier = subscription?.tier || 'base'
+  const signInWithGoogle = async () => {
+    if (!isSupabaseConfigured()) {
+      return { error: { message: 'Supabase not configured' } }
+    }
+
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: `${window.location.origin}/auth/callback`,
+      },
+    })
+    return { data, error }
+  }
+
+  const signOut = async () => {
+    if (!isSupabaseConfigured()) {
+      setUser(null)
+      setUserProfile(null)
+      return { error: null }
+    }
+
+    const { error } = await supabase.auth.signOut()
+    if (!error) {
+      setUser(null)
+      setUserProfile(null)
+    }
+    return { error }
+  }
+
+  const refreshUserProfile = async () => {
+    if (user) {
+      await fetchUserProfile(user.id)
+    }
+  }
 
   const value = {
     user,
-    profile,
-    subscription,
+    userProfile,
     loading,
-    error,
-    isAuthenticated,
-    isAdmin,
-    isNutritionist,
-    isPremium,
-    tier,
-    refreshUser,
+    signIn,
+    signUp,
+    signInWithGoogle,
+    signOut,
+    refreshUserProfile,
+    isAuthenticated: !!user,
   }
 
   return (
@@ -95,13 +164,3 @@ export function AuthProvider({ children }) {
     </AuthContext.Provider>
   )
 }
-
-export function useAuth() {
-  const context = useContext(AuthContext)
-  if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider')
-  }
-  return context
-}
-
-export default AuthContext

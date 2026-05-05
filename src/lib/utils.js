@@ -5,20 +5,17 @@ export function cn(...inputs) {
   return twMerge(clsx(inputs))
 }
 
-export function formatDate(date, locale = 'en') {
-  return new Intl.DateTimeFormat(locale === 'ar' ? 'ar-SA' : 'en-US', {
+export function formatDate(date, options = {}) {
+  return new Intl.DateTimeFormat('en-US', {
     year: 'numeric',
-    month: 'long',
+    month: 'short',
     day: 'numeric',
+    ...options,
   }).format(new Date(date))
 }
 
-export function formatNumber(num, locale = 'en') {
-  return new Intl.NumberFormat(locale === 'ar' ? 'ar-SA' : 'en-US').format(num)
-}
-
-export function formatCurrency(amount, currency = 'USD', locale = 'en') {
-  return new Intl.NumberFormat(locale === 'ar' ? 'ar-SA' : 'en-US', {
+export function formatCurrency(amount, currency = 'USD') {
+  return new Intl.NumberFormat('en-US', {
     style: 'currency',
     currency,
   }).format(amount)
@@ -26,17 +23,15 @@ export function formatCurrency(amount, currency = 'USD', locale = 'en') {
 
 export function truncate(str, length = 100) {
   if (!str) return ''
-  if (str.length <= length) return str
-  return str.slice(0, length) + '...'
+  return str.length > length ? str.substring(0, length) + '...' : str
 }
 
-export function slugify(str) {
-  return str
-    .toLowerCase()
-    .trim()
-    .replace(/[^\w\s-]/g, '')
-    .replace(/[\s_-]+/g, '-')
-    .replace(/^-+|-+$/g, '')
+export function generateId() {
+  return Math.random().toString(36).substring(2, 15)
+}
+
+export function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms))
 }
 
 export function debounce(func, wait) {
@@ -51,110 +46,49 @@ export function debounce(func, wait) {
   }
 }
 
-export function throttle(func, limit) {
-  let inThrottle
-  return function executedFunction(...args) {
-    if (!inThrottle) {
-      func(...args)
-      inThrottle = true
-      setTimeout(() => (inThrottle = false), limit)
-    }
-  }
-}
-
-export function getInitials(name) {
-  if (!name) return ''
-  return name
-    .split(' ')
-    .map(part => part[0])
-    .join('')
-    .toUpperCase()
-    .slice(0, 2)
-}
-
-export function isValidEmail(email) {
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-  return emailRegex.test(email)
-}
-
-export function generateId() {
-  return Math.random().toString(36).substring(2) + Date.now().toString(36)
-}
-
 export function capitalizeFirst(str) {
   if (!str) return ''
   return str.charAt(0).toUpperCase() + str.slice(1)
 }
 
-export function sleep(ms) {
-  return new Promise(resolve => setTimeout(resolve, ms))
+export const TIER_COLORS = {
+  Base: 'text-gray-400',
+  Premium: 'text-blue-400',
+  Ultimate: 'text-purple-400',
+  Elite: 'text-amber-400',
 }
 
-export function getErrorMessage(error) {
-  if (typeof error === 'string') return error
-  if (error?.message) return error.message
-  return 'An unexpected error occurred'
-}
-
-export const SUBSCRIPTION_TIERS = {
-  base: {
-    id: 'base',
-    name: 'Base',
-    monthlyPrice: 0,
-    yearlyPrice: 0,
-    features: {
-      aiMealPlans: 2,
-      aiWorkoutPlans: 2,
-      aiChatMessages: 10,
-      expertConsultations: false,
-      videoConsultations: false,
-      photoFoodRecognition: false,
-      adFree: false,
-    },
+export const TIER_FEATURES = {
+  Base: {
+    aiCoachMessages: 5,
+    mealPlanning: false,
+    recipeDatabase: false,
+    nutritionistMessaging: false,
+    videoConsultations: 0,
+    hasAds: true,
   },
-  premium: {
-    id: 'premium',
-    name: 'Premium',
-    monthlyPrice: 9.99,
-    yearlyPrice: 89.99,
-    features: {
-      aiMealPlans: -1, // unlimited
-      aiWorkoutPlans: -1,
-      aiChatMessages: -1,
-      expertConsultations: false,
-      videoConsultations: false,
-      photoFoodRecognition: false,
-      adFree: true,
-    },
+  Premium: {
+    aiCoachMessages: -1,
+    mealPlanning: true,
+    recipeDatabase: true,
+    nutritionistMessaging: false,
+    videoConsultations: 0,
+    hasAds: false,
   },
-  ultimate: {
-    id: 'ultimate',
-    name: 'Ultimate',
-    monthlyPrice: 19.99,
-    yearlyPrice: 179.99,
-    features: {
-      aiMealPlans: -1,
-      aiWorkoutPlans: -1,
-      aiChatMessages: -1,
-      expertConsultations: true,
-      videoConsultations: 2,
-      photoFoodRecognition: false,
-      adFree: true,
-    },
+  Ultimate: {
+    aiCoachMessages: -1,
+    mealPlanning: true,
+    recipeDatabase: true,
+    nutritionistMessaging: true,
+    videoConsultations: 2,
+    hasAds: false,
   },
-  elite: {
-    id: 'elite',
-    name: 'Elite',
-    monthlyPrice: 49.99,
-    yearlyPrice: 449.99,
-    features: {
-      aiMealPlans: -1,
-      aiWorkoutPlans: -1,
-      aiChatMessages: -1,
-      expertConsultations: true,
-      videoConsultations: -1,
-      photoFoodRecognition: true,
-      adFree: true,
-    },
+  Elite: {
+    aiCoachMessages: -1,
+    mealPlanning: true,
+    recipeDatabase: true,
+    nutritionistMessaging: true,
+    videoConsultations: -1,
+    hasAds: false,
   },
 }

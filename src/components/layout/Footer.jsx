@@ -1,88 +1,62 @@
-import React from 'react'
 import { Link } from 'react-router-dom'
-import { useTranslation } from 'react-i18next'
-import { Heart, Facebook, Twitter, Instagram, Linkedin, Youtube } from 'lucide-react'
-import { cn } from '@/lib/utils'
-import { useLanguage } from '@/contexts/LanguageContext'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Separator } from '@/components/ui/separator'
-import Logo from './Logo'
+import { Facebook, Twitter, Instagram, Linkedin, Mail, Phone, MapPin } from 'lucide-react'
 
 const footerLinks = {
   product: [
-    { href: '/features', label: 'footer.features' },
-    { href: '/pricing', label: 'footer.pricing' },
-    { href: '/download', label: 'footer.download' },
+    { name: 'Features', path: '/features' },
+    { name: 'Pricing', path: '/pricing' },
+    { name: 'Blog', path: '/blog' },
+    { name: 'Download', path: '/download' },
   ],
   company: [
-    { href: '/about', label: 'footer.about' },
-    { href: '/blog', label: 'footer.blog' },
-    { href: '/careers', label: 'footer.careers' },
-  ],
-  resources: [
-    { href: '/help', label: 'footer.helpCenter' },
-    { href: '/community', label: 'footer.community' },
-    { href: '/webinars', label: 'footer.webinars' },
+    { name: 'About Us', path: '/about' },
+    { name: 'Contact', path: '/contact' },
+    { name: 'Careers', path: '/careers' },
+    { name: 'Press', path: '/press' },
   ],
   legal: [
-    { href: '/privacy', label: 'footer.privacy' },
-    { href: '/terms', label: 'footer.terms' },
-    { href: '/cookies', label: 'footer.cookies' },
+    { name: 'Privacy Policy', path: '/privacy-policy' },
+    { name: 'Terms of Service', path: '/terms-of-service' },
+    { name: 'Cookie Policy', path: '/cookies' },
+  ],
+  support: [
+    { name: 'Help Center', path: '/help' },
+    { name: 'FAQ', path: '/faq' },
+    { name: 'Community', path: '/community' },
   ],
 }
 
 const socialLinks = [
-  { href: 'https://facebook.com', icon: Facebook, label: 'Facebook' },
-  { href: 'https://twitter.com', icon: Twitter, label: 'Twitter' },
-  { href: 'https://instagram.com', icon: Instagram, label: 'Instagram' },
-  { href: 'https://linkedin.com', icon: Linkedin, label: 'LinkedIn' },
-  { href: 'https://youtube.com', icon: Youtube, label: 'YouTube' },
+  { icon: Facebook, href: 'https://facebook.com', label: 'Facebook' },
+  { icon: Twitter, href: 'https://twitter.com', label: 'Twitter' },
+  { icon: Instagram, href: 'https://instagram.com', label: 'Instagram' },
+  { icon: Linkedin, href: 'https://linkedin.com', label: 'LinkedIn' },
 ]
 
 export function Footer() {
-  const { t } = useTranslation()
-  const { isRTL } = useLanguage()
-  const currentYear = new Date().getFullYear()
-
   return (
-    <footer className="bg-card border-t" dir={isRTL ? 'rtl' : 'ltr'}>
-      <div className="section-container py-12 lg:py-16">
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-8 lg:gap-12">
-          {/* Brand Section */}
+    <footer className="bg-card border-t border-border">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div className="grid grid-cols-2 md:grid-cols-6 gap-8">
+          {/* Brand */}
           <div className="col-span-2">
-            <Logo showText className="mb-4" />
-            <p className="text-muted-foreground text-sm mb-6 max-w-xs">
-              {t('app.description')}
+            <Link to="/" className="flex items-center space-x-2 mb-4">
+              <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
+                <span className="text-primary-foreground font-bold text-xl">G</span>
+              </div>
+              <span className="text-xl font-bold gradient-text">GreenoFig</span>
+            </Link>
+            <p className="text-muted-foreground text-sm mb-4">
+              Your AI-powered health companion. Achieve your wellness goals with personalized nutrition, fitness, and lifestyle coaching.
             </p>
-
-            {/* Newsletter */}
-            <div className="mb-6">
-              <h4 className="font-semibold text-sm mb-2">{t('footer.newsletter')}</h4>
-              <p className="text-xs text-muted-foreground mb-3">
-                {t('footer.newsletterText')}
-              </p>
-              <form className="flex gap-2" onSubmit={(e) => e.preventDefault()}>
-                <Input
-                  type="email"
-                  placeholder={t('footer.emailPlaceholder')}
-                  className="flex-1 h-9 text-sm"
-                />
-                <Button size="sm" type="submit">
-                  {t('footer.subscribe')}
-                </Button>
-              </form>
-            </div>
-
-            {/* Social Links */}
-            <div className="flex items-center gap-2">
+            <div className="flex space-x-4">
               {socialLinks.map((social) => (
                 <a
                   key={social.label}
                   href={social.href}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                  className="text-muted-foreground hover:text-primary transition-colors"
                   aria-label={social.label}
                 >
                   <social.icon className="h-5 w-5" />
@@ -91,89 +65,87 @@ export function Footer() {
             </div>
           </div>
 
-          {/* Product Links */}
+          {/* Product */}
           <div>
-            <h4 className="font-semibold text-sm mb-4">{t('footer.product')}</h4>
-            <ul className="space-y-3">
+            <h3 className="font-semibold text-foreground mb-4">Product</h3>
+            <ul className="space-y-2">
               {footerLinks.product.map((link) => (
-                <li key={link.href}>
+                <li key={link.path}>
                   <Link
-                    to={link.href}
-                    className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                    to={link.path}
+                    className="text-sm text-muted-foreground hover:text-primary transition-colors"
                   >
-                    {t(link.label)}
+                    {link.name}
                   </Link>
                 </li>
               ))}
             </ul>
           </div>
 
-          {/* Company Links */}
+          {/* Company */}
           <div>
-            <h4 className="font-semibold text-sm mb-4">{t('footer.company')}</h4>
-            <ul className="space-y-3">
+            <h3 className="font-semibold text-foreground mb-4">Company</h3>
+            <ul className="space-y-2">
               {footerLinks.company.map((link) => (
-                <li key={link.href}>
+                <li key={link.path}>
                   <Link
-                    to={link.href}
-                    className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                    to={link.path}
+                    className="text-sm text-muted-foreground hover:text-primary transition-colors"
                   >
-                    {t(link.label)}
+                    {link.name}
                   </Link>
                 </li>
               ))}
             </ul>
           </div>
 
-          {/* Resources Links */}
+          {/* Legal */}
           <div>
-            <h4 className="font-semibold text-sm mb-4">{t('footer.resources')}</h4>
-            <ul className="space-y-3">
-              {footerLinks.resources.map((link) => (
-                <li key={link.href}>
-                  <Link
-                    to={link.href}
-                    className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-                  >
-                    {t(link.label)}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {/* Legal Links */}
-          <div>
-            <h4 className="font-semibold text-sm mb-4">{t('footer.legal')}</h4>
-            <ul className="space-y-3">
+            <h3 className="font-semibold text-foreground mb-4">Legal</h3>
+            <ul className="space-y-2">
               {footerLinks.legal.map((link) => (
-                <li key={link.href}>
+                <li key={link.path}>
                   <Link
-                    to={link.href}
-                    className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                    to={link.path}
+                    className="text-sm text-muted-foreground hover:text-primary transition-colors"
                   >
-                    {t(link.label)}
+                    {link.name}
                   </Link>
                 </li>
               ))}
+            </ul>
+          </div>
+
+          {/* Contact */}
+          <div>
+            <h3 className="font-semibold text-foreground mb-4">Contact</h3>
+            <ul className="space-y-3">
+              <li className="flex items-center space-x-2 text-sm text-muted-foreground">
+                <Mail className="h-4 w-4" />
+                <span>support@greenofig.com</span>
+              </li>
+              <li className="flex items-center space-x-2 text-sm text-muted-foreground">
+                <Phone className="h-4 w-4" />
+                <span>+1 (555) 123-4567</span>
+              </li>
+              <li className="flex items-start space-x-2 text-sm text-muted-foreground">
+                <MapPin className="h-4 w-4 mt-0.5" />
+                <span>123 Health Street, Wellness City, WC 12345</span>
+              </li>
             </ul>
           </div>
         </div>
 
-        <Separator className="my-8" />
-
-        {/* Bottom Section */}
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+        {/* Bottom */}
+        <div className="mt-12 pt-8 border-t border-border flex flex-col md:flex-row justify-between items-center">
           <p className="text-sm text-muted-foreground">
-            © {currentYear} {t('app.name')}. {t('footer.allRightsReserved')}
+            © {new Date().getFullYear()} GreenoFig. All rights reserved.
           </p>
-          <p className="text-sm text-muted-foreground flex items-center gap-1">
-            {t('footer.madeWith')} <Heart className="h-4 w-4 text-destructive fill-destructive" /> {t('footer.forYourHealth')}
+          <p className="text-sm text-muted-foreground mt-2 md:mt-0">
+            Made with love for a healthier world
           </p>
         </div>
       </div>
     </footer>
   )
 }
-
-export default Footer

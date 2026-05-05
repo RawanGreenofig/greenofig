@@ -1,210 +1,241 @@
-import React from 'react'
-import { Link } from 'react-router-dom'
-import { useTranslation } from 'react-i18next'
 import { motion } from 'framer-motion'
 import {
+  TrendingUp,
   Utensils,
   Dumbbell,
-  Droplets,
   Flame,
-  TrendingUp,
+  Droplets,
+  Moon,
   Target,
+  Trophy,
   Calendar,
-  Bot,
-  Plus,
   ArrowRight,
+  Plus
 } from 'lucide-react'
-import { cn } from '@/lib/utils'
+import { Link } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
-import { useLanguage } from '@/contexts/LanguageContext'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Progress } from '@/components/ui/progress'
 import { Badge } from '@/components/ui/badge'
 
-const quickActions = [
-  { icon: Utensils, label: 'dashboard.logMeal', href: '/app/nutrition', color: 'bg-green-500' },
-  { icon: Dumbbell, label: 'dashboard.logWorkout', href: '/app/fitness', color: 'bg-blue-500' },
-  { icon: Droplets, label: 'dashboard.logWater', href: '/app/progress', color: 'bg-cyan-500' },
-  { icon: Bot, label: 'dashboard.aiCoach', href: '/app/ai-coach', color: 'bg-purple-500' },
+const quickStats = [
+  { label: 'Calories', value: 1850, target: 2200, icon: Flame, color: 'text-orange-500' },
+  { label: 'Protein', value: 95, target: 120, unit: 'g', icon: Target, color: 'text-blue-500' },
+  { label: 'Water', value: 6, target: 8, unit: 'cups', icon: Droplets, color: 'text-cyan-500' },
+  { label: 'Sleep', value: 7.5, target: 8, unit: 'hrs', icon: Moon, color: 'text-purple-500' },
 ]
 
-const todayStats = [
-  { key: 'calories', value: 1450, target: 2000, icon: Flame, color: 'text-orange-500' },
-  { key: 'protein', value: 85, target: 120, icon: Target, color: 'text-red-500', unit: 'g' },
-  { key: 'water', value: 5, target: 8, icon: Droplets, color: 'text-blue-500', unit: ' glasses' },
-  { key: 'steps', value: 6543, target: 10000, icon: TrendingUp, color: 'text-green-500' },
+const recentActivities = [
+  { type: 'meal', title: 'Logged breakfast', time: '2 hours ago', icon: Utensils },
+  { type: 'workout', title: 'Completed workout', time: '5 hours ago', icon: Dumbbell },
+  { type: 'achievement', title: 'Earned "7-Day Streak"', time: 'Yesterday', icon: Trophy },
+  { type: 'goal', title: 'Updated weight goal', time: '2 days ago', icon: Target },
+]
+
+const upcomingEvents = [
+  { title: 'Nutritionist Call', date: 'Tomorrow, 10:00 AM', type: 'appointment' },
+  { title: 'Weekly Check-in', date: 'Friday, 9:00 AM', type: 'reminder' },
 ]
 
 export default function Dashboard() {
-  const { t } = useTranslation()
-  const { isRTL } = useLanguage()
-  const { profile } = useAuth()
+  const { userProfile } = useAuth()
 
   const getGreeting = () => {
     const hour = new Date().getHours()
-    if (hour < 12) return t('dashboard.goodMorning')
-    if (hour < 18) return t('dashboard.goodAfternoon')
-    return t('dashboard.goodEvening')
+    if (hour < 12) return 'Good morning'
+    if (hour < 18) return 'Good afternoon'
+    return 'Good evening'
   }
 
   return (
-    <div className="page-enter space-y-6">
+    <div className="p-6 space-y-6">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-          <h1 className="text-2xl md:text-3xl font-bold">
-            {getGreeting()}, {profile?.full_name?.split(' ')[0] || 'User'}! 👋
+          <h1 className="text-2xl font-bold">
+            {getGreeting()}, {userProfile?.full_name?.split(' ')[0] || 'there'}!
           </h1>
-          <p className="text-muted-foreground">{t('dashboard.todayProgress')}</p>
+          <p className="text-muted-foreground">Here's your health summary for today</p>
         </div>
-        <div className="flex items-center gap-2">
-          <Badge variant="outline" className="gap-1">
-            <Flame className="h-3 w-3 text-orange-500" />
-            7 {t('dashboard.days')} {t('dashboard.streak')}
-          </Badge>
+        <div className="flex gap-2">
+          <Button variant="outline" asChild>
+            <Link to="/app/ai-coach">
+              Ask AI Coach
+            </Link>
+          </Button>
+          <Button asChild>
+            <Link to="/app/nutrition">
+              <Plus className="mr-2 h-4 w-4" />
+              Log Meal
+            </Link>
+          </Button>
         </div>
       </div>
 
-      {/* Quick Actions */}
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-lg">{t('dashboard.quickActions')}</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            {quickActions.map(({ icon: Icon, label, href, color }, index) => (
-              <motion.div
-                key={label}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.1 }}
-              >
-                <Link
-                  to={href}
-                  className="flex flex-col items-center gap-2 p-4 rounded-xl bg-muted/50 hover:bg-muted transition-colors group"
-                >
-                  <div className={cn('w-10 h-10 rounded-lg flex items-center justify-center text-white', color)}>
-                    <Icon className="h-5 w-5" />
-                  </div>
-                  <span className="text-sm font-medium text-center">{t(label)}</span>
-                </Link>
-              </motion.div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Today's Stats */}
-      <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {todayStats.map(({ key, value, target, icon: Icon, color, unit }, index) => (
+      {/* Quick Stats */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        {quickStats.map((stat, index) => (
           <motion.div
-            key={key}
+            key={stat.label}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: index * 0.1 }}
           >
-            <Card hover>
+            <Card>
               <CardContent className="p-4">
-                <div className="flex items-center justify-between mb-3">
-                  <span className="text-sm text-muted-foreground">{t(`dashboard.${key}`)}</span>
-                  <Icon className={cn('h-5 w-5', color)} />
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm text-muted-foreground">{stat.label}</span>
+                  <stat.icon className={`h-4 w-4 ${stat.color}`} />
                 </div>
-                <div className="mb-2">
-                  <span className="text-2xl font-bold">{value.toLocaleString()}</span>
+                <div className="flex items-baseline gap-1">
+                  <span className="text-2xl font-bold">{stat.value}</span>
                   <span className="text-sm text-muted-foreground">
-                    {unit} / {target.toLocaleString()}{unit}
+                    / {stat.target}{stat.unit || ''}
                   </span>
                 </div>
-                <Progress value={(value / target) * 100} className="h-2" />
+                <Progress
+                  value={(stat.value / stat.target) * 100}
+                  className="h-2 mt-2"
+                />
               </CardContent>
             </Card>
           </motion.div>
         ))}
       </div>
 
-      {/* Today's Meals & Workout */}
-      <div className="grid lg:grid-cols-2 gap-6">
-        {/* Today's Meals */}
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle className="text-lg">{t('dashboard.todaysMeals')}</CardTitle>
-            <Button variant="ghost" size="sm" asChild>
-              <Link to="/app/nutrition">
-                {t('dashboard.viewAll')}
-                <ArrowRight className={cn('h-4 w-4', isRTL ? 'mr-1 rtl-flip' : 'ml-1')} />
-              </Link>
-            </Button>
+      {/* Main Grid */}
+      <div className="grid lg:grid-cols-3 gap-6">
+        {/* Today's Progress */}
+        <Card className="lg:col-span-2">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <TrendingUp className="h-5 w-5 text-primary" />
+              Today's Progress
+            </CardTitle>
+            <CardDescription>Your daily goals completion</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-3">
-              {['breakfast', 'lunch', 'dinner', 'snacks'].map((meal) => (
-                <div
-                  key={meal}
-                  className="flex items-center justify-between p-3 rounded-lg bg-muted/50"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                      <Utensils className="h-5 w-5 text-primary" />
-                    </div>
-                    <div>
-                      <p className="font-medium">{t(`nutrition.${meal}`)}</p>
-                      <p className="text-sm text-muted-foreground">--</p>
-                    </div>
+            <div className="space-y-4">
+              <div className="flex items-center justify-between p-4 rounded-lg bg-muted/50">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                    <Utensils className="h-5 w-5 text-primary" />
                   </div>
-                  <Button variant="ghost" size="icon">
-                    <Plus className="h-4 w-4" />
-                  </Button>
+                  <div>
+                    <p className="font-medium">Nutrition</p>
+                    <p className="text-sm text-muted-foreground">2 of 4 meals logged</p>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <p className="text-2xl font-bold">50%</p>
+                  <Progress value={50} className="w-24 h-2" />
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between p-4 rounded-lg bg-muted/50">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                    <Dumbbell className="h-5 w-5 text-primary" />
+                  </div>
+                  <div>
+                    <p className="font-medium">Fitness</p>
+                    <p className="text-sm text-muted-foreground">Workout completed</p>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <p className="text-2xl font-bold">100%</p>
+                  <Progress value={100} className="w-24 h-2" />
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between p-4 rounded-lg bg-muted/50">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                    <Droplets className="h-5 w-5 text-primary" />
+                  </div>
+                  <div>
+                    <p className="font-medium">Hydration</p>
+                    <p className="text-sm text-muted-foreground">6 of 8 glasses</p>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <p className="text-2xl font-bold">75%</p>
+                  <Progress value={75} className="w-24 h-2" />
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Right Column */}
+        <div className="space-y-6">
+          {/* Streak Card */}
+          <Card className="bg-gradient-to-br from-primary/10 to-primary/5 border-primary/20">
+            <CardContent className="p-6 text-center">
+              <div className="w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center mx-auto mb-3">
+                <Flame className="h-8 w-8 text-primary" />
+              </div>
+              <h3 className="text-3xl font-bold">7</h3>
+              <p className="text-muted-foreground">Day Streak</p>
+              <p className="text-xs text-muted-foreground mt-2">Keep it up! You're on fire!</p>
+            </CardContent>
+          </Card>
+
+          {/* Upcoming */}
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base flex items-center gap-2">
+                <Calendar className="h-4 w-4" />
+                Upcoming
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {upcomingEvents.map((event, index) => (
+                <div key={index} className="flex items-center justify-between p-2 rounded-lg hover:bg-muted/50 transition-colors">
+                  <div>
+                    <p className="font-medium text-sm">{event.title}</p>
+                    <p className="text-xs text-muted-foreground">{event.date}</p>
+                  </div>
+                  <Badge variant="outline" className="text-xs">{event.type}</Badge>
                 </div>
               ))}
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Today's Workout */}
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle className="text-lg">{t('dashboard.todaysWorkout')}</CardTitle>
-            <Button variant="ghost" size="sm" asChild>
-              <Link to="/app/fitness">
-                {t('dashboard.viewAll')}
-                <ArrowRight className={cn('h-4 w-4', isRTL ? 'mr-1 rtl-flip' : 'ml-1')} />
-              </Link>
-            </Button>
-          </CardHeader>
-          <CardContent>
-            <div className="text-center py-8">
-              <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mx-auto mb-4">
-                <Dumbbell className="h-8 w-8 text-muted-foreground" />
-              </div>
-              <p className="text-muted-foreground mb-4">{t('dashboard.noWorkoutScheduled')}</p>
-              <Button asChild>
-                <Link to="/app/fitness">
-                  {t('dashboard.startWorkout')}
+              <Button variant="ghost" size="sm" className="w-full" asChild>
+                <Link to="/app/appointments">
+                  View All
+                  <ArrowRight className="ml-2 h-4 w-4" />
                 </Link>
               </Button>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        </div>
       </div>
 
-      {/* Upcoming */}
+      {/* Recent Activity */}
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="text-lg">{t('dashboard.upcomingTasks')}</CardTitle>
-          <Button variant="ghost" size="sm" asChild>
-            <Link to="/app/appointments">
-              {t('dashboard.viewAll')}
-              <ArrowRight className={cn('h-4 w-4', isRTL ? 'mr-1 rtl-flip' : 'ml-1')} />
-            </Link>
-          </Button>
+        <CardHeader>
+          <CardTitle>Recent Activity</CardTitle>
+          <CardDescription>Your latest health activities</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="flex items-center justify-center py-8">
-            <div className="text-center">
-              <Calendar className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
-              <p className="text-muted-foreground">{t('appointments.noAppointments')}</p>
-            </div>
+          <div className="space-y-4">
+            {recentActivities.map((activity, index) => (
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: index * 0.1 }}
+                className="flex items-center gap-4 p-3 rounded-lg hover:bg-muted/50 transition-colors"
+              >
+                <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center">
+                  <activity.icon className="h-5 w-5 text-muted-foreground" />
+                </div>
+                <div className="flex-1">
+                  <p className="font-medium">{activity.title}</p>
+                  <p className="text-sm text-muted-foreground">{activity.time}</p>
+                </div>
+              </motion.div>
+            ))}
           </div>
         </CardContent>
       </Card>
