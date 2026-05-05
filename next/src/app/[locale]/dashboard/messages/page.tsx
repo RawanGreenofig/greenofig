@@ -69,7 +69,7 @@ const SEED: Msg[] = [
 export default function MessagesPage() {
   const t = useTranslations('msgs')
   const { tier } = useUser()
-  const allowed = tierAtLeast(tier, 'vip')
+  const allowed = tierAtLeast(tier, 'premium')
 
   if (!allowed) return <UpgradeGate t={t} />
 

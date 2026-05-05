@@ -873,7 +873,7 @@ insert into public.feature_flags(feature, enabled_for_tiers, is_globally_enabled
   ('progress_charts',      array['basic','premium','vip']::user_tier[], true, 'Progress tracking'),
   ('milestone_sharing',    array['basic','premium','vip']::user_tier[], true, 'Share milestones'),
   ('community_feed',       array['free','basic','premium','vip']::user_tier[], true, 'Community feed'),
-  ('direct_messaging',     array['vip']::user_tier[], true, 'Message nutritionist'),
+  ('direct_messaging',     array['premium','vip']::user_tier[], true, 'Message nutritionist'),
   ('ai_chatbot',           array['premium','vip']::user_tier[], true, 'AI nutrition chatbot'),
   ('ai_chatbot_priority',  array['vip']::user_tier[], true, 'Priority AI'),
   ('store_access',         array['free','basic','premium','vip']::user_tier[], true, 'Store'),

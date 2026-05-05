@@ -49,6 +49,7 @@
     "home": "Home",
     "about": "About",
     "services": "Services",
+    "pricing": "Pricing",
     "store": "Store",
     "community": "Community",
     "blog": "Blog",
@@ -180,6 +181,19 @@
     "terms": "Terms",
     "cookies": "Cookies",
     "accessibility": "Accessibility"
+  },
+  "pricing": {
+    "title": "Pricing",
+    "monthly": "Monthly",
+    "annual": "Annual",
+    "savePercent": "Save 20%",
+    "mostPopular": "Most Popular",
+    "bestValue": "Best Value",
+    "billedAnnually": "Billed annually",
+    "freeForever": "Free forever",
+    "perMonth": "/ mo",
+    "changePlan": "Change plan",
+    "signingUpFor": "Signing up for"
   },
   "dashboard": {
     "greeting": "Hello, {name}",
@@ -485,9 +499,9 @@
   "msgs": {
     "title": "Messages",
     "subtitle": "Direct line to Dr. Rawan, replies typically within a day",
-    "lockedTitle": "Direct messaging with Dr. Rawan",
-    "lockedBody": "Direct messaging is exclusive to VIP members. Upgrade to chat with Dr. Rawan one-to-one.",
-    "lockedCta": "Upgrade to VIP",
+    "lockedTitle": "Premium & VIP Feature",
+    "lockedBody": "Direct messaging with Dr. Rawan is available on Premium and VIP plans.",
+    "lockedCta": "Upgrade to Premium",
     "compose": "Type a message…",
     "send": "Send",
     "today": "Today",

@@ -1,7 +1,8 @@
 'use client'
 
-import { useState } from 'react'
-import { useTranslations } from 'next-intl'
+import { Suspense, useState } from 'react'
+import { useTranslations, useLocale } from 'next-intl'
+import { useSearchParams } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -29,6 +30,35 @@ const schema = z
     message: 'mismatch',
   })
 type Form = z.infer<typeof schema>
+
+const PLAN_LABELS: Record<string, { en: string; ar: string }> = {
+  basic:   { en: 'Basic',   ar: 'أساسي' },
+  premium: { en: 'Premium', ar: 'مميز' },
+  vip:     { en: 'VIP',     ar: 'VIP' },
+}
+
+function PlanBanner() {
+  const tPricing = useTranslations('pricing')
+  const locale = useLocale() as 'en' | 'ar'
+  const searchParams = useSearchParams()
+  const planParam = searchParams?.get('plan') ?? 'free'
+  const planMeta = PLAN_LABELS[planParam]
+  if (!planMeta) return null
+  return (
+    <div className="mb-6 flex items-center justify-between gap-3 rounded-xl bg-surface-raised border border-primary/40 px-4 py-3">
+      <p className="text-sm text-fg-2">
+        {tPricing('signingUpFor')}:{' '}
+        <span className="text-lime-400 font-semibold">{planMeta[locale]}</span>
+      </p>
+      <Link
+        href="/pricing"
+        className="text-xs text-fg-3 hover:text-lime-400 transition-colors"
+      >
+        {tPricing('changePlan')}
+      </Link>
+    </div>
+  )
+}
 
 export default function SignUpPage() {
   const t = useTranslations('auth')
@@ -83,6 +113,10 @@ export default function SignUpPage() {
         </h1>
         <p className="mt-2 text-sm text-fg-2">{t('signUpSub')}</p>
       </header>
+
+      <Suspense fallback={null}>
+        <PlanBanner />
+      </Suspense>
 
       <form onSubmit={handleSubmit(onSubmit)} noValidate>
         <Field

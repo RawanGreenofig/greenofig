@@ -140,7 +140,11 @@
       "PowerShell(npm run *)",
       "PowerShell(ls -Recurse \"C:\\\\Users\\\\ADMIN\\\\OneDrive\\\\Desktop\\\\GreenofigV2\\\\next\\\\src\\\\app\\\\[locale]\" | where { $_.Extension -match '\\\\.\\(tsx|jsx\\)$' } | select FullName)",
       "PowerShell(npx next lint --dir src 2>&1 | Select-Object -Last 30)",
-      "Bash(grep -rn 'href={`' /c/Users/ADMIN/OneDrive/Desktop/GreenofigV2/next/src --include='*.tsx')"
+      "Bash(grep -rn 'href={`' /c/Users/ADMIN/OneDrive/Desktop/GreenofigV2/next/src --include='*.tsx')",
+      "Bash(node -e ' *)",
+      "Bash(echo \"tsc exit: $?\")",
+      "Bash(grep -nA12 '\"nav\":' /c/Users/ADMIN/OneDrive/Desktop/GreenofigV2/next/messages/en.json)",
+      "Bash(grep -nA12 '\"nav\":' /c/Users/ADMIN/OneDrive/Desktop/GreenofigV2/next/messages/ar.json)"
     ]
   }
 }

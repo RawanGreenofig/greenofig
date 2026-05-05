@@ -68,6 +68,7 @@ export function FooterSection() {
             <FooterLink href="/" label={tNav('home')} />
             <FooterLink href="/#about" label={tNav('about')} />
             <FooterLink href="/#services" label={tNav('services')} />
+            <FooterLink href="/pricing" label={tNav('pricing')} />
             <FooterLink href="/#community" label={tNav('community')} />
             <FooterLink href="/#store" label={tNav('store')} />
             <FooterLink href="/blog" label={tNav('blog')} />

@@ -60,7 +60,13 @@ export function GhostBar() {
           <Wordmark size="md" />
         </Link>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-4">
+          <Link
+            href="/pricing"
+            className="hidden md:inline-flex items-center text-sm font-medium text-fg-2 hover:text-lime-400 transition-colors duration-fast ease-out"
+          >
+            {t('pricing')}
+          </Link>
           <Link
             href="/blog"
             className="hidden md:inline-flex items-center text-sm font-medium text-fg-2 hover:text-lime-400 transition-colors duration-fast ease-out"

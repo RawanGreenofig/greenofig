@@ -210,11 +210,11 @@ export default async function ArticlePage({ params }: RouteParams) {
         {/* CTA banner */}
         <section className="max-w-3xl mx-auto mt-16 rounded-2xl bg-surface border border-primary/40 p-10 text-center">
           <h2 className="font-display font-bold text-2xl text-fg-1 mb-3">
-            {isAr ? 'جاهزة لتغيير تغذيتك؟' : 'Ready to transform your nutrition?'}
+            {isAr ? 'جاهز لتغيير تغذيتك؟' : 'Ready to transform your nutrition?'}
           </h2>
           <p className="text-fg-2 mb-6">
             {isAr
-              ? 'احجزي استشارة مجانية مع د. روان وابدئي رحلتك اليوم.'
+              ? 'احجز استشارة مجانية مع د. روان وابدأ رحلتك اليوم.'
               : 'Book a free consultation with Dr. Rawan and start your journey today.'}
           </p>
           <Link
