@@ -6,6 +6,7 @@ import { Link } from '@/i18n/navigation'
 import { ArrowRight, ArrowLeft, Clock, Calendar, Crown, BadgeCheck } from 'lucide-react'
 import { BLOG_ARTICLES, type BlogArticle } from '@/lib/blog-seed'
 import { NUTRITIONIST } from '@/lib/tokens'
+import { ArticleImage } from '@/components/blog/ArticleImage'
 
 interface RouteParams {
   params: { slug: string; locale: 'en' | 'ar' }
@@ -99,14 +100,13 @@ export default async function ArticlePage({ params }: RouteParams) {
 
         {/* Hero image */}
         <div className="relative w-full aspect-video rounded-2xl overflow-hidden mb-8">
-          <Image
+          <ArticleImage
             src={article.imageUrl}
             alt={imageAlt}
             width={1200}
             height={675}
             priority
             className="w-full h-full object-cover"
-            unoptimized
           />
         </div>
 
@@ -239,13 +239,12 @@ function RelatedCard({ article, isAr }: { article: BlogArticle; isAr: boolean })
         className="group block rounded-xl bg-surface border border-border overflow-hidden transition-all duration-normal ease-out hover:-translate-y-1 hover:border-primary/40"
       >
         <div className="relative w-full aspect-video overflow-hidden">
-          <Image
+          <ArticleImage
             src={article.imageUrl}
             alt={isAr ? article.imageAltAr : article.imageAlt}
             width={400}
             height={225}
             className="w-full h-full object-cover transition-transform duration-slow ease-out group-hover:scale-105"
-            unoptimized
           />
         </div>
         <div className="p-4">

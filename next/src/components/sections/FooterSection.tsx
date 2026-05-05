@@ -83,10 +83,10 @@ export function FooterSection() {
 
           {/* Col 4 — Legal */}
           <FooterCol title={tRoot('footerLegal')}>
-            <FooterLink href="/#" label={tLegal('privacy')} />
-            <FooterLink href="/#" label={tLegal('terms')} />
-            <FooterLink href="/#" label={tLegal('cookies')} />
-            <FooterLink href="/#" label={tLegal('accessibility')} />
+            <FooterLink href="/privacy" label={tLegal('privacy')} />
+            <FooterLink href="/terms" label={tLegal('terms')} />
+            <FooterLink href="/cookies" label={tLegal('cookies')} />
+            <FooterLink href="/accessibility" label={tLegal('accessibility')} />
           </FooterCol>
         </div>
 

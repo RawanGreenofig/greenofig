@@ -1,9 +1,9 @@
 import type { Metadata } from 'next'
-import Image from 'next/image'
 import { useLocale } from 'next-intl'
 import { Link } from '@/i18n/navigation'
-import { ArrowRight, Clock, Calendar } from 'lucide-react'
+import { ArrowRight, Clock } from 'lucide-react'
 import { BLOG_ARTICLES, type BlogArticle } from '@/lib/blog-seed'
+import { ArticleImage } from '@/components/blog/ArticleImage'
 
 export const metadata: Metadata = {
   title: 'Nutrition Blog | Dr. Rawan Othman | Greenofig',
@@ -36,13 +36,16 @@ export default function BlogIndexPage() {
   return (
     <main className="bg-bg min-h-screen">
       <div className="max-w-6xl mx-auto px-6 py-20 lg:py-28">
-        {/* Hero */}
-        <header className="mb-14 lg:mb-20 max-w-3xl">
-          <p className="text-xs uppercase tracking-eyebrow font-semibold text-lime-400 mb-4">
-            {isAr ? 'رؤى التغذية' : 'NUTRITION INSIGHTS'}
-          </p>
+        {/* Centered hero */}
+        <header className="text-center mb-16">
+          <span className="inline-flex items-center gap-2 rounded-full bg-surface border border-primary/40 px-5 py-2 mb-6">
+            <span aria-hidden className="w-1.5 h-1.5 rounded-full bg-lime-400" />
+            <span className="text-xs uppercase tracking-eyebrow font-semibold text-lime-400">
+              {isAr ? 'رؤى التغذية' : 'NUTRITION INSIGHTS'}
+            </span>
+          </span>
           <h1
-            className="font-display font-bold text-fg-1 tracking-tight"
+            className="font-display font-bold text-fg-1 tracking-tight max-w-3xl mx-auto"
             style={{
               fontSize: 'clamp(40px, 5vw, 64px)',
               lineHeight: 1.05,
@@ -53,15 +56,15 @@ export default function BlogIndexPage() {
               ? 'مقالات التغذية بقلم د. روان عثمان'
               : 'Nutrition Articles by Dr. Rawan Othman'}
           </h1>
-          <p className="mt-5 text-lg text-fg-2 leading-relaxed">
+          <p className="mt-5 text-base lg:text-lg text-fg-2 leading-relaxed max-w-xl mx-auto">
             {isAr
               ? 'نصائح مدعومة بالعلم لتساعدك تأكل أفضل وتشعر بأحسن حال.'
               : 'Science-backed advice to help you eat better and feel your best.'}
           </p>
         </header>
 
-        {/* Article grid */}
-        <ul className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
+        {/* Article grid: 1 col mobile, 2 col tablet, 3 col desktop */}
+        <ul className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {articles.map((article) => (
             <ArticleCard key={article.slug} article={article} isAr={isAr} />
           ))}
@@ -74,14 +77,15 @@ export default function BlogIndexPage() {
 function ArticleCard({ article, isAr }: { article: BlogArticle; isAr: boolean }) {
   const title = isAr ? article.titleAr : article.title
   const body = isAr ? article.contentAr : article.content
-  // First 140 chars of body, stripping markdown headings/syntax
-  const excerpt = body
-    .replace(/^#+\s+.*$/gm, '')
-    .replace(/[*_>:]/g, '')
-    .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
-    .trim()
-    .slice(0, 140)
-    .trim() + '…'
+  // First 140 chars of body, stripping markdown
+  const excerpt =
+    body
+      .replace(/^#+\s+.*$/gm, '')
+      .replace(/[*_>:]/g, '')
+      .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
+      .trim()
+      .slice(0, 140)
+      .trim() + '…'
   const date = new Date(article.publishedAt).toLocaleDateString(isAr ? 'ar' : 'en', {
     month: 'short',
     day: 'numeric',
@@ -93,16 +97,15 @@ function ArticleCard({ article, isAr }: { article: BlogArticle; isAr: boolean })
     <li>
       <Link
         href={`/blog/${article.slug}` as `/blog/${string}`}
-        className="group block rounded-xl bg-surface border border-border overflow-hidden transition-all duration-normal ease-out hover:-translate-y-1 hover:shadow-lime-glow hover:border-primary/40"
+        className="group block rounded-xl bg-surface border border-border overflow-hidden transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-lime-glow hover:border-primary/40"
       >
         <div className="relative w-full aspect-video overflow-hidden">
-          <Image
+          <ArticleImage
             src={article.imageUrl}
             alt={isAr ? article.imageAltAr : article.imageAlt}
             width={800}
             height={450}
             className="w-full h-full object-cover transition-transform duration-slow ease-out group-hover:scale-105"
-            unoptimized
           />
         </div>
         <div className="p-5 space-y-3">
@@ -112,21 +115,22 @@ function ArticleCard({ article, isAr }: { article: BlogArticle; isAr: boolean })
           <h2 className="font-display font-semibold text-lg text-fg-1 leading-snug group-hover:text-lime-400 transition-colors">
             {title}
           </h2>
-          <p className="text-sm text-fg-2 leading-relaxed line-clamp-3">{excerpt}</p>
-          <div className="flex items-center justify-between text-[11px] text-fg-3 font-mono pt-2" dir="ltr">
-            <span className="inline-flex items-center gap-3">
-              <span className="inline-flex items-center gap-1">
-                <Clock className="w-3 h-3" strokeWidth={1.75} />
-                {article.readTimeMinutes} min
-              </span>
-              <span className="inline-flex items-center gap-1">
-                <Calendar className="w-3 h-3" strokeWidth={1.75} />
-                {date}
-              </span>
+          <p className="text-sm text-fg-2 leading-relaxed line-clamp-2">{excerpt}</p>
+          <div className="flex items-center justify-between text-xs text-fg-3 pt-2" dir="ltr">
+            <span className="inline-flex items-center gap-1.5">
+              <Clock className="w-3 h-3" strokeWidth={1.75} />
+              {article.readTimeMinutes} min read · {date}
             </span>
-            <span className="inline-flex items-center gap-1 text-lime-400 font-semibold">
-              {isAr ? 'اقرأ' : 'Read'}
-              <ArrowRight className={`w-3 h-3 transition-transform ${isAr ? 'rotate-180 group-hover:-translate-x-1' : 'group-hover:translate-x-1'}`} strokeWidth={2} />
+            <span className="inline-flex items-center gap-1 text-lime-400 font-medium text-sm">
+              {isAr ? 'اقرأ المزيد' : 'Read more'}
+              <ArrowRight
+                className={`w-3.5 h-3.5 transition-transform ${
+                  isAr
+                    ? 'rotate-180 group-hover:-translate-x-1'
+                    : 'group-hover:translate-x-1'
+                }`}
+                strokeWidth={2}
+              />
             </span>
           </div>
         </div>
