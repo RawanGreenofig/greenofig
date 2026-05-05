@@ -36,9 +36,19 @@ export default function Login() {
       if (error) throw error
 
       toast.success(t('auth.loginSuccess'))
+      // Redirect will happen automatically via AuthContext watching auth state
       navigate(from, { replace: true })
     } catch (error) {
-      toast.error(t('auth.loginError'))
+      console.error('Login error:', error)
+      // Show actual error message for debugging
+      const errorMessage = error.message || t('auth.loginError')
+      if (errorMessage.includes('Invalid login')) {
+        toast.error('Invalid email or password')
+      } else if (errorMessage.includes('Email not confirmed')) {
+        toast.error('Please verify your email before logging in')
+      } else {
+        toast.error(errorMessage)
+      }
     } finally {
       setLoading(false)
     }

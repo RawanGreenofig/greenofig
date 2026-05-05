@@ -27,8 +27,8 @@ const Login = lazy(() => import('@/pages/auth/Login'))
 const Signup = lazy(() => import('@/pages/auth/Signup'))
 const ForgotPassword = lazy(() => import('@/pages/auth/ForgotPassword'))
 
-// App Pages
-const Dashboard = lazy(() => import('@/pages/app/Dashboard'))
+// App Pages - Role-based Dashboard Router
+const DashboardRouter = lazy(() => import('@/pages/app/DashboardRouter'))
 const AICoach = lazy(() => import('@/pages/app/AICoach'))
 const Nutrition = lazy(() => import('@/pages/app/Nutrition'))
 const Fitness = lazy(() => import('@/pages/app/Fitness'))
@@ -61,8 +61,8 @@ function App() {
 
           {/* App Routes (Protected) */}
           <Route path="/app" element={<AppLayout />}>
-            <Route index element={<Dashboard />} />
-            <Route path="dashboard" element={<Dashboard />} />
+            <Route index element={<DashboardRouter />} />
+            <Route path="dashboard" element={<DashboardRouter />} />
             <Route path="ai-coach" element={<AICoach />} />
             <Route path="nutrition" element={<Nutrition />} />
             <Route path="fitness" element={<Fitness />} />

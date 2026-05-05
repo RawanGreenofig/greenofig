@@ -142,13 +142,18 @@
 }
 
 @layer components {
-  /* Glass Effect */
+  /* Glass Effect - Enhanced visibility */
   .glass-effect {
-    background-color: hsl(var(--glass-bg));
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    border: 1px solid hsl(var(--glass-border));
-    box-shadow: var(--glass-shadow);
+    background-color: hsl(var(--background) / 0.85);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border-bottom: 1px solid hsl(var(--border) / 0.5);
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+  }
+
+  .dark .glass-effect {
+    background-color: hsl(220 15% 8% / 0.9);
+    border-bottom: 1px solid hsl(var(--border) / 0.3);
   }
 
   /* Card with Hover Effect */
