@@ -7,15 +7,14 @@ import {
   Paperclip,
   Sparkles,
   Lock,
-  ArrowRight,
   CheckCheck,
   Check,
 } from 'lucide-react'
-import { Link } from '@/i18n/navigation'
 import { useUser } from '@/lib/hooks/useUser'
 import { getBrowserSupabase } from '@/lib/supabase/client'
 import { tierAtLeast } from '@/lib/tier'
 import { NUTRITIONIST } from '@/lib/tokens'
+import UpgradeButton from '@/components/UpgradeButton'
 
 interface Msg {
   id: string
@@ -97,13 +96,9 @@ function UpgradeGate({ t }: { t: ReturnType<typeof useTranslations> }) {
         <p className="mt-3 text-sm md:text-base text-fg-2 max-w-md mx-auto leading-relaxed">
           {t('lockedBody')}
         </p>
-        <Link
-          href="/pricing"
-          className="mt-6 inline-flex items-center gap-2 rounded-pill bg-gradient-to-b from-lime-400 to-lime-600 text-bg font-semibold h-11 px-6 text-sm shadow-lime-glow border border-lime-600/60 hover:-translate-y-px transition-transform"
-        >
-          {t('lockedCta')}
-          <ArrowRight className="w-4 h-4 rtl:rotate-180" strokeWidth={2.25} />
-        </Link>
+        <div className="mt-6">
+          <UpgradeButton tier="premium" label={t('lockedCta')} />
+        </div>
       </div>
     </div>
   )

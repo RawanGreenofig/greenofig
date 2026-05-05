@@ -11,10 +11,9 @@ import {
   Award,
   Pin,
   Lock,
-  ArrowRight,
   type LucideIcon,
 } from 'lucide-react'
-import { Link } from '@/i18n/navigation'
+import UpgradeButton from '@/components/UpgradeButton'
 import { useUser } from '@/lib/hooks/useUser'
 import { tierAtLeast } from '@/lib/tier'
 import { NUTRITIONIST } from '@/lib/tokens'
@@ -429,13 +428,9 @@ function FreeGateCard({ t }: { t: ReturnType<typeof useTranslations> }) {
           <p className="mt-1.5 text-sm text-fg-2 leading-relaxed">
             {t('lockedFreeBody')}
           </p>
-          <Link
-            href="/pricing"
-            className="mt-4 inline-flex items-center gap-1.5 rounded-pill bg-surface-raised border border-border h-9 px-4 text-xs font-semibold text-fg-1 hover:border-primary/40"
-          >
-            {t('lockedFreeCta')}
-            <ArrowRight className="w-3.5 h-3.5 rtl:rotate-180" strokeWidth={2} />
-          </Link>
+          <div className="mt-4">
+            <UpgradeButton tier="basic" label={t('lockedFreeCta')} />
+          </div>
         </div>
       </div>
     </article>

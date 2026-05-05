@@ -1,6 +1,7 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { Suspense, useEffect, useState } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import {
   User,
@@ -657,6 +658,26 @@ function NotifPane({
   )
 }
 
+function UpgradeSuccessBanner() {
+  const sp = useSearchParams()
+  if (sp?.get('upgrade') !== 'success') return null
+  const tier = sp?.get('tier') ?? ''
+  const niceTier = tier.charAt(0).toUpperCase() + tier.slice(1)
+  return (
+    <div
+      role="status"
+      className="rounded-xl p-4 border"
+      style={{
+        background: 'rgb(132 204 22 / 0.12)',
+        borderColor: 'rgb(132 204 22 / 0.4)',
+        color: '#f0ede6',
+      }}
+    >
+      🎉 Welcome to {niceTier}! Your plan has been upgraded.
+    </div>
+  )
+}
+
 function SubscriptionPane({
   t,
   tier,
@@ -675,6 +696,9 @@ function SubscriptionPane({
   const [confirmCancel, setConfirmCancel] = useState(false)
   return (
     <div className="space-y-6">
+      <Suspense fallback={null}>
+        <UpgradeSuccessBanner />
+      </Suspense>
       <article className="rounded-xl border border-primary/30 bg-gradient-to-b from-primary/15 to-transparent p-5 md:p-6">
         <div className="flex items-start justify-between gap-4 flex-wrap">
           <div>

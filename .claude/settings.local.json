@@ -144,7 +144,9 @@
       "Bash(node -e ' *)",
       "Bash(echo \"tsc exit: $?\")",
       "Bash(grep -nA12 '\"nav\":' /c/Users/ADMIN/OneDrive/Desktop/GreenofigV2/next/messages/en.json)",
-      "Bash(grep -nA12 '\"nav\":' /c/Users/ADMIN/OneDrive/Desktop/GreenofigV2/next/messages/ar.json)"
+      "Bash(grep -nA12 '\"nav\":' /c/Users/ADMIN/OneDrive/Desktop/GreenofigV2/next/messages/ar.json)",
+      "Bash(awk '{print $1, $5, $NF}')",
+      "Bash(xargs grep *)"
     ]
   }
 }
