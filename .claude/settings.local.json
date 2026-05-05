@@ -139,7 +139,8 @@
       "Bash(OPENCLAW_WEBHOOK_SECRET=smoke_test_secret_abc123 NODE_OPTIONS=\"--preserve-symlinks --preserve-symlinks-main\" npx next start)",
       "PowerShell(npm run *)",
       "PowerShell(ls -Recurse \"C:\\\\Users\\\\ADMIN\\\\OneDrive\\\\Desktop\\\\GreenofigV2\\\\next\\\\src\\\\app\\\\[locale]\" | where { $_.Extension -match '\\\\.\\(tsx|jsx\\)$' } | select FullName)",
-      "PowerShell(npx next lint --dir src 2>&1 | Select-Object -Last 30)"
+      "PowerShell(npx next lint --dir src 2>&1 | Select-Object -Last 30)",
+      "Bash(grep -rn 'href={`' /c/Users/ADMIN/OneDrive/Desktop/GreenofigV2/next/src --include='*.tsx')"
     ]
   }
 }
