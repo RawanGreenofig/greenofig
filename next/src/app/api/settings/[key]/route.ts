@@ -43,6 +43,10 @@ const ALLOWED_KEYS = [
   'site_general',
   'site_branding',
   'site_integrations',
+  'ai_limits_scanner',
+  'ai_limits_chat',
+  'ai_limits_research',
+  'ai_daily_global_cap',
 ] as const
 
 const isAllowed = (k: string): boolean =>

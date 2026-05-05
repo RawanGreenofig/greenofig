@@ -16,6 +16,7 @@ import {
   ImageIcon,
 } from 'lucide-react'
 import { useUser } from '@/lib/hooks/useUser'
+import { ScannerUsageBanner } from '@/components/dashboard/ScannerUsageBanner'
 
 type MealType = 'breakfast' | 'lunch' | 'dinner' | 'snack'
 
@@ -178,6 +179,7 @@ export default function ScannerPage() {
 
   return (
     <div className="px-4 md:px-8 py-6 md:py-8 max-w-screen-lg mx-auto space-y-6">
+      <ScannerUsageBanner />
       {/* Header */}
       <header className="flex items-start justify-between gap-4">
         <div>

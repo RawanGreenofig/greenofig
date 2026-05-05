@@ -13,6 +13,7 @@ import {
   type LucideIcon,
 } from 'lucide-react'
 import { getBrowserSupabase } from '@/lib/supabase/client'
+import { AIUsageTodaySection } from '@/components/admin/AIUsageTodaySection'
 import {
   AreaChart,
   Area,
@@ -366,6 +367,8 @@ export default function AdminAnalyticsPage() {
           })}
         </ul>
       </article>
+
+      <AIUsageTodaySection />
     </div>
   )
 }

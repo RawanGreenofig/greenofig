@@ -856,6 +856,7 @@
     "openclaw": "OpenClaw",
     "analytics": "Analytics",
     "featureFlags": "Feature Flags",
+    "aiLimits": "AI Limits",
     "apiKeys": "API Keys",
     "siteEditor": "Site Editor",
     "dataExport": "Data Export",

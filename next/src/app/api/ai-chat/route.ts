@@ -14,6 +14,7 @@ import {
   isGeminiConfigured,
 } from '@/lib/gemini'
 import { tierAtLeast } from '@/lib/tier'
+import { checkAndIncrementUsage } from '@/lib/ai-usage'
 
 /**
  * POST /api/ai-chat
@@ -49,6 +50,27 @@ export const POST = withAuth(async (req: NextRequest, ctx: AuthedContext) => {
   // Tier gate — premium and vip only
   if (!tierAtLeast(ctx.profile.tier, 'premium')) {
     return forbidden('AI chat requires Premium or higher.')
+  }
+
+  // Daily quota — admin-configurable per tier via /admin/ai-limits
+  const usage = await checkAndIncrementUsage(
+    ctx.userId,
+    ctx.profile.tier as 'free' | 'basic' | 'premium' | 'vip',
+    'ai_chat',
+  )
+  if (!usage.allowed) {
+    return json(
+      {
+        error: {
+          code: 'quota_exceeded',
+          message: 'Daily AI chat limit reached.',
+        },
+        used: usage.used,
+        limit: usage.limit,
+        remaining: 0,
+      },
+      429,
+    )
   }
 
   let body: { conversationId?: string; message?: string }

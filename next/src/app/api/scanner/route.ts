@@ -13,6 +13,7 @@ import {
   safeJson,
 } from '@/lib/gemini'
 import { tierAtLeast } from '@/lib/tier'
+import { checkAndIncrementUsage } from '@/lib/ai-usage'
 
 /**
  * POST /api/scanner
@@ -67,8 +68,6 @@ Guidelines:
 - "alternatives" is 0-3 brief swap suggestions ("Swap white rice for quinoa for more protein and fiber")
 - Be honest when an item is ambiguous — say so in the drNote rather than fabricating macros`
 
-const FREE_TIER_DAILY_LIMIT = 1
-
 export const POST = withAuth(async (req: NextRequest, ctx: AuthedContext) => {
   if (!isGeminiConfigured()) return serviceUnavailable('Gemini')
 
@@ -84,26 +83,27 @@ export const POST = withAuth(async (req: NextRequest, ctx: AuthedContext) => {
     return badRequest('imageBase64 is required.')
   }
 
-  // Free-tier daily quota
-  if (ctx.profile.tier === 'free') {
-    const since = new Date()
-    since.setUTCHours(0, 0, 0, 0)
-    const supabase = (await import('@/lib/supabase/server')).getServerSupabase()
-    if (!supabase) return serviceUnavailable('Supabase')
-
-    const { count } = await supabase
-      .from('nutrition_logs')
-      .select('id', { count: 'exact', head: true })
-      .eq('user_id', ctx.userId)
-      .eq('source', 'scanner')
-      .gte('logged_at', since.toISOString())
-
-    if ((count ?? 0) >= FREE_TIER_DAILY_LIMIT) {
-      return json(
-        { error: { code: 'quota_exceeded', message: 'Daily scan limit reached.' } },
-        429,
-      )
-    }
+  // Daily quota — admin-configurable per tier via /admin/ai-limits
+  // (replaces the old hardcoded FREE_TIER_DAILY_LIMIT free-tier check).
+  const usage = await checkAndIncrementUsage(
+    ctx.userId,
+    ctx.profile.tier as 'free' | 'basic' | 'premium' | 'vip',
+    'scanner',
+  )
+  if (!usage.allowed) {
+    return json(
+      {
+        error: {
+          code: 'quota_exceeded',
+          message: 'Daily scan limit reached.',
+        },
+        used: usage.used,
+        limit: usage.limit,
+        remaining: 0,
+        upgradeRequired: usage.limit === 0 || ctx.profile.tier === 'free',
+      },
+      429,
+    )
   }
 
   // Premium gates the priority model; everyone else gets flash
