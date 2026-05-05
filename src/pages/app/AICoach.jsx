@@ -1,33 +1,32 @@
 import { useState, useRef, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Send, Bot, User, Sparkles, RefreshCw } from 'lucide-react'
+import { Send, Bot, User, Sparkles, RefreshCw, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { useAuth } from '@/contexts/AuthContext'
-
-const suggestedQuestions = [
-  'What should I eat for breakfast?',
-  'How can I improve my sleep?',
-  'Create a workout for today',
-  'Tips for staying motivated',
-]
-
-const initialMessages = [
-  {
-    id: 1,
-    role: 'assistant',
-    content: "Hi! I'm your GreenoFig AI Health Coach. I'm here to help you with nutrition advice, workout suggestions, and overall wellness guidance. How can I help you today?",
-  },
-]
+import { supabase, isSupabaseConfigured } from '@/lib/supabase'
+import { generateAIResponse } from '@/lib/gemini'
+import toast from 'react-hot-toast'
 
 export default function AICoach() {
-  const [messages, setMessages] = useState(initialMessages)
+  const { t } = useTranslation()
+  const { user, userProfile } = useAuth()
+
+  const suggestedQuestions = [
+    t('aiCoach.suggestions.breakfast'),
+    t('aiCoach.suggestions.sleep'),
+    t('aiCoach.suggestions.workout'),
+    t('aiCoach.suggestions.motivation'),
+  ]
+
+  const [messages, setMessages] = useState([])
   const [input, setInput] = useState('')
   const [isLoading, setIsLoading] = useState(false)
+  const [isLoadingHistory, setIsLoadingHistory] = useState(true)
   const messagesEndRef = useRef(null)
-  const { userProfile } = useAuth()
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -37,54 +36,135 @@ export default function AICoach() {
     scrollToBottom()
   }, [messages])
 
-  const generateResponse = async (userMessage) => {
-    // Simulate AI response
-    await new Promise(resolve => setTimeout(resolve, 1500))
+  // Load chat history from database
+  useEffect(() => {
+    const loadChatHistory = async () => {
+      if (!isSupabaseConfigured() || !user) {
+        setIsLoadingHistory(false)
+        setMessages([{
+          id: 1,
+          sender: 'assistant',
+          text: t('aiCoach.greeting'),
+          created_at: new Date().toISOString()
+        }])
+        return
+      }
 
-    const responses = {
-      breakfast: "For a nutritious breakfast, I recommend starting with protein-rich foods like eggs or Greek yogurt, paired with complex carbs such as oatmeal or whole-grain toast. Add some fruits for vitamins and fiber. This combination will keep you energized throughout the morning!",
-      sleep: "To improve your sleep quality, try these tips:\n\n1. Maintain a consistent sleep schedule\n2. Avoid screens 1 hour before bed\n3. Keep your bedroom cool and dark\n4. Limit caffeine after 2 PM\n5. Try relaxation techniques like deep breathing\n\nWould you like more specific advice?",
-      workout: "Here's a quick full-body workout for today:\n\n1. Warm-up (5 min): Jumping jacks, arm circles\n2. Squats: 3 sets of 12\n3. Push-ups: 3 sets of 10\n4. Lunges: 3 sets of 10 each leg\n5. Plank: 3 sets of 30 seconds\n6. Cool-down: Stretching\n\nRemember to rest 60 seconds between sets!",
-      motivated: "Staying motivated is about building sustainable habits. Here are my top tips:\n\n1. Set small, achievable goals\n2. Track your progress daily\n3. Celebrate small wins\n4. Find an accountability partner\n5. Remember your 'why'\n\nWhat specific area are you struggling with motivation?",
-      default: "That's a great question! Based on your health profile, I'd recommend focusing on balanced nutrition and regular physical activity. Would you like me to provide more specific guidance on nutrition, fitness, or another aspect of your wellness journey?",
+      try {
+        const { data, error } = await supabase
+          .from('ai_chat_messages')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: true })
+          .limit(50)
+
+        if (error) throw error
+
+        if (data && data.length > 0) {
+          setMessages(data)
+        } else {
+          // Add welcome message for new users
+          const welcomeMessage = {
+            id: Date.now(),
+            sender: 'assistant',
+            text: t('aiCoach.greeting'),
+            created_at: new Date().toISOString()
+          }
+          setMessages([welcomeMessage])
+
+          // Save welcome message to database
+          await supabase.from('ai_chat_messages').insert({
+            user_id: user.id,
+            sender: 'assistant',
+            text: t('aiCoach.greeting')
+          })
+        }
+      } catch (error) {
+        console.error('Error loading chat history:', error)
+        setMessages([{
+          id: 1,
+          sender: 'assistant',
+          text: t('aiCoach.greeting'),
+          created_at: new Date().toISOString()
+        }])
+      } finally {
+        setIsLoadingHistory(false)
+      }
     }
 
-    const lowerMessage = userMessage.toLowerCase()
-    if (lowerMessage.includes('breakfast') || lowerMessage.includes('eat')) {
-      return responses.breakfast
-    } else if (lowerMessage.includes('sleep')) {
-      return responses.sleep
-    } else if (lowerMessage.includes('workout') || lowerMessage.includes('exercise')) {
-      return responses.workout
-    } else if (lowerMessage.includes('motivat')) {
-      return responses.motivated
+    loadChatHistory()
+  }, [user, t])
+
+  const saveMessage = async (sender, text) => {
+    if (!isSupabaseConfigured() || !user) return null
+
+    try {
+      const { data, error } = await supabase
+        .from('ai_chat_messages')
+        .insert({
+          user_id: user.id,
+          sender,
+          text
+        })
+        .select()
+        .single()
+
+      if (error) throw error
+      return data
+    } catch (error) {
+      console.error('Error saving message:', error)
+      return null
     }
-    return responses.default
   }
 
   const handleSend = async () => {
     if (!input.trim() || isLoading) return
 
+    const userMessageText = input.trim()
     const userMessage = {
       id: Date.now(),
-      role: 'user',
-      content: input.trim(),
+      sender: 'user',
+      text: userMessageText,
+      created_at: new Date().toISOString()
     }
 
     setMessages(prev => [...prev, userMessage])
     setInput('')
     setIsLoading(true)
 
+    // Save user message to database
+    saveMessage('user', userMessageText)
+
     try {
-      const response = await generateResponse(input)
+      // Get conversation history for context (last 10 messages)
+      const recentMessages = messages.slice(-10)
+
+      // Call Gemini API
+      const response = await generateAIResponse(userMessageText, recentMessages)
+
       const assistantMessage = {
         id: Date.now() + 1,
-        role: 'assistant',
-        content: response,
+        sender: 'assistant',
+        text: response,
+        created_at: new Date().toISOString()
       }
+
       setMessages(prev => [...prev, assistantMessage])
+
+      // Save assistant message to database
+      saveMessage('assistant', response)
     } catch (error) {
       console.error('Error generating response:', error)
+      toast.error(t('aiCoach.errorGenerating') || 'Failed to generate response. Please try again.')
+
+      // Add fallback message
+      const fallbackMessage = {
+        id: Date.now() + 1,
+        sender: 'assistant',
+        text: t('aiCoach.fallbackResponse') || "I'm having trouble responding right now. Please try again in a moment!",
+        created_at: new Date().toISOString()
+      }
+      setMessages(prev => [...prev, fallbackMessage])
     } finally {
       setIsLoading(false)
     }
@@ -101,6 +181,48 @@ export default function AICoach() {
     setInput(question)
   }
 
+  const handleClearChat = async () => {
+    if (!user) return
+
+    try {
+      if (isSupabaseConfigured()) {
+        await supabase
+          .from('ai_chat_messages')
+          .delete()
+          .eq('user_id', user.id)
+      }
+
+      const welcomeMessage = {
+        id: Date.now(),
+        sender: 'assistant',
+        text: t('aiCoach.greeting'),
+        created_at: new Date().toISOString()
+      }
+      setMessages([welcomeMessage])
+
+      if (isSupabaseConfigured()) {
+        await supabase.from('ai_chat_messages').insert({
+          user_id: user.id,
+          sender: 'assistant',
+          text: t('aiCoach.greeting')
+        })
+      }
+
+      toast.success(t('aiCoach.chatCleared') || 'Chat cleared')
+    } catch (error) {
+      console.error('Error clearing chat:', error)
+      toast.error(t('common.error') || 'Error clearing chat')
+    }
+  }
+
+  if (isLoadingHistory) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <RefreshCw className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    )
+  }
+
   return (
     <div className="flex flex-col h-full">
       {/* Header */}
@@ -111,14 +233,24 @@ export default function AICoach() {
               <Bot className="h-5 w-5 text-primary" />
             </div>
             <div>
-              <h1 className="font-semibold">AI Health Coach</h1>
-              <p className="text-sm text-muted-foreground">Powered by AI</p>
+              <h1 className="font-semibold">{t('aiCoach.title')}</h1>
+              <p className="text-sm text-muted-foreground">{t('aiCoach.poweredBy')}</p>
             </div>
           </div>
-          <Badge variant="secondary" className="gap-1">
-            <Sparkles className="h-3 w-3" />
-            {userProfile?.tier || 'Free'} Plan
-          </Badge>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleClearChat}
+              title={t('aiCoach.clearChat') || 'Clear chat'}
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+            <Badge variant="secondary" className="gap-1">
+              <Sparkles className="h-3 w-3" />
+              {userProfile?.tier || 'Base'} {t('aiCoach.plan')}
+            </Badge>
+          </div>
         </div>
       </div>
 
@@ -130,21 +262,21 @@ export default function AICoach() {
               key={message.id}
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              className={`flex gap-3 ${message.role === 'user' ? 'flex-row-reverse' : ''}`}
+              className={`flex gap-3 ${message.sender === 'user' ? 'flex-row-reverse' : ''}`}
             >
               <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
-                message.role === 'user' ? 'bg-primary' : 'bg-muted'
+                message.sender === 'user' ? 'bg-primary' : 'bg-muted'
               }`}>
-                {message.role === 'user' ? (
+                {message.sender === 'user' ? (
                   <User className="h-4 w-4 text-primary-foreground" />
                 ) : (
                   <Bot className="h-4 w-4 text-muted-foreground" />
                 )}
               </div>
               <Card className={`max-w-[80%] p-4 ${
-                message.role === 'user' ? 'bg-primary text-primary-foreground' : 'bg-card'
+                message.sender === 'user' ? 'bg-primary text-primary-foreground' : 'bg-card'
               }`}>
-                <p className="whitespace-pre-wrap text-sm">{message.content}</p>
+                <p className="whitespace-pre-wrap text-sm">{message.text}</p>
               </Card>
             </motion.div>
           ))}
@@ -162,7 +294,7 @@ export default function AICoach() {
             <Card className="p-4 bg-card">
               <div className="flex items-center gap-2">
                 <RefreshCw className="h-4 w-4 animate-spin text-muted-foreground" />
-                <span className="text-sm text-muted-foreground">Thinking...</span>
+                <span className="text-sm text-muted-foreground">{t('aiCoach.thinking')}</span>
               </div>
             </Card>
           </motion.div>
@@ -174,7 +306,7 @@ export default function AICoach() {
       {/* Suggestions */}
       {messages.length <= 2 && (
         <div className="px-4 pb-2">
-          <p className="text-sm text-muted-foreground mb-2">Try asking:</p>
+          <p className="text-sm text-muted-foreground mb-2">{t('aiCoach.tryAsking')}</p>
           <div className="flex flex-wrap gap-2">
             {suggestedQuestions.map((question, index) => (
               <Button
@@ -198,7 +330,7 @@ export default function AICoach() {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyPress={handleKeyPress}
-            placeholder="Ask me anything about health, nutrition, or fitness..."
+            placeholder={t('aiCoach.inputPlaceholder')}
             disabled={isLoading}
             className="flex-1"
           />
@@ -207,7 +339,7 @@ export default function AICoach() {
           </Button>
         </div>
         <p className="text-xs text-muted-foreground mt-2 text-center">
-          AI responses are for informational purposes. Consult a healthcare professional for medical advice.
+          {t('aiCoach.disclaimer')}
         </p>
       </div>
     </div>

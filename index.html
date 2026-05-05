@@ -29,17 +29,82 @@
 
     <title>GreenoFig - Your Professional Health Companion</title>
 
+    <!-- Loading screen styles -->
+    <style>
+      #app-loader {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(135deg, #0a0f0a 0%, #111711 50%, #0a0f0a 100%);
+        z-index: 9999;
+        transition: opacity 0.3s ease-out;
+      }
+      #app-loader.light-mode {
+        background: linear-gradient(135deg, #f8faf8 0%, #ffffff 50%, #f0f4f0 100%);
+      }
+      #app-loader.hidden {
+        opacity: 0;
+        pointer-events: none;
+      }
+      #app-loader img {
+        width: 120px;
+        height: auto;
+        animation: pulse 1.5s ease-in-out infinite;
+      }
+      #app-loader .loader-text {
+        margin-top: 20px;
+        font-family: system-ui, -apple-system, sans-serif;
+        font-size: 14px;
+        color: #65a30d;
+        letter-spacing: 2px;
+      }
+      #app-loader .loader-dots {
+        display: flex;
+        gap: 6px;
+        margin-top: 16px;
+      }
+      #app-loader .loader-dot {
+        width: 8px;
+        height: 8px;
+        background-color: #65a30d;
+        border-radius: 50%;
+        animation: bounce 1.4s ease-in-out infinite;
+      }
+      #app-loader .loader-dot:nth-child(1) { animation-delay: 0s; }
+      #app-loader .loader-dot:nth-child(2) { animation-delay: 0.2s; }
+      #app-loader .loader-dot:nth-child(3) { animation-delay: 0.4s; }
+      @keyframes pulse {
+        0%, 100% { transform: scale(1); opacity: 1; }
+        50% { transform: scale(1.05); opacity: 0.9; }
+      }
+      @keyframes bounce {
+        0%, 80%, 100% { transform: translateY(0); }
+        40% { transform: translateY(-10px); }
+      }
+    </style>
+
     <!-- Prevent flash of wrong theme -->
     <script>
       (function() {
         const savedTheme = localStorage.getItem('greenofig-theme');
         const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-        const theme = savedTheme || (prefersDark ? 'dark' : 'dark'); // Default to dark
+        const theme = savedTheme || (prefersDark ? 'dark' : 'light');
 
         if (theme === 'dark') {
           document.documentElement.classList.add('dark');
         } else {
           document.documentElement.classList.remove('dark');
+          // Add light mode class to loader
+          document.addEventListener('DOMContentLoaded', function() {
+            const loader = document.getElementById('app-loader');
+            if (loader) loader.classList.add('light-mode');
+          });
         }
 
         // Set direction based on saved language
@@ -50,6 +115,16 @@
     </script>
   </head>
   <body>
+    <!-- Loading screen with logo -->
+    <div id="app-loader">
+      <img src="/logo.png" alt="GreenoFig" />
+      <div class="loader-dots">
+        <div class="loader-dot"></div>
+        <div class="loader-dot"></div>
+        <div class="loader-dot"></div>
+      </div>
+    </div>
+
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
   </body>

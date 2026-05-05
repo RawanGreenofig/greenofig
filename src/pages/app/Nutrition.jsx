@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { motion } from 'framer-motion'
 import {
   Plus,
@@ -21,12 +22,12 @@ import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 
-const meals = [
-  { id: 'breakfast', name: 'Breakfast', icon: Coffee, time: '6:00 AM - 10:00 AM' },
-  { id: 'lunch', name: 'Lunch', icon: Sun, time: '11:00 AM - 2:00 PM' },
-  { id: 'dinner', name: 'Dinner', icon: Moon, time: '6:00 PM - 9:00 PM' },
-  { id: 'snacks', name: 'Snacks', icon: Apple, time: 'Anytime' },
-]
+const mealIcons = {
+  breakfast: Coffee,
+  lunch: Sun,
+  dinner: Moon,
+  snacks: Apple,
+}
 
 const todaysMeals = {
   breakfast: [
@@ -59,13 +60,21 @@ const quickAddFoods = [
 ]
 
 export default function Nutrition() {
+  const { t, i18n } = useTranslation()
   const [selectedDate, setSelectedDate] = useState(new Date())
   const [addFoodOpen, setAddFoodOpen] = useState(false)
   const [selectedMealType, setSelectedMealType] = useState('breakfast')
   const [searchQuery, setSearchQuery] = useState('')
 
+  const meals = [
+    { id: 'breakfast', name: t('nutrition.meals.breakfast'), icon: mealIcons.breakfast, time: t('nutrition.mealTimes.breakfast') },
+    { id: 'lunch', name: t('nutrition.meals.lunch'), icon: mealIcons.lunch, time: t('nutrition.mealTimes.lunch') },
+    { id: 'dinner', name: t('nutrition.meals.dinner'), icon: mealIcons.dinner, time: t('nutrition.mealTimes.dinner') },
+    { id: 'snacks', name: t('nutrition.meals.snacks'), icon: mealIcons.snacks, time: t('nutrition.mealTimes.snacks') },
+  ]
+
   const formatDate = (date) => {
-    return date.toLocaleDateString('en-US', {
+    return date.toLocaleDateString(i18n.language === 'ar' ? 'ar-SA' : 'en-US', {
       weekday: 'short',
       month: 'short',
       day: 'numeric'
@@ -95,26 +104,26 @@ export default function Nutrition() {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold">Nutrition Tracker</h1>
-          <p className="text-muted-foreground">Track your meals and monitor your macros</p>
+          <h1 className="text-2xl font-bold">{t('nutrition.title')}</h1>
+          <p className="text-muted-foreground">{t('nutrition.subtitle')}</p>
         </div>
         <Dialog open={addFoodOpen} onOpenChange={setAddFoodOpen}>
           <DialogTrigger asChild>
             <Button>
-              <Plus className="mr-2 h-4 w-4" />
-              Log Food
+              <Plus className="me-2 h-4 w-4" />
+              {t('nutrition.logFood')}
             </Button>
           </DialogTrigger>
           <DialogContent className="sm:max-w-md">
             <DialogHeader>
-              <DialogTitle>Add Food</DialogTitle>
+              <DialogTitle>{t('nutrition.addFood')}</DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Search className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
-                  placeholder="Search foods..."
-                  className="pl-10"
+                  placeholder={t('nutrition.searchPlaceholder')}
+                  className="ps-10"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
@@ -132,7 +141,7 @@ export default function Nutrition() {
                 ))}
               </div>
               <div className="space-y-2 max-h-64 overflow-y-auto">
-                <p className="text-sm text-muted-foreground">Quick Add</p>
+                <p className="text-sm text-muted-foreground">{t('nutrition.quickAdd')}</p>
                 {quickAddFoods.map((food, index) => (
                   <div
                     key={index}
@@ -145,7 +154,7 @@ export default function Nutrition() {
                         P: {food.protein}g | C: {food.carbs}g | F: {food.fat}g
                       </p>
                     </div>
-                    <Badge variant="secondary">{food.calories} cal</Badge>
+                    <Badge variant="secondary">{food.calories} {t('nutrition.cal')}</Badge>
                   </div>
                 ))}
               </div>
@@ -162,7 +171,7 @@ export default function Nutrition() {
         <div className="flex items-center gap-2">
           <Calendar className="h-4 w-4 text-muted-foreground" />
           <span className="font-medium">
-            {isToday ? 'Today' : formatDate(selectedDate)}
+            {isToday ? t('nutrition.today') : formatDate(selectedDate)}
           </span>
         </div>
         <Button variant="ghost" size="icon" onClick={() => changeDate(1)} disabled={isToday}>
@@ -182,7 +191,7 @@ export default function Nutrition() {
             <Card>
               <CardContent className="p-4">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm text-muted-foreground capitalize">{macro}</span>
+                  <span className="text-sm text-muted-foreground capitalize">{t(`nutrition.macros.${macro}`)}</span>
                   {macro === 'calories' ? (
                     <Flame className="h-4 w-4 text-orange-500" />
                   ) : (
@@ -226,7 +235,7 @@ export default function Nutrition() {
                   </div>
                   <div className="text-right">
                     {totals.calories > 0 && (
-                      <Badge variant="secondary">{totals.calories} cal</Badge>
+                      <Badge variant="secondary">{totals.calories} {t('nutrition.cal')}</Badge>
                     )}
                   </div>
                 </div>
@@ -245,13 +254,13 @@ export default function Nutrition() {
                             P: {item.protein}g | C: {item.carbs}g | F: {item.fat}g
                           </p>
                         </div>
-                        <span className="text-sm font-medium">{item.calories} cal</span>
+                        <span className="text-sm font-medium">{item.calories} {t('nutrition.cal')}</span>
                       </div>
                     ))}
                   </div>
                 ) : (
                   <div className="text-center py-4">
-                    <p className="text-muted-foreground text-sm mb-2">No foods logged</p>
+                    <p className="text-muted-foreground text-sm mb-2">{t('nutrition.noFoodsLogged')}</p>
                     <Button
                       variant="outline"
                       size="sm"
@@ -260,8 +269,8 @@ export default function Nutrition() {
                         setAddFoodOpen(true)
                       }}
                     >
-                      <Plus className="mr-2 h-4 w-4" />
-                      Add Food
+                      <Plus className="me-2 h-4 w-4" />
+                      {t('nutrition.addFood')}
                     </Button>
                   </div>
                 )}

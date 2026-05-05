@@ -1,0 +1,364 @@
+<!doctype html><html><head><meta charset="utf-8"><link rel="stylesheet" href="_card.css">
+<style>
+.frame {
+  width: 720px;
+  background:
+    radial-gradient(ellipse 600px 400px at 80% 0%, rgba(132,204,22,0.10), transparent 60%),
+    radial-gradient(ellipse 500px 300px at 0% 100%, rgba(245,158,11,0.08), transparent 60%),
+    #fafaf7;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.section-label {
+  font: 600 10px/1 var(--font-sans);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #65a30d;
+  display: flex; align-items: center; gap: 8px;
+}
+.section-label::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(to right, rgba(132,204,22,0.3), transparent);
+}
+
+/* Domain-tinted icon showcase */
+.domain-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+}
+.dom {
+  background: #fff;
+  border: 1px solid #ececec;
+  border-radius: 14px;
+  padding: 14px 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transition: transform 200ms;
+}
+.dom:hover { transform: translateY(-2px); }
+.dom-ic {
+  width: 38px; height: 38px;
+  border-radius: 11px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.dom-ic svg { width: 18px; height: 18px; }
+.dom-text { display: flex; flex-direction: column; min-width: 0; }
+.dom-name { font: 600 12px/1.2 var(--font-sans); color: #0f172a; }
+.dom-role { font: 400 10px/1.2 var(--font-mono); color: #94a3b8; margin-top: 2px; }
+
+/* Chip row — context */
+.chip-row { display: flex; gap: 8px; flex-wrap: wrap; }
+.chip {
+  display: inline-flex; align-items: center; gap: 7px;
+  height: 32px; padding: 0 12px;
+  background: #fff;
+  border: 1px solid #e8e8e8;
+  border-radius: 9999px;
+  font: 500 12px/1 var(--font-sans);
+  color: #0f172a;
+}
+.chip svg { width: 14px; height: 14px; }
+.c-lime { background: #ecfccb; color: #4d7c0f; border-color: #d9f99d; }
+.c-lime svg { color: #65a30d; }
+.c-amber { background: #fef3c7; color: #b45309; border-color: #fde68a; }
+.c-amber svg { color: #d97706; }
+.c-cyan { background: #cffafe; color: #0e7490; border-color: #a5f3fc; }
+.c-cyan svg { color: #0891b2; }
+.c-rose { background: #ffe4e6; color: #be123c; border-color: #fecdd3; }
+.c-rose svg { color: #e11d48; }
+.c-violet { background: #ede9fe; color: #6d28d9; border-color: #ddd6fe; }
+.c-violet svg { color: #7c3aed; }
+.c-dark { background: #0f172a; color: #fafaf7; border-color: #0f172a; }
+.c-dark svg { color: #a3e635; }
+
+/* Analysis grid */
+.analysis {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+.spec {
+  background: #fff;
+  border: 1px solid #ececec;
+  border-radius: 12px;
+  padding: 14px;
+}
+.spec-title {
+  font: 600 11px/1 var(--font-sans);
+  color: #0f172a;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 12px;
+  display: flex; align-items: center; gap: 6px;
+}
+.spec-title svg { width: 13px; height: 13px; color: #65a30d; }
+
+/* Stroke comparison */
+.stroke-row {
+  display: flex; gap: 8px; align-items: flex-end;
+}
+.stroke-cell {
+  flex: 1;
+  background: #fafaf7;
+  border-radius: 8px;
+  padding: 10px 6px 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+.stroke-cell svg { width: 22px; height: 22px; color: #0f172a; }
+.stroke-cell.active { background: #ecfccb; outline: 2px solid #84cc16; }
+.stroke-lbl { font: 500 9px/1 var(--font-mono); color: #64748b; }
+.stroke-cell.active .stroke-lbl { color: #4d7c0f; font-weight: 600; }
+
+/* Size scale */
+.size-row {
+  display: flex; gap: 14px; align-items: flex-end;
+  padding: 4px 0;
+}
+.size-item { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.size-item svg { color: #0f172a; }
+.size-lbl { font: 500 10px/1 var(--font-mono); color: #64748b; }
+.size-use { font: 400 9px/1.3 var(--font-sans); color: #94a3b8; text-align: center; max-width: 60px; }
+
+/* Color palette of icon tints */
+.tint-row { display: flex; gap: 6px; }
+.tint-swatch {
+  flex: 1;
+  height: 44px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font: 600 10px/1 var(--font-mono);
+}
+
+/* Do/don't */
+.rules {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.rule {
+  background: #fff;
+  border-radius: 10px;
+  padding: 10px;
+  font: 400 11px/1.4 var(--font-sans);
+  color: #475569;
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+}
+.rule-tag {
+  width: 18px; height: 18px;
+  border-radius: 5px;
+  flex-shrink: 0;
+  display: inline-flex; align-items: center; justify-content: center;
+}
+.rule-tag svg { width: 11px; height: 11px; color: #fff; }
+.rule.do .rule-tag { background: #84cc16; }
+.rule.dont .rule-tag { background: #ef4444; }
+.rule b { color: #0f172a; }
+
+.meta {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-top: 4px;
+  font: 400 10px/1.4 var(--font-mono); color: #94a3b8;
+}
+.tag {
+  font: 600 10px/1 var(--font-sans);
+  letter-spacing: 0.12em; text-transform: uppercase;
+  color: #65a30d;
+  padding: 5px 9px;
+  background: rgba(132,204,22,0.12);
+  border-radius: 9999px;
+}
+</style></head>
+<body>
+<div class="frame">
+
+  <!-- Domain library: 8 icons, each tinted to match its UI role -->
+  <div>
+    <div class="section-label">Library — domain tints</div>
+    <div class="domain-grid" style="margin-top:10px">
+      <div class="dom">
+        <div class="dom-ic" style="background:rgba(132,204,22,0.14);color:#65a30d">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/></svg>
+        </div>
+        <div class="dom-text"><span class="dom-name">Leaf</span><span class="dom-role">ai-coach</span></div>
+      </div>
+      <div class="dom">
+        <div class="dom-ic" style="background:rgba(245,158,11,0.14);color:#d97706">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2v0a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Z"/></svg>
+        </div>
+        <div class="dom-text"><span class="dom-name">Utensils</span><span class="dom-role">meals</span></div>
+      </div>
+      <div class="dom">
+        <div class="dom-ic" style="background:rgba(249,115,22,0.14);color:#ea580c">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M13.5.67s.74 2.65.74 4.8c0 2.06-1.35 3.73-3.41 3.73-2.07 0-3.63-1.67-3.63-3.73l.03-.36C5.21 7.51 4 10.62 4 14a8 8 0 0 0 16 0C20 9.33 17.85 5.5 13.5.67z"/></svg>
+        </div>
+        <div class="dom-text"><span class="dom-name">Flame</span><span class="dom-role">calories</span></div>
+      </div>
+      <div class="dom">
+        <div class="dom-ic" style="background:rgba(6,182,212,0.14);color:#0891b2">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>
+        </div>
+        <div class="dom-text"><span class="dom-name">Drop</span><span class="dom-role">hydration</span></div>
+      </div>
+      <div class="dom">
+        <div class="dom-ic" style="background:rgba(168,85,247,0.14);color:#7c3aed">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        </div>
+        <div class="dom-text"><span class="dom-name">Moon</span><span class="dom-role">sleep</span></div>
+      </div>
+      <div class="dom">
+        <div class="dom-ic" style="background:rgba(225,29,72,0.14);color:#e11d48">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M14.4 14.4l2.7 2.7M9.6 9.6L6.9 6.9M6.9 17.1l2.7-2.7M14.4 9.6l2.7-2.7M2 12h2M20 12h2M12 2v2M12 20v2"/><circle cx="12" cy="12" r="3"/></svg>
+        </div>
+        <div class="dom-text"><span class="dom-name">Dumbbell</span><span class="dom-role">fitness</span></div>
+      </div>
+      <div class="dom">
+        <div class="dom-ic" style="background:rgba(59,130,246,0.14);color:#2563eb">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
+        </div>
+        <div class="dom-text"><span class="dom-name">Trend</span><span class="dom-role">progress</span></div>
+      </div>
+      <div class="dom">
+        <div class="dom-ic" style="background:rgba(16,185,129,0.14);color:#059669">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        </div>
+        <div class="dom-text"><span class="dom-name">Message</span><span class="dom-role">chat</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- In context: chips -->
+  <div>
+    <div class="section-label">In context</div>
+    <div class="chip-row" style="margin-top:10px">
+      <span class="chip c-lime"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg> Logged</span>
+      <span class="chip c-amber"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M13.5.67s.74 2.65.74 4.8c0 2.06-1.35 3.73-3.41 3.73-2.07 0-3.63-1.67-3.63-3.73l.03-.36C5.21 7.51 4 10.62 4 14a8 8 0 0 0 16 0C20 9.33 17.85 5.5 13.5.67z"/></svg> 7-day streak</span>
+      <span class="chip c-cyan"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg> 2.4L hydrated</span>
+      <span class="chip c-violet"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg> 7h 24m</span>
+      <span class="chip c-rose"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg> Saved</span>
+      <span class="chip c-dark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/></svg> Ask Coach</span>
+    </div>
+  </div>
+
+  <!-- Analysis grid -->
+  <div>
+    <div class="section-label">Analysis</div>
+    <div class="analysis" style="margin-top:10px">
+
+      <!-- Stroke weight -->
+      <div class="spec">
+        <div class="spec-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/></svg> Stroke weight</div>
+        <div class="stroke-row">
+          <div class="stroke-cell">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+            <span class="stroke-lbl">1.25 thin</span>
+          </div>
+          <div class="stroke-cell">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+            <span class="stroke-lbl">1.5</span>
+          </div>
+          <div class="stroke-cell active">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+            <span class="stroke-lbl">1.75 ✓</span>
+          </div>
+          <div class="stroke-cell">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+            <span class="stroke-lbl">2 bold</span>
+          </div>
+        </div>
+        <p style="font:400 11px/1.5 var(--font-sans);color:#64748b;margin:10px 0 0">Default <b style="color:#0f172a">1.75</b> — sits between editorial and utility, reads clean at 16–24px.</p>
+      </div>
+
+      <!-- Size scale -->
+      <div class="spec">
+        <div class="spec-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M3 12h12M3 18h6"/></svg> Size scale</div>
+        <div class="size-row">
+          <div class="size-item">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>
+            <span class="size-lbl">14</span>
+            <span class="size-use">inline</span>
+          </div>
+          <div class="size-item">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>
+            <span class="size-lbl">16</span>
+            <span class="size-use">chips</span>
+          </div>
+          <div class="size-item">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M20 6L9 17l-5-5"/></svg>
+            <span class="size-lbl">20</span>
+            <span class="size-use">buttons</span>
+          </div>
+          <div class="size-item">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M20 6L9 17l-5-5"/></svg>
+            <span class="size-lbl">24</span>
+            <span class="size-use">stats</span>
+          </div>
+          <div class="size-item">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20 6L9 17l-5-5"/></svg>
+            <span class="size-lbl">32</span>
+            <span class="size-use">hero</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Color tints -->
+      <div class="spec">
+        <div class="spec-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="13.5" cy="6.5" r=".5"/><circle cx="17.5" cy="10.5" r=".5"/><circle cx="8.5" cy="7.5" r=".5"/><circle cx="6.5" cy="12.5" r=".5"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/></svg> Color tints</div>
+        <div class="tint-row">
+          <div class="tint-swatch" style="background:rgba(132,204,22,0.14);color:#65a30d">lime</div>
+          <div class="tint-swatch" style="background:rgba(245,158,11,0.14);color:#d97706">amber</div>
+          <div class="tint-swatch" style="background:rgba(6,182,212,0.14);color:#0891b2">cyan</div>
+          <div class="tint-swatch" style="background:rgba(168,85,247,0.14);color:#7c3aed">violet</div>
+          <div class="tint-swatch" style="background:rgba(225,29,72,0.14);color:#e11d48">rose</div>
+        </div>
+        <p style="font:400 11px/1.5 var(--font-sans);color:#64748b;margin:10px 0 0">14% alpha tint + 600-step solid. Pair tint w/ icon, never solid bg.</p>
+      </div>
+
+      <!-- Style guidelines -->
+      <div class="spec">
+        <div class="spec-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> Rules</div>
+        <div class="rules">
+          <div class="rule do">
+            <span class="rule-tag"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg></span>
+            <span><b>currentColor</b> for stroke — inherit from parent text.</span>
+          </div>
+          <div class="rule dont">
+            <span class="rule-tag"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M18 6L6 18M6 6l12 12"/></svg></span>
+            <span>Don't mix <b>filled</b> and <b>stroked</b> in the same row.</span>
+          </div>
+          <div class="rule do">
+            <span class="rule-tag"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg></span>
+            <span>Pair tinted bg with same-hue icon (lime / lime-700).</span>
+          </div>
+          <div class="rule dont">
+            <span class="rule-tag"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M18 6L6 18M6 6l12 12"/></svg></span>
+            <span>Don't scale below <b>14px</b> — strokes break.</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="meta">
+    <span>lucide-react v0.535 · 1.75 stroke · monoline · currentColor</span>
+    <span class="tag">System</span>
+  </div>
+</div>
+</body></html>

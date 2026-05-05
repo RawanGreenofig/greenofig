@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { motion } from 'framer-motion'
 import {
   Dumbbell,
@@ -17,11 +18,11 @@ import { Progress } from '@/components/ui/progress'
 import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 
-const workoutCategories = [
-  { id: 'strength', name: 'Strength', count: 12 },
-  { id: 'cardio', name: 'Cardio', count: 8 },
-  { id: 'flexibility', name: 'Flexibility', count: 6 },
-  { id: 'hiit', name: 'HIIT', count: 5 },
+const workoutCategoriesData = [
+  { id: 'strength', count: 12 },
+  { id: 'cardio', count: 8 },
+  { id: 'flexibility', count: 6 },
+  { id: 'hiit', count: 5 },
 ]
 
 const recommendedWorkouts = [
@@ -82,19 +83,27 @@ const weeklyProgress = {
 }
 
 export default function Fitness() {
+  const { t } = useTranslation()
   const [selectedCategory, setSelectedCategory] = useState('all')
+
+  const workoutCategories = workoutCategoriesData.map(cat => ({
+    ...cat,
+    name: t(`fitness.categories.${cat.id}`)
+  }))
+
+  const muscleGroups = ['chest', 'back', 'shoulders', 'arms', 'legs', 'core']
 
   return (
     <div className="p-6 space-y-6">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold">Fitness</h1>
-          <p className="text-muted-foreground">Track workouts and reach your fitness goals</p>
+          <h1 className="text-2xl font-bold">{t('fitness.title')}</h1>
+          <p className="text-muted-foreground">{t('fitness.subtitle')}</p>
         </div>
         <Button>
-          <Plus className="mr-2 h-4 w-4" />
-          Start Workout
+          <Plus className="me-2 h-4 w-4" />
+          {t('fitness.startWorkout')}
         </Button>
       </div>
 
@@ -110,8 +119,8 @@ export default function Fitness() {
             <Card>
               <CardContent className="p-4">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm text-muted-foreground capitalize">
-                    Weekly {key}
+                  <span className="text-sm text-muted-foreground">
+                    {t(`fitness.weekly.${key}`)}
                   </span>
                   {key === 'workouts' && <Trophy className="h-4 w-4 text-primary" />}
                   {key === 'minutes' && <Clock className="h-4 w-4 text-blue-500" />}
@@ -130,9 +139,9 @@ export default function Fitness() {
 
       <Tabs defaultValue="workouts" className="space-y-6">
         <TabsList>
-          <TabsTrigger value="workouts">Workouts</TabsTrigger>
-          <TabsTrigger value="history">History</TabsTrigger>
-          <TabsTrigger value="exercises">Exercises</TabsTrigger>
+          <TabsTrigger value="workouts">{t('fitness.tabs.workouts')}</TabsTrigger>
+          <TabsTrigger value="history">{t('fitness.tabs.history')}</TabsTrigger>
+          <TabsTrigger value="exercises">{t('fitness.tabs.exercises')}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="workouts" className="space-y-6">
@@ -143,7 +152,7 @@ export default function Fitness() {
               size="sm"
               onClick={() => setSelectedCategory('all')}
             >
-              All
+              {t('fitness.categories.all')}
             </Button>
             {workoutCategories.map((category) => (
               <Button
@@ -153,7 +162,7 @@ export default function Fitness() {
                 onClick={() => setSelectedCategory(category.id)}
               >
                 {category.name}
-                <Badge variant="secondary" className="ml-2">
+                <Badge variant="secondary" className="ms-2">
                   {category.count}
                 </Badge>
               </Button>
@@ -162,7 +171,7 @@ export default function Fitness() {
 
           {/* Recommended Workouts */}
           <div>
-            <h2 className="text-lg font-semibold mb-4">Recommended For You</h2>
+            <h2 className="text-lg font-semibold mb-4">{t('fitness.recommended')}</h2>
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
               {recommendedWorkouts.map((workout, index) => (
                 <motion.div
@@ -183,16 +192,16 @@ export default function Fitness() {
                       <div className="flex items-center gap-4 text-sm text-muted-foreground">
                         <span className="flex items-center gap-1">
                           <Clock className="h-4 w-4" />
-                          {workout.duration} min
+                          {workout.duration} {t('fitness.min')}
                         </span>
                         <span className="flex items-center gap-1">
                           <Flame className="h-4 w-4" />
-                          {workout.calories} cal
+                          {workout.calories} {t('fitness.cal')}
                         </span>
                       </div>
                       <Button className="w-full mt-4" variant="secondary">
-                        <Play className="mr-2 h-4 w-4" />
-                        Start Workout
+                        <Play className="me-2 h-4 w-4" />
+                        {t('fitness.startWorkout')}
                       </Button>
                     </CardContent>
                   </Card>
@@ -205,8 +214,8 @@ export default function Fitness() {
         <TabsContent value="history">
           <Card>
             <CardHeader>
-              <CardTitle>Recent Workouts</CardTitle>
-              <CardDescription>Your workout history</CardDescription>
+              <CardTitle>{t('fitness.recentWorkouts')}</CardTitle>
+              <CardDescription>{t('fitness.workoutHistory')}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               {recentWorkouts.map((workout, index) => (
@@ -227,14 +236,14 @@ export default function Fitness() {
                     </div>
                   </div>
                   <div className="text-right">
-                    <p className="font-medium">{workout.duration} min</p>
-                    <p className="text-sm text-muted-foreground">{workout.calories} cal</p>
+                    <p className="font-medium">{workout.duration} {t('fitness.min')}</p>
+                    <p className="text-sm text-muted-foreground">{workout.calories} {t('fitness.cal')}</p>
                   </div>
                 </motion.div>
               ))}
               <Button variant="outline" className="w-full">
-                View All History
-                <ChevronRight className="ml-2 h-4 w-4" />
+                {t('fitness.viewAllHistory')}
+                <ChevronRight className="ms-2 h-4 w-4" />
               </Button>
             </CardContent>
           </Card>
@@ -243,12 +252,12 @@ export default function Fitness() {
         <TabsContent value="exercises">
           <Card>
             <CardHeader>
-              <CardTitle>Exercise Library</CardTitle>
-              <CardDescription>Browse exercises by muscle group</CardDescription>
+              <CardTitle>{t('fitness.exerciseLibrary')}</CardTitle>
+              <CardDescription>{t('fitness.exerciseLibrarySubtitle')}</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {['Chest', 'Back', 'Shoulders', 'Arms', 'Legs', 'Core'].map((muscle, index) => (
+                {muscleGroups.map((muscle, index) => (
                   <motion.div
                     key={muscle}
                     initial={{ opacity: 0, scale: 0.9 }}
@@ -259,7 +268,7 @@ export default function Fitness() {
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
                         <Target className="h-5 w-5 text-primary" />
-                        <span className="font-medium">{muscle}</span>
+                        <span className="font-medium">{t(`fitness.muscles.${muscle}`)}</span>
                       </div>
                       <ChevronRight className="h-4 w-4 text-muted-foreground" />
                     </div>

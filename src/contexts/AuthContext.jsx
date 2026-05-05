@@ -3,6 +3,119 @@ import { supabase, isSupabaseConfigured } from '@/lib/supabase'
 
 const AuthContext = createContext({})
 
+// Demo accounts for testing different roles
+export const DEMO_ACCOUNTS = {
+  user: {
+    email: 'user@greenofig.com',
+    password: 'user123',
+    profile: {
+      id: 'demo-user',
+      full_name: 'Demo User',
+      email: 'user@greenofig.com',
+      role: 'basic_user',
+      tier: 'Free',
+      subscription_tier: 'Free',
+      is_active: true,
+      community_points: 150,
+    }
+  },
+  basic: {
+    email: 'basic@greenofig.com',
+    password: 'basic123',
+    profile: {
+      id: 'demo-basic',
+      full_name: 'Basic User',
+      email: 'basic@greenofig.com',
+      role: 'basic_user',
+      tier: 'Basic',
+      subscription_tier: 'Basic',
+      is_active: true,
+      community_points: 500,
+    }
+  },
+  premium: {
+    email: 'premium@greenofig.com',
+    password: 'premium123',
+    profile: {
+      id: 'demo-premium',
+      full_name: 'Premium User',
+      email: 'premium@greenofig.com',
+      role: 'basic_user',
+      tier: 'Premium',
+      subscription_tier: 'Premium',
+      is_active: true,
+      community_points: 1200,
+    }
+  },
+  elite: {
+    email: 'elite@greenofig.com',
+    password: 'elite123',
+    profile: {
+      id: 'demo-elite',
+      full_name: 'Elite User',
+      email: 'elite@greenofig.com',
+      role: 'basic_user',
+      tier: 'Elite',
+      subscription_tier: 'Elite',
+      is_active: true,
+      community_points: 3000,
+    }
+  },
+  nutritionist: {
+    email: 'nutritionist@greenofig.com',
+    password: 'nutri123',
+    profile: {
+      id: 'demo-nutritionist',
+      full_name: 'Dr. Sarah Wellness',
+      email: 'nutritionist@greenofig.com',
+      role: 'nutritionist',
+      tier: null,
+      subscription_tier: null,
+      is_active: true,
+      specialization: 'Clinical Nutrition',
+    }
+  },
+  admin: {
+    email: 'admin@greenofig.com',
+    password: 'admin123',
+    profile: {
+      id: 'demo-admin',
+      full_name: 'Admin User',
+      email: 'admin@greenofig.com',
+      role: 'admin',
+      tier: null,
+      subscription_tier: null,
+      is_active: true,
+    }
+  },
+  superadmin: {
+    email: 'superadmin@greenofig.com',
+    password: 'super123',
+    profile: {
+      id: 'demo-superadmin',
+      full_name: 'Super Admin',
+      email: 'superadmin@greenofig.com',
+      role: 'super_admin',
+      tier: null,
+      subscription_tier: null,
+      is_active: true,
+    }
+  }
+}
+
+// Where each role lands after login / on /app
+export const getHomePathForRole = (role) => {
+  switch (role) {
+    case 'super_admin':
+    case 'admin':
+      return '/app/admin'
+    case 'nutritionist':
+      return '/app/nutritionist'
+    default:
+      return '/app/dashboard'
+  }
+}
+
 export const useAuth = () => {
   const context = useContext(AuthContext)
   if (!context) {
@@ -23,8 +136,11 @@ export const AuthProvider = ({ children }) => {
         id: userId,
         full_name: 'Demo User',
         email: 'demo@greenofig.com',
-        role: 'user',
-        tier: 'Premium',
+        role: 'basic_user',
+        tier: 'Base',
+        subscription_tier: 'Base',
+        is_active: true,
+        community_points: 0,
       })
       return
     }
@@ -57,6 +173,8 @@ export const AuthProvider = ({ children }) => {
         fetchUserProfile(session.user.id)
       }
       setLoading(false)
+    }).catch(() => {
+      setLoading(false)
     })
 
     // Listen for auth changes
@@ -76,15 +194,29 @@ export const AuthProvider = ({ children }) => {
   }, [])
 
   const signIn = async (email, password) => {
+    // Check for demo accounts first
+    const demoAccount = Object.values(DEMO_ACCOUNTS).find(
+      acc => acc.email === email && acc.password === password
+    )
+
+    if (demoAccount) {
+      setUser({ id: demoAccount.profile.id, email: demoAccount.email })
+      setUserProfile(demoAccount.profile)
+      return { error: null }
+    }
+
     if (!isSupabaseConfigured()) {
-      // Demo mode
+      // Default demo mode for unknown accounts
       setUser({ id: 'demo-user', email })
       setUserProfile({
         id: 'demo-user',
         full_name: 'Demo User',
         email,
-        role: 'user',
-        tier: 'Premium',
+        role: 'basic_user',
+        tier: 'Free',
+        subscription_tier: 'Free',
+        is_active: true,
+        community_points: 0,
       })
       return { error: null }
     }
@@ -146,6 +278,59 @@ export const AuthProvider = ({ children }) => {
     }
   }
 
+  // Helper functions for role/tier checks
+  const isAdmin = () => {
+    return userProfile?.role === 'admin' || userProfile?.role === 'super_admin'
+  }
+
+  const isSuperAdmin = () => {
+    return userProfile?.role === 'super_admin'
+  }
+
+  const isNutritionist = () => {
+    return userProfile?.role === 'nutritionist'
+  }
+
+  const isStaffMember = () => {
+    return isAdmin() || isNutritionist()
+  }
+
+  // Tiers that should see ads: Free and Basic
+  // Tiers that should NOT see ads: Premium, Elite, Staff (nutritionist, admin, super_admin)
+  const shouldShowAds = () => {
+    // Staff members never see ads
+    if (isStaffMember()) return false
+
+    // Premium and Elite users don't see ads
+    const tier = userProfile?.tier || userProfile?.subscription_tier
+    if (tier === 'Premium' || tier === 'Elite') return false
+
+    // Free and Basic users see ads
+    // Also visitors (no userProfile) see ads
+    return true
+  }
+
+  const shouldShowUpgradePrompts = () => {
+    // Staff members never see upgrade prompts
+    if (isStaffMember()) return false
+
+    // Premium and Elite users don't need to upgrade
+    const tier = userProfile?.tier || userProfile?.subscription_tier
+    if (tier === 'Premium' || tier === 'Elite') return false
+
+    return true
+  }
+
+  const getTier = () => {
+    return userProfile?.tier || userProfile?.subscription_tier || 'Free'
+  }
+
+  const getRole = () => {
+    return userProfile?.role || 'visitor'
+  }
+
+  const getHomePath = () => getHomePathForRole(userProfile?.role)
+
   const value = {
     user,
     userProfile,
@@ -156,6 +341,17 @@ export const AuthProvider = ({ children }) => {
     signOut,
     refreshUserProfile,
     isAuthenticated: !!user,
+    // Role helpers
+    isAdmin,
+    isSuperAdmin,
+    isNutritionist,
+    isStaffMember,
+    // Ad helpers
+    shouldShowAds,
+    shouldShowUpgradePrompts,
+    getTier,
+    getRole,
+    getHomePath,
   }
 
   return (

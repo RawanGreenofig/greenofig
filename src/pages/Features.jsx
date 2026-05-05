@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion'
 import { Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import {
   Bot,
   Utensils,
@@ -18,99 +19,58 @@ import {
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { HeroImage } from '@/components/ui/hero-slider'
 
-const mainFeatures = [
-  {
-    icon: Bot,
-    title: 'AI Health Coach',
-    description: 'Our intelligent AI coach provides personalized guidance 24/7. Get instant answers to your health questions, meal suggestions, and workout advice tailored to your goals.',
-    tier: 'All Plans',
-  },
-  {
-    icon: Utensils,
-    title: 'Smart Meal Planning',
-    description: 'AI-generated meal plans based on your dietary preferences, restrictions, and nutritional goals. Includes detailed recipes, shopping lists, and macro tracking.',
-    tier: 'Premium+',
-  },
-  {
-    icon: Dumbbell,
-    title: 'Personalized Workouts',
-    description: 'Custom workout programs that adapt to your fitness level, available equipment, and schedule. Video demonstrations and progress tracking included.',
-    tier: 'Premium+',
-  },
-  {
-    icon: TrendingUp,
-    title: 'Progress Analytics',
-    description: 'Comprehensive tracking with detailed insights. Monitor weight, measurements, strength gains, and health metrics with beautiful visualizations.',
-    tier: 'All Plans',
-  },
-  {
-    icon: MessageSquare,
-    title: 'Nutritionist Access',
-    description: 'Connect with certified nutritionists for personalized advice. Get expert guidance on your diet, supplements, and health concerns.',
-    tier: 'Ultimate+',
-  },
-  {
-    icon: Calendar,
-    title: 'Video Consultations',
-    description: 'Schedule video calls with health professionals. Get face-to-face guidance from nutritionists and fitness coaches.',
-    tier: 'Ultimate+',
-  },
-]
+const mainFeatureIcons = [Bot, Utensils, Dumbbell, TrendingUp, MessageSquare, Calendar]
+const mainFeatureKeys = ['aiCoach', 'mealPlanning', 'workouts', 'analytics', 'nutritionist', 'consultations']
 
-const additionalFeatures = [
-  {
-    icon: Watch,
-    title: 'Wearable Integration',
-    description: 'Sync with Fitbit, Apple Watch, Garmin, and more.',
-  },
-  {
-    icon: Camera,
-    title: 'Photo Food Recognition',
-    description: 'Snap a photo of your meal for instant nutrition info.',
-  },
-  {
-    icon: Trophy,
-    title: 'Gamification',
-    description: 'Earn achievements, streaks, and rewards for consistency.',
-  },
-  {
-    icon: Globe,
-    title: 'Multi-language Support',
-    description: 'Available in English and Arabic with RTL support.',
-  },
-  {
-    icon: Shield,
-    title: 'Privacy Focused',
-    description: 'Your health data is encrypted and never shared.',
-  },
-  {
-    icon: Zap,
-    title: 'Offline Mode',
-    description: 'Access your plans and track meals offline.',
-  },
-]
+const additionalFeatureIcons = [Watch, Camera, Trophy, Globe, Shield, Zap]
+const additionalFeatureKeys = ['wearable', 'photoRecognition', 'gamification', 'multiLanguage', 'privacy', 'offline']
 
 export default function Features() {
+  const { t } = useTranslation()
+
+  const mainFeatures = mainFeatureKeys.map((key, index) => ({
+    icon: mainFeatureIcons[index],
+    title: t(`features.main.${key}.title`),
+    description: t(`features.main.${key}.description`),
+    tier: t(`features.main.${key}.tier`),
+  }))
+
+  const additionalFeatures = additionalFeatureKeys.map((key, index) => ({
+    icon: additionalFeatureIcons[index],
+    title: t(`features.additional.${key}.title`),
+    description: t(`features.additional.${key}.description`),
+  }))
+
   return (
-    <div className="pt-16">
-      {/* Hero */}
-      <section className="py-24 bg-gradient-to-b from-primary/10 to-background">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-          >
-            <Badge className="mb-4" variant="secondary">Features</Badge>
-            <h1 className="text-4xl sm:text-5xl font-bold mb-6">
-              Powerful Features for Your
-              <span className="block gradient-text">Health Journey</span>
-            </h1>
-            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              Discover all the tools and features designed to help you achieve your wellness goals.
-            </p>
-          </motion.div>
-        </div>
+    <div>
+      {/* Hero with Background Image */}
+      <section className="relative min-h-[60vh] flex items-center justify-center overflow-hidden">
+        <HeroImage
+          src="https://images.unsplash.com/photo-1576678927484-cc907957088c?w=1920&q=80"
+          alt="Fitness features"
+          overlayOpacity={0.75}
+          className="absolute inset-0"
+        >
+          <div className="flex items-center justify-center min-h-[60vh] pt-16">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-white">
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+              >
+                <Badge className="mb-4" variant="secondary">{t('features.badge')}</Badge>
+                <h1 className="text-4xl sm:text-5xl font-bold mb-6">
+                  {t('features.heroTitle')}
+                  <span className="block gradient-text">{t('features.heroTitleHighlight')}</span>
+                </h1>
+                <p className="text-lg text-white/70 max-w-2xl mx-auto">
+                  {t('features.heroSubtitle')}
+                </p>
+              </motion.div>
+            </div>
+          </div>
+        </HeroImage>
       </section>
 
       {/* Main Features */}
@@ -149,8 +109,8 @@ export default function Features() {
       <section className="py-24 bg-card/50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <h2 className="text-3xl font-bold mb-4">And Much More</h2>
-            <p className="text-muted-foreground">Additional features to enhance your experience</p>
+            <h2 className="text-3xl font-bold mb-4">{t('features.additional.title')}</h2>
+            <p className="text-muted-foreground">{t('features.additional.subtitle')}</p>
           </div>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {additionalFeatures.map((feature, index) => (
@@ -178,14 +138,14 @@ export default function Features() {
       {/* CTA */}
       <section className="py-24">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-3xl font-bold mb-4">Ready to Get Started?</h2>
+          <h2 className="text-3xl font-bold mb-4">{t('features.cta.title')}</h2>
           <p className="text-muted-foreground mb-8">
-            Start your free trial today and experience all these features firsthand.
+            {t('features.cta.subtitle')}
           </p>
           <Button size="lg" asChild>
             <Link to="/signup">
-              Start Free Trial
-              <ArrowRight className="ml-2 h-5 w-5" />
+              {t('features.cta.button')}
+              <ArrowRight className="ms-2 h-5 w-5" />
             </Link>
           </Button>
         </div>

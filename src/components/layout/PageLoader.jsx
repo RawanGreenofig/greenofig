@@ -8,16 +8,30 @@ export function PageLoader() {
         animate={{ opacity: 1, scale: 1 }}
         className="flex flex-col items-center"
       >
-        <div className="w-16 h-16 bg-primary rounded-2xl flex items-center justify-center mb-4 animate-pulse">
-          <span className="text-primary-foreground font-bold text-2xl">G</span>
-        </div>
-        <motion.div
-          initial={{ width: 0 }}
-          animate={{ width: 120 }}
-          transition={{ duration: 1, repeat: Infinity }}
-          className="h-1 bg-primary rounded-full"
+        <motion.img
+          src="/logo.png"
+          alt="GreenoFig"
+          className="h-20 w-auto mb-4"
+          animate={{ scale: [1, 1.05, 1] }}
+          transition={{ duration: 1.5, repeat: Infinity }}
         />
-        <p className="mt-4 text-muted-foreground text-sm">Loading...</p>
+        <div className="flex gap-1.5 mt-2">
+          <motion.div
+            className="w-2 h-2 bg-primary rounded-full"
+            animate={{ y: [0, -8, 0] }}
+            transition={{ duration: 0.6, repeat: Infinity, delay: 0 }}
+          />
+          <motion.div
+            className="w-2 h-2 bg-primary rounded-full"
+            animate={{ y: [0, -8, 0] }}
+            transition={{ duration: 0.6, repeat: Infinity, delay: 0.15 }}
+          />
+          <motion.div
+            className="w-2 h-2 bg-primary rounded-full"
+            animate={{ y: [0, -8, 0] }}
+            transition={{ duration: 0.6, repeat: Infinity, delay: 0.3 }}
+          />
+        </div>
       </motion.div>
     </div>
   )

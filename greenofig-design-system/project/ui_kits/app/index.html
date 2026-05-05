@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>GreenoFig · App UI Kit</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Cormorant+Garamond:wght@500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div id="root"></div>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<script type="text/babel" src="Sidebar.jsx"></script>
+<script type="text/babel" src="Topbar.jsx"></script>
+<script type="text/babel" src="Dashboard.jsx"></script>
+<script type="text/babel" src="AICoach.jsx"></script>
+<script type="text/babel" src="MealPlans.jsx"></script>
+<script type="text/babel" src="Messages.jsx"></script>
+
+<script type="text/babel">
+const { useState } = React;
+
+const TITLES = {
+  dashboard: 'Dashboard',
+  coach: 'AI Coach',
+  meals: 'Meal Plans',
+  fitness: 'Fitness',
+  progress: 'Progress',
+  messages: 'Messages',
+  appts: 'Appointments',
+};
+
+function App() {
+  const [page, setPage] = useState('dashboard');
+  return (
+    <div className="app" data-screen-label={`App · ${TITLES[page]}`}>
+      <Sidebar active={page} onNav={setPage} />
+      <div className="app-main">
+        <Topbar title={TITLES[page]} />
+        {page === 'dashboard' && <Dashboard />}
+        {page === 'coach' && <AICoach />}
+        {page === 'meals' && <MealPlans />}
+        {page === 'messages' && <Messages />}
+        {(page === 'fitness' || page === 'progress' || page === 'appts') && (
+          <div className="page" style={{ display:'flex', alignItems:'center', justifyContent:'center', minHeight: 400 }}>
+            <div style={{ textAlign:'center', color:'#94a3b8', font:'400 14px/1.5 var(--font-sans)' }}>
+              <div style={{ font:'600 18px var(--font-sans)', color:'#475569' }}>{TITLES[page]}</div>
+              <div style={{ marginTop: 6 }}>Page not in UI kit — extend with same patterns.</div>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>

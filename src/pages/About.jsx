@@ -1,30 +1,12 @@
 import { motion } from 'framer-motion'
+import { useTranslation } from 'react-i18next'
 import { Target, Heart, Users, Award, Globe, Zap } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { HeroImage } from '@/components/ui/hero-slider'
 
-const values = [
-  {
-    icon: Heart,
-    title: 'Health First',
-    description: 'We believe everyone deserves access to quality health guidance.',
-  },
-  {
-    icon: Users,
-    title: 'Community Driven',
-    description: 'Building a supportive community of health-conscious individuals.',
-  },
-  {
-    icon: Zap,
-    title: 'Innovation',
-    description: 'Leveraging AI and technology to make health management effortless.',
-  },
-  {
-    icon: Globe,
-    title: 'Accessibility',
-    description: 'Making wellness tools available to everyone, everywhere.',
-  },
-]
+const valueIcons = [Heart, Users, Zap, Globe]
+const valueKeys = ['healthFirst', 'community', 'innovation', 'accessibility']
 
 const team = [
   {
@@ -49,48 +31,64 @@ const team = [
   },
 ]
 
-const milestones = [
-  { year: '2021', event: 'GreenoFig founded with a mission to democratize health' },
-  { year: '2022', event: 'Launched AI coach feature, reached 10K users' },
-  { year: '2023', event: 'Expanded to 50K users, added nutritionist network' },
-  { year: '2024', event: 'Introduced video consultations and DNA-based nutrition' },
-]
+const milestoneYears = ['2021', '2022', '2023', '2024']
 
 export default function About() {
+  const { t } = useTranslation()
+
+  const values = valueKeys.map((key, index) => ({
+    icon: valueIcons[index],
+    title: t(`about.values.${key}.title`),
+    description: t(`about.values.${key}.description`),
+  }))
+
+  const milestones = milestoneYears.map((year) => ({
+    year,
+    event: t(`about.journey.${year}`),
+  }))
   return (
-    <div className="pt-16">
-      {/* Hero */}
-      <section className="py-24 bg-gradient-to-b from-primary/10 to-background">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-          >
-            <Badge className="mb-4" variant="secondary">About Us</Badge>
-            <h1 className="text-4xl sm:text-5xl font-bold mb-6">
-              Our Mission is to Make
-              <span className="block gradient-text">Health Accessible</span>
-            </h1>
-            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              We're building the future of personal health management, powered by AI and guided by science.
-            </p>
-          </motion.div>
-        </div>
+    <div>
+      {/* Hero with Background Image */}
+      <section className="relative min-h-[60vh] flex items-center justify-center overflow-hidden">
+        <HeroImage
+          src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=1920&q=80"
+          alt="About our team"
+          overlayOpacity={0.75}
+          className="absolute inset-0"
+        >
+          <div className="flex items-center justify-center min-h-[60vh] pt-16">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-white">
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+              >
+                <Badge className="mb-4" variant="secondary">{t('about.badge')}</Badge>
+                <h1 className="text-4xl sm:text-5xl font-bold mb-6">
+                  {t('about.heroTitle')}
+                  <span className="block gradient-text">{t('about.heroTitleHighlight')}</span>
+                </h1>
+                <p className="text-lg text-white/70 max-w-2xl mx-auto">
+                  {t('about.heroSubtitle')}
+                </p>
+              </motion.div>
+            </div>
+          </div>
+        </HeroImage>
       </section>
 
       {/* Story */}
       <section className="py-24">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="prose prose-lg dark:prose-invert mx-auto">
-            <h2 className="text-3xl font-bold mb-6 text-center">Our Story</h2>
+            <h2 className="text-3xl font-bold mb-6 text-center">{t('about.story.title')}</h2>
             <p className="text-muted-foreground">
-              GreenoFig was born from a simple observation: while health information is more abundant than ever, personalized guidance remains out of reach for most people. Traditional nutritionists and personal trainers are expensive, and generic advice often fails to account for individual needs.
+              {t('about.story.p1')}
             </p>
             <p className="text-muted-foreground">
-              Our founder, Michael Chen, experienced this firsthand when trying to manage his health while working demanding hours in tech. He envisioned a platform that could provide the same quality of personalized health guidance that the wealthy receive, but accessible to everyone.
+              {t('about.story.p2')}
             </p>
             <p className="text-muted-foreground">
-              Today, GreenoFig combines cutting-edge AI technology with evidence-based health science to provide personalized nutrition, fitness, and wellness guidance to users worldwide. Our platform learns from each interaction, continuously improving its recommendations to help you achieve your unique health goals.
+              {t('about.story.p3')}
             </p>
           </div>
         </div>
@@ -100,8 +98,8 @@ export default function About() {
       <section className="py-24 bg-card/50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <h2 className="text-3xl font-bold mb-4">Our Values</h2>
-            <p className="text-muted-foreground">The principles that guide everything we do</p>
+            <h2 className="text-3xl font-bold mb-4">{t('about.values.title')}</h2>
+            <p className="text-muted-foreground">{t('about.values.subtitle')}</p>
           </div>
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {values.map((value, index) => (
@@ -131,8 +129,8 @@ export default function About() {
       <section className="py-24">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <h2 className="text-3xl font-bold mb-4">Our Journey</h2>
-            <p className="text-muted-foreground">Key milestones in our growth</p>
+            <h2 className="text-3xl font-bold mb-4">{t('about.journey.title')}</h2>
+            <p className="text-muted-foreground">{t('about.journey.subtitle')}</p>
           </div>
           <div className="space-y-8">
             {milestones.map((milestone, index) => (
@@ -160,8 +158,8 @@ export default function About() {
       <section className="py-24 bg-card/50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <h2 className="text-3xl font-bold mb-4">Meet Our Team</h2>
-            <p className="text-muted-foreground">The passionate people behind GreenoFig</p>
+            <h2 className="text-3xl font-bold mb-4">{t('about.team.title')}</h2>
+            <p className="text-muted-foreground">{t('about.team.subtitle')}</p>
           </div>
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {team.map((member, index) => (

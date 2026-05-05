@@ -1,8 +1,10 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Menu, X, Sun, Moon, User, LogOut, Settings, LayoutDashboard } from 'lucide-react'
+import { Menu, X, Sun, Moon, User, LogOut, Settings, LayoutDashboard, Globe } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
+import { useTheme } from '@/contexts/ThemeContext'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -14,21 +16,24 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 
-const navLinks = [
-  { name: 'Home', path: '/' },
-  { name: 'Features', path: '/features' },
-  { name: 'Pricing', path: '/pricing' },
-  { name: 'Blog', path: '/blog' },
-  { name: 'Contact', path: '/contact' },
+const navLinkKeys = [
+  { key: 'home', path: '/' },
+  { key: 'features', path: '/features' },
+  { key: 'pricing', path: '/pricing' },
+  { key: 'reviews', path: '/reviews' },
+  { key: 'blog', path: '/blog' },
+  { key: 'contact', path: '/contact' },
 ]
 
 export function Navbar() {
+  const { t, i18n } = useTranslation()
   const [isOpen, setIsOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
-  const [theme, setTheme] = useState('dark')
+  const mobileMenuRef = useRef(null)
   const location = useLocation()
   const navigate = useNavigate()
   const { user, userProfile, signOut } = useAuth()
+  const { theme, toggleTheme } = useTheme()
 
   useEffect(() => {
     const handleScroll = () => {
@@ -39,16 +44,18 @@ export function Navbar() {
   }, [])
 
   useEffect(() => {
-    const savedTheme = localStorage.getItem('greenofig-theme') || 'dark'
-    setTheme(savedTheme)
-    document.documentElement.classList.toggle('dark', savedTheme === 'dark')
-  }, [])
+    const handleClickOutside = (e) => {
+      if (isOpen && mobileMenuRef.current && !mobileMenuRef.current.contains(e.target)) {
+        setIsOpen(false)
+      }
+    }
+    document.addEventListener('click', handleClickOutside)
+    return () => document.removeEventListener('click', handleClickOutside)
+  }, [isOpen])
 
-  const toggleTheme = () => {
-    const newTheme = theme === 'dark' ? 'light' : 'dark'
-    setTheme(newTheme)
-    localStorage.setItem('greenofig-theme', newTheme)
-    document.documentElement.classList.toggle('dark', newTheme === 'dark')
+  const toggleLanguage = () => {
+    const newLang = i18n.language === 'en' ? 'ar' : 'en'
+    i18n.changeLanguage(newLang)
   }
 
   const handleSignOut = async () => {
@@ -83,8 +90,8 @@ export function Navbar() {
           </Link>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center space-x-8">
-            {navLinks.map((link) => (
+          <div className="hidden md:flex items-center space-x-8 rtl:space-x-reverse">
+            {navLinkKeys.map((link) => (
               <Link
                 key={link.path}
                 to={link.path}
@@ -94,13 +101,22 @@ export function Navbar() {
                     : 'text-muted-foreground'
                 }`}
               >
-                {link.name}
+                {t(`nav.${link.key}`)}
               </Link>
             ))}
           </div>
 
           {/* Right side */}
-          <div className="hidden md:flex items-center space-x-4">
+          <div className="hidden md:flex items-center space-x-4 rtl:space-x-reverse">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={toggleLanguage}
+              className="rounded-full"
+              title={i18n.language === 'en' ? 'Switch to Arabic' : 'التبديل إلى الإنجليزية'}
+            >
+              <Globe className="h-5 w-5" />
+            </Button>
             <Button
               variant="ghost"
               size="icon"
@@ -135,34 +151,42 @@ export function Navbar() {
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={() => navigate(getDashboardPath())}>
-                    <LayoutDashboard className="mr-2 h-4 w-4" />
-                    Dashboard
+                    <LayoutDashboard className="me-2 h-4 w-4" />
+                    {t('nav.dashboard')}
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => navigate('/app/settings')}>
-                    <Settings className="mr-2 h-4 w-4" />
-                    Settings
+                    <Settings className="me-2 h-4 w-4" />
+                    {t('nav.settings')}
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={handleSignOut}>
-                    <LogOut className="mr-2 h-4 w-4" />
-                    Log out
+                    <LogOut className="me-2 h-4 w-4" />
+                    {t('nav.logOut')}
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
-              <div className="flex items-center space-x-3">
+              <div className="flex items-center space-x-3 rtl:space-x-reverse">
                 <Button variant="ghost" asChild>
-                  <Link to="/login">Sign In</Link>
+                  <Link to="/login">{t('nav.signIn')}</Link>
                 </Button>
                 <Button asChild>
-                  <Link to="/signup">Get Started</Link>
+                  <Link to="/signup">{t('nav.getStarted')}</Link>
                 </Button>
               </div>
             )}
           </div>
 
           {/* Mobile menu button */}
-          <div className="md:hidden flex items-center space-x-2">
+          <div className="md:hidden flex items-center space-x-2 rtl:space-x-reverse" ref={mobileMenuRef}>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={toggleLanguage}
+              className="rounded-full"
+            >
+              <Globe className="h-5 w-5" />
+            </Button>
             <Button
               variant="ghost"
               size="icon"
@@ -178,7 +202,10 @@ export function Navbar() {
             <Button
               variant="ghost"
               size="icon"
-              onClick={() => setIsOpen(!isOpen)}
+              onClick={(e) => {
+                e.stopPropagation()
+                setIsOpen(!isOpen)
+              }}
             >
               {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
             </Button>
@@ -196,7 +223,7 @@ export function Navbar() {
             className="md:hidden glass-effect border-t border-border"
           >
             <div className="px-4 py-4 space-y-2">
-              {navLinks.map((link) => (
+              {navLinkKeys.map((link) => (
                 <Link
                   key={link.path}
                   to={link.path}
@@ -207,7 +234,7 @@ export function Navbar() {
                       : 'text-foreground hover:bg-accent'
                   }`}
                 >
-                  {link.name}
+                  {t(`nav.${link.key}`)}
                 </Link>
               ))}
               <div className="pt-4 border-t border-border space-y-2">
@@ -218,16 +245,16 @@ export function Navbar() {
                       onClick={() => setIsOpen(false)}
                       className="block px-4 py-2 rounded-lg text-sm font-medium hover:bg-accent"
                     >
-                      Dashboard
+                      {t('nav.dashboard')}
                     </Link>
                     <button
                       onClick={() => {
                         handleSignOut()
                         setIsOpen(false)
                       }}
-                      className="w-full text-left px-4 py-2 rounded-lg text-sm font-medium hover:bg-accent text-destructive"
+                      className="w-full text-start px-4 py-2 rounded-lg text-sm font-medium hover:bg-accent text-destructive"
                     >
-                      Log out
+                      {t('nav.logOut')}
                     </button>
                   </>
                 ) : (
@@ -237,14 +264,14 @@ export function Navbar() {
                       onClick={() => setIsOpen(false)}
                       className="block px-4 py-2 rounded-lg text-sm font-medium hover:bg-accent"
                     >
-                      Sign In
+                      {t('nav.signIn')}
                     </Link>
                     <Link
                       to="/signup"
                       onClick={() => setIsOpen(false)}
                       className="block px-4 py-2 rounded-lg text-sm font-medium bg-primary text-primary-foreground text-center"
                     >
-                      Get Started
+                      {t('nav.getStarted')}
                     </Link>
                   </>
                 )}

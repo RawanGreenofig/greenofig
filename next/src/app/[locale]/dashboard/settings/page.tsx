@@ -1,0 +1,1429 @@
+'use client'
+
+import { useEffect, useState } from 'react'
+import { useTranslations } from 'next-intl'
+import {
+  User,
+  Target,
+  Bell,
+  CreditCard,
+  Shield,
+  Camera,
+  Check,
+  Sparkles,
+  Plus,
+  X,
+  Download,
+  AlertTriangle,
+  LogOut,
+  KeyRound,
+  Languages,
+  Trash2,
+  ArrowRight,
+  Eye,
+  type LucideIcon,
+} from 'lucide-react'
+import { useUser } from '@/lib/hooks/useUser'
+import { getBrowserSupabase } from '@/lib/supabase/client'
+
+type TabKey =
+  | 'profile'
+  | 'goals'
+  | 'notifications'
+  | 'subscription'
+  | 'account'
+
+type Channels = { email: boolean; push: boolean; sms: boolean }
+type NotifTopic =
+  | 'dailyReminders'
+  | 'mealPlan'
+  | 'bookings'
+  | 'messages'
+  | 'community'
+  | 'marketing'
+
+const NOTIF_TOPICS: NotifTopic[] = [
+  'dailyReminders',
+  'mealPlan',
+  'bookings',
+  'messages',
+  'community',
+  'marketing',
+]
+
+interface NotifPrefs {
+  channels: Record<NotifTopic, Channels>
+  quietHours: { enabled: boolean; from: string; to: string }
+}
+
+interface ProfileForm {
+  fullName: string
+  phone: string
+  dob: string
+  gender: 'female' | 'male' | 'preferNotToSay' | 'other' | ''
+  heightCm: string
+  weightKg: string
+}
+
+interface GoalsForm {
+  primaryGoal: 'lose_weight' | 'build_muscle' | 'maintain' | 'energy' | 'medical' | ''
+  targetWeightKg: string
+  activityLevel: 'sedentary' | 'light' | 'moderate' | 'active' | 'athlete' | ''
+  preferences: Set<string>
+  allergies: string[]
+  conditions: string[]
+}
+
+const TABS: { key: TabKey; Icon: LucideIcon }[] = [
+  { key: 'profile',       Icon: User },
+  { key: 'goals',          Icon: Target },
+  { key: 'notifications',  Icon: Bell },
+  { key: 'subscription',   Icon: CreditCard },
+  { key: 'account',        Icon: Shield },
+]
+
+export default function SettingsPage() {
+  const t = useTranslations('settings')
+  const { profile, tier } = useUser()
+  const [tab, setTab] = useState<TabKey>('profile')
+  const [dirty, setDirty] = useState(false)
+  const [saveState, setSaveState] = useState<'idle' | 'saving' | 'saved'>('idle')
+
+  // Hydrate forms from `profile` once
+  const [profileForm, setProfileForm] = useState<ProfileForm>({
+    fullName: '',
+    phone: '',
+    dob: '',
+    gender: '',
+    heightCm: '',
+    weightKg: '',
+  })
+  const [goals, setGoals] = useState<GoalsForm>({
+    primaryGoal: '',
+    targetWeightKg: '',
+    activityLevel: '',
+    preferences: new Set(),
+    allergies: [],
+    conditions: [],
+  })
+  const [notif, setNotif] = useState<NotifPrefs>(() => ({
+    channels: NOTIF_TOPICS.reduce(
+      (acc, topic) => ({
+        ...acc,
+        [topic]: {
+          email: topic !== 'marketing',
+          push: ['dailyReminders', 'bookings', 'messages'].includes(topic),
+          sms: false,
+        },
+      }),
+      {} as Record<NotifTopic, Channels>,
+    ),
+    quietHours: { enabled: true, from: '22:00', to: '07:00' },
+  }))
+
+  useEffect(() => {
+    if (!profile) return
+    setProfileForm({
+      fullName: profile.full_name ?? '',
+      phone: profile.phone ?? '',
+      dob: profile.date_of_birth ?? '',
+      gender: (profile.gender as ProfileForm['gender']) ?? '',
+      heightCm: profile.height_cm ? String(profile.height_cm) : '',
+      weightKg: profile.weight_kg ? String(profile.weight_kg) : '',
+    })
+    setGoals({
+      primaryGoal: (profile.primary_goal as GoalsForm['primaryGoal']) ?? '',
+      targetWeightKg: profile.target_weight_kg
+        ? String(profile.target_weight_kg)
+        : '',
+      activityLevel:
+        (profile.activity_level as GoalsForm['activityLevel']) ?? '',
+      preferences: new Set(profile.dietary_preferences ?? []),
+      allergies: profile.allergies ?? [],
+      conditions: profile.health_conditions ?? [],
+    })
+  }, [profile])
+
+  const markDirty = () => {
+    if (!dirty) setDirty(true)
+    if (saveState === 'saved') setSaveState('idle')
+  }
+
+  const save = () => {
+    setSaveState('saving')
+
+    void (async () => {
+      const supabase = getBrowserSupabase()
+      if (supabase && profile?.id) {
+        const patch: Record<string, unknown> = {}
+        // Profile pane fields
+        if (tab === 'profile') {
+          patch.full_name = profileForm.fullName
+          patch.phone = profileForm.phone
+          patch.date_of_birth = profileForm.dob || null
+          patch.gender = profileForm.gender || null
+          patch.height_cm = profileForm.heightCm ? Number(profileForm.heightCm) : null
+          patch.weight_kg = profileForm.weightKg ? Number(profileForm.weightKg) : null
+        }
+        if (tab === 'goals') {
+          patch.primary_goal = goals.primaryGoal || null
+          patch.target_weight_kg = goals.targetWeightKg ? Number(goals.targetWeightKg) : null
+          patch.activity_level = goals.activityLevel || null
+          patch.dietary_preferences = Array.from(goals.preferences)
+          patch.allergies = goals.allergies
+          patch.health_conditions = goals.conditions
+        }
+        if (Object.keys(patch).length > 0) {
+          await supabase
+            .from('profiles')
+            .update(patch as never)
+            .eq('id', profile.id)
+        }
+      }
+      setSaveState('saved')
+      setDirty(false)
+    })()
+  }
+
+  return (
+    <div className="px-4 md:px-8 py-6 md:py-8 max-w-screen-xl mx-auto space-y-6">
+      <header>
+        <h1
+          className="font-display font-bold text-fg-1 tracking-tight"
+          style={{ fontSize: 'clamp(28px, 4vw, 40px)', lineHeight: 1.1 }}
+        >
+          {t('title')}
+        </h1>
+        <p className="mt-2 text-sm md:text-base text-fg-2">{t('subtitle')}</p>
+      </header>
+
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        {/* Sidebar tabs (lg+) / horizontal scroll (sm) */}
+        <nav
+          aria-label="Settings tabs"
+          className="lg:col-span-3 flex lg:flex-col gap-1 overflow-x-auto -mx-1 px-1 lg:overflow-visible lg:mx-0 lg:px-0 pb-1 lg:pb-0"
+        >
+          {TABS.map(({ key, Icon }) => {
+            const active = tab === key
+            return (
+              <button
+                key={key}
+                type="button"
+                onClick={() => setTab(key)}
+                className={`shrink-0 inline-flex items-center gap-2.5 rounded-lg h-10 px-3 text-sm font-medium transition-colors lg:w-full lg:text-start ${
+                  active
+                    ? 'bg-primary/15 text-lime-400'
+                    : 'text-fg-2 hover:text-fg-1 hover:bg-surface'
+                }`}
+              >
+                <Icon className="w-4 h-4 shrink-0" strokeWidth={1.75} />
+                {t(`tabs.${key}` as 'tabs.profile')}
+              </button>
+            )
+          })}
+        </nav>
+
+        {/* Content */}
+        <div className="lg:col-span-9 space-y-6">
+          {tab === 'profile' && (
+            <ProfilePane
+              t={t}
+              email={profile?.id ? `${profile.id.slice(0, 8)}@greenofig.local` : ''}
+              form={profileForm}
+              onChange={(f) => {
+                setProfileForm(f)
+                markDirty()
+              }}
+            />
+          )}
+
+          {tab === 'goals' && (
+            <GoalsPane
+              t={t}
+              goals={goals}
+              onChange={(g) => {
+                setGoals(g)
+                markDirty()
+              }}
+            />
+          )}
+
+          {tab === 'notifications' && (
+            <NotifPane
+              t={t}
+              prefs={notif}
+              onChange={(p) => {
+                setNotif(p)
+                markDirty()
+              }}
+            />
+          )}
+
+          {tab === 'subscription' && (
+            <SubscriptionPane t={t} tier={tier ?? 'free'} />
+          )}
+
+          {tab === 'account' && (
+            <AccountPane
+              t={t}
+              email={profile?.id ? `${profile.id.slice(0, 8)}@greenofig.local` : ''}
+            />
+          )}
+        </div>
+      </div>
+
+      {/* Sticky save bar */}
+      {tab !== 'subscription' && tab !== 'account' && (
+        <SaveBar
+          t={t}
+          dirty={dirty}
+          state={saveState}
+          onSave={save}
+          onDiscard={() => {
+            setDirty(false)
+            setSaveState('idle')
+          }}
+        />
+      )}
+    </div>
+  )
+}
+
+/* ── Tab panes ──────────────────────────────────────────────────── */
+
+function ProfilePane({
+  t,
+  email,
+  form,
+  onChange,
+}: {
+  t: ReturnType<typeof useTranslations>
+  email: string
+  form: ProfileForm
+  onChange: (f: ProfileForm) => void
+}) {
+  const set = <K extends keyof ProfileForm>(k: K, v: ProfileForm[K]) =>
+    onChange({ ...form, [k]: v })
+
+  return (
+    <div className="space-y-6">
+      <Section title={t('profile.sectionPhoto')}>
+        <div className="flex flex-wrap items-center gap-5">
+          <span
+            className="w-20 h-20 rounded-full bg-gradient-to-br from-lime-400 to-lime-600 text-bg inline-flex items-center justify-center font-display text-2xl font-bold"
+            aria-hidden
+          >
+            {form.fullName ? initialsOf(form.fullName) : <Camera className="w-7 h-7" strokeWidth={1.5} />}
+          </span>
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              className="inline-flex items-center gap-1.5 rounded-pill bg-primary/15 text-lime-400 h-9 px-4 text-xs font-semibold hover:bg-primary/25"
+            >
+              <Plus className="w-3.5 h-3.5" strokeWidth={2} />
+              {t('profile.uploadPhoto')}
+            </button>
+            <button
+              type="button"
+              className="inline-flex items-center gap-1.5 rounded-pill bg-surface-raised border border-border h-9 px-4 text-xs font-medium text-fg-2 hover:text-fg-1"
+            >
+              {t('profile.removePhoto')}
+            </button>
+          </div>
+          <p className="text-xs text-fg-3 ms-auto">{t('profile.photoHint')}</p>
+        </div>
+      </Section>
+
+      <Section title={t('profile.sectionPersonal')}>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <Field label={t('profile.fullName')}>
+            <TextInput
+              value={form.fullName}
+              onChange={(v) => set('fullName', v)}
+              placeholder={t('profile.fullNamePh')}
+            />
+          </Field>
+          <Field label={t('profile.email')} hint={t('profile.emailReadOnly')}>
+            <TextInput value={email} onChange={() => {}} readOnly />
+          </Field>
+          <Field label={t('profile.phone')}>
+            <TextInput
+              value={form.phone}
+              onChange={(v) => set('phone', v)}
+              placeholder={t('profile.phonePh')}
+              ltr
+            />
+          </Field>
+          <Field label={t('profile.dob')}>
+            <TextInput
+              type="date"
+              value={form.dob}
+              onChange={(v) => set('dob', v)}
+              ltr
+            />
+          </Field>
+          <Field label={t('profile.gender')}>
+            <SelectInput
+              value={form.gender}
+              onChange={(v) => set('gender', v as ProfileForm['gender'])}
+              options={[
+                ['', '—'],
+                ['female', t('profile.genderOptions.female')],
+                ['male', t('profile.genderOptions.male')],
+                ['preferNotToSay', t('profile.genderOptions.preferNotToSay')],
+                ['other', t('profile.genderOptions.other')],
+              ]}
+            />
+          </Field>
+        </div>
+      </Section>
+
+      <Section title={t('profile.sectionBody')}>
+        <div className="grid grid-cols-2 gap-4">
+          <Field label={t('profile.height')}>
+            <TextInput
+              type="number"
+              value={form.heightCm}
+              onChange={(v) => set('heightCm', v)}
+              ltr
+              suffix="cm"
+            />
+          </Field>
+          <Field label={t('profile.weight')}>
+            <TextInput
+              type="number"
+              value={form.weightKg}
+              onChange={(v) => set('weightKg', v)}
+              ltr
+              suffix="kg"
+            />
+          </Field>
+        </div>
+      </Section>
+    </div>
+  )
+}
+
+function GoalsPane({
+  t,
+  goals,
+  onChange,
+}: {
+  t: ReturnType<typeof useTranslations>
+  goals: GoalsForm
+  onChange: (g: GoalsForm) => void
+}) {
+  const togglePref = (key: string) => {
+    const next = new Set(goals.preferences)
+    if (next.has(key)) next.delete(key)
+    else next.add(key)
+    onChange({ ...goals, preferences: next })
+  }
+
+  const PRIMARY_GOALS: GoalsForm['primaryGoal'][] = [
+    'lose_weight',
+    'build_muscle',
+    'maintain',
+    'energy',
+    'medical',
+  ]
+
+  const ACTIVITY: GoalsForm['activityLevel'][] = [
+    'sedentary',
+    'light',
+    'moderate',
+    'active',
+    'athlete',
+  ]
+
+  const PREFS = [
+    'vegan',
+    'vegetarian',
+    'pescatarian',
+    'keto',
+    'lowCarb',
+    'glutenFree',
+    'dairyFree',
+    'halal',
+    'mediterranean',
+  ]
+
+  return (
+    <div className="space-y-6">
+      <Section title={t('goals.sectionPrimary')}>
+        <p className="text-sm text-fg-2 mb-3">{t('goals.primaryGoal')}</p>
+        <div className="grid grid-cols-2 lg:grid-cols-3 gap-2">
+          {PRIMARY_GOALS.map((g) => (
+            <button
+              key={g}
+              type="button"
+              onClick={() => onChange({ ...goals, primaryGoal: g })}
+              className={`rounded-lg border p-3 text-start text-sm transition-colors ${
+                goals.primaryGoal === g
+                  ? 'border-primary/60 bg-primary/10 text-fg-1'
+                  : 'border-border bg-surface text-fg-2 hover:border-primary/40 hover:text-fg-1'
+              }`}
+            >
+              {t(`goals.primaryOptions.${g}` as 'goals.primaryOptions.lose_weight')}
+            </button>
+          ))}
+        </div>
+        <div className="mt-4 max-w-xs">
+          <Field label={t('goals.targetWeight')}>
+            <TextInput
+              type="number"
+              value={goals.targetWeightKg}
+              onChange={(v) => onChange({ ...goals, targetWeightKg: v })}
+              ltr
+              suffix="kg"
+            />
+          </Field>
+        </div>
+      </Section>
+
+      <Section title={t('goals.sectionActivity')}>
+        <p className="text-sm text-fg-2 mb-3">{t('goals.activityLevel')}</p>
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
+          {ACTIVITY.map((a) => (
+            <button
+              key={a}
+              type="button"
+              onClick={() => onChange({ ...goals, activityLevel: a })}
+              className={`rounded-lg border h-12 px-3 text-sm transition-colors ${
+                goals.activityLevel === a
+                  ? 'border-primary/60 bg-primary/10 text-fg-1'
+                  : 'border-border bg-surface text-fg-2 hover:border-primary/40 hover:text-fg-1'
+              }`}
+            >
+              {t(`goals.activityOptions.${a}` as 'goals.activityOptions.sedentary')}
+            </button>
+          ))}
+        </div>
+      </Section>
+
+      <Section title={t('goals.sectionDiet')}>
+        <p className="text-sm text-fg-2 mb-3">{t('goals.preferences')}</p>
+        <div className="flex flex-wrap gap-2 mb-6">
+          {PREFS.map((p) => {
+            const on = goals.preferences.has(p)
+            return (
+              <button
+                key={p}
+                type="button"
+                onClick={() => togglePref(p)}
+                className={`rounded-pill h-8 px-3.5 text-xs font-medium transition-colors ${
+                  on
+                    ? 'bg-primary/20 text-lime-400 border border-primary/40'
+                    : 'bg-surface-raised border border-border text-fg-2 hover:border-primary/40'
+                }`}
+              >
+                {t(`goals.preferenceOptions.${p}` as 'goals.preferenceOptions.vegan')}
+              </button>
+            )
+          })}
+        </div>
+
+        <Field label={t('goals.allergies')}>
+          <ChipInput
+            values={goals.allergies}
+            placeholder={t('goals.allergiesPh')}
+            onChange={(v) => onChange({ ...goals, allergies: v })}
+          />
+        </Field>
+
+        <div className="mt-4">
+          <Field label={t('goals.conditions')}>
+            <ChipInput
+              values={goals.conditions}
+              placeholder={t('goals.conditionsPh')}
+              onChange={(v) => onChange({ ...goals, conditions: v })}
+            />
+          </Field>
+        </div>
+      </Section>
+    </div>
+  )
+}
+
+function NotifPane({
+  t,
+  prefs,
+  onChange,
+}: {
+  t: ReturnType<typeof useTranslations>
+  prefs: NotifPrefs
+  onChange: (p: NotifPrefs) => void
+}) {
+  const setChannel = (topic: NotifTopic, channel: keyof Channels, on: boolean) => {
+    onChange({
+      ...prefs,
+      channels: {
+        ...prefs.channels,
+        [topic]: { ...prefs.channels[topic], [channel]: on },
+      },
+    })
+  }
+  return (
+    <div className="space-y-6">
+      <Section title={t('notif.sectionEmail')}>
+        <ul className="rounded-xl border border-border bg-surface divide-y divide-border">
+          {NOTIF_TOPICS.map((topic) => {
+            const ch = prefs.channels[topic]
+            return (
+              <li
+                key={topic}
+                className="flex flex-wrap items-center gap-4 px-5 py-4"
+              >
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-fg-1">
+                    {t(`notif.topics.${topic}` as 'notif.topics.dailyReminders')}
+                  </p>
+                  <p className="mt-0.5 text-xs text-fg-3 leading-relaxed">
+                    {t(
+                      `notif.topics.${topic}Body` as 'notif.topics.dailyRemindersBody',
+                    )}
+                  </p>
+                </div>
+                <div className="flex items-center gap-3 shrink-0">
+                  <ChannelToggle
+                    label={t('notif.channelEmail')}
+                    on={ch.email}
+                    onChange={(v) => setChannel(topic, 'email', v)}
+                  />
+                  <ChannelToggle
+                    label={t('notif.channelPush')}
+                    on={ch.push}
+                    onChange={(v) => setChannel(topic, 'push', v)}
+                  />
+                </div>
+              </li>
+            )
+          })}
+        </ul>
+      </Section>
+
+      <Section title={t('notif.quietHours')}>
+        <div className="rounded-xl border border-border bg-surface p-5 flex flex-wrap items-center gap-4">
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-medium text-fg-1">
+              {t('notif.quietHours')}
+            </p>
+            <p className="mt-0.5 text-xs text-fg-3 leading-relaxed">
+              {t('notif.quietHoursBody')}
+            </p>
+          </div>
+          <Switch
+            on={prefs.quietHours.enabled}
+            onChange={(v) =>
+              onChange({
+                ...prefs,
+                quietHours: { ...prefs.quietHours, enabled: v },
+              })
+            }
+          />
+          {prefs.quietHours.enabled && (
+            <div className="w-full flex items-center gap-3">
+              <Field label={t('notif.from')} className="flex-1">
+                <TextInput
+                  type="time"
+                  value={prefs.quietHours.from}
+                  onChange={(v) =>
+                    onChange({
+                      ...prefs,
+                      quietHours: { ...prefs.quietHours, from: v },
+                    })
+                  }
+                  ltr
+                />
+              </Field>
+              <Field label={t('notif.to')} className="flex-1">
+                <TextInput
+                  type="time"
+                  value={prefs.quietHours.to}
+                  onChange={(v) =>
+                    onChange({
+                      ...prefs,
+                      quietHours: { ...prefs.quietHours, to: v },
+                    })
+                  }
+                  ltr
+                />
+              </Field>
+            </div>
+          )}
+        </div>
+      </Section>
+    </div>
+  )
+}
+
+function SubscriptionPane({
+  t,
+  tier,
+}: {
+  t: ReturnType<typeof useTranslations>
+  tier: string
+}) {
+  const tCommon = useTranslations('tiers')
+  const benefitsKey = `${tier}Benefits` as
+    | 'freeBenefits'
+    | 'basicBenefits'
+    | 'premiumBenefits'
+    | 'vipBenefits'
+  const isFree = tier === 'free'
+  const renewISO = '2026-06-03'
+  const [confirmCancel, setConfirmCancel] = useState(false)
+  return (
+    <div className="space-y-6">
+      <article className="rounded-xl border border-primary/30 bg-gradient-to-b from-primary/15 to-transparent p-5 md:p-6">
+        <div className="flex items-start justify-between gap-4 flex-wrap">
+          <div>
+            <p className="text-xs uppercase tracking-eyebrow text-fg-3 font-semibold">
+              {t('sub.currentPlan')}
+            </p>
+            <p className="mt-1 font-display text-2xl md:text-3xl font-bold text-fg-1 tracking-tight">
+              {tCommon(`${tier as 'free'}.name`)}
+            </p>
+            {!isFree && (
+              <p className="mt-1 text-xs text-fg-3 font-mono" dir="ltr">
+                {t('sub.renewsOn', {
+                  date: new Date(renewISO).toLocaleDateString(undefined, {
+                    month: 'short',
+                    day: 'numeric',
+                    year: 'numeric',
+                  }),
+                })}
+              </p>
+            )}
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              className="inline-flex items-center gap-1.5 rounded-pill bg-gradient-to-b from-lime-400 to-lime-600 text-bg font-semibold h-10 px-5 text-sm shadow-lime-glow border border-lime-600/60 hover:-translate-y-px transition-transform"
+            >
+              <Sparkles className="w-3.5 h-3.5" strokeWidth={2} />
+              {t('sub.upgrade')}
+            </button>
+            {!isFree && (
+              <button
+                type="button"
+                onClick={() => setConfirmCancel(true)}
+                className="inline-flex items-center gap-1.5 rounded-pill bg-surface-raised border border-border h-10 px-4 text-sm font-medium text-fg-2 hover:text-fg-1"
+              >
+                {t('sub.cancelPlan')}
+              </button>
+            )}
+          </div>
+        </div>
+        <div className="mt-5 pt-5 border-t border-primary/20">
+          <p className="text-xs uppercase tracking-eyebrow text-fg-3 font-semibold mb-2">
+            {t('sub.tierBenefits')}
+          </p>
+          <p className="text-sm text-fg-1">
+            {isFree ? t('sub.freePlanNote') : t(`sub.${benefitsKey}`)}
+          </p>
+        </div>
+      </article>
+
+      <Section title={t('sub.paymentMethod')}>
+        {isFree ? (
+          <div className="rounded-xl border border-dashed border-border bg-surface/50 p-6 text-center text-sm text-fg-3">
+            {t('sub.noPaymentMethod')}
+          </div>
+        ) : (
+          <div className="rounded-xl border border-border bg-surface p-5 flex items-center gap-4">
+            <span
+              className="w-12 h-9 rounded-md bg-gradient-to-br from-fg-2/20 to-bg-deeper border border-border inline-flex items-center justify-center font-mono text-[10px] uppercase tracking-eyebrow text-fg-3 font-bold"
+              aria-hidden
+            >
+              VISA
+            </span>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-mono text-fg-1" dir="ltr">
+                •••• •••• •••• 4242
+              </p>
+              <p className="text-xs text-fg-3 mt-0.5" dir="ltr">
+                Exp 04 / 28
+              </p>
+            </div>
+            <button
+              type="button"
+              className="inline-flex items-center gap-1.5 rounded-pill bg-surface-raised border border-border h-9 px-4 text-xs font-semibold text-fg-1 hover:border-primary/40"
+            >
+              {t('sub.updateCard')}
+            </button>
+          </div>
+        )}
+      </Section>
+
+      <Section title={t('sub.invoices')}>
+        {isFree ? (
+          <div className="rounded-xl border border-dashed border-border bg-surface/50 p-6 text-center text-sm text-fg-3">
+            {t('sub.noInvoices')}
+          </div>
+        ) : (
+          <ul className="rounded-xl border border-border bg-surface divide-y divide-border">
+            {[
+              { id: 'INV-20480', date: '2026-05-03', amount: 15 },
+              { id: 'INV-20422', date: '2026-04-03', amount: 15 },
+              { id: 'INV-20371', date: '2026-03-03', amount: 15 },
+            ].map((inv) => (
+              <li
+                key={inv.id}
+                className="flex items-center justify-between gap-3 px-5 py-3"
+              >
+                <div className="min-w-0">
+                  <p className="text-sm font-mono text-fg-1" dir="ltr">
+                    {inv.id}
+                  </p>
+                  <p className="text-xs text-fg-3 font-mono" dir="ltr">
+                    {new Date(inv.date).toLocaleDateString(undefined, {
+                      month: 'short',
+                      day: 'numeric',
+                      year: 'numeric',
+                    })}
+                  </p>
+                </div>
+                <p className="font-mono text-sm text-fg-1" dir="ltr">
+                  {inv.amount} JOD
+                </p>
+                <div className="flex items-center gap-1">
+                  <button
+                    type="button"
+                    aria-label={t('sub.viewInvoice')}
+                    className="w-8 h-8 rounded-md inline-flex items-center justify-center text-fg-3 hover:text-fg-1 hover:bg-surface-raised"
+                  >
+                    <Eye className="w-3.5 h-3.5" strokeWidth={1.75} />
+                  </button>
+                  <button
+                    type="button"
+                    aria-label={t('sub.downloadAll')}
+                    className="w-8 h-8 rounded-md inline-flex items-center justify-center text-fg-3 hover:text-fg-1 hover:bg-surface-raised"
+                  >
+                    <Download className="w-3.5 h-3.5" strokeWidth={1.75} />
+                  </button>
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+      </Section>
+
+      {confirmCancel && (
+        <ConfirmDialog
+          title={t('sub.cancelConfirm')}
+          body={t('sub.cancelConfirmBody')}
+          cancelLabel={t('sub.keepPlan')}
+          confirmLabel={t('sub.yesCancel')}
+          confirmTone="warn"
+          onCancel={() => setConfirmCancel(false)}
+          onConfirm={async () => {
+            setConfirmCancel(false)
+            try {
+              const res = await fetch('/api/stripe/portal', { method: 'POST' })
+              if (res.ok) {
+                const { url } = (await res.json()) as { url: string }
+                if (url) window.location.href = url
+              }
+            } catch {
+              /* ignore — user can retry from the same button */
+            }
+          }}
+        />
+      )}
+    </div>
+  )
+}
+
+function AccountPane({
+  t,
+  email,
+}: {
+  t: ReturnType<typeof useTranslations>
+  email: string
+}) {
+  const [twoFa, setTwoFa] = useState(false)
+  const [units, setUnits] = useState<'metric' | 'imperial'>('metric')
+  const [language, setLanguage] = useState<'en' | 'ar'>('en')
+  const [confirmDel, setConfirmDel] = useState(false)
+  const [delEmail, setDelEmail] = useState('')
+  const canDelete = delEmail.trim().toLowerCase() === email.toLowerCase()
+
+  return (
+    <div className="space-y-6">
+      <Section title={t('account.sectionLanguage')}>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <Field label={t('account.language')}>
+            <SelectInput
+              value={language}
+              onChange={(v) => setLanguage(v as 'en' | 'ar')}
+              options={[
+                ['en', t('account.languageEn')],
+                ['ar', t('account.languageAr')],
+              ]}
+              leftIcon={Languages}
+            />
+          </Field>
+          <Field label={t('account.units')}>
+            <SelectInput
+              value={units}
+              onChange={(v) => setUnits(v as 'metric' | 'imperial')}
+              options={[
+                ['metric', t('account.metric')],
+                ['imperial', t('account.imperial')],
+              ]}
+            />
+          </Field>
+          <Field label={t('account.timezone')}>
+            <TextInput
+              value="(GMT+03) Amman"
+              onChange={() => {}}
+              readOnly
+            />
+          </Field>
+        </div>
+      </Section>
+
+      <Section title={t('account.sectionSecurity')}>
+        <div className="rounded-xl border border-border bg-surface p-5 space-y-5">
+          <div>
+            <p className="text-sm font-medium text-fg-1 mb-3 inline-flex items-center gap-2">
+              <KeyRound className="w-4 h-4 text-fg-3" strokeWidth={1.75} />
+              {t('account.changePassword')}
+            </p>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              <PasswordInput placeholder={t('account.currentPassword')} />
+              <PasswordInput placeholder={t('account.newPassword')} />
+              <PasswordInput placeholder={t('account.confirmPassword')} />
+            </div>
+            <button
+              type="button"
+              className="mt-4 inline-flex items-center gap-1.5 rounded-pill bg-primary/15 text-lime-400 h-9 px-4 text-xs font-semibold hover:bg-primary/25"
+            >
+              {t('account.changePassword')}
+            </button>
+          </div>
+
+          <div className="pt-5 border-t border-border flex items-center justify-between gap-4 flex-wrap">
+            <div className="min-w-0">
+              <p className="text-sm font-medium text-fg-1">
+                {t('account.twoFa')}
+              </p>
+              <p className="mt-0.5 text-xs text-fg-3">
+                {twoFa ? t('account.twoFaOn') : t('account.twoFaOff')}
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setTwoFa((v) => !v)}
+              className={`inline-flex items-center gap-1.5 rounded-pill h-9 px-4 text-xs font-semibold transition-colors ${
+                twoFa
+                  ? 'bg-rose-500/15 text-rose-400 hover:bg-rose-500/25'
+                  : 'bg-primary/15 text-lime-400 hover:bg-primary/25'
+              }`}
+            >
+              {twoFa ? t('account.twoFaDisable') : t('account.twoFaEnable')}
+            </button>
+          </div>
+
+          <div className="pt-5 border-t border-border">
+            <p className="text-sm font-medium text-fg-1 mb-3">
+              {t('account.sessions')}
+            </p>
+            <div className="rounded-lg bg-bg-deeper/50 border border-border p-3 flex items-center gap-3">
+              <span
+                className="w-2 h-2 rounded-full bg-lime-400 shrink-0"
+                aria-hidden
+              />
+              <div className="flex-1 min-w-0">
+                <p className="text-sm text-fg-1">{t('account.currentSession')}</p>
+                <p className="text-xs text-fg-3 font-mono" dir="ltr">
+                  Chrome · Windows · Amman
+                </p>
+              </div>
+            </div>
+            <button
+              type="button"
+              className="mt-3 inline-flex items-center gap-1.5 rounded-pill bg-surface-raised border border-border h-9 px-4 text-xs font-medium text-fg-2 hover:text-fg-1"
+            >
+              <LogOut className="w-3.5 h-3.5" strokeWidth={1.75} />
+              {t('account.signOutAll')}
+            </button>
+          </div>
+        </div>
+      </Section>
+
+      <Section title={t('account.sectionData')}>
+        <div className="rounded-xl border border-border bg-surface p-5 flex flex-wrap items-center gap-4">
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-medium text-fg-1">
+              {t('account.exportData')}
+            </p>
+            <p className="mt-0.5 text-xs text-fg-3 leading-relaxed">
+              {t('account.exportDataBody')}
+            </p>
+          </div>
+          <button
+            type="button"
+            className="inline-flex items-center gap-1.5 rounded-pill bg-surface-raised border border-border h-9 px-4 text-xs font-semibold text-fg-1 hover:border-primary/40"
+          >
+            <Download className="w-3.5 h-3.5" strokeWidth={1.75} />
+            {t('account.exportDataCta')}
+          </button>
+        </div>
+      </Section>
+
+      <Section title={t('account.sectionDanger')} tone="danger">
+        <div className="rounded-xl border border-rose-500/30 bg-rose-500/5 p-5 flex flex-wrap items-start gap-4">
+          <span
+            className="shrink-0 w-10 h-10 rounded-lg inline-flex items-center justify-center"
+            style={{ background: 'rgb(244 63 94 / 0.12)', color: '#f43f5e' }}
+          >
+            <AlertTriangle className="w-4 h-4" strokeWidth={1.75} />
+          </span>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-medium text-fg-1">
+              {t('account.deleteAccount')}
+            </p>
+            <p className="mt-0.5 text-xs text-fg-3 leading-relaxed">
+              {t('account.deleteAccountBody')}
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => setConfirmDel(true)}
+            className="inline-flex items-center gap-1.5 rounded-pill bg-rose-500/15 text-rose-400 h-9 px-4 text-xs font-semibold hover:bg-rose-500/25"
+          >
+            <Trash2 className="w-3.5 h-3.5" strokeWidth={1.75} />
+            {t('account.deleteAccountCta')}
+          </button>
+        </div>
+      </Section>
+
+      {confirmDel && (
+        <ConfirmDialog
+          title={t('account.deleteConfirmTitle')}
+          body={t('account.deleteConfirmBody')}
+          cancelLabel={t('account.deleteCancel')}
+          confirmLabel={t('account.deleteConfirmCta')}
+          confirmTone="danger"
+          confirmDisabled={!canDelete}
+          onCancel={() => {
+            setConfirmDel(false)
+            setDelEmail('')
+          }}
+          onConfirm={() => {
+            setConfirmDel(false)
+            setDelEmail('')
+          }}
+        >
+          <input
+            type="email"
+            value={delEmail}
+            onChange={(e) => setDelEmail(e.target.value)}
+            placeholder={t('account.deleteConfirmInputPh')}
+            autoFocus
+            className="mt-4 w-full h-10 rounded-md bg-bg-deeper border border-border px-3 text-sm text-fg-1 placeholder-fg-3 focus:outline-none focus:border-rose-500 font-mono"
+            dir="ltr"
+          />
+        </ConfirmDialog>
+      )}
+    </div>
+  )
+}
+
+/* ── Reusable bits ──────────────────────────────────────────────── */
+
+function Section({
+  title,
+  tone,
+  children,
+}: {
+  title: string
+  tone?: 'danger'
+  children: React.ReactNode
+}) {
+  return (
+    <section>
+      <h2
+        className={`text-xs uppercase tracking-eyebrow font-semibold mb-3 ${
+          tone === 'danger' ? 'text-rose-400' : 'text-fg-3'
+        }`}
+      >
+        {title}
+      </h2>
+      {children}
+    </section>
+  )
+}
+
+function Field({
+  label,
+  hint,
+  className,
+  children,
+}: {
+  label: string
+  hint?: string
+  className?: string
+  children: React.ReactNode
+}) {
+  return (
+    <div className={className}>
+      <label className="block text-xs uppercase tracking-eyebrow text-fg-3 font-semibold mb-1.5">
+        {label}
+      </label>
+      {children}
+      {hint && <p className="mt-1 text-xs text-fg-3">{hint}</p>}
+    </div>
+  )
+}
+
+function TextInput({
+  value,
+  onChange,
+  placeholder,
+  type = 'text',
+  ltr,
+  readOnly,
+  suffix,
+}: {
+  value: string
+  onChange: (v: string) => void
+  placeholder?: string
+  type?: string
+  ltr?: boolean
+  readOnly?: boolean
+  suffix?: string
+}) {
+  return (
+    <div className="relative">
+      <input
+        type={type}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
+        readOnly={readOnly}
+        dir={ltr ? 'ltr' : undefined}
+        className={`w-full h-10 rounded-md bg-bg-deeper border border-border px-3 text-sm text-fg-1 placeholder-fg-3 focus:outline-none focus:border-primary ${
+          readOnly ? 'cursor-not-allowed opacity-70' : ''
+        } ${suffix ? 'pe-10' : ''}`}
+      />
+      {suffix && (
+        <span
+          className="absolute end-3 top-1/2 -translate-y-1/2 text-xs text-fg-3 font-mono"
+          aria-hidden
+        >
+          {suffix}
+        </span>
+      )}
+    </div>
+  )
+}
+
+function PasswordInput({ placeholder }: { placeholder: string }) {
+  return (
+    <input
+      type="password"
+      placeholder={placeholder}
+      className="w-full h-10 rounded-md bg-bg-deeper border border-border px-3 text-sm text-fg-1 placeholder-fg-3 focus:outline-none focus:border-primary"
+    />
+  )
+}
+
+function SelectInput({
+  value,
+  onChange,
+  options,
+  leftIcon: LeftIcon,
+}: {
+  value: string
+  onChange: (v: string) => void
+  options: [string, string][]
+  leftIcon?: LucideIcon
+}) {
+  return (
+    <div className="relative">
+      {LeftIcon && (
+        <LeftIcon
+          className="absolute start-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-fg-3"
+          strokeWidth={1.75}
+        />
+      )}
+      <select
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className={`w-full h-10 rounded-md bg-bg-deeper border border-border ${
+          LeftIcon ? 'ps-9' : 'ps-3'
+        } pe-3 text-sm text-fg-1 focus:outline-none focus:border-primary appearance-none`}
+      >
+        {options.map(([v, label]) => (
+          <option key={v} value={v} className="bg-surface text-fg-1">
+            {label}
+          </option>
+        ))}
+      </select>
+    </div>
+  )
+}
+
+function ChipInput({
+  values,
+  placeholder,
+  onChange,
+}: {
+  values: string[]
+  placeholder: string
+  onChange: (v: string[]) => void
+}) {
+  const [draft, setDraft] = useState('')
+  const add = () => {
+    const v = draft.trim()
+    if (!v) return
+    if (values.includes(v)) {
+      setDraft('')
+      return
+    }
+    onChange([...values, v])
+    setDraft('')
+  }
+  const remove = (v: string) => onChange(values.filter((x) => x !== v))
+  return (
+    <div className="rounded-md bg-bg-deeper border border-border p-2 flex flex-wrap items-center gap-1.5 focus-within:border-primary">
+      {values.map((v) => (
+        <span
+          key={v}
+          className="inline-flex items-center gap-1 rounded-pill bg-surface-raised border border-border text-fg-1 text-xs h-7 ps-3 pe-1"
+        >
+          {v}
+          <button
+            type="button"
+            onClick={() => remove(v)}
+            aria-label="Remove"
+            className="w-5 h-5 rounded-full inline-flex items-center justify-center text-fg-3 hover:text-rose-400"
+          >
+            <X className="w-3 h-3" strokeWidth={2} />
+          </button>
+        </span>
+      ))}
+      <input
+        type="text"
+        value={draft}
+        onChange={(e) => setDraft(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ',') {
+            e.preventDefault()
+            add()
+          } else if (e.key === 'Backspace' && !draft && values.length > 0) {
+            onChange(values.slice(0, -1))
+          }
+        }}
+        placeholder={values.length === 0 ? placeholder : ''}
+        className="flex-1 min-w-[120px] bg-transparent border-none px-2 text-sm text-fg-1 placeholder-fg-3 focus:outline-none h-7"
+      />
+    </div>
+  )
+}
+
+function ChannelToggle({
+  label,
+  on,
+  onChange,
+}: {
+  label: string
+  on: boolean
+  onChange: (v: boolean) => void
+}) {
+  return (
+    <button
+      type="button"
+      onClick={() => onChange(!on)}
+      className={`inline-flex items-center gap-1.5 rounded-pill h-8 px-3 text-[11px] font-semibold transition-colors ${
+        on
+          ? 'bg-primary/20 text-lime-400 border border-primary/40'
+          : 'bg-bg-deeper border border-border text-fg-3 hover:text-fg-1'
+      }`}
+    >
+      {on && <Check className="w-3 h-3" strokeWidth={2.5} />}
+      {label}
+    </button>
+  )
+}
+
+function Switch({
+  on,
+  onChange,
+}: {
+  on: boolean
+  onChange: (v: boolean) => void
+}) {
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={on}
+      onClick={() => onChange(!on)}
+      className={`shrink-0 relative w-10 h-6 rounded-full transition-colors ${
+        on ? 'bg-lime-400' : 'bg-bg-deeper border border-border'
+      }`}
+    >
+      <span
+        aria-hidden
+        className={`absolute top-0.5 w-5 h-5 rounded-full bg-bg shadow transition-all ${
+          on ? 'start-[18px]' : 'start-0.5'
+        }`}
+      />
+    </button>
+  )
+}
+
+function SaveBar({
+  t,
+  dirty,
+  state,
+  onSave,
+  onDiscard,
+}: {
+  t: ReturnType<typeof useTranslations>
+  dirty: boolean
+  state: 'idle' | 'saving' | 'saved'
+  onSave: () => void
+  onDiscard: () => void
+}) {
+  const visible = dirty || state === 'saved'
+  if (!visible) return null
+  return (
+    <div className="sticky bottom-4 z-30 mx-auto max-w-screen-md">
+      <div
+        className={`rounded-xl border shadow-2xl backdrop-blur-md flex items-center gap-3 px-4 py-3 ${
+          state === 'saved'
+            ? 'border-primary/40 bg-primary/10'
+            : 'border-border bg-surface/95'
+        }`}
+      >
+        {state === 'saved' ? (
+          <Check className="w-4 h-4 text-lime-400" strokeWidth={2.5} />
+        ) : (
+          <span
+            className="w-2 h-2 rounded-full bg-amber-400 shrink-0"
+            aria-hidden
+            style={{ background: '#e8912a' }}
+          />
+        )}
+        <p className="text-sm text-fg-1 flex-1">
+          {state === 'saved' ? t('saved') : t('changesUnsaved')}
+        </p>
+        {state !== 'saved' && (
+          <button
+            type="button"
+            onClick={onDiscard}
+            className="inline-flex items-center gap-1.5 rounded-pill bg-surface-raised border border-border h-9 px-4 text-xs font-medium text-fg-2 hover:text-fg-1"
+          >
+            {t('changesUnsaved')}
+          </button>
+        )}
+        <button
+          type="button"
+          onClick={onSave}
+          disabled={state === 'saving' || state === 'saved'}
+          className="inline-flex items-center gap-1.5 rounded-pill bg-gradient-to-b from-lime-400 to-lime-600 text-bg font-semibold h-9 px-5 text-xs shadow-lime-glow border border-lime-600/60 hover:-translate-y-px transition-transform disabled:opacity-60 disabled:hover:translate-y-0"
+        >
+          {state === 'saving'
+            ? t('saving')
+            : state === 'saved'
+              ? t('saved')
+              : t('saveChanges')}
+        </button>
+      </div>
+    </div>
+  )
+}
+
+function ConfirmDialog({
+  title,
+  body,
+  cancelLabel,
+  confirmLabel,
+  confirmTone = 'warn',
+  confirmDisabled,
+  onCancel,
+  onConfirm,
+  children,
+}: {
+  title: string
+  body: string
+  cancelLabel: string
+  confirmLabel: string
+  confirmTone?: 'warn' | 'danger'
+  confirmDisabled?: boolean
+  onCancel: () => void
+  onConfirm: () => void
+  children?: React.ReactNode
+}) {
+  return (
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-label={title}
+      className="fixed inset-0 z-50 flex items-end md:items-center justify-center"
+    >
+      <button
+        type="button"
+        aria-label="Close"
+        onClick={onCancel}
+        className="absolute inset-0 bg-bg-deeper/70 backdrop-blur-sm"
+      />
+      <div className="relative w-full md:max-w-md rounded-t-2xl md:rounded-2xl bg-surface border border-border shadow-2xl p-6">
+        <h3 className="text-base font-semibold text-fg-1 inline-flex items-center gap-2">
+          <AlertTriangle
+            className={`w-4 h-4 ${
+              confirmTone === 'danger' ? 'text-rose-400' : 'text-amber-400'
+            }`}
+            strokeWidth={1.75}
+            style={confirmTone !== 'danger' ? { color: '#e8912a' } : undefined}
+          />
+          {title}
+        </h3>
+        <p className="mt-2 text-sm text-fg-2 leading-relaxed">{body}</p>
+        {children}
+        <div className="mt-5 flex items-center justify-end gap-2">
+          <button
+            type="button"
+            onClick={onCancel}
+            className="inline-flex items-center gap-1.5 rounded-pill bg-surface-raised border border-border h-10 px-4 text-sm font-medium text-fg-1 hover:border-primary/40"
+          >
+            {cancelLabel}
+          </button>
+          <button
+            type="button"
+            onClick={onConfirm}
+            disabled={confirmDisabled}
+            className={`inline-flex items-center gap-1.5 rounded-pill h-10 px-5 text-sm font-semibold transition-colors disabled:opacity-40 ${
+              confirmTone === 'danger'
+                ? 'bg-rose-500/20 text-rose-400 hover:bg-rose-500/30'
+                : 'bg-amber-500/20 hover:bg-amber-500/30'
+            }`}
+            style={
+              confirmTone !== 'danger'
+                ? { color: '#e8912a' }
+                : undefined
+            }
+          >
+            {confirmLabel}
+            <ArrowRight className="w-3.5 h-3.5 rtl:rotate-180" strokeWidth={2.25} />
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function initialsOf(name: string): string {
+  return name
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((n) => n[0])
+    .slice(0, 2)
+    .join('')
+    .toUpperCase()
+}

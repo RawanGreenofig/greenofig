@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Link, useLocation, useNavigate, Outlet } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
@@ -19,6 +20,8 @@ import {
   Users,
   FileText,
   BarChart3,
+  PenSquare,
+  Target,
 } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 import { Button } from '@/components/ui/button'
@@ -26,43 +29,60 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
 
-const userNavItems = [
-  { name: 'Dashboard', path: '/app/dashboard', icon: LayoutDashboard },
-  { name: 'AI Coach', path: '/app/ai-coach', icon: Bot },
-  { name: 'Nutrition', path: '/app/nutrition', icon: Utensils },
-  { name: 'Fitness', path: '/app/fitness', icon: Dumbbell },
-  { name: 'Progress', path: '/app/progress', icon: TrendingUp },
-  { name: 'Messages', path: '/app/messages', icon: MessageSquare },
-  { name: 'Appointments', path: '/app/appointments', icon: Calendar },
+const userNavItemsData = [
+  { key: 'dashboard', path: '/app/dashboard', icon: LayoutDashboard },
+  { key: 'aiCoach', path: '/app/ai-coach', icon: Bot },
+  { key: 'nutrition', path: '/app/nutrition', icon: Utensils },
+  { key: 'mealPlans', path: '/app/meal-plans', icon: FileText },
+  { key: 'fitness', path: '/app/fitness', icon: Dumbbell },
+  { key: 'progress', path: '/app/progress', icon: TrendingUp },
+  { key: 'appointments', path: '/app/appointments', icon: Calendar },
+  { key: 'messages', path: '/app/messages', icon: MessageSquare },
 ]
 
-const nutritionistNavItems = [
-  { name: 'Dashboard', path: '/app/nutritionist', icon: LayoutDashboard },
-  { name: 'Clients', path: '/app/nutritionist/clients', icon: Users },
-  { name: 'Meal Plans', path: '/app/nutritionist/meals', icon: Utensils },
-  { name: 'Schedule', path: '/app/nutritionist/schedule', icon: Calendar },
-  { name: 'Messages', path: '/app/nutritionist/messages', icon: MessageSquare },
-  { name: 'Analytics', path: '/app/nutritionist/analytics', icon: BarChart3 },
-  { name: 'Resources', path: '/app/nutritionist/resources', icon: FileText },
+const nutritionistNavItemsData = [
+  { key: 'dashboard', path: '/app/nutritionist', icon: LayoutDashboard },
+  { key: 'clients', path: '/app/nutritionist/clients', icon: Users },
+  { key: 'mealPlans', path: '/app/nutritionist/meal-plans', icon: Utensils },
+  { key: 'schedule', path: '/app/nutritionist/schedule', icon: Calendar },
+  { key: 'messages', path: '/app/nutritionist/messages', icon: MessageSquare },
+  { key: 'blog', path: '/app/nutritionist/blog', icon: PenSquare },
 ]
 
-const adminNavItems = [
-  { name: 'Dashboard', path: '/app/admin', icon: LayoutDashboard },
-  { name: 'Users', path: '/app/admin/users', icon: Users },
-  { name: 'Subscriptions', path: '/app/admin/subscriptions', icon: CreditCard },
-  { name: 'Analytics', path: '/app/admin/analytics', icon: BarChart3 },
-  { name: 'Content', path: '/app/admin/content', icon: FileText },
-  { name: 'Support', path: '/app/admin/support', icon: HelpCircle },
-  { name: 'Settings', path: '/app/admin/settings', icon: Settings },
+// Regular admin items (no settings)
+const adminNavItemsData = [
+  { key: 'dashboard', path: '/app/admin', icon: LayoutDashboard },
+  { key: 'users', path: '/app/admin/users', icon: Users },
+  { key: 'leads', path: '/app/admin/leads', icon: Target },
+  { key: 'content', path: '/app/admin/content', icon: FileText },
+  { key: 'support', path: '/app/admin/support', icon: HelpCircle },
 ]
 
-const bottomNavItems = [
-  { name: 'Billing', path: '/app/billing', icon: CreditCard },
-  { name: 'Support', path: '/app/support', icon: HelpCircle },
-  { name: 'Settings', path: '/app/settings', icon: Settings },
+// Super admin gets all controls
+const superAdminNavItemsData = [
+  { key: 'dashboard', path: '/app/admin', icon: LayoutDashboard },
+  { key: 'users', path: '/app/admin/users', icon: Users },
+  { key: 'leads', path: '/app/admin/leads', icon: Target },
+  { key: 'subscriptions', path: '/app/admin/subscriptions', icon: CreditCard },
+  { key: 'analytics', path: '/app/admin/analytics', icon: BarChart3 },
+  { key: 'content', path: '/app/admin/content', icon: FileText },
+  { key: 'support', path: '/app/admin/support', icon: HelpCircle },
+  { key: 'settings', path: '/app/admin/settings', icon: Settings },
+]
+
+const customerBottomNavItemsData = [
+  { key: 'billing', path: '/app/billing', icon: CreditCard },
+  { key: 'support', path: '/app/support', icon: HelpCircle },
+  { key: 'settings', path: '/app/settings', icon: Settings },
+]
+
+const staffBottomNavItemsData = [
+  { key: 'support', path: '/app/support', icon: HelpCircle },
+  { key: 'settings', path: '/app/settings', icon: Settings },
 ]
 
 export function AppLayout() {
+  const { t } = useTranslation()
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const location = useLocation()
@@ -74,20 +94,37 @@ export function AppLayout() {
     navigate('/')
   }
 
+  const mapNavItems = (items) => items.map(item => ({
+    ...item,
+    name: t(`appNav.${item.key}`)
+  }))
+
   const getNavItems = () => {
-    if (!userProfile) return userNavItems
+    if (!userProfile) return mapNavItems(userNavItemsData)
     switch (userProfile.role) {
-      case 'admin':
       case 'super_admin':
-        return adminNavItems
+        return mapNavItems(superAdminNavItemsData)
+      case 'admin':
+        return mapNavItems(adminNavItemsData)
       case 'nutritionist':
-        return nutritionistNavItems
+        return mapNavItems(nutritionistNavItemsData)
       default:
-        return userNavItems
+        return mapNavItems(userNavItemsData)
     }
   }
 
+  const isStaff = ['nutritionist', 'admin', 'super_admin'].includes(userProfile?.role)
   const navItems = getNavItems()
+  const bottomNavItems = mapNavItems(isStaff ? staffBottomNavItemsData : customerBottomNavItemsData)
+
+  const roleLabel = (() => {
+    switch (userProfile?.role) {
+      case 'super_admin': return 'Super Admin'
+      case 'admin': return 'Admin'
+      case 'nutritionist': return 'Nutritionist'
+      default: return null
+    }
+  })()
 
   const Sidebar = ({ mobile = false }) => (
     <div className={cn(
@@ -98,10 +135,7 @@ export function AppLayout() {
       <div className="flex items-center justify-between p-4 border-b border-border">
         {(!sidebarCollapsed || mobile) && (
           <Link to="/" className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-              <span className="text-primary-foreground font-bold">G</span>
-            </div>
-            <span className="font-bold gradient-text">GreenoFig</span>
+            <img src="/logo.png" alt="GreenoFig" className="h-8 w-auto" />
           </Link>
         )}
         {!mobile && (
@@ -128,9 +162,13 @@ export function AppLayout() {
           {(!sidebarCollapsed || mobile) && (
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium truncate">{userProfile?.full_name || 'User'}</p>
-              <Badge variant="secondary" className="text-xs">
-                {userProfile?.tier || 'Free'}
-              </Badge>
+              {isStaff ? (
+                <Badge variant="outline" className="text-xs">{roleLabel}</Badge>
+              ) : (
+                <Badge variant="secondary" className="text-xs">
+                  {userProfile?.tier || 'Free'}
+                </Badge>
+              )}
             </div>
           )}
         </div>
@@ -201,7 +239,7 @@ export function AppLayout() {
             >
               <LogOut className="h-5 w-5 flex-shrink-0" />
               {(!sidebarCollapsed || mobile) && (
-                <span className="text-sm font-medium">Log out</span>
+                <span className="text-sm font-medium">{t('appNav.logOut')}</span>
               )}
             </button>
           </li>
@@ -248,10 +286,7 @@ export function AppLayout() {
             <Menu className="h-6 w-6" />
           </Button>
           <Link to="/" className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-              <span className="text-primary-foreground font-bold">G</span>
-            </div>
-            <span className="font-bold gradient-text">GreenoFig</span>
+            <img src="/logo.png" alt="GreenoFig" className="h-8 w-auto" />
           </Link>
           <Avatar className="h-8 w-8">
             <AvatarImage src={userProfile?.profile_picture_url} />

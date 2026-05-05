@@ -1,0 +1,52 @@
+/* Shared card chrome — preview cards are content-only; no titles or framing */
+@import url('../colors_and_type.css');
+
+* { box-sizing: border-box; }
+html, body {
+  margin: 0;
+  padding: 0;
+  background: var(--gf-paper);
+  color: var(--fg-1);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+.card {
+  padding: 24px;
+  width: 700px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.row { display: flex; gap: 12px; align-items: stretch; }
+.col { display: flex; flex-direction: column; gap: 8px; }
+.swatch {
+  flex: 1;
+  border-radius: 12px;
+  height: 96px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 12px;
+  border: 1px solid var(--line-1);
+  position: relative;
+  overflow: hidden;
+}
+.swatch .name {
+  font: 600 12px/1 var(--font-sans);
+  letter-spacing: 0.02em;
+}
+.swatch .hex {
+  font: 400 11px/1.4 var(--font-mono);
+  opacity: 0.7;
+  margin-top: 2px;
+}
+.swatch.dark { color: white; }
+.swatch.dark .hex { opacity: 0.7; }
+.swatch.light { color: var(--gf-ink); }
+.label {
+  font: 500 11px/1.4 var(--font-sans);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--fg-2);
+}
+.mono { font-family: var(--font-mono); font-size: 12px; color: var(--fg-2); }

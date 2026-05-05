@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { motion } from 'framer-motion'
 import {
   ArrowRight,
@@ -6,44 +7,40 @@ import {
   Utensils,
   Dumbbell,
   TrendingUp,
-  Users,
   Star,
-  CheckCircle,
   Play,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { HeroSlider } from '@/components/ui/hero-slider'
+import { LeaderboardAd } from '@/components/ads'
 
-const features = [
+const heroImages = [
   {
-    icon: Bot,
-    title: 'AI Health Coach',
-    description: 'Get personalized guidance 24/7 from our intelligent health assistant.',
+    url: 'https://images.unsplash.com/photo-1490645935967-10de6ba17061?w=1920&q=80',
+    alt: 'Healthy food preparation'
   },
   {
-    icon: Utensils,
-    title: 'Smart Meal Planning',
-    description: 'AI-generated meal plans tailored to your goals and preferences.',
+    url: 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=1920&q=80',
+    alt: 'Fitness workout'
   },
   {
-    icon: Dumbbell,
-    title: 'Workout Programs',
-    description: 'Custom workout routines that adapt to your fitness level.',
+    url: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=1920&q=80',
+    alt: 'Yoga and wellness'
   },
   {
-    icon: TrendingUp,
-    title: 'Progress Tracking',
-    description: 'Comprehensive tracking with insights and analytics.',
+    url: 'https://images.unsplash.com/photo-1498837167922-ddd27525d352?w=1920&q=80',
+    alt: 'Fresh vegetables and fruits'
+  },
+  {
+    url: 'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=1920&q=80',
+    alt: 'Meditation and mindfulness'
   },
 ]
 
-const stats = [
-  { value: '50K+', label: 'Active Users' },
-  { value: '1M+', label: 'Meals Tracked' },
-  { value: '500K+', label: 'Workouts Completed' },
-  { value: '4.9', label: 'App Rating' },
-]
+const featureIcons = [Bot, Utensils, Dumbbell, TrendingUp]
+const featureKeys = ['aiCoach', 'mealPlanning', 'workouts', 'progress']
 
 const testimonials = [
   {
@@ -67,92 +64,114 @@ const testimonials = [
 ]
 
 export default function Home() {
+  const { t } = useTranslation()
+
+  const stats = [
+    { value: '50K+', labelKey: 'activeUsers' },
+    { value: '1M+', labelKey: 'mealsTracked' },
+    { value: '500K+', labelKey: 'workoutsCompleted' },
+    { value: '4.9', labelKey: 'appRating' },
+  ]
+
+  const features = featureKeys.map((key, index) => ({
+    icon: featureIcons[index],
+    title: t(`home.features.${key}.title`),
+    description: t(`home.features.${key}.description`),
+  }))
+
   return (
     <div className="flex flex-col">
-      {/* Hero Section */}
+      {/* Hero Section with Slider */}
       <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
-        {/* Background */}
-        <div className="absolute inset-0 bg-gradient-to-br from-background via-background to-primary/10" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-primary/5 via-transparent to-transparent" />
+        <HeroSlider
+          images={heroImages}
+          autoPlay={true}
+          interval={5000}
+          showControls={true}
+          showIndicators={true}
+          overlayOpacity={0.7}
+          className="absolute inset-0"
+        >
+          <div className="flex items-center justify-center min-h-screen">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-32 text-center text-white">
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6 }}
+              >
+                <Badge className="mb-6 px-4 py-1.5" variant="secondary">
+                  {t('home.badge')}
+                </Badge>
+              </motion.div>
 
-        {/* Content */}
-        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-32 text-center">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-          >
-            <Badge className="mb-6 px-4 py-1.5" variant="secondary">
-              AI-Powered Wellness Platform
-            </Badge>
-          </motion.div>
+              <motion.h1
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.1 }}
+                className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight mb-6"
+              >
+                {t('home.heroTitle')}
+                <span className="block gradient-text">{t('home.heroTitleHighlight')}</span>
+              </motion.h1>
 
-          <motion.h1
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.1 }}
-            className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight mb-6"
-          >
-            Your Personal
-            <span className="block gradient-text">Health Companion</span>
-          </motion.h1>
+              <motion.p
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.2 }}
+                className="text-lg sm:text-xl text-white/70 max-w-2xl mx-auto mb-8"
+              >
+                {t('home.heroSubtitle')}
+              </motion.p>
 
-          <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-            className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto mb-8"
-          >
-            Transform your health journey with AI-powered nutrition plans, personalized workouts, and 24/7 coaching support.
-          </motion.p>
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.3 }}
+                className="flex flex-col sm:flex-row gap-4 justify-center"
+              >
+                <Button size="lg" asChild className="text-lg">
+                  <Link to="/signup">
+                    {t('home.startFreeTrial')}
+                    <ArrowRight className="ms-2 h-5 w-5" />
+                  </Link>
+                </Button>
+                <Button size="lg" variant="outline" asChild className="text-lg bg-white/10 backdrop-blur-sm border-white/20 text-white hover:bg-white/20">
+                  <Link to="/features">
+                    <Play className="me-2 h-5 w-5" />
+                    {t('home.watchDemo')}
+                  </Link>
+                </Button>
+              </motion.div>
 
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.3 }}
-            className="flex flex-col sm:flex-row gap-4 justify-center"
-          >
-            <Button size="lg" asChild className="text-lg">
-              <Link to="/signup">
-                Start Free Trial
-                <ArrowRight className="ml-2 h-5 w-5" />
-              </Link>
-            </Button>
-            <Button size="lg" variant="outline" asChild className="text-lg">
-              <Link to="/features">
-                <Play className="mr-2 h-5 w-5" />
-                Watch Demo
-              </Link>
-            </Button>
-          </motion.div>
-
-          {/* Stats */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.4 }}
-            className="mt-16 grid grid-cols-2 md:grid-cols-4 gap-8"
-          >
-            {stats.map((stat, index) => (
-              <div key={index} className="text-center">
-                <div className="text-3xl sm:text-4xl font-bold gradient-text">{stat.value}</div>
-                <div className="text-sm text-muted-foreground mt-1">{stat.label}</div>
-              </div>
-            ))}
-          </motion.div>
-        </div>
+              {/* Stats */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.4 }}
+                className="mt-16 grid grid-cols-2 md:grid-cols-4 gap-8"
+              >
+                {stats.map((stat, index) => (
+                  <div key={index} className="text-center bg-white/10 backdrop-blur-sm rounded-lg p-4">
+                    <div className="text-3xl sm:text-4xl font-bold gradient-text">{stat.value}</div>
+                    <div className="text-sm text-white/70 mt-1">{t(`home.stats.${stat.labelKey}`)}</div>
+                  </div>
+                ))}
+              </motion.div>
+            </div>
+          </div>
+        </HeroSlider>
       </section>
 
       {/* Features Section */}
       <section className="py-24 bg-card/50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <Badge className="mb-4" variant="secondary">Features</Badge>
+            <Badge className="mb-4" variant="secondary">{t('home.features.badge')}</Badge>
             <h2 className="text-3xl sm:text-4xl font-bold mb-4">
-              Everything You Need to <span className="gradient-text">Succeed</span>
+              {t('home.features.title')} <span className="gradient-text">{t('home.features.titleHighlight')}</span>
             </h2>
             <p className="text-muted-foreground max-w-2xl mx-auto">
-              Our comprehensive platform provides all the tools you need for a healthier lifestyle.
+              {t('home.features.subtitle')}
             </p>
           </div>
 
@@ -180,16 +199,19 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Ad Banner - only shown to free/basic users and visitors */}
+      <LeaderboardAd className="my-8 max-w-5xl mx-auto px-4" />
+
       {/* Testimonials Section */}
       <section className="py-24">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <Badge className="mb-4" variant="secondary">Testimonials</Badge>
+            <Badge className="mb-4" variant="secondary">{t('home.testimonials.badge')}</Badge>
             <h2 className="text-3xl sm:text-4xl font-bold mb-4">
-              Loved by <span className="gradient-text">Thousands</span>
+              {t('home.testimonials.title')} <span className="gradient-text">{t('home.testimonials.titleHighlight')}</span>
             </h2>
             <p className="text-muted-foreground max-w-2xl mx-auto">
-              See what our users have to say about their transformation journey.
+              {t('home.testimonials.subtitle')}
             </p>
           </div>
 
@@ -236,24 +258,24 @@ export default function Home() {
             viewport={{ once: true }}
           >
             <h2 className="text-3xl sm:text-4xl font-bold mb-4">
-              Ready to Transform Your Health?
+              {t('home.cta.title')}
             </h2>
             <p className="text-muted-foreground mb-8 max-w-2xl mx-auto">
-              Join thousands of users who have already started their journey to a healthier lifestyle with GreenoFig.
+              {t('home.cta.subtitle')}
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button size="lg" asChild>
                 <Link to="/signup">
-                  Get Started Free
-                  <ArrowRight className="ml-2 h-5 w-5" />
+                  {t('home.cta.button')}
+                  <ArrowRight className="ms-2 h-5 w-5" />
                 </Link>
               </Button>
               <Button size="lg" variant="outline" asChild>
-                <Link to="/pricing">View Pricing</Link>
+                <Link to="/pricing">{t('home.cta.viewPricing')}</Link>
               </Button>
             </div>
             <p className="mt-6 text-sm text-muted-foreground">
-              No credit card required. Start your 14-day free trial today.
+              {t('home.cta.noCreditCard')}
             </p>
           </motion.div>
         </div>

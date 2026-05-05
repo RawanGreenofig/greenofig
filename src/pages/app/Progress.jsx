@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { motion } from 'framer-motion'
 import {
   TrendingUp,
@@ -28,37 +29,37 @@ const weightData = [
   { date: 'Feb 12', weight: 173.5 },
 ]
 
-const stats = [
+const statsData = [
   {
-    label: 'Current Weight',
+    key: 'currentWeight',
     value: '173.5',
     unit: 'lbs',
     change: -6.5,
-    changeLabel: 'from start',
+    changeLabel: 'fromStart',
     icon: Scale,
   },
   {
-    label: 'Goal Weight',
+    key: 'goalWeight',
     value: '165',
     unit: 'lbs',
     remaining: 8.5,
     icon: Target,
   },
   {
-    label: 'BMI',
+    key: 'bmi',
     value: '24.2',
     unit: '',
-    status: 'Normal',
+    status: 'normal',
     icon: Ruler,
   },
 ]
 
-const measurements = [
-  { label: 'Chest', current: 42, previous: 43, unit: 'in' },
-  { label: 'Waist', current: 34, previous: 36, unit: 'in' },
-  { label: 'Hips', current: 40, previous: 41, unit: 'in' },
-  { label: 'Thighs', current: 24, previous: 25, unit: 'in' },
-  { label: 'Arms', current: 14.5, previous: 14, unit: 'in' },
+const measurementsData = [
+  { key: 'chest', current: 42, previous: 43 },
+  { key: 'waist', current: 34, previous: 36 },
+  { key: 'hips', current: 40, previous: 41 },
+  { key: 'thighs', current: 24, previous: 25 },
+  { key: 'arms', current: 14.5, previous: 14 },
 ]
 
 const achievements = [
@@ -69,24 +70,35 @@ const achievements = [
 ]
 
 export default function Progress() {
+  const { t } = useTranslation()
   const [timeRange, setTimeRange] = useState('1m')
+
+  const stats = statsData.map(stat => ({
+    ...stat,
+    label: t(`progress.stats.${stat.key}`),
+  }))
+
+  const measurements = measurementsData.map(m => ({
+    ...m,
+    label: t(`progress.measurements.${m.key}`),
+  }))
 
   return (
     <div className="p-6 space-y-6">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold">Progress</h1>
-          <p className="text-muted-foreground">Track your health journey over time</p>
+          <h1 className="text-2xl font-bold">{t('progress.title')}</h1>
+          <p className="text-muted-foreground">{t('progress.subtitle')}</p>
         </div>
         <div className="flex gap-2">
           <Button variant="outline">
-            <Camera className="mr-2 h-4 w-4" />
-            Add Photo
+            <Camera className="me-2 h-4 w-4" />
+            {t('progress.addPhoto')}
           </Button>
           <Button>
-            <Plus className="mr-2 h-4 w-4" />
-            Log Weight
+            <Plus className="me-2 h-4 w-4" />
+            {t('progress.logWeight')}
           </Button>
         </div>
       </div>
@@ -118,18 +130,18 @@ export default function Progress() {
                       <TrendingUp className="h-4 w-4 text-red-500" />
                     )}
                     <span className={stat.change < 0 ? 'text-green-500' : 'text-red-500'}>
-                      {Math.abs(stat.change)} lbs
+                      {Math.abs(stat.change)} {t('common.lbs')}
                     </span>
-                    <span className="text-muted-foreground text-sm">{stat.changeLabel}</span>
+                    <span className="text-muted-foreground text-sm">{t(`progress.stats.${stat.changeLabel}`)}</span>
                   </div>
                 )}
                 {stat.remaining !== undefined && (
                   <p className="text-sm text-muted-foreground mt-2">
-                    {stat.remaining} lbs to go
+                    {stat.remaining} {t('common.lbs')} {t('progress.stats.toGo')}
                   </p>
                 )}
                 {stat.status && (
-                  <Badge variant="secondary" className="mt-2">{stat.status}</Badge>
+                  <Badge variant="secondary" className="mt-2">{t(`progress.stats.${stat.status}`)}</Badge>
                 )}
               </CardContent>
             </Card>
@@ -139,10 +151,10 @@ export default function Progress() {
 
       <Tabs defaultValue="weight" className="space-y-6">
         <TabsList>
-          <TabsTrigger value="weight">Weight</TabsTrigger>
-          <TabsTrigger value="measurements">Measurements</TabsTrigger>
-          <TabsTrigger value="photos">Photos</TabsTrigger>
-          <TabsTrigger value="achievements">Achievements</TabsTrigger>
+          <TabsTrigger value="weight">{t('progress.tabs.weight')}</TabsTrigger>
+          <TabsTrigger value="measurements">{t('progress.tabs.measurements')}</TabsTrigger>
+          <TabsTrigger value="photos">{t('progress.tabs.photos')}</TabsTrigger>
+          <TabsTrigger value="achievements">{t('progress.tabs.achievements')}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="weight">
@@ -150,19 +162,19 @@ export default function Progress() {
             <CardHeader>
               <div className="flex items-center justify-between">
                 <div>
-                  <CardTitle>Weight Progress</CardTitle>
-                  <CardDescription>Track your weight over time</CardDescription>
+                  <CardTitle>{t('progress.weight.title')}</CardTitle>
+                  <CardDescription>{t('progress.weight.subtitle')}</CardDescription>
                 </div>
                 <Select value={timeRange} onValueChange={setTimeRange}>
                   <SelectTrigger className="w-32">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="1w">1 Week</SelectItem>
-                    <SelectItem value="1m">1 Month</SelectItem>
-                    <SelectItem value="3m">3 Months</SelectItem>
-                    <SelectItem value="6m">6 Months</SelectItem>
-                    <SelectItem value="1y">1 Year</SelectItem>
+                    <SelectItem value="1w">{t('progress.timeRange.1w')}</SelectItem>
+                    <SelectItem value="1m">{t('progress.timeRange.1m')}</SelectItem>
+                    <SelectItem value="3m">{t('progress.timeRange.3m')}</SelectItem>
+                    <SelectItem value="6m">{t('progress.timeRange.6m')}</SelectItem>
+                    <SelectItem value="1y">{t('progress.timeRange.1y')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -198,8 +210,8 @@ export default function Progress() {
         <TabsContent value="measurements">
           <Card>
             <CardHeader>
-              <CardTitle>Body Measurements</CardTitle>
-              <CardDescription>Track changes in your body composition</CardDescription>
+              <CardTitle>{t('progress.measurements.title')}</CardTitle>
+              <CardDescription>{t('progress.measurements.subtitle')}</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
@@ -207,7 +219,7 @@ export default function Progress() {
                   const change = measurement.current - measurement.previous
                   return (
                     <motion.div
-                      key={measurement.label}
+                      key={measurement.key}
                       initial={{ opacity: 0, x: -20 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: index * 0.1 }}
@@ -216,12 +228,12 @@ export default function Progress() {
                       <div>
                         <p className="font-medium">{measurement.label}</p>
                         <p className="text-sm text-muted-foreground">
-                          Previous: {measurement.previous} {measurement.unit}
+                          {t('progress.measurements.previous')}: {measurement.previous} {t('common.in')}
                         </p>
                       </div>
                       <div className="text-right">
                         <p className="text-xl font-bold">
-                          {measurement.current} {measurement.unit}
+                          {measurement.current} {t('common.in')}
                         </p>
                         <div className="flex items-center justify-end gap-1">
                           {change < 0 ? (
@@ -230,7 +242,7 @@ export default function Progress() {
                             <TrendingUp className="h-4 w-4 text-red-500" />
                           ) : null}
                           <span className={change < 0 ? 'text-green-500' : change > 0 ? 'text-red-500' : 'text-muted-foreground'}>
-                            {change > 0 ? '+' : ''}{change} {measurement.unit}
+                            {change > 0 ? '+' : ''}{change} {t('common.in')}
                           </span>
                         </div>
                       </div>
@@ -239,8 +251,8 @@ export default function Progress() {
                 })}
               </div>
               <Button variant="outline" className="w-full mt-4">
-                <Plus className="mr-2 h-4 w-4" />
-                Update Measurements
+                <Plus className="me-2 h-4 w-4" />
+                {t('progress.measurements.update')}
               </Button>
             </CardContent>
           </Card>
@@ -249,19 +261,19 @@ export default function Progress() {
         <TabsContent value="photos">
           <Card>
             <CardHeader>
-              <CardTitle>Progress Photos</CardTitle>
-              <CardDescription>Visual documentation of your journey</CardDescription>
+              <CardTitle>{t('progress.photos.title')}</CardTitle>
+              <CardDescription>{t('progress.photos.subtitle')}</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="text-center py-12">
                 <Camera className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                <h3 className="font-semibold mb-2">No photos yet</h3>
+                <h3 className="font-semibold mb-2">{t('progress.photos.noPhotos')}</h3>
                 <p className="text-muted-foreground text-sm mb-4">
-                  Add progress photos to visualize your transformation
+                  {t('progress.photos.noPhotosSubtitle')}
                 </p>
                 <Button>
-                  <Camera className="mr-2 h-4 w-4" />
-                  Add First Photo
+                  <Camera className="me-2 h-4 w-4" />
+                  {t('progress.photos.addFirst')}
                 </Button>
               </div>
             </CardContent>
@@ -271,8 +283,8 @@ export default function Progress() {
         <TabsContent value="achievements">
           <Card>
             <CardHeader>
-              <CardTitle>Achievements</CardTitle>
-              <CardDescription>Milestones you've reached</CardDescription>
+              <CardTitle>{t('progress.achievements.title')}</CardTitle>
+              <CardDescription>{t('progress.achievements.subtitle')}</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="grid sm:grid-cols-2 gap-4">

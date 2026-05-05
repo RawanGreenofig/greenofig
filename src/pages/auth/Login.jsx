@@ -1,16 +1,19 @@
 import { useState } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { motion } from 'framer-motion'
-import { Eye, EyeOff, Mail, Lock, ArrowRight } from 'lucide-react'
-import { useAuth } from '@/contexts/AuthContext'
+import { Eye, EyeOff, Mail, Lock, ArrowRight, Users, Crown, Shield, Sparkles } from 'lucide-react'
+import { useAuth, DEMO_ACCOUNTS, getHomePathForRole } from '@/contexts/AuthContext'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
+import { Badge } from '@/components/ui/badge'
 import toast from 'react-hot-toast'
 
 export default function Login() {
+  const { t } = useTranslation()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
@@ -19,22 +22,24 @@ export default function Login() {
   const navigate = useNavigate()
   const location = useLocation()
 
-  const from = location.state?.from?.pathname || '/app'
+  const from = location.state?.from?.pathname
 
   const handleSubmit = async (e) => {
     e.preventDefault()
     setLoading(true)
 
     try {
-      const { error } = await signIn(email, password)
+      const { error, data } = await signIn(email, password)
       if (error) {
-        toast.error(error.message || 'Failed to sign in')
+        toast.error(error.message || t('auth.login.error'))
       } else {
-        toast.success('Welcome back!')
-        navigate(from, { replace: true })
+        toast.success(t('auth.login.welcomeBack'))
+        // Demo accounts return their profile inline; real auth profile is loaded async,
+        // so use /app and let AppIndex route by role.
+        navigate(from || '/app', { replace: true })
       }
     } catch (error) {
-      toast.error('An unexpected error occurred')
+      toast.error(t('common.error'))
     } finally {
       setLoading(false)
     }
@@ -44,10 +49,10 @@ export default function Login() {
     try {
       const { error } = await signInWithGoogle()
       if (error) {
-        toast.error(error.message || 'Failed to sign in with Google')
+        toast.error(error.message || t('auth.login.error'))
       }
     } catch (error) {
-      toast.error('An unexpected error occurred')
+      toast.error(t('common.error'))
     }
   }
 
@@ -59,21 +64,18 @@ export default function Login() {
         className="w-full max-w-md"
       >
         <div className="text-center mb-8">
-          <Link to="/" className="inline-flex items-center space-x-2 mb-6">
-            <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
-              <span className="text-primary-foreground font-bold text-xl">G</span>
-            </div>
-            <span className="text-2xl font-bold gradient-text">GreenoFig</span>
+          <Link to="/" className="inline-flex items-center space-x-2 rtl:space-x-reverse mb-6">
+            <img src="/logo.png" alt="GreenoFig" className="h-12 w-auto" />
           </Link>
-          <h1 className="text-2xl font-bold">Welcome back</h1>
-          <p className="text-muted-foreground mt-2">Sign in to continue your wellness journey</p>
+          <h1 className="text-2xl font-bold">{t('auth.login.title')}</h1>
+          <p className="text-muted-foreground mt-2">{t('auth.login.subtitle')}</p>
         </div>
 
         <Card>
           <CardHeader className="space-y-1 pb-4">
-            <CardTitle className="text-xl">Sign in</CardTitle>
+            <CardTitle className="text-xl">{t('auth.login.cardTitle')}</CardTitle>
             <CardDescription>
-              Enter your credentials to access your account
+              {t('auth.login.cardDescription')}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -83,7 +85,7 @@ export default function Login() {
               onClick={handleGoogleSignIn}
               type="button"
             >
-              <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
+              <svg className="me-2 h-4 w-4" viewBox="0 0 24 24">
                 <path
                   d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
                   fill="#4285F4"
@@ -101,7 +103,7 @@ export default function Login() {
                   fill="#EA4335"
                 />
               </svg>
-              Continue with Google
+              {t('auth.login.googleButton')}
             </Button>
 
             <div className="relative">
@@ -109,82 +111,172 @@ export default function Login() {
                 <Separator className="w-full" />
               </div>
               <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-card px-2 text-muted-foreground">Or continue with</span>
+                <span className="bg-card px-2 text-muted-foreground">{t('auth.login.orContinue')}</span>
               </div>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="email">{t('auth.login.email')}</Label>
                 <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Mail className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
                     id="email"
                     type="email"
-                    placeholder="you@example.com"
+                    placeholder={t('auth.login.emailPlaceholder')}
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="pl-10"
+                    className="ps-10"
                     required
                   />
                 </div>
               </div>
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <Label htmlFor="password">Password</Label>
+                  <Label htmlFor="password">{t('auth.login.password')}</Label>
                   <Link
                     to="/forgot-password"
                     className="text-sm text-primary hover:underline"
                   >
-                    Forgot password?
+                    {t('auth.login.forgotPassword')}
                   </Link>
                 </div>
                 <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Lock className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
                     id="password"
                     type={showPassword ? 'text' : 'password'}
-                    placeholder="Enter your password"
+                    placeholder={t('auth.login.passwordPlaceholder')}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="pl-10 pr-10"
+                    className="ps-10 pe-10"
                     required
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                    className="absolute end-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                   >
                     {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>
                 </div>
               </div>
               <Button type="submit" className="w-full" disabled={loading}>
-                {loading ? 'Signing in...' : 'Sign in'}
-                {!loading && <ArrowRight className="ml-2 h-4 w-4" />}
+                {loading ? t('auth.login.submitting') : t('auth.login.submit')}
+                {!loading && <ArrowRight className="ms-2 h-4 w-4" />}
               </Button>
             </form>
           </CardContent>
           <CardFooter className="flex flex-col space-y-4">
             <div className="text-sm text-center text-muted-foreground">
-              Don't have an account?{' '}
+              {t('auth.login.noAccount')}{' '}
               <Link to="/signup" className="text-primary hover:underline font-medium">
-                Sign up
+                {t('auth.login.signUp')}
               </Link>
             </div>
           </CardFooter>
         </Card>
 
         <p className="text-center text-xs text-muted-foreground mt-6">
-          By continuing, you agree to our{' '}
+          {t('auth.login.terms')}{' '}
           <Link to="/terms-of-service" className="underline hover:text-foreground">
-            Terms of Service
+            {t('auth.login.termsLink')}
           </Link>{' '}
-          and{' '}
+          {t('auth.login.and')}{' '}
           <Link to="/privacy-policy" className="underline hover:text-foreground">
-            Privacy Policy
+            {t('auth.login.privacyLink')}
           </Link>
         </p>
+
+        {/* Demo Accounts Section */}
+        <Card className="mt-6 bg-muted/30">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm flex items-center gap-2">
+              <Users className="h-4 w-4" />
+              Demo Accounts
+            </CardTitle>
+            <CardDescription className="text-xs">
+              Click to auto-fill login credentials
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            <div className="grid grid-cols-2 gap-2">
+              {/* User accounts */}
+              <button
+                type="button"
+                onClick={() => { setEmail(DEMO_ACCOUNTS.user.email); setPassword(DEMO_ACCOUNTS.user.password); }}
+                className="flex items-center gap-2 p-2 rounded-lg border border-border hover:bg-accent text-left text-xs transition-colors"
+              >
+                <Sparkles className="h-3 w-3 text-gray-500" />
+                <div>
+                  <div className="font-medium">Free User</div>
+                  <div className="text-muted-foreground">Sees ads</div>
+                </div>
+              </button>
+              <button
+                type="button"
+                onClick={() => { setEmail(DEMO_ACCOUNTS.basic.email); setPassword(DEMO_ACCOUNTS.basic.password); }}
+                className="flex items-center gap-2 p-2 rounded-lg border border-border hover:bg-accent text-left text-xs transition-colors"
+              >
+                <Badge className="h-3 w-3 bg-blue-500" />
+                <div>
+                  <div className="font-medium">Basic User</div>
+                  <div className="text-muted-foreground">Sees ads</div>
+                </div>
+              </button>
+              <button
+                type="button"
+                onClick={() => { setEmail(DEMO_ACCOUNTS.premium.email); setPassword(DEMO_ACCOUNTS.premium.password); }}
+                className="flex items-center gap-2 p-2 rounded-lg border border-yellow-500/50 hover:bg-yellow-500/10 text-left text-xs transition-colors"
+              >
+                <Crown className="h-3 w-3 text-yellow-500" />
+                <div>
+                  <div className="font-medium">Premium User</div>
+                  <div className="text-muted-foreground">No ads</div>
+                </div>
+              </button>
+              <button
+                type="button"
+                onClick={() => { setEmail(DEMO_ACCOUNTS.elite.email); setPassword(DEMO_ACCOUNTS.elite.password); }}
+                className="flex items-center gap-2 p-2 rounded-lg border border-purple-500/50 hover:bg-purple-500/10 text-left text-xs transition-colors"
+              >
+                <Crown className="h-3 w-3 text-purple-500" />
+                <div>
+                  <div className="font-medium">Elite User</div>
+                  <div className="text-muted-foreground">No ads</div>
+                </div>
+              </button>
+            </div>
+
+            <Separator className="my-2" />
+
+            {/* Staff accounts */}
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={() => { setEmail(DEMO_ACCOUNTS.nutritionist.email); setPassword(DEMO_ACCOUNTS.nutritionist.password); }}
+                className="flex items-center gap-2 p-2 rounded-lg border border-green-500/50 hover:bg-green-500/10 text-left text-xs transition-colors"
+              >
+                <Shield className="h-3 w-3 text-green-500" />
+                <div>
+                  <div className="font-medium">Nutritionist</div>
+                  <div className="text-muted-foreground">Staff - No ads</div>
+                </div>
+              </button>
+              <button
+                type="button"
+                onClick={() => { setEmail(DEMO_ACCOUNTS.superadmin.email); setPassword(DEMO_ACCOUNTS.superadmin.password); }}
+                className="flex items-center gap-2 p-2 rounded-lg border border-red-500/50 hover:bg-red-500/10 text-left text-xs transition-colors"
+              >
+                <Shield className="h-3 w-3 text-red-500" />
+                <div>
+                  <div className="font-medium">Super Admin</div>
+                  <div className="text-muted-foreground">Full access</div>
+                </div>
+              </button>
+            </div>
+          </CardContent>
+        </Card>
       </motion.div>
     </div>
   )

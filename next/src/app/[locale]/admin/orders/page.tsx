@@ -1,0 +1,365 @@
+'use client'
+
+import { useMemo, useState } from 'react'
+import { useTranslations } from 'next-intl'
+import {
+  Search,
+  Download,
+  ShoppingBag,
+  CreditCard,
+  Package,
+  TrendingUp,
+  Clock,
+  Truck,
+  CheckCircle2,
+  XCircle,
+  RotateCcw,
+  ChevronDown,
+  type LucideIcon,
+} from 'lucide-react'
+import { useSupabaseQuery } from '@/lib/hooks/useSupabaseQuery'
+
+type Status = 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled' | 'refunded'
+
+interface AdminOrder {
+  id: string
+  customerName: string
+  customerInitials: string
+  customerEmail: string
+  itemCount: number
+  total: number
+  status: Status
+  placedISO: string
+}
+
+const STATUS_META: Record<Status, { Icon: LucideIcon; tint: string }> = {
+  pending:    { Icon: Clock,        tint: '#9baf9f' },
+  processing: { Icon: Package,      tint: '#06b6d4' },
+  shipped:    { Icon: Truck,        tint: '#e8912a' },
+  delivered:  { Icon: CheckCircle2, tint: '#a3e635' },
+  cancelled:  { Icon: XCircle,      tint: '#f43f5e' },
+  refunded:   { Icon: RotateCcw,    tint: '#a855f7' },
+}
+
+const FILTERS: ('all' | Status)[] = [
+  'all', 'pending', 'processing', 'shipped', 'delivered', 'cancelled', 'refunded',
+]
+
+const SEED: AdminOrder[] = [
+  { id: 'GF-10254', customerName: 'Sara Khoury',     customerInitials: 'SK', customerEmail: 'sara@example.com',   itemCount: 3, total: 92,  status: 'pending',    placedISO: '2026-05-03' },
+  { id: 'GF-10253', customerName: 'Layla Hijazi',    customerInitials: 'LH', customerEmail: 'layla@example.com',  itemCount: 2, total: 66,  status: 'shipped',    placedISO: '2026-04-29' },
+  { id: 'GF-10250', customerName: 'Maya Khalil',     customerInitials: 'MK', customerEmail: 'maya@example.com',   itemCount: 4, total: 124, status: 'processing', placedISO: '2026-04-28' },
+  { id: 'GF-10241', customerName: 'Yousef Abu Shaer', customerInitials: 'YA', customerEmail: 'yousef@example.com', itemCount: 1, total: 28,  status: 'delivered',  placedISO: '2026-04-22' },
+  { id: 'GF-10239', customerName: 'Diana Costa',     customerInitials: 'DC', customerEmail: 'diana@example.com',  itemCount: 5, total: 152, status: 'delivered',  placedISO: '2026-04-19' },
+  { id: 'GF-10231', customerName: 'Omar Saadeh',     customerInitials: 'OS', customerEmail: 'omar@example.com',   itemCount: 2, total: 48,  status: 'cancelled',  placedISO: '2026-04-15' },
+  { id: 'GF-10222', customerName: 'Maya Khalil',     customerInitials: 'MK', customerEmail: 'maya@example.com',   itemCount: 1, total: 22,  status: 'refunded',   placedISO: '2026-04-10' },
+  { id: 'GF-10213', customerName: 'Rasha Tarawneh',  customerInitials: 'RT', customerEmail: 'rasha@example.com',  itemCount: 3, total: 78,  status: 'delivered',  placedISO: '2026-04-04' },
+  { id: 'GF-10199', customerName: 'Layla Hijazi',    customerInitials: 'LH', customerEmail: 'layla@example.com',  itemCount: 4, total: 52,  status: 'delivered',  placedISO: '2026-03-30' },
+  { id: 'GF-10184', customerName: 'Karim Jubran',    customerInitials: 'KJ', customerEmail: 'karim@example.com',  itemCount: 2, total: 60,  status: 'delivered',  placedISO: '2026-03-25' },
+]
+
+export default function AdminOrdersPage() {
+  const t = useTranslations('admin')
+  const tO = useTranslations('admin.ordersPage')
+  const tStatus = useTranslations('orders')
+
+  const [filter, setFilter] = useState<'all' | Status>('all')
+  const [query, setQuery] = useState('')
+  const [openId, setOpenId] = useState<string | null>(null)
+
+  const live = useSupabaseQuery<AdminOrder[]>(async (supabase) => {
+    type OrderRow = {
+      id: string
+      user_id: string
+      total_jod: number
+      status: Status
+      created_at: string
+    }
+    const { data: orders } = await supabase
+      .from('orders')
+      .select('id, user_id, total_jod, status, created_at')
+      .order('created_at', { ascending: false })
+      .limit(80)
+    const rows = (orders as OrderRow[] | null) ?? []
+    if (rows.length === 0) return []
+
+    // Hydrate item counts (single grouped query)
+    const orderIds = rows.map((r) => r.id)
+    const { data: itemRows } = await supabase
+      .from('order_items')
+      .select('order_id, qty')
+      .in('order_id', orderIds)
+    type ItemRow = { order_id: string; qty: number }
+    const itemCount = new Map<string, number>()
+    for (const i of (itemRows as ItemRow[] | null) ?? []) {
+      itemCount.set(i.order_id, (itemCount.get(i.order_id) ?? 0) + i.qty)
+    }
+
+    // Hydrate customer names
+    const customerIds = Array.from(new Set(rows.map((r) => r.user_id)))
+    const { data: customers } = await supabase
+      .from('profiles')
+      .select('id, full_name')
+      .in('id', customerIds)
+    type CustomerRow = { id: string; full_name: string | null }
+    const nameOf = new Map(
+      ((customers as CustomerRow[] | null) ?? []).map((c) => [c.id, c.full_name ?? 'Customer']),
+    )
+
+    return rows.map((r) => {
+      const name = nameOf.get(r.user_id) ?? 'Customer'
+      return {
+        id: r.id,
+        customerName: name,
+        customerInitials: name.split(/\s+/).map((n) => n[0]).slice(0, 2).join('').toUpperCase(),
+        customerEmail: '',
+        itemCount: itemCount.get(r.id) ?? 0,
+        total: r.total_jod,
+        status: r.status,
+        placedISO: r.created_at,
+      }
+    })
+  }, [])
+
+  const sourceList = (live.data && live.data.length > 0) ? live.data : SEED
+
+  const visible = useMemo(() => {
+    const q = query.trim().toLowerCase()
+    return sourceList.filter((o) => {
+      if (filter !== 'all' && o.status !== filter) return false
+      if (
+        q &&
+        !o.id.toLowerCase().includes(q) &&
+        !o.customerEmail.toLowerCase().includes(q) &&
+        !o.customerName.toLowerCase().includes(q)
+      ) {
+        return false
+      }
+      return true
+    })
+  }, [sourceList, filter, query])
+
+  const totalRevenue = sourceList.filter(
+    (o) => o.status === 'delivered' || o.status === 'shipped' || o.status === 'processing',
+  ).reduce((acc, o) => acc + o.total, 0)
+  const ordersThisMonth = sourceList.length
+  const aov = sourceList.length > 0 ? Math.round(totalRevenue / sourceList.length) : 0
+  const fulfillmentRate = sourceList.length > 0 ? Math.round(
+    (sourceList.filter((o) => o.status === 'delivered').length / sourceList.length) * 100,
+  ) : 0
+
+  return (
+    <div className="px-4 md:px-8 py-6 md:py-8 max-w-screen-xl mx-auto space-y-6">
+      <header className="flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <h1
+            className="font-display font-bold text-fg-1 tracking-tight"
+            style={{ fontSize: 'clamp(28px, 4vw, 40px)', lineHeight: 1.1 }}
+          >
+            {t('orders')}
+          </h1>
+          <p className="mt-2 text-sm md:text-base text-fg-2">{tO('subtitle')}</p>
+        </div>
+        <button
+          type="button"
+          className="inline-flex items-center gap-1.5 rounded-pill bg-surface-raised border border-border h-10 px-4 text-xs font-semibold text-fg-1 hover:border-primary/40"
+        >
+          <Download className="w-3.5 h-3.5" strokeWidth={1.75} />
+          {tO('exportCsv')}
+        </button>
+      </header>
+
+      {/* KPIs */}
+      <section className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <Stat Icon={CreditCard} tint="#a3e635" label={tO('totalRevenue')}    value={`${totalRevenue} JOD`} />
+        <Stat Icon={ShoppingBag} tint="#06b6d4" label={tO('ordersThisMonth')} value={ordersThisMonth} />
+        <Stat Icon={TrendingUp} tint="#e8912a" label={tO('avgOrderValue')}    value={`${aov} JOD`} />
+        <Stat Icon={CheckCircle2} tint="#a855f7" label={tO('fulfillment')}     value={`${fulfillmentRate}%`} />
+      </section>
+
+      {/* Search + filter */}
+      <div className="flex flex-wrap items-center gap-3">
+        <div className="relative flex-1 min-w-[240px]">
+          <Search
+            className="absolute start-4 top-1/2 -translate-y-1/2 w-4 h-4 text-fg-3"
+            strokeWidth={1.75}
+          />
+          <input
+            type="text"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder={tO('search')}
+            className="w-full h-11 rounded-pill bg-surface border border-border ps-11 pe-4 text-sm text-fg-1 placeholder-fg-3 focus:outline-none focus:border-primary"
+          />
+        </div>
+        <div className="flex items-center gap-1 overflow-x-auto -mx-1 px-1">
+          {FILTERS.map((f) => (
+            <button
+              key={f}
+              type="button"
+              onClick={() => setFilter(f)}
+              className={`shrink-0 rounded-pill h-9 px-4 text-xs font-semibold transition-colors ${
+                filter === f
+                  ? 'bg-primary/20 text-lime-400 border border-primary/40'
+                  : 'bg-surface border border-border text-fg-2 hover:border-primary/40'
+              }`}
+            >
+              {f === 'all' ? tO('filterAll') : tStatus(f)}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {visible.length === 0 ? (
+        <div className="rounded-xl border border-dashed border-border bg-surface/50 p-12 text-center">
+          <ShoppingBag className="w-9 h-9 mx-auto mb-3 text-fg-3" strokeWidth={1.5} />
+          <p className="text-base font-semibold text-fg-1">{tO('noOrders')}</p>
+          <p className="mt-1 text-sm text-fg-2">{tO('noOrdersBody')}</p>
+        </div>
+      ) : (
+        <ul className="rounded-xl border border-border bg-surface divide-y divide-border overflow-hidden">
+          {visible.map((o) => (
+            <OrderRow
+              key={o.id}
+              tO={tO}
+              tStatus={tStatus}
+              order={o}
+              expanded={openId === o.id}
+              onToggle={() => setOpenId((c) => (c === o.id ? null : o.id))}
+            />
+          ))}
+        </ul>
+      )}
+    </div>
+  )
+}
+
+function OrderRow({
+  tO,
+  tStatus,
+  order,
+  expanded,
+  onToggle,
+}: {
+  tO: ReturnType<typeof useTranslations>
+  tStatus: ReturnType<typeof useTranslations>
+  order: AdminOrder
+  expanded: boolean
+  onToggle: () => void
+}) {
+  const meta = STATUS_META[order.status]
+  return (
+    <li className="bg-surface">
+      <button
+        type="button"
+        onClick={onToggle}
+        className="w-full text-start grid grid-cols-[36px_1fr_auto] md:grid-cols-[36px_1.5fr_2fr_1fr_1fr_auto_36px] gap-3 items-center px-5 py-3 hover:bg-surface-raised transition-colors"
+        aria-expanded={expanded}
+      >
+        <span
+          className="shrink-0 w-9 h-9 rounded-lg inline-flex items-center justify-center"
+          style={{ background: `${meta.tint}1a`, color: meta.tint }}
+        >
+          <meta.Icon className="w-4 h-4" strokeWidth={1.75} />
+        </span>
+        <div className="min-w-0">
+          <p className="text-sm font-mono text-fg-1 truncate" dir="ltr">
+            {order.id}
+          </p>
+          <p className="md:hidden text-xs text-fg-3 truncate">
+            {order.customerName} · {order.itemCount} items
+          </p>
+        </div>
+        <div className="hidden md:block min-w-0">
+          <p className="text-sm text-fg-1 truncate">{order.customerName}</p>
+          <p className="text-xs text-fg-3 font-mono truncate" dir="ltr">
+            {order.customerEmail}
+          </p>
+        </div>
+        <p className="hidden md:block text-xs text-fg-2 font-mono" dir="ltr">
+          {tO('itemsCount', { count: order.itemCount })}
+        </p>
+        <p className="hidden md:block font-mono text-sm text-fg-1" dir="ltr">
+          {order.total} <span className="text-xs text-fg-3">JOD</span>
+        </p>
+        <span
+          className="hidden md:inline-flex rounded-pill h-5 px-2 items-center text-[10px] uppercase tracking-eyebrow font-bold"
+          style={{ background: `${meta.tint}1a`, color: meta.tint }}
+        >
+          {tStatus(order.status)}
+        </span>
+        <ChevronDown
+          className={`hidden md:block w-4 h-4 text-fg-3 justify-self-end transition-transform ${
+            expanded ? 'rotate-180' : ''
+          }`}
+          strokeWidth={1.75}
+        />
+      </button>
+      {expanded && (
+        <div className="border-t border-border bg-bg-deeper/30 px-5 py-4 flex flex-wrap items-center justify-between gap-3 text-xs text-fg-2 font-mono" dir="ltr">
+          <span>
+            placed {new Date(order.placedISO).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
+          </span>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              className="inline-flex items-center gap-1.5 rounded-pill bg-surface-raised border border-border h-9 px-4 text-xs font-semibold text-fg-1 hover:border-primary/40"
+            >
+              {tO('viewDetails')}
+            </button>
+            {order.status !== 'refunded' && order.status !== 'cancelled' && (
+              <>
+                <button
+                  type="button"
+                  className="inline-flex items-center gap-1.5 rounded-pill bg-amber-500/15 h-9 px-4 text-xs font-semibold hover:bg-amber-500/25"
+                  style={{ color: '#e8912a' }}
+                >
+                  <RotateCcw className="w-3 h-3" strokeWidth={1.75} />
+                  {tO('refund')}
+                </button>
+                <button
+                  type="button"
+                  className="inline-flex items-center gap-1.5 rounded-pill bg-rose-500/15 text-rose-400 h-9 px-4 text-xs font-semibold hover:bg-rose-500/25"
+                >
+                  <XCircle className="w-3 h-3" strokeWidth={1.75} />
+                  {tO('cancel')}
+                </button>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+    </li>
+  )
+}
+
+function Stat({
+  Icon,
+  tint,
+  label,
+  value,
+}: {
+  Icon: LucideIcon
+  tint: string
+  label: string
+  value: string | number
+}) {
+  return (
+    <article className="rounded-xl border border-border bg-surface p-5">
+      <div className="flex items-center gap-2.5 mb-3">
+        <span
+          className="w-9 h-9 rounded-lg flex items-center justify-center"
+          style={{ background: `${tint}1a`, color: tint }}
+        >
+          <Icon className="w-4 h-4" strokeWidth={1.75} />
+        </span>
+        <span className="text-xs uppercase tracking-eyebrow text-fg-3 font-medium">
+          {label}
+        </span>
+      </div>
+      <p className="font-mono text-2xl font-bold text-fg-1" dir="ltr">
+        {value}
+      </p>
+    </article>
+  )
+}
