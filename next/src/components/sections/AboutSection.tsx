@@ -16,7 +16,7 @@ export function AboutSection() {
 
   const name = isAr ? NUTRITIONIST.nameAr : NUTRITIONIST.name
   const role = isAr ? NUTRITIONIST.roleAr : NUTRITIONIST.role
-  const bio = isAr ? NUTRITIONIST.bio.longAr : NUTRITIONIST.bio.long
+  const bio = t('aboutBioLong')
   const credentials = isAr
     ? NUTRITIONIST.credentialsAr
     : NUTRITIONIST.credentials
@@ -38,7 +38,7 @@ export function AboutSection() {
         >
           <Image
             src="/images/dr-rawan-othman.jpg"
-            alt={`${NUTRITIONIST.name} — ${NUTRITIONIST.role}`}
+            alt={`${name} — ${role}`}
             width={480}
             height={640}
             priority
