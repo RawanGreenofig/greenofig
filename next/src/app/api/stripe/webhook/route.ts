@@ -170,6 +170,13 @@ async function handleCheckoutCompleted(
       }
     }
 
+    console.log(
+      '[stripe webhook] checkout.session.completed: setting tier:',
+      tier,
+      'for user:',
+      userId,
+    )
+
     await service
       .from('subscriptions')
       .upsert({
@@ -305,6 +312,14 @@ async function handleSubscriptionUpsert(
   // Mirror the active tier onto profiles so the rest of the app doesn't
   // have to JOIN to subscriptions on every request.
   if (sub.status === 'active' || sub.status === 'trialing') {
+    console.log(
+      '[stripe webhook] subscription.upsert: setting tier:',
+      tier,
+      'for user:',
+      userId,
+      'status:',
+      sub.status,
+    )
     await service
       .from('profiles')
       .update({ tier } as never)
