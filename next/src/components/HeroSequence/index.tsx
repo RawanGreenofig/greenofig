@@ -215,11 +215,15 @@ export function HeroSequence() {
                 }}
               >
                 <p
-                  className="inline-block font-sans text-xl md:text-2xl font-medium tracking-wide"
+                  className="inline-block font-sans font-medium"
                   style={{
-                    color: '#86efac',
+                    color: '#ffffff',
+                    fontSize: 'clamp(16px, 2.5vw, 22px)',
+                    fontWeight: 500,
+                    letterSpacing: '0.05em',
                     lineHeight: 1.5,
-                    textShadow: 'none',
+                    opacity: 1,
+                    textShadow: '0 2px 12px rgba(0,0,0,0.8)',
                   }}
                 >
                   <WordReveal show={showSub} exit={exitInitial}>

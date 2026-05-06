@@ -12,6 +12,7 @@
     "setup:accounts": "tsx scripts/setup-accounts.ts",
     "fix:subscriptions": "tsx scripts/fix-subscriptions.ts",
     "fix:roles": "tsx scripts/fix-roles.ts",
+    "fix:nutritionist-email": "tsx scripts/fix-nutritionist-email.ts",
     "set:nutritionist": "tsx scripts/set-nutritionist.ts",
     "webhook:listen": "stripe listen --forward-to localhost:3000/api/webhooks/stripe"
   },

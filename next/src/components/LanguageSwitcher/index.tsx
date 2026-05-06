@@ -48,10 +48,7 @@ export function LanguageSwitcher({ className }: { className?: string }) {
     <div
       role="group"
       aria-label={t('switchTo', { language: '' }).trim() || 'Language'}
-      className={cn(
-        'inline-flex items-center gap-1 rounded-pill border border-fg-1/15 bg-bg-deeper/30 backdrop-blur-md px-1 py-1',
-        className,
-      )}
+      className={cn('inline-flex items-center gap-1', className)}
     >
       {routing.locales.map((code) => {
         const isActive = code === locale
@@ -64,12 +61,24 @@ export function LanguageSwitcher({ className }: { className?: string }) {
             aria-label={t('switchTo', {
               language: code === 'en' ? t('english') : t('arabic'),
             })}
-            className={cn(
-              'rounded-pill px-3 py-1 text-xs font-semibold transition-colors duration-fast ease-out',
-              isActive
-                ? 'bg-lime-500/15 text-lime-500'
-                : 'text-fg-2 hover:text-fg-1',
-            )}
+            className="text-xs font-semibold transition-colors duration-fast ease-out"
+            style={{
+              padding: '4px 12px',
+              borderRadius: 999,
+              color: '#ffffff',
+              border: '1px solid rgba(255,255,255,0.12)',
+              background: isActive
+                ? 'rgba(255,255,255,0.18)'
+                : 'rgba(255,255,255,0.08)',
+            }}
+            onMouseEnter={(e) => {
+              if (!isActive)
+                e.currentTarget.style.background = 'rgba(255,255,255,0.15)'
+            }}
+            onMouseLeave={(e) => {
+              if (!isActive)
+                e.currentTarget.style.background = 'rgba(255,255,255,0.08)'
+            }}
           >
             {LABELS[code]}
           </button>

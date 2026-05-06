@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { useLocale, useTranslations } from 'next-intl'
+import { useTranslations } from 'next-intl'
 import { Menu, X, ChevronDown, LayoutDashboard, Settings, LogOut } from 'lucide-react'
 import { Link, usePathname } from '@/i18n/navigation'
 import { LanguageSwitcher } from '@/components/LanguageSwitcher'
@@ -20,8 +20,6 @@ import { useAuth } from '@/context/AuthContext'
  */
 export function SiteHeader() {
   const t = useTranslations('nav')
-  const locale = useLocale()
-  const isRtl = locale === 'ar'
   const { user, profile, signOut, isLoading } = useAuth()
   const pathname = usePathname()
 
@@ -121,8 +119,29 @@ export function SiteHeader() {
                 <button
                   type="button"
                   onClick={() => setMenuOpen((o) => !o)}
-                  className="inline-flex items-center gap-2 pe-3 ps-1 h-10 rounded-full transition-colors"
-                  style={{ background: '#111', border: '1px solid #222' }}
+                  className="inline-flex items-center h-10 rounded-full transition-colors"
+                  style={{
+                    gap: 10,
+                    paddingInlineStart: 8,
+                    paddingInlineEnd: 14,
+                    minWidth: 'fit-content',
+                    whiteSpace: 'nowrap',
+                    background: scrolled ? '#1a1a1a' : 'rgba(255,255,255,0.08)',
+                    border: scrolled
+                      ? '1px solid #2a2a2a'
+                      : '1px solid rgba(255,255,255,0.12)',
+                    color: '#ffffff',
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = scrolled
+                      ? '#222'
+                      : 'rgba(255,255,255,0.15)'
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = scrolled
+                      ? '#1a1a1a'
+                      : 'rgba(255,255,255,0.08)'
+                  }}
                   aria-haspopup="menu"
                   aria-expanded={menuOpen}
                 >
@@ -229,11 +248,15 @@ export function SiteHeader() {
                         setMenuOpen(false)
                         void signOut()
                       }}
-                      className="w-full flex items-center gap-3 rounded-[10px] px-3 py-3 text-sm font-medium transition-colors"
+                      className="w-full flex items-center rounded-[10px] text-sm font-medium transition-colors"
                       style={{
                         color: '#f87171',
-                        marginTop: 4,
+                        gap: 12,
+                        padding: '10px 16px',
                         minHeight: 44,
+                        minWidth: 180,
+                        whiteSpace: 'nowrap',
+                        marginTop: 4,
                         borderTop: '1px solid #222',
                       }}
                       onMouseEnter={(e) =>
@@ -283,90 +306,126 @@ export function SiteHeader() {
         </div>
       </header>
 
-      {/* Mobile drawer — always mounted so the slide+fade animation runs
-       *  on both open and close. `pointer-events-none` keeps it inert
-       *  while hidden so it doesn't trap clicks. */}
+      {/* Mobile drawer — glassmorphism panel that slides + fades down
+       * from the top of the viewport. Always mounted so the closing
+       * animation can run; pointer-events-none keeps it inert while
+       * hidden so it doesn't trap clicks. */}
       <div
-        className={`md:hidden fixed inset-0 z-50 transition-opacity duration-300 ${
-          drawerOpen
-            ? 'opacity-100 pointer-events-auto'
-            : 'opacity-0 pointer-events-none'
-        }`}
+        className="md:hidden fixed inset-0"
+        style={{ zIndex: 100, pointerEvents: drawerOpen ? 'auto' : 'none' }}
         role="dialog"
         aria-modal
         aria-hidden={!drawerOpen}
       >
+        {/* Backdrop */}
         <button
           type="button"
           aria-label={t('closeMenu')}
           tabIndex={drawerOpen ? 0 : -1}
           onClick={() => setDrawerOpen(false)}
           className="absolute inset-0"
-          style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }}
-        />
-        <div
-          className="absolute top-0 end-0 h-full w-72 max-w-[80vw] flex flex-col transition-transform duration-300 ease-out"
           style={{
-            background: '#0e0e0e',
-            borderInlineStart: '1px solid #222',
-            // RTL: panel is at the LEFT edge (`end-0` flips to `left:0`),
-            // so to hide it we slide it OFF-LEFT (negative X).
-            // LTR: panel is at the right edge, hide by sliding off-RIGHT.
-            transform: drawerOpen
-              ? 'translateX(0)'
-              : isRtl
-                ? 'translateX(-100%)'
-                : 'translateX(100%)',
+            background: 'rgba(0, 0, 0, 0.4)',
+            backdropFilter: 'blur(4px)',
+            WebkitBackdropFilter: 'blur(4px)',
+            opacity: drawerOpen ? 1 : 0,
+            transition: 'opacity 300ms ease',
+          }}
+        />
+
+        {/* Glass panel — slides + fades from top */}
+        <div
+          className="absolute inset-x-0 top-0 flex flex-col"
+          style={{
+            background: 'rgba(10, 20, 10, 0.75)',
+            backdropFilter: 'blur(24px)',
+            WebkitBackdropFilter: 'blur(24px)',
+            border: '1px solid rgba(255, 255, 255, 0.08)',
+            borderRadius: '0 0 24px 24px',
+            padding: '80px 24px 32px',
+            boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
+            transition:
+              'transform 350ms cubic-bezier(0.16, 1, 0.3, 1), opacity 350ms cubic-bezier(0.16, 1, 0.3, 1)',
+            transform: drawerOpen ? 'translateY(0)' : 'translateY(-20px)',
+            opacity: drawerOpen ? 1 : 0,
           }}
         >
-          <div
-            className="px-5 h-16 flex items-center justify-between shrink-0"
-            style={{ borderBottom: '1px solid #1a1a1a' }}
+          {/* Close button — top-right, regardless of writing direction */}
+          <button
+            type="button"
+            onClick={() => setDrawerOpen(false)}
+            aria-label={t('closeMenu')}
+            className="inline-flex items-center justify-center"
+            style={{
+              position: 'absolute',
+              top: 20,
+              insetInlineEnd: 20,
+              width: 36,
+              height: 36,
+              borderRadius: '50%',
+              background: 'rgba(255,255,255,0.1)',
+              color: '#fff',
+              border: 'none',
+              cursor: 'pointer',
+            }}
           >
-            <Link href="/" aria-label="Greenofig">
-              <Wordmark size="md" />
-            </Link>
-            <button
-              type="button"
-              onClick={() => setDrawerOpen(false)}
-              aria-label={t('closeMenu')}
-              className="inline-flex items-center justify-center w-10 h-10 rounded-xl"
-              style={{ background: '#1a1a1a', border: '1px solid #222', color: '#fff' }}
-            >
-              <X className="w-5 h-5" strokeWidth={1.75} />
-            </button>
-          </div>
-          <nav className="flex-1 px-5 py-4 flex flex-col gap-1 overflow-y-auto">
+            <X className="w-[18px] h-[18px]" strokeWidth={1.75} />
+          </button>
+
+          <nav className="flex flex-col">
             {navLinks.map((l) => (
               <a
                 key={l.href}
                 href={l.href}
                 onClick={() => setDrawerOpen(false)}
-                className="py-4 text-base font-medium text-white"
-                style={{ borderBottom: '1px solid #1a1a1a' }}
+                className="block transition-colors duration-200"
+                style={{
+                  padding: '16px 0',
+                  fontSize: 18,
+                  fontWeight: 500,
+                  color: 'rgba(255,255,255,0.85)',
+                  borderBottom: '1px solid rgba(255,255,255,0.08)',
+                }}
+                onMouseEnter={(e) =>
+                  (e.currentTarget.style.color = '#4ade80')
+                }
+                onMouseLeave={(e) =>
+                  (e.currentTarget.style.color = 'rgba(255,255,255,0.85)')
+                }
               >
                 {l.label}
               </a>
             ))}
           </nav>
-          <div
-            className="p-5 flex items-center gap-3"
-            style={{ borderTop: '1px solid #1a1a1a' }}
-          >
-            <LanguageSwitcher />
+
+          <div className="mt-8 flex flex-col gap-3">
             {!user ? (
               <>
                 <Link
                   href="/sign-in"
-                  className="flex-1 inline-flex items-center justify-center text-sm text-white py-3 rounded-xl"
-                  style={{ background: '#1a1a1a', border: '1px solid #222' }}
+                  className="text-center transition-colors"
+                  style={{
+                    border: '1px solid rgba(255,255,255,0.2)',
+                    color: '#fff',
+                    padding: '12px 0',
+                    borderRadius: 12,
+                    fontSize: 15,
+                    fontWeight: 500,
+                  }}
                 >
                   {t('signIn')}
                 </Link>
                 <Link
                   href="/sign-up"
-                  className="flex-1 inline-flex items-center justify-center text-sm font-semibold py-3 rounded-xl"
-                  style={{ background: '#4ade80', color: '#000' }}
+                  className="text-center transition-colors"
+                  style={{
+                    background: '#4ade80',
+                    color: '#000',
+                    padding: '12px 0',
+                    borderRadius: 12,
+                    fontSize: 15,
+                    fontWeight: 600,
+                  }}
                 >
                   {t('getStarted')}
                 </Link>
@@ -374,8 +433,15 @@ export function SiteHeader() {
             ) : (
               <Link
                 href="/dashboard"
-                className="flex-1 inline-flex items-center justify-center text-sm font-semibold py-3 rounded-xl"
-                style={{ background: '#4ade80', color: '#000' }}
+                className="text-center transition-colors"
+                style={{
+                  background: '#4ade80',
+                  color: '#000',
+                  padding: '12px 0',
+                  borderRadius: 12,
+                  fontSize: 15,
+                  fontWeight: 600,
+                }}
               >
                 {t('dashboard')}
               </Link>
@@ -403,8 +469,15 @@ function DropLink({
       href={href}
       onClick={onClick}
       role="menuitem"
-      className="flex items-center gap-3 rounded-[10px] px-3 py-3 text-sm font-medium transition-colors"
-      style={{ color: '#fff', minHeight: 44 }}
+      className="flex items-center rounded-[10px] text-sm font-medium transition-colors"
+      style={{
+        color: '#fff',
+        gap: 12,
+        padding: '10px 16px',
+        minHeight: 44,
+        minWidth: 180,
+        whiteSpace: 'nowrap',
+      }}
       onMouseEnter={(e) => (e.currentTarget.style.background = '#1a1a1a')}
       onMouseLeave={(e) =>
         (e.currentTarget.style.background = 'transparent')
