@@ -6,9 +6,11 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from 'react'
+import { usePathname } from 'next/navigation'
 import type { Session, User } from '@supabase/supabase-js'
 import { getBrowserSupabase } from '@/lib/supabase/client'
 import type { Profile, UserRole, UserTier } from '@/lib/supabase/types'
@@ -77,8 +79,37 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
       },
     )
-    return () => sub.subscription.unsubscribe()
+
+    // Refresh whenever the tab regains focus — covers the case where the
+    // user was just redirected back from Stripe Checkout and we need the
+    // newly-active tier to land in the UI without a manual reload.
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') {
+        void refresh()
+      }
+    }
+    document.addEventListener('visibilitychange', onVisible)
+
+    return () => {
+      sub.subscription.unsubscribe()
+      document.removeEventListener('visibilitychange', onVisible)
+    }
   }, [supabase, refresh, fetchProfile])
+
+  // Refetch the profile on every route change so subscription tier (which
+  // can flip server-side via Stripe webhooks) never goes stale. Skip the
+  // very first render — the initial mount effect already calls refresh().
+  const pathname = usePathname()
+  const firstRender = useRef(true)
+  useEffect(() => {
+    if (firstRender.current) {
+      firstRender.current = false
+      return
+    }
+    if (session?.user) {
+      void fetchProfile(session.user.id).then((p) => p && setProfile(p))
+    }
+  }, [pathname, session?.user, fetchProfile])
 
   const signOut = useCallback(async () => {
     if (!supabase) return

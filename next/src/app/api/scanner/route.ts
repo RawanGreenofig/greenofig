@@ -47,12 +47,25 @@ interface ScannerResponse {
   drNote: string
   alternatives: string[]
   scanId?: string
+  detected?: boolean
+  reason?: string
 }
 
-const SYSTEM_PROMPT = `You are Dr. Rawan Othman's clinical food-scanner assistant. Identify the foods on the plate and return realistic nutrition estimates.
+// Confidence scores below 70 are considered "no food detected" — the scanner
+// should refuse to fabricate macros for surfaces, walls, or ambiguous shots.
+const FOOD_CONFIDENCE_THRESHOLD = 70
 
-Return ONLY valid JSON in this exact shape, no prose, no markdown:
+const SYSTEM_PROMPT = `You are Dr. Rawan Othman's clinical food-scanner assistant.
+
+ONLY analyze actual food items in the photo. If the image does not clearly
+show food (e.g. a wall, floor, person, animal, random surface, blurry blank
+frame), you MUST return EXACTLY this JSON and nothing else:
+{ "detected": false, "reason": "No food detected" }
+
+Otherwise, identify the foods on the plate and return realistic nutrition
+estimates as JSON in this exact shape, no prose, no markdown:
 {
+  "detected": true,
   "foods": [
     { "name": string, "confidence": number 0..100, "servingLabel": string, "calories": number, "protein": number, "carbs": number, "fat": number }
   ],
@@ -62,11 +75,12 @@ Return ONLY valid JSON in this exact shape, no prose, no markdown:
 
 Guidelines:
 - 1 to 5 foods, ranked by visual prominence
+- "confidence" is 0..100; only return foods with confidence >= 70
 - "servingLabel" should be human-readable ("120 g chicken breast", "1 medium banana")
 - Macros are per-serving and integers
 - "drNote" is one to two sentences in Dr. Rawan's clinical-but-warm voice (Mediterranean, evidence-led, no shame)
 - "alternatives" is 0-3 brief swap suggestions ("Swap white rice for quinoa for more protein and fiber")
-- Be honest when an item is ambiguous — say so in the drNote rather than fabricating macros`
+- Do NOT guess or assume an item is food. If unsure, set detected=false.`
 
 export const POST = withAuth(async (req: NextRequest, ctx: AuthedContext) => {
   if (!isGeminiConfigured()) return serviceUnavailable('Gemini')
@@ -134,12 +148,30 @@ export const POST = withAuth(async (req: NextRequest, ctx: AuthedContext) => {
     return internalError()
   }
 
-  if (!analysis || !Array.isArray(analysis.foods)) {
+  if (!analysis) {
     return json(
       { error: { code: 'parse_failed', message: 'Could not analyze that photo.' } },
       502,
     )
   }
+
+  // Honor the model's "this isn't food" verdict. Also catch low-confidence
+  // / empty-array cases where the model hallucinated nothing useful.
+  const usableFoods = (analysis.foods ?? []).filter(
+    (f) => typeof f?.confidence === 'number' && f.confidence >= FOOD_CONFIDENCE_THRESHOLD,
+  )
+  if (analysis.detected === false || usableFoods.length === 0) {
+    return json<ScannerResponse>({
+      foods: [],
+      drNote: '',
+      alternatives: [],
+      detected: false,
+      reason:
+        analysis.reason ||
+        'No food detected. Please point the camera at food or a meal.',
+    })
+  }
+  analysis.foods = usableFoods
 
   // Persist a nutrition_logs row for the scan so quota + history work.
   const supabase = (await import('@/lib/supabase/server')).getServerSupabase()

@@ -28,11 +28,15 @@ export function Sidebar({
   const pathname = usePathname()
   const { user, profile, signOut } = useAuth()
 
+  // Root-level hrefs only match on EXACT pathname so "/dashboard" doesn't
+  // also light up when the user is on "/dashboard/track" or any other
+  // dashboard subpage. Children use the normal startsWith match so deep
+  // routes (e.g. /admin/users/123) still highlight their parent ("/admin/users").
   const ROOT_HREFS = ['/dashboard', '/nutritionist', '/admin']
-  const isActive = (href: string) =>
-    ROOT_HREFS.includes(href)
-      ? pathname === href
-      : pathname === href || pathname.startsWith(`${href}/`)
+  const isActive = (href: string) => {
+    if (ROOT_HREFS.includes(href)) return pathname === href
+    return pathname === href || pathname.startsWith(`${href}/`)
+  }
 
   const fullName = profile?.full_name?.trim()
   const displayName =
@@ -146,10 +150,10 @@ export function Sidebar({
           }}
         >
           <span
-            className="w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold shrink-0"
-            style={{ background: '#1a2e1f', color: ACCENT }}
+            className="w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold shrink-0 overflow-hidden select-none"
+            style={{ background: '#1a2e1f', color: ACCENT, lineHeight: 1 }}
           >
-            {initials}
+            {initials.slice(0, 2)}
           </span>
           <div className="flex-1 min-w-0">
             <p

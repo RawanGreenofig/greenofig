@@ -138,10 +138,10 @@ export function Topbar({ onOpenMenu }: { onOpenMenu: () => void }) {
           aria-expanded={open}
         >
           <span
-            className="w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold"
-            style={{ background: '#1a2e1f', color: '#4ade80' }}
+            className="w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 overflow-hidden select-none"
+            style={{ background: '#1a2e1f', color: '#4ade80', lineHeight: 1 }}
           >
-            {initials}
+            {initials.slice(0, 2)}
           </span>
           <ChevronDown
             className={cn(

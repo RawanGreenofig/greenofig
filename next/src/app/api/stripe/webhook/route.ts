@@ -113,17 +113,26 @@ async function handleCheckoutCompleted(
   if (!userId) return
 
   // Subscriptions: fully resolved via the customer.subscription.* events;
-  // we just need to make sure the customer id is on file.
+  // we just need to make sure the customer id is on file. Also mirror the
+  // tier to profiles immediately so the user sees the upgrade as soon as
+  // they land back on the app — without waiting for customer.subscription.*
+  // to land seconds later.
   if (meta.kind === 'subscription' && session.customer) {
+    const tier = (meta.tier as Tier) ?? 'free'
     await service
       .from('subscriptions')
       .upsert({
         user_id: userId,
-        tier: (meta.tier as Tier) ?? 'free',
+        tier,
         stripe_customer_id:
           typeof session.customer === 'string' ? session.customer : session.customer.id,
         status: 'active',
       } as never, { onConflict: 'user_id' })
+
+    await service
+      .from('profiles')
+      .update({ tier } as never)
+      .eq('id', userId)
   }
 
   if (meta.kind === 'order') {

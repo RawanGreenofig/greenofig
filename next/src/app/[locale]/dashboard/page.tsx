@@ -29,8 +29,20 @@ interface TodayQueryResult {
 export default function DashboardTodayPage() {
   const t = useTranslations('dashboard')
   const tCommon = useTranslations('common')
-  const { profile } = useUser()
-  const firstName = profile?.full_name?.split(' ')[0] ?? t('guest')
+  const { user, profile } = useUser()
+  // Cascade through every place a name might live before falling back to
+  // the localized "guest" label. profiles.full_name → Google metadata →
+  // local-part of the email address.
+  const metaFullName =
+    typeof user?.user_metadata?.full_name === 'string'
+      ? (user.user_metadata.full_name as string)
+      : null
+  const emailLocal = user?.email?.split('@')[0]?.replace(/[._]/g, ' ')
+  const firstName =
+    profile?.full_name?.trim().split(' ')[0] ||
+    metaFullName?.trim().split(' ')[0] ||
+    emailLocal?.trim().split(' ')[0] ||
+    t('guest')
   const greetingKey = pickGreeting()
   const today = new Date().toLocaleDateString(undefined, {
     weekday: 'long',
@@ -407,7 +419,10 @@ function QuickAction({
       >
         <Icon className="w-4 h-4" strokeWidth={1.75} />
       </span>
-      <span className="text-sm font-medium" style={{ color: '#ffffff' }}>
+      <span
+        className="text-sm font-medium whitespace-nowrap"
+        style={{ color: '#ffffff' }}
+      >
         {label}
       </span>
     </Link>
@@ -563,7 +578,7 @@ function ProgressCard({ t }: { t: ReturnType<typeof useTranslations> }) {
         </span>
       </div>
       <p className="font-mono text-2xl font-bold text-fg-1" dir="ltr">
-        0 kg
+        0.0 kg
       </p>
       <p className="mt-1 text-xs text-fg-3">
         {t('weightDelta', { delta: '0' })}

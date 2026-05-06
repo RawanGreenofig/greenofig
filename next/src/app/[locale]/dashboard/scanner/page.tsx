@@ -60,13 +60,16 @@ export default function ScannerPage() {
   const fileInputRef = useRef<HTMLInputElement>(null)
   const cameraInputRef = useRef<HTMLInputElement>(null)
 
-  const [stage, setStage] = useState<'idle' | 'analyzing' | 'result' | 'error'>('idle')
+  const [stage, setStage] = useState<
+    'idle' | 'analyzing' | 'result' | 'error' | 'no-food'
+  >('idle')
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const [result, setResult] = useState<ScanResult | null>(null)
   const [meal, setMeal] = useState<MealType>(pickGreetingMeal())
   const [logged, setLogged] = useState(false)
   const [scansToday, setScansToday] = useState(0) // Wired to nutrition_logs in Cluster H
   const [dragOver, setDragOver] = useState(false)
+  const [noFoodReason, setNoFoodReason] = useState<string | null>(null)
 
   const isFree = tier === 'free' || tier == null
   const limitHit = isFree && scansToday >= FREE_DAILY_LIMIT
@@ -101,6 +104,18 @@ export default function ScannerPage() {
             foods: DetectedFood[]
             drNote: string
             alternatives: string[]
+            detected?: boolean
+            reason?: string
+          }
+          // Server-side gate said this image isn't food. Don't fabricate
+          // calories — surface a clear empty-state message instead.
+          if (data.detected === false || !data.foods?.length) {
+            setNoFoodReason(
+              data.reason ||
+                'No food detected. Please point the camera at food or a meal.',
+            )
+            setStage('no-food')
+            return
           }
           setResult({
             imageUrl: url,
@@ -118,26 +133,16 @@ export default function ScannerPage() {
           return
         }
       } catch {
-        /* fall through to demo */
+        /* fall through */
       }
 
-      // Demo path — keeps the scanner usable in dev / when env unset
-      setResult({
-        imageUrl: url,
-        foods: [
-          { name: 'Grilled chicken breast', confidence: 94, servingLabel: '120 g',  calories: 198, protein: 37, carbs: 0,  fat: 4 },
-          { name: 'Brown rice',             confidence: 88, servingLabel: '150 g',  calories: 165, protein: 4,  carbs: 35, fat: 1 },
-          { name: 'Steamed broccoli',       confidence: 91, servingLabel: '90 g',   calories: 31,  protein: 3,  carbs: 6,  fat: 0 },
-        ],
-        drNote:
-          'Solid plate. Add a tablespoon of olive oil to the broccoli for healthier fat absorption of vitamins A and K.',
-        alternatives: [
-          'Swap brown rice for quinoa for more protein and fiber',
-          'Add a side of leafy greens to boost micronutrients',
-        ],
-      })
-      setStage('result')
-      setScansToday((n) => n + 1)
+      // No food detected / network failure — show the empty state instead
+      // of fabricating a demo plate. The API has already enforced quotas
+      // and refused non-food images by this point.
+      setNoFoodReason(
+        'No food detected. Please point the camera at food or a meal.',
+      )
+      setStage('no-food')
     })()
   }, [meal])
 
@@ -163,6 +168,7 @@ export default function ScannerPage() {
     setPreviewUrl(null)
     setResult(null)
     setLogged(false)
+    setNoFoodReason(null)
     setStage('idle')
   }
 
@@ -218,6 +224,16 @@ export default function ScannerPage() {
         />
       ) : stage === 'analyzing' ? (
         <AnalyzingCard previewUrl={previewUrl} t={t} />
+      ) : stage === 'no-food' ? (
+        <NoFoodCard
+          previewUrl={previewUrl}
+          reason={noFoodReason}
+          onRetry={() => {
+            setNoFoodReason(null)
+            setPreviewUrl(null)
+            setStage('idle')
+          }}
+        />
       ) : stage === 'result' && result ? (
         <ResultPanel
           t={t}
@@ -385,6 +401,59 @@ function DropZone({
           </button>
         </div>
       </label>
+    </div>
+  )
+}
+
+function NoFoodCard({
+  previewUrl,
+  reason,
+  onRetry,
+}: {
+  previewUrl: string | null
+  reason: string | null
+  onRetry: () => void
+}) {
+  return (
+    <div
+      className="rounded-2xl overflow-hidden"
+      style={{ background: '#111', border: '1px solid #1a1a1a' }}
+    >
+      {previewUrl && (
+        <div className="relative w-full aspect-[16/9]" style={{ background: '#080808' }}>
+          <Image
+            src={previewUrl}
+            alt=""
+            fill
+            unoptimized
+            className="object-cover opacity-40"
+          />
+        </div>
+      )}
+      <div className="p-10 flex flex-col items-center text-center gap-3">
+        <span
+          className="w-16 h-16 rounded-full flex items-center justify-center"
+          style={{ background: '#1a1a1a', color: '#333' }}
+        >
+          <Camera className="w-8 h-8" strokeWidth={1.5} />
+        </span>
+        <p className="text-sm" style={{ color: '#888' }}>
+          {reason ?? 'Point your camera at food'}
+        </p>
+        <p className="text-xs" style={{ color: '#444' }}>
+          We&apos;ll identify it and calculate nutrition
+        </p>
+        <button
+          type="button"
+          onClick={onRetry}
+          className="mt-3 inline-flex items-center justify-center text-sm font-semibold px-5 py-2.5 rounded-xl transition-colors"
+          style={{ background: '#4ade80', color: '#000' }}
+          onMouseEnter={(e) => (e.currentTarget.style.background = '#86efac')}
+          onMouseLeave={(e) => (e.currentTarget.style.background = '#4ade80')}
+        >
+          Try another photo
+        </button>
+      </div>
     </div>
   )
 }

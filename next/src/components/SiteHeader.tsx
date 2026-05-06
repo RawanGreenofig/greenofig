@@ -115,22 +115,30 @@ export function SiteHeader() {
                   aria-expanded={menuOpen}
                 >
                   <span
-                    className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold"
-                    style={{ background: '#1a2e1f', color: '#4ade80' }}
+                    className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 overflow-hidden select-none"
+                    style={{ background: '#1a2e1f', color: '#4ade80', lineHeight: 1 }}
                   >
-                    {initials}
+                    {initials.slice(0, 2)}
                   </span>
                   <ChevronDown
                     className="hidden md:block w-4 h-4 text-[#666]"
                     strokeWidth={1.75}
                   />
                 </button>
-                {menuOpen && (
-                  <div
-                    role="menu"
-                    className="absolute end-0 mt-2 w-56 rounded-2xl overflow-hidden z-30"
-                    style={{ background: '#111', border: '1px solid #222' }}
-                  >
+                <div
+                  role="menu"
+                  aria-hidden={!menuOpen}
+                  className={`absolute end-0 top-12 w-56 rounded-2xl overflow-hidden z-30 transition-all duration-200 ${
+                    menuOpen
+                      ? 'opacity-100 scale-100 pointer-events-auto'
+                      : 'opacity-0 scale-95 pointer-events-none'
+                  }`}
+                  style={{
+                    background: '#111',
+                    border: '1px solid #222',
+                    transformOrigin: 'top right',
+                  }}
+                >
                     {user.email && (
                       <div
                         className="px-4 py-3"
@@ -179,8 +187,7 @@ export function SiteHeader() {
                       <LogOut className="w-4 h-4" strokeWidth={1.75} />
                       <span>{t('signOut')}</span>
                     </button>
-                  </div>
-                )}
+                </div>
               </div>
             ) : (
               <>
@@ -216,84 +223,100 @@ export function SiteHeader() {
         </div>
       </header>
 
-      {/* Mobile drawer */}
-      {drawerOpen && (
+      {/* Mobile drawer — always mounted so the slide+fade animation runs
+       *  on both open and close. `pointer-events-none` keeps it inert
+       *  while hidden so it doesn't trap clicks. */}
+      <div
+        className={`md:hidden fixed inset-0 z-50 transition-opacity duration-300 ${
+          drawerOpen
+            ? 'opacity-100 pointer-events-auto'
+            : 'opacity-0 pointer-events-none'
+        }`}
+        role="dialog"
+        aria-modal
+        aria-hidden={!drawerOpen}
+      >
+        <button
+          type="button"
+          aria-label={t('closeMenu')}
+          tabIndex={drawerOpen ? 0 : -1}
+          onClick={() => setDrawerOpen(false)}
+          className="absolute inset-0"
+          style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }}
+        />
         <div
-          className="md:hidden fixed inset-0 z-50"
-          role="dialog"
-          aria-modal
+          className={`absolute top-0 end-0 h-full w-72 max-w-[80vw] flex flex-col transform transition-transform duration-300 ease-out ${
+            drawerOpen ? 'translate-x-0' : 'rtl:-translate-x-full ltr:translate-x-full'
+          }`}
+          style={{
+            background: '#0e0e0e',
+            borderInlineStart: '1px solid #222',
+          }}
         >
-          <button
-            type="button"
-            aria-label={t('closeMenu')}
-            onClick={() => setDrawerOpen(false)}
-            className="absolute inset-0"
-            style={{ background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(4px)' }}
-          />
           <div
-            className="absolute inset-x-0 top-0"
-            style={{ background: '#111', borderBottom: '1px solid #222' }}
+            className="px-5 h-16 flex items-center justify-between shrink-0"
+            style={{ borderBottom: '1px solid #1a1a1a' }}
           >
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
-              <Link href="/" aria-label="Greenofig">
-                <Wordmark size="md" />
-              </Link>
-              <button
-                type="button"
+            <Link href="/" aria-label="Greenofig">
+              <Wordmark size="md" />
+            </Link>
+            <button
+              type="button"
+              onClick={() => setDrawerOpen(false)}
+              aria-label={t('closeMenu')}
+              className="inline-flex items-center justify-center w-10 h-10 rounded-xl"
+              style={{ background: '#1a1a1a', border: '1px solid #222', color: '#fff' }}
+            >
+              <X className="w-5 h-5" strokeWidth={1.75} />
+            </button>
+          </div>
+          <nav className="flex-1 px-5 py-4 flex flex-col gap-1 overflow-y-auto">
+            {navLinks.map((l) => (
+              <a
+                key={l.href}
+                href={l.href}
                 onClick={() => setDrawerOpen(false)}
-                aria-label={t('closeMenu')}
-                className="inline-flex items-center justify-center w-10 h-10 rounded-xl"
-                style={{ background: '#1a1a1a', border: '1px solid #222', color: '#fff' }}
+                className="py-4 text-base font-medium text-white"
+                style={{ borderBottom: '1px solid #1a1a1a' }}
               >
-                <X className="w-5 h-5" strokeWidth={1.75} />
-              </button>
-            </div>
-            <nav className="px-4 sm:px-6 py-4 flex flex-col">
-              {navLinks.map((l) => (
-                <a
-                  key={l.href}
-                  href={l.href}
-                  onClick={() => setDrawerOpen(false)}
-                  className="py-3 text-base font-medium text-white"
-                  style={{ borderBottom: '1px solid #1a1a1a' }}
+                {l.label}
+              </a>
+            ))}
+          </nav>
+          <div
+            className="p-5 flex items-center gap-3"
+            style={{ borderTop: '1px solid #1a1a1a' }}
+          >
+            <LanguageSwitcher />
+            {!user ? (
+              <>
+                <Link
+                  href="/sign-in"
+                  className="flex-1 inline-flex items-center justify-center text-sm text-white py-3 rounded-xl"
+                  style={{ background: '#1a1a1a', border: '1px solid #222' }}
                 >
-                  {l.label}
-                </a>
-              ))}
-              <div className="pt-4 flex items-center gap-3">
-                <LanguageSwitcher />
-                {!user && (
-                  <>
-                    <Link
-                      href="/sign-in"
-                      className="flex-1 inline-flex items-center justify-center text-sm text-white py-3 rounded-xl"
-                      style={{ background: '#1a1a1a', border: '1px solid #222' }}
-                    >
-                      {t('signIn')}
-                    </Link>
-                    <Link
-                      href="/sign-up"
-                      className="flex-1 inline-flex items-center justify-center text-sm font-semibold py-3 rounded-xl"
-                      style={{ background: '#4ade80', color: '#000' }}
-                    >
-                      {t('getStarted')}
-                    </Link>
-                  </>
-                )}
-                {user && (
-                  <Link
-                    href="/dashboard"
-                    className="flex-1 inline-flex items-center justify-center text-sm font-semibold py-3 rounded-xl"
-                    style={{ background: '#4ade80', color: '#000' }}
-                  >
-                    {t('dashboard')}
-                  </Link>
-                )}
-              </div>
-            </nav>
+                  {t('signIn')}
+                </Link>
+                <Link
+                  href="/sign-up"
+                  className="flex-1 inline-flex items-center justify-center text-sm font-semibold py-3 rounded-xl"
+                  style={{ background: '#4ade80', color: '#000' }}
+                >
+                  {t('getStarted')}
+                </Link>
+              </>
+            ) : (
+              <Link
+                href="/dashboard"
+                className="flex-1 inline-flex items-center justify-center text-sm font-semibold py-3 rounded-xl"
+                style={{ background: '#4ade80', color: '#000' }}
+              >
+                {t('dashboard')}
+              </Link>
+            )}
           </div>
         </div>
-      )}
+      </div>
     </>
   )
 }

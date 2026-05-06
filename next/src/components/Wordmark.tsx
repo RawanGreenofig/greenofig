@@ -37,7 +37,8 @@ export function Wordmark({
     >
       <Image
         src="/logo.png"
-        alt="Greenofig"
+        alt=""
+        aria-hidden
         width={logoPx}
         height={logoPx}
         priority
