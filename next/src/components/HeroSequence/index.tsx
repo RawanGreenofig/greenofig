@@ -17,10 +17,6 @@ const STILL_FRAME = heroFrames.reducedMotionStill
 // Light, single-layer shadow for legibility — no halo / backdrop / glow.
 const TEXT_SHADOW = '0 2px 8px rgb(0 0 0 / 0.9)'
 
-// Single legibility shadow for the subtitle — no pill, no backdrop.
-const SUB_TEXT_SHADOW =
-  '0 2px 12px rgba(0,0,0,0.95), 0 0 40px rgba(0,0,0,0.9)'
-
 const framePath = (i: number) =>
   `/frames/frame${String(i + 1).padStart(3, '0')}.jpg`
 
@@ -229,14 +225,11 @@ export function HeroSequence() {
                 }}
               >
                 <p
-                  className="inline-block font-sans"
+                  className="inline-block font-sans text-xl md:text-2xl font-medium tracking-wide"
                   style={{
-                    color: 'rgba(240,237,230,0.72)',
-                    fontSize: 'clamp(1rem, 2vw, 1.2rem)',
-                    fontWeight: 500,
-                    letterSpacing: '0.04em',
+                    color: '#86efac',
                     lineHeight: 1.5,
-                    textShadow: SUB_TEXT_SHADOW,
+                    textShadow: 'none',
                   }}
                 >
                   <WordReveal show={showSub} exit={exitInitial}>

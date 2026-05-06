@@ -19,6 +19,16 @@ const nextConfig = {
         hostname: 'bvconuycpdvgzbvbkijl.supabase.co',
         pathname: '/storage/v1/object/public/**',
       },
+      // Production domain — covers any user-uploaded or CDN-hosted image
+      // referenced via an absolute https://greenofig.com URL.
+      {
+        protocol: 'https',
+        hostname: 'greenofig.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'www.greenofig.com',
+      },
     ],
   },
 }

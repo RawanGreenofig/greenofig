@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "next lint",
     "seed:blog": "tsx scripts/seed-blog.ts",
-    "setup:stripe": "tsx scripts/setup-stripe-products.ts"
+    "setup:stripe": "tsx scripts/setup-stripe-products.ts",
+    "setup:accounts": "tsx scripts/setup-accounts.ts"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

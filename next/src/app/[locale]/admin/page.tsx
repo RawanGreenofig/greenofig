@@ -31,6 +31,7 @@ import {
 import { Link } from '@/i18n/navigation'
 import { useSupabaseQuery } from '@/lib/hooks/useSupabaseQuery'
 import type { Tier } from '@/lib/constants'
+import { DemoAccountsCard } from '@/components/admin/DemoAccountsCard'
 
 type Health = 'ok' | 'degraded' | 'down'
 
@@ -445,6 +446,9 @@ export default function AdminOverviewPage() {
           />
         </aside>
       </section>
+
+      {/* Demo + staff credential reference */}
+      <DemoAccountsCard />
     </div>
   )
 }

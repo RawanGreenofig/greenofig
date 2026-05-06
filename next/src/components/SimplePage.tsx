@@ -1,5 +1,6 @@
 import { Link } from '@/i18n/navigation'
 import { ArrowLeft } from 'lucide-react'
+import { SiteHeader } from '@/components/SiteHeader'
 
 interface SimplePageProps {
   title: string
@@ -15,7 +16,8 @@ interface SimplePageProps {
 export function SimplePage({ title, subtitle, isAr, children }: SimplePageProps) {
   return (
     <main className="bg-bg min-h-screen">
-      <div className="max-w-3xl mx-auto px-6 py-20 lg:py-28">
+      <SiteHeader />
+      <div className="max-w-3xl mx-auto px-4 md:px-8 py-16">
         <Link
           href="/"
           className="inline-flex items-center gap-1.5 text-sm text-fg-2 hover:text-lime-400 transition-colors mb-8"
@@ -36,7 +38,7 @@ export function SimplePage({ title, subtitle, isAr, children }: SimplePageProps)
           </h1>
           {subtitle && <p className="mt-4 text-lg text-fg-2 leading-relaxed">{subtitle}</p>}
         </header>
-        <div className="prose-greenofig text-fg-2" style={{ fontSize: '1rem', lineHeight: 1.8 }}>
+        <div className="prose-greenofig text-fg-2 space-y-10" style={{ fontSize: '1rem', lineHeight: 1.8 }}>
           {children}
         </div>
       </div>
@@ -46,10 +48,10 @@ export function SimplePage({ title, subtitle, isAr, children }: SimplePageProps)
 
 export function H2({ children }: { children: React.ReactNode }) {
   return (
-    <h2 className="font-sans font-semibold text-lg text-fg-1 mt-10 mb-3">{children}</h2>
+    <h2 className="font-sans font-bold text-2xl text-fg-1 mb-4">{children}</h2>
   )
 }
 
 export function P({ children }: { children: React.ReactNode }) {
-  return <p className="my-4">{children}</p>
+  return <p className="mb-4 leading-relaxed text-base">{children}</p>
 }

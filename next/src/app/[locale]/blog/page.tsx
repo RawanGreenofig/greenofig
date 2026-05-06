@@ -4,6 +4,7 @@ import { Link } from '@/i18n/navigation'
 import { ArrowRight, Clock } from 'lucide-react'
 import { BLOG_ARTICLES, type BlogArticle } from '@/lib/blog-seed'
 import { ArticleImage } from '@/components/blog/ArticleImage'
+import { SiteHeader } from '@/components/SiteHeader'
 
 export const metadata: Metadata = {
   title: 'Nutrition Blog | Dr. Rawan Othman | Greenofig',
@@ -35,7 +36,8 @@ export default function BlogIndexPage() {
 
   return (
     <main className="bg-bg min-h-screen">
-      <div className="max-w-6xl mx-auto px-6 py-20 lg:py-28">
+      <SiteHeader />
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24">
         {/* Centered hero */}
         <header className="text-center mb-16">
           <span className="inline-flex items-center gap-2 rounded-full bg-surface border border-primary/40 px-5 py-2 mb-6">
@@ -64,7 +66,7 @@ export default function BlogIndexPage() {
         </header>
 
         {/* Article grid: 1 col mobile, 2 col tablet, 3 col desktop */}
-        <ul className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        <ul className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
           {articles.map((article) => (
             <ArticleCard key={article.slug} article={article} isAr={isAr} />
           ))}

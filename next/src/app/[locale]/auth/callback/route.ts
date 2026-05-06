@@ -13,9 +13,15 @@ import { getServerSupabase } from '@/lib/supabase/server'
  *   5. On any error, send back to /sign-in?error=...
  */
 export async function GET(request: NextRequest) {
-  const { searchParams, origin } = new URL(request.url)
+  const { searchParams, origin: requestOrigin } = new URL(request.url)
   const code = searchParams.get('code')
   const locale = request.nextUrl.pathname.split('/')[1] || 'en'
+
+  // Always send the user back to the canonical app URL when configured —
+  // this keeps cookies/session on greenofig.com instead of bouncing them to
+  // the supabase-side or vercel-side host the OAuth provider redirected to.
+  const origin =
+    process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, '') || requestOrigin
 
   const fail = (reason: string) =>
     NextResponse.redirect(new URL(`/${locale}/sign-in?error=${reason}`, origin))

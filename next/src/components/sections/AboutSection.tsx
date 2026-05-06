@@ -60,12 +60,12 @@ export function AboutSection() {
 
         {/* Right — text */}
         <div className="space-y-5">
-          <LineReveal>
+          <LineReveal isAr={isAr}>
             <p className="text-xs uppercase tracking-eyebrow font-semibold text-lime-400">
               {t('aboutEyebrow')}
             </p>
           </LineReveal>
-          <LineReveal delay={0.08}>
+          <LineReveal isAr={isAr} delay={0.08}>
             <h2
               className="font-display font-bold text-fg-1 tracking-tight"
               style={{
@@ -78,17 +78,17 @@ export function AboutSection() {
               {t('aboutHeadline')}
             </h2>
           </LineReveal>
-          <LineReveal delay={0.14}>
+          <LineReveal isAr={isAr} delay={0.14}>
             <p className="font-display italic text-lg lg:text-xl text-fg-2 leading-relaxed">
               {t('aboutSub')}
             </p>
           </LineReveal>
-          <LineReveal delay={0.2}>
+          <LineReveal isAr={isAr} delay={0.2}>
             <p className="text-base lg:text-lg text-fg-2 leading-relaxed">
               {bio}
             </p>
           </LineReveal>
-          <LineReveal delay={0.4}>
+          <LineReveal isAr={isAr} delay={0.4}>
             <div
               style={{
                 display: 'flex',
@@ -139,7 +139,7 @@ export function AboutSection() {
               ))}
             </div>
           </LineReveal>
-          <LineReveal delay={0.5}>
+          <LineReveal isAr={isAr} delay={0.5}>
             <Link
               href="/dashboard"
               style={{
@@ -188,13 +188,17 @@ export function AboutSection() {
 function LineReveal({
   children,
   delay = 0,
+  isAr = false,
 }: {
   children: React.ReactNode
   delay?: number
+  isAr?: boolean
 }) {
+  // RTL: reveal from right side (clip the left). LTR: reveal from left side.
+  const initialClip = isAr ? 'inset(0 0 0 100%)' : 'inset(0 100% 0 0)'
   return (
     <motion.div
-      initial={{ clipPath: 'inset(0 100% 0 0)', opacity: 0 }}
+      initial={{ clipPath: initialClip, opacity: 0 }}
       whileInView={{ clipPath: 'inset(0 0% 0 0)', opacity: 1 }}
       transition={{ duration: 0.9, ease: EASE_OUT, delay }}
       viewport={{ once: true, margin: '-100px' }}

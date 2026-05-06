@@ -6,6 +6,7 @@ import { useLocale } from 'next-intl'
 import { Link } from '@/i18n/navigation'
 import { Check, X, Plus, Minus } from 'lucide-react'
 import { NUTRITIONIST } from '@/lib/tokens'
+import { SiteHeader } from '@/components/SiteHeader'
 
 interface Plan {
   name: string
@@ -111,7 +112,6 @@ const PLANS: Record<'en' | 'ar', Plan[]> = {
       accentColor: '#c9a84c',
       features: [
         'Everything in Premium',
-        '✉️ Direct messaging with Dr. Rawan',
         'Monthly consultation included',
         'Fastest AI response time',
         'Exclusive VIP products',
@@ -210,7 +210,6 @@ const PLANS: Record<'en' | 'ar', Plan[]> = {
       accentColor: '#c9a84c',
       features: [
         'كل ما في المميز',
-        '✉️ تواصل مباشر مع د. روان',
         'استشارة شهرية مشمولة',
         'أسرع استجابة للذكاء الاصطناعي',
         'منتجات VIP حصرية',
@@ -322,8 +321,9 @@ export default function PricingPage() {
   const copy = COPY[locale]
 
   return (
-    <main className="bg-bg min-h-screen">
-      <div className="max-w-6xl mx-auto px-6 py-20 lg:py-28">
+    <main className="min-h-screen" style={{ background: '#0d1a12' }}>
+      <SiteHeader />
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24">
         {/* Header */}
         <header className="text-center mb-12">
           <span className="inline-flex items-center gap-2 rounded-full bg-surface border border-primary/40 px-5 py-2 mb-6">
@@ -333,9 +333,8 @@ export default function PricingPage() {
             </span>
           </span>
           <h1
-            className="font-display font-bold text-fg-1 tracking-tight"
+            className="font-display font-bold text-white tracking-tight text-3xl md:text-4xl lg:text-5xl"
             style={{
-              fontSize: 'clamp(2.2rem, 5vw, 3.5rem)',
               lineHeight: 1.1,
               fontVariationSettings: "'opsz' 144, 'wght' 700, 'SOFT' 100, 'WONK' 1",
             }}
@@ -347,12 +346,17 @@ export default function PricingPage() {
           </p>
 
           {/* Billing toggle */}
-          <div className="mt-8 inline-flex items-center gap-1 rounded-full bg-surface border border-border p-1">
+          <div
+            className="mt-8 inline-flex items-center gap-1 rounded-full p-1"
+            style={{ background: '#122018', border: '1px solid #2a4a30' }}
+          >
             <button
               type="button"
               onClick={() => setBilling('monthly')}
               className={`px-5 h-10 rounded-full text-sm font-semibold transition-colors ${
-                billing === 'monthly' ? 'bg-primary text-fg-1' : 'text-fg-2 hover:text-fg-1'
+                billing === 'monthly'
+                  ? 'bg-green-500 text-white'
+                  : 'text-fg-2 hover:text-fg-1'
               }`}
             >
               {copy.monthly}
@@ -361,12 +365,14 @@ export default function PricingPage() {
               type="button"
               onClick={() => setBilling('annual')}
               className={`relative px-5 h-10 rounded-full text-sm font-semibold transition-colors ${
-                billing === 'annual' ? 'bg-primary text-fg-1' : 'text-fg-2 hover:text-fg-1'
+                billing === 'annual'
+                  ? 'bg-green-500 text-white'
+                  : 'text-fg-2 hover:text-fg-1'
               }`}
             >
               {copy.annual}
               <span
-                className="absolute -top-2 -end-3 inline-flex items-center rounded-full bg-lime-400 text-bg text-[10px] font-bold px-2 py-0.5 leading-none"
+                className="absolute -top-2 -end-3 inline-flex items-center rounded-full bg-green-500 text-white text-[10px] font-bold px-2 py-0.5 leading-none"
                 style={{ minHeight: 18 }}
               >
                 {copy.save}
@@ -375,10 +381,10 @@ export default function PricingPage() {
           </div>
         </header>
 
-        {/* Plans grid */}
+        {/* Plans grid: 4 across on xl+ */}
         <ul
           dir={isAr ? 'rtl' : 'ltr'}
-          className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 items-start mt-16"
+          className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 items-start mt-16"
         >
           {plans.map((plan) => (
             <PlanCard key={plan.tier} plan={plan} billing={billing} copy={copy} />
@@ -386,7 +392,10 @@ export default function PricingPage() {
         </ul>
 
         {/* Dr. Rawan guarantee */}
-        <section className="max-w-xl mx-auto bg-surface border border-border rounded-2xl p-10 text-center mt-12">
+        <section
+          className="max-w-xl mx-auto rounded-2xl p-10 text-center mt-16"
+          style={{ background: '#122018', border: '1px solid #2a4a30' }}
+        >
           <div className="w-16 h-16 rounded-full overflow-hidden mx-auto border-2 border-primary mb-4">
             <Image
               src="/images/dr-rawan-othman.jpg"
@@ -450,32 +459,30 @@ function PlanCard({
   const price = billing === 'monthly' ? plan.price.monthly : plan.price.annual
   const isFree = price === 0
   const isFeatured = plan.featured
-  const badgeBg = plan.tier === 'vip' ? '#c9a84c' : plan.accentColor
+
+  // Premium = featured (highlighted with #4ade80 + green glow)
+  // Other cards use a subtle #2a4a30 border on #122018 bg.
+  const cardStyle = isFeatured
+    ? {
+        background: '#122018',
+        border: '1.5px solid #4ade80',
+        boxShadow: '0 0 48px rgba(74,222,128,0.18)',
+      }
+    : { background: '#122018', border: '1px solid #2a4a30' }
 
   return (
     <li
-      className={`relative rounded-2xl bg-surface p-8 transition-all ${
-        isFeatured
-          ? 'border-[1.5px] border-primary lg:scale-[1.02]'
-          : 'border border-border'
-      }`}
-      style={
-        isFeatured
-          ? { boxShadow: '0 0 48px rgba(61,122,74,0.15)' }
-          : undefined
-      }
+      className="relative rounded-2xl p-8 transition-all"
+      style={cardStyle}
     >
       {plan.badge && (
-        <span
-          className="absolute -top-3 start-1/2 -translate-x-1/2 rounded-full px-4 py-1.5 text-xs font-bold text-bg whitespace-nowrap"
-          style={{ background: badgeBg }}
-        >
+        <span className="absolute -top-3 start-1/2 -translate-x-1/2 bg-green-500 text-white text-xs px-3 py-1 rounded-full font-semibold whitespace-nowrap">
           {plan.badge}
         </span>
       )}
 
       <div className="mb-3">
-        <h3 className="font-sans font-bold text-fg-1 text-xl mb-1">{plan.name}</h3>
+        <h3 className="font-sans font-bold text-white text-2xl mb-1">{plan.name}</h3>
         <span
           className="inline-block rounded-full text-[10px] uppercase tracking-eyebrow font-bold px-2 py-0.5"
           style={{
@@ -487,24 +494,16 @@ function PlanCard({
         </span>
       </div>
 
-      <p className="text-sm text-fg-2 mb-5 leading-relaxed">{plan.description}</p>
+      <p className="text-sm text-fg-2 mb-6 leading-relaxed">{plan.description}</p>
 
       {/* Price */}
       <div className="mb-6 min-h-[80px]">
         {isFree ? (
-          <p
-            className="font-display font-bold leading-none"
-            style={{ fontSize: '2.5rem', color: '#a3e635' }}
-          >
-            {copy.free}
-          </p>
+          <p className="text-4xl font-bold text-white leading-none">{copy.free}</p>
         ) : (
           <>
             <div className="flex items-baseline gap-2" dir="ltr">
-              <span
-                className="font-mono font-bold leading-none"
-                style={{ fontSize: '2.75rem', color: plan.accentColor }}
-              >
+              <span className="text-4xl font-bold text-white leading-none">
                 {price}
               </span>
               <span className="text-sm text-fg-2 font-semibold">{plan.currency}</span>
@@ -522,7 +521,7 @@ function PlanCard({
         href={plan.href}
         className={`block w-full rounded-full py-3 text-center text-sm font-semibold transition-all ${
           isFeatured
-            ? 'bg-gradient-to-b from-lime-400 to-lime-600 text-bg shadow-lime-glow border border-lime-600/60 hover:-translate-y-px'
+            ? 'bg-green-500 text-white hover:bg-green-600 hover:-translate-y-px'
             : 'bg-transparent border hover:opacity-90'
         }`}
         style={
@@ -534,43 +533,48 @@ function PlanCard({
         {plan.cta}
       </Link>
 
-      <hr className="border-border my-5" />
+      <hr className="my-6" style={{ borderColor: '#2a4a30' }} />
 
       {/* Features */}
-      <ul className="space-y-2.5">
+      <ul className="flex flex-col gap-y-3">
         {plan.features.map((f) => {
-          const isDirectMessaging = f.includes('✉️')
+          const text = f.replace(/^✉️\s*/, '')
           return (
             <li key={f} className="flex items-start gap-2.5">
               <span
                 aria-hidden
                 className="shrink-0 w-5 h-5 rounded-full inline-flex items-center justify-center mt-0.5"
                 style={{
-                  background: 'rgba(61,122,74,0.18)',
-                  border: '1px solid rgba(61,122,74,0.4)',
+                  background: 'rgba(74,222,128,0.15)',
+                  border: '1px solid rgba(74,222,128,0.45)',
                 }}
               >
-                <Check className="w-3 h-3 text-lime-400" strokeWidth={2.5} />
+                <Check className="w-3 h-3 text-green-400" strokeWidth={2.5} />
               </span>
               <span
-                className={`text-sm leading-snug ${
-                  isDirectMessaging ? 'text-fg-1 font-semibold' : 'text-fg-2'
-                }`}
+                className="text-sm leading-relaxed"
+                style={{ color: '#d1fae5' }}
               >
-                {f}
+                {text}
               </span>
             </li>
           )
         })}
         {plan.missing.map((f) => (
-          <li key={f} className="flex items-start gap-2.5" style={{ opacity: 0.45 }}>
+          <li key={f} className="flex items-start gap-2.5">
             <span
               aria-hidden
-              className="shrink-0 w-5 h-5 rounded-full inline-flex items-center justify-center mt-0.5 bg-bg-deeper"
+              className="shrink-0 w-5 h-5 rounded-full inline-flex items-center justify-center mt-0.5"
+              style={{ background: 'rgba(107,114,128,0.15)' }}
             >
-              <X className="w-3 h-3 text-fg-3" strokeWidth={2} />
+              <X className="w-3 h-3" strokeWidth={2} style={{ color: '#6b7280' }} />
             </span>
-            <span className="text-sm text-fg-3 line-through leading-snug">{f}</span>
+            <span
+              className="text-sm leading-relaxed line-through"
+              style={{ color: '#6b7280' }}
+            >
+              {f}
+            </span>
           </li>
         ))}
       </ul>

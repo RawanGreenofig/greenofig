@@ -7,6 +7,7 @@ import { ArrowRight, ArrowLeft, Clock, Calendar, Crown, BadgeCheck } from 'lucid
 import { BLOG_ARTICLES, type BlogArticle } from '@/lib/blog-seed'
 import { NUTRITIONIST } from '@/lib/tokens'
 import { ArticleImage } from '@/components/blog/ArticleImage'
+import { SiteHeader } from '@/components/SiteHeader'
 
 interface RouteParams {
   params: { slug: string; locale: 'en' | 'ar' }
@@ -88,8 +89,9 @@ export default async function ArticlePage({ params }: RouteParams) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
+      <SiteHeader />
 
-      <div className="max-w-5xl mx-auto px-6 pt-10 pb-20">
+      <div className="max-w-5xl mx-auto px-4 md:px-8 pt-10 pb-20">
         <Link
           href="/blog"
           className="inline-flex items-center gap-1.5 text-sm text-fg-2 hover:text-lime-400 transition-colors mb-8"
