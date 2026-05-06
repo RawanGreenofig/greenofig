@@ -142,12 +142,19 @@ export default function DashboardTodayPage() {
           {today}
         </p>
         <h1
-          className="font-bold tracking-tight text-3xl md:text-4xl"
-          style={{ color: '#ffffff', lineHeight: 1.1 }}
+          className="font-sans font-bold tracking-tight text-3xl md:text-4xl"
+          style={{
+            color: 'var(--gf-fg-1)',
+            lineHeight: 1.1,
+            fontFamily: 'var(--font-sans), system-ui, sans-serif',
+          }}
         >
           {t(greetingKey)}, {displayFirstName}
         </h1>
-        <p className="mt-2 text-sm" style={{ color: '#666' }}>
+        <p
+          className="mt-2 text-sm"
+          style={{ color: 'var(--gf-fg-2)' }}
+        >
           {t('overviewSubtitle')}
         </p>
       </header>
@@ -236,13 +243,15 @@ function KpiCard({
     <article
       className="rounded-2xl p-4 md:p-5 transition-colors"
       style={{
-        background: '#181b2e',
-        border: '1px solid #252a45',
+        background: 'var(--gf-surface-raised)',
+        border: '1px solid var(--gf-border)',
         borderInlineStartWidth: 3,
         borderInlineStartColor: accent,
       }}
       onMouseEnter={(e) => (e.currentTarget.style.borderColor = '#363d60')}
-      onMouseLeave={(e) => (e.currentTarget.style.borderColor = '#252a45')}
+      onMouseLeave={(e) =>
+        (e.currentTarget.style.borderColor = 'var(--gf-border)')
+      }
     >
       <div className="flex items-center gap-2.5 mb-3">
         <span
@@ -252,7 +261,7 @@ function KpiCard({
           <Icon className="w-4 h-4" strokeWidth={1.75} />
         </span>
         <span
-          className="text-[10px] uppercase font-semibold"
+          className="text-[12px] uppercase font-semibold"
           style={{ letterSpacing: '0.15em', color: '#4a5080' }}
         >
           {label}
@@ -293,13 +302,15 @@ function StreakCard({
     <article
       className="rounded-2xl p-4 md:p-5 transition-colors"
       style={{
-        background: '#181b2e',
-        border: '1px solid #252a45',
+        background: 'var(--gf-surface-raised)',
+        border: '1px solid var(--gf-border)',
         borderInlineStartWidth: 3,
         borderInlineStartColor: accent,
       }}
       onMouseEnter={(e) => (e.currentTarget.style.borderColor = '#363d60')}
-      onMouseLeave={(e) => (e.currentTarget.style.borderColor = '#252a45')}
+      onMouseLeave={(e) =>
+        (e.currentTarget.style.borderColor = 'var(--gf-border)')
+      }
     >
       <div className="flex items-center gap-2.5 mb-3">
         <span
@@ -309,7 +320,7 @@ function StreakCard({
           <Sparkles className="w-4 h-4" strokeWidth={1.75} />
         </span>
         <span
-          className="text-[10px] uppercase font-semibold"
+          className="text-[12px] uppercase font-semibold"
           style={{ letterSpacing: '0.15em', color: '#4a5080' }}
         >
           {t('kpiStreak')}
@@ -347,13 +358,15 @@ function BookingCard({
     <article
       className="rounded-2xl p-4 md:p-5 transition-colors"
       style={{
-        background: '#181b2e',
-        border: '1px solid #252a45',
+        background: 'var(--gf-surface-raised)',
+        border: '1px solid var(--gf-border)',
         borderInlineStartWidth: 3,
         borderInlineStartColor: accent,
       }}
       onMouseEnter={(e) => (e.currentTarget.style.borderColor = '#363d60')}
-      onMouseLeave={(e) => (e.currentTarget.style.borderColor = '#252a45')}
+      onMouseLeave={(e) =>
+        (e.currentTarget.style.borderColor = 'var(--gf-border)')
+      }
     >
       <div className="flex items-center gap-2.5 mb-3">
         <span
@@ -363,7 +376,7 @@ function BookingCard({
           <Calendar className="w-4 h-4" strokeWidth={1.75} />
         </span>
         <span
-          className="text-[10px] uppercase font-semibold"
+          className="text-[12px] uppercase font-semibold"
           style={{ letterSpacing: '0.15em', color: '#4a5080' }}
         >
           {t('kpiNextBooking')}
@@ -411,26 +424,30 @@ function QuickAction({
   return (
     <Link
       href={href}
-      className="group flex items-center gap-3 rounded-xl p-4 transition-colors shrink-0 min-w-[160px] sm:min-w-0"
-      style={{ background: '#111', border: '1px solid #1a1a1a' }}
+      className="group flex items-center gap-3 rounded-xl px-4 transition-colors shrink-0 min-w-[160px] sm:min-w-0"
+      style={{
+        background: 'var(--gf-surface-raised)',
+        border: '1px solid var(--gf-border)',
+        height: 56,
+      }}
       onMouseEnter={(e) => {
-        e.currentTarget.style.background = '#161616'
-        e.currentTarget.style.borderColor = '#2a2a2a'
+        e.currentTarget.style.background = 'var(--gf-surface)'
+        e.currentTarget.style.borderColor = '#363d60'
       }}
       onMouseLeave={(e) => {
-        e.currentTarget.style.background = '#111'
-        e.currentTarget.style.borderColor = '#1a1a1a'
+        e.currentTarget.style.background = 'var(--gf-surface-raised)'
+        e.currentTarget.style.borderColor = 'var(--gf-border)'
       }}
     >
       <span
-        className="rounded-xl p-3 flex items-center justify-center"
+        className="rounded-xl p-2.5 flex items-center justify-center shrink-0"
         style={{ background: 'rgb(74 222 128 / 0.10)', color: '#4ade80' }}
       >
         <Icon className="w-4 h-4" strokeWidth={1.75} />
       </span>
       <span
-        className="text-sm font-medium whitespace-nowrap"
-        style={{ color: '#ffffff' }}
+        className="text-[14px] font-medium whitespace-nowrap"
+        style={{ color: 'var(--gf-fg-1)' }}
       >
         {label}
       </span>
@@ -448,7 +465,7 @@ function MacroCard({
   totalKcal: number
 }) {
   return (
-    <article className="rounded-2xl p-5 lg:p-6" style={{ background: '#1a1a1a', border: '1px solid #2a2a2a' }}>
+    <article className="rounded-2xl p-5 lg:p-6" style={{ background: 'var(--gf-surface-raised)', border: '1px solid var(--gf-border)' }}>
       <h2 className="text-base font-semibold text-fg-1">{t('macroToday')}</h2>
       <div className="mt-4 grid grid-cols-3 gap-4 items-end">
         <Ring
@@ -491,28 +508,62 @@ function Ring({
 }) {
   const pct = target > 0 ? Math.min(1, value / target) : 0
   const radius = 32
-  const stroke = 6
+  const stroke = 8
   const C = 2 * Math.PI * radius
+  const isEmpty = value === 0
   return (
     <div className="flex flex-col items-center">
       <svg width="80" height="80" viewBox="0 0 80 80" aria-hidden>
-        <circle cx="40" cy="40" r={radius} stroke="var(--gf-bg-deeper)" strokeWidth={stroke} fill="none" />
+        {/* Track — always visible against the card surface. */}
         <circle
           cx="40"
           cy="40"
           r={radius}
-          stroke={color}
+          stroke="var(--gf-border)"
           strokeWidth={stroke}
-          strokeLinecap="round"
           fill="none"
-          strokeDasharray={C}
-          strokeDashoffset={C * (1 - pct)}
-          transform="rotate(-90 40 40)"
+          strokeDasharray={isEmpty ? '4 4' : undefined}
         />
+        {/* Progress — only render when there's something to show. */}
+        {!isEmpty && (
+          <circle
+            cx="40"
+            cy="40"
+            r={radius}
+            stroke={color}
+            strokeWidth={stroke}
+            strokeLinecap="round"
+            fill="none"
+            strokeDasharray={C}
+            strokeDashoffset={C * (1 - pct)}
+            transform="rotate(-90 40 40)"
+          />
+        )}
+        {/* Center label */}
+        <text
+          x="40"
+          y="42"
+          textAnchor="middle"
+          dominantBaseline="middle"
+          style={{
+            fill: 'var(--gf-fg-1)',
+            fontSize: 14,
+            fontWeight: 700,
+            fontFamily: 'var(--font-mono)',
+          }}
+        >
+          {value}
+        </text>
       </svg>
-      <p className="mt-2 text-xs uppercase tracking-eyebrow text-fg-3 font-medium">{label}</p>
-      <p className="font-mono text-sm text-fg-1" dir="ltr">
-        {value}<span className="text-fg-3">/{target}g</span>
+      <p
+        className="mt-2 text-[12px] uppercase font-medium"
+        style={{ letterSpacing: '0.18em', color: 'var(--gf-fg-3)' }}
+      >
+        {label}
+      </p>
+      <p className="font-mono text-[13px]" dir="ltr" style={{ color: 'var(--gf-fg-2)' }}>
+        <span style={{ color: 'var(--gf-fg-1)', fontWeight: 600 }}>{value}</span>
+        <span style={{ color: 'var(--gf-fg-3)' }}>/{target}g</span>
       </p>
     </div>
   )
@@ -527,7 +578,7 @@ function PlanCard({
 }) {
   void tCommon
   return (
-    <article className="rounded-2xl p-5 lg:p-6" style={{ background: '#1a1a1a', border: '1px solid #2a2a2a' }}>
+    <article className="rounded-2xl p-5 lg:p-6" style={{ background: 'var(--gf-surface-raised)', border: '1px solid var(--gf-border)' }}>
       <div className="flex items-center justify-between gap-4 mb-3">
         <h2 className="text-base font-semibold text-fg-1">{t('todayPlan')}</h2>
         <Link
@@ -559,7 +610,7 @@ function LatestPostCard({
   drName: string
 }) {
   return (
-    <article className="rounded-2xl p-5" style={{ background: '#1a1a1a', border: '1px solid #2a2a2a' }}>
+    <article className="rounded-2xl p-5" style={{ background: 'var(--gf-surface-raised)', border: '1px solid var(--gf-border)' }}>
       <p className="text-xs uppercase tracking-eyebrow text-fg-3 font-semibold">
         {t('latestPost', { name: drName })}
       </p>
@@ -579,7 +630,7 @@ function LatestPostCard({
 
 function ProgressCard({ t }: { t: ReturnType<typeof useTranslations> }) {
   return (
-    <article className="rounded-2xl p-5" style={{ background: '#1a1a1a', border: '1px solid #2a2a2a' }}>
+    <article className="rounded-2xl p-5" style={{ background: 'var(--gf-surface-raised)', border: '1px solid var(--gf-border)' }}>
       <div className="flex items-center gap-2.5 mb-3">
         <TrendingUp className="w-4 h-4 text-lime-400" strokeWidth={1.75} />
         <span className="text-xs uppercase tracking-eyebrow text-fg-3 font-medium">
@@ -608,7 +659,7 @@ function NotificationsCard({
   t: ReturnType<typeof useTranslations>
 }) {
   return (
-    <article className="rounded-2xl p-5" style={{ background: '#1a1a1a', border: '1px solid #2a2a2a' }}>
+    <article className="rounded-2xl p-5" style={{ background: 'var(--gf-surface-raised)', border: '1px solid var(--gf-border)' }}>
       <p className="text-xs uppercase tracking-eyebrow text-fg-3 font-semibold mb-3">
         {t('notifications')}
       </p>

@@ -140,7 +140,7 @@ export function Sidebar({
           <Link
             href="/"
             onClick={onItemClick}
-            className="group mx-2 flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors"
+            className="group mx-2 flex items-center gap-3 rounded-xl px-3 py-[11px] text-[14px] font-medium transition-colors"
             style={{ color: INACTIVE_TEXT }}
             onMouseEnter={(e) => {
               e.currentTarget.style.background = HOVER_BG
@@ -157,7 +157,7 @@ export function Sidebar({
             >
               <Home className="w-4 h-4" strokeWidth={1.75} style={{ color: '#8b92b8' }} />
             </span>
-            <span className="flex-1 truncate text-sm font-medium leading-none">
+            <span className="flex-1 truncate text-[14px] font-medium leading-none">
               {tNav('home')}
             </span>
           </Link>
@@ -181,7 +181,7 @@ export function Sidebar({
                   <Link
                     href={href}
                     onClick={onItemClick}
-                    className="group mx-2 flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors relative"
+                    className="group mx-2 flex items-center gap-3 rounded-xl px-3 py-[11px] text-[14px] font-medium transition-colors relative"
                     style={{
                       background: active ? ACTIVE_BG : 'transparent',
                       color: active ? ACTIVE_TEXT : INACTIVE_TEXT,
@@ -227,7 +227,7 @@ export function Sidebar({
                         style={{ color: tint }}
                       />
                     </span>
-                    <span className="flex-1 truncate text-sm font-medium leading-none">
+                    <span className="flex-1 truncate text-[14px] font-medium leading-none">
                       {t(labelKey)}
                     </span>
                   </Link>
@@ -240,8 +240,11 @@ export function Sidebar({
 
       {/* ── Bottom: user card → settings, then back link, then sign out ── */}
       <div
-        className="p-3 space-y-1 mt-auto"
-        style={{ borderTop: `1px solid ${SIDEBAR_BORDER}` }}
+        className="p-3 mt-auto flex flex-col"
+        style={{
+          borderTop: `1px solid ${SIDEBAR_BORDER}`,
+          rowGap: 6,
+        }}
       >
         <Link
           href="/dashboard/settings"
@@ -303,8 +306,8 @@ export function Sidebar({
         <Link
           href="/"
           onClick={onItemClick}
-          className="flex items-center gap-2 rounded-lg px-2 py-1.5 text-xs font-medium transition-colors"
-          style={{ color: GROUP_LABEL }}
+          className="flex items-center gap-2 rounded-lg p-2 text-[13px] font-medium transition-colors"
+          style={{ color: GROUP_LABEL, minHeight: 36 }}
           onMouseEnter={(e) => {
             e.currentTarget.style.color = ACTIVE_TEXT
             e.currentTarget.style.background = HOVER_BG
@@ -314,7 +317,7 @@ export function Sidebar({
             e.currentTarget.style.background = 'transparent'
           }}
         >
-          <ArrowLeft className="w-3.5 h-3.5" strokeWidth={1.75} />
+          <ArrowLeft className="w-4 h-4" strokeWidth={1.75} />
           <span>{tNav('backToHome')}</span>
         </Link>
 
@@ -324,8 +327,8 @@ export function Sidebar({
             void signOut()
             onItemClick?.()
           }}
-          className="w-full flex items-center gap-2 rounded-lg px-2 py-1.5 text-xs font-medium transition-colors"
-          style={{ color: GROUP_LABEL }}
+          className="w-full flex items-center gap-2 rounded-lg p-2 text-[13px] font-medium transition-colors"
+          style={{ color: GROUP_LABEL, minHeight: 36 }}
           onMouseEnter={(e) => {
             e.currentTarget.style.color = '#f87171'
             e.currentTarget.style.background = HOVER_BG
@@ -335,7 +338,7 @@ export function Sidebar({
             e.currentTarget.style.background = 'transparent'
           }}
         >
-          <LogOut className="w-3.5 h-3.5" strokeWidth={1.75} />
+          <LogOut className="w-4 h-4" strokeWidth={1.75} />
           <span>{tNav('signOut')}</span>
         </button>
 
@@ -343,8 +346,8 @@ export function Sidebar({
           type="button"
           onClick={toggleTheme}
           aria-pressed={theme === 'light'}
-          className="w-full flex items-center gap-2 rounded-lg px-2 py-1.5 text-xs font-medium transition-colors"
-          style={{ color: GROUP_LABEL }}
+          className="w-full flex items-center gap-2 rounded-lg p-2 text-[13px] font-medium transition-colors"
+          style={{ color: GROUP_LABEL, minHeight: 36 }}
           onMouseEnter={(e) => {
             e.currentTarget.style.color = ACTIVE_TEXT
             e.currentTarget.style.background = HOVER_BG
@@ -355,9 +358,9 @@ export function Sidebar({
           }}
         >
           {theme === 'dark' ? (
-            <Sun className="w-3.5 h-3.5" strokeWidth={1.75} />
+            <Sun className="w-4 h-4" strokeWidth={1.75} />
           ) : (
-            <Moon className="w-3.5 h-3.5" strokeWidth={1.75} />
+            <Moon className="w-4 h-4" strokeWidth={1.75} />
           )}
           <span>{theme === 'dark' ? 'Light mode' : 'Dark mode'}</span>
         </button>
