@@ -155,11 +155,11 @@ export default function DashboardTodayPage() {
       {/* KPI row */}
       <section
         aria-label="Today summary"
-        className="grid grid-cols-2 lg:grid-cols-4 gap-4"
+        className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4"
       >
         <KpiCard
           Icon={Flame}
-          accent="#f97316"
+          accent="#fb923c"
           label={t('kpiCalories')}
           current={stats.caloriesLogged}
           target={stats.caloriesTarget}
@@ -167,7 +167,7 @@ export default function DashboardTodayPage() {
         />
         <KpiCard
           Icon={Droplets}
-          accent="#06b6d4"
+          accent="#2dd4bf"
           label={t('kpiWater')}
           current={stats.waterGlasses}
           target={stats.waterTarget}
@@ -233,34 +233,43 @@ function KpiCard({
   const pct = target > 0 ? Math.min(100, Math.round((current / target) * 100)) : 0
   return (
     <article
-      className="rounded-2xl p-5 transition-colors"
-      style={{ background: '#111', border: '1px solid #1a1a1a' }}
-      onMouseEnter={(e) => (e.currentTarget.style.borderColor = '#2a2a2a')}
-      onMouseLeave={(e) => (e.currentTarget.style.borderColor = '#1a1a1a')}
+      className="rounded-2xl p-4 md:p-5 transition-colors"
+      style={{
+        background: '#181b2e',
+        border: '1px solid #252a45',
+        borderInlineStartWidth: 3,
+        borderInlineStartColor: accent,
+      }}
+      onMouseEnter={(e) => (e.currentTarget.style.borderColor = '#363d60')}
+      onMouseLeave={(e) => (e.currentTarget.style.borderColor = '#252a45')}
     >
       <div className="flex items-center gap-2.5 mb-3">
         <span
           className="w-9 h-9 rounded-lg flex items-center justify-center"
-          style={{ background: '#1f2e1f', color: accent }}
+          style={{ background: `${accent}1a`, color: accent }}
         >
           <Icon className="w-4 h-4" strokeWidth={1.75} />
         </span>
         <span
-          className="text-xs uppercase font-semibold"
-          style={{ letterSpacing: '0.18em', color: '#888' }}
+          className="text-[10px] uppercase font-semibold"
+          style={{ letterSpacing: '0.15em', color: '#4a5080' }}
         >
           {label}
         </span>
       </div>
-      <p className="font-mono text-3xl font-bold" style={{ color: '#fff' }} dir="ltr">
+      <p
+        className="font-mono text-3xl font-bold"
+        style={{ color: accent }}
+        dir="ltr"
+      >
         {current.toLocaleString()}
-        <span className="ms-1.5 text-sm font-normal" style={{ color: '#666' }}>
+        <span className="ms-1.5 text-sm font-normal" style={{ color: '#8b92b8' }}>
           / {target.toLocaleString()} {unit}
         </span>
       </p>
       <div
         className="mt-3 h-1.5 rounded-pill overflow-hidden"
-        style={{ background: '#0a0a0a' }}
+        style={{ background: '#0d0f1a' }}
       >
         <div
           className="h-full rounded-pill"
@@ -278,28 +287,38 @@ function StreakCard({
   streak: number
   t: ReturnType<typeof useTranslations>
 }) {
+  const accent = '#a78bfa'
   return (
     <article
-      className="rounded-2xl p-5 transition-colors"
-      style={{ background: '#111', border: '1px solid #1a1a1a' }}
-      onMouseEnter={(e) => (e.currentTarget.style.borderColor = '#2a2a2a')}
-      onMouseLeave={(e) => (e.currentTarget.style.borderColor = '#1a1a1a')}
+      className="rounded-2xl p-4 md:p-5 transition-colors"
+      style={{
+        background: '#181b2e',
+        border: '1px solid #252a45',
+        borderInlineStartWidth: 3,
+        borderInlineStartColor: accent,
+      }}
+      onMouseEnter={(e) => (e.currentTarget.style.borderColor = '#363d60')}
+      onMouseLeave={(e) => (e.currentTarget.style.borderColor = '#252a45')}
     >
       <div className="flex items-center gap-2.5 mb-3">
         <span
           className="w-9 h-9 rounded-lg flex items-center justify-center"
-          style={{ background: '#1f2e1f', color: '#e8912a' }}
+          style={{ background: `${accent}1a`, color: accent }}
         >
           <Sparkles className="w-4 h-4" strokeWidth={1.75} />
         </span>
         <span
-          className="text-xs uppercase font-semibold"
-          style={{ letterSpacing: '0.18em', color: '#888' }}
+          className="text-[10px] uppercase font-semibold"
+          style={{ letterSpacing: '0.15em', color: '#4a5080' }}
         >
           {t('kpiStreak')}
         </span>
       </div>
-      <p className="font-mono text-3xl font-bold" style={{ color: '#fff' }} dir="ltr">
+      <p
+        className="font-mono text-3xl font-bold"
+        style={{ color: accent }}
+        dir="ltr"
+      >
         {t('streakDays', { count: streak })}
       </p>
       <div className="mt-3 flex gap-1">
@@ -307,7 +326,7 @@ function StreakCard({
           <span
             key={i}
             className="h-1.5 flex-1 rounded-pill"
-            style={{ background: i < streak ? '#e8912a' : '#0a0a0a' }}
+            style={{ background: i < streak ? accent : '#0d0f1a' }}
           />
         ))}
       </div>
@@ -322,23 +341,29 @@ function BookingCard({
   t: ReturnType<typeof useTranslations>
   booking: { whenLabel: string; type: string } | null
 }) {
+  const accent = '#60a5fa'
   return (
     <article
-      className="rounded-2xl p-5 transition-colors"
-      style={{ background: '#111', border: '1px solid #1a1a1a' }}
-      onMouseEnter={(e) => (e.currentTarget.style.borderColor = '#2a2a2a')}
-      onMouseLeave={(e) => (e.currentTarget.style.borderColor = '#1a1a1a')}
+      className="rounded-2xl p-4 md:p-5 transition-colors"
+      style={{
+        background: '#181b2e',
+        border: '1px solid #252a45',
+        borderInlineStartWidth: 3,
+        borderInlineStartColor: accent,
+      }}
+      onMouseEnter={(e) => (e.currentTarget.style.borderColor = '#363d60')}
+      onMouseLeave={(e) => (e.currentTarget.style.borderColor = '#252a45')}
     >
       <div className="flex items-center gap-2.5 mb-3">
         <span
           className="w-9 h-9 rounded-lg flex items-center justify-center"
-          style={{ background: '#1f2e1f', color: '#4ade80' }}
+          style={{ background: `${accent}1a`, color: accent }}
         >
           <Calendar className="w-4 h-4" strokeWidth={1.75} />
         </span>
         <span
-          className="text-xs uppercase font-semibold"
-          style={{ letterSpacing: '0.18em', color: '#888' }}
+          className="text-[10px] uppercase font-semibold"
+          style={{ letterSpacing: '0.15em', color: '#4a5080' }}
         >
           {t('kpiNextBooking')}
         </span>
@@ -348,19 +373,19 @@ function BookingCard({
           <p className="text-base font-semibold" style={{ color: '#fff' }}>
             {booking.type}
           </p>
-          <p className="text-sm mt-0.5" style={{ color: '#888' }}>
+          <p className="text-sm mt-0.5" style={{ color: '#8b92b8' }}>
             {booking.whenLabel}
           </p>
         </>
       ) : (
         <>
-          <p className="text-sm" style={{ color: '#888' }}>
+          <p className="text-sm" style={{ color: '#8b92b8' }}>
             {t('noUpcomingBooking')}
           </p>
           <Link
             href="/dashboard/bookings"
             className="mt-3 inline-flex items-center gap-1 text-xs hover:gap-2 transition-all"
-            style={{ color: '#4ade80' }}
+            style={{ color: accent }}
           >
             {t('bookOne')} <ArrowRight className="w-3 h-3 rtl:rotate-180" />
           </Link>

@@ -6,10 +6,12 @@ import { Link, usePathname } from '@/i18n/navigation'
 import { cn } from '@/lib/cn'
 import type { DashboardNavItem } from './nav'
 
-const NAV_BG = '#111111'
-const NAV_BORDER = '#222222'
-const ACCENT = '#4ade80'
-const INACTIVE = '#888888'
+const NAV_BG = '#0e1124'
+const NAV_BORDER = '#252a45'
+const FAB_BG = '#4ade80'
+const FAB_BORDER = '#0d0f1a'
+const ACTIVE = '#60a5fa'
+const INACTIVE = '#4a5080'
 
 export function MobileNav({
   tabs,
@@ -36,9 +38,10 @@ export function MobileNav({
       style={{
         background: `${NAV_BG}f0`,
         borderTop: `1px solid ${NAV_BORDER}`,
+        paddingBottom: 'env(safe-area-inset-bottom)',
       }}
     >
-      <div className="flex items-end justify-around px-3 pt-2 pb-3 max-w-screen-md mx-auto">
+      <div className="flex items-end justify-around px-3 pt-1 pb-2 max-w-screen-md mx-auto">
         {tabs.slice(0, 2).map((item) => (
           <TabButton
             key={item.href}
@@ -48,17 +51,21 @@ export function MobileNav({
           />
         ))}
 
+        {/* Center FAB — larger, ringed in the page bg so it floats */}
         <Link
           href={fab.href}
           aria-label={t(fab.labelKey)}
-          className="-mt-8 inline-flex items-center justify-center w-14 h-14 rounded-full"
+          className="relative -mt-6 inline-flex items-center justify-center rounded-full transition-transform active:scale-95"
           style={{
-            background: ACCENT,
-            color: '#0a0a0a',
-            boxShadow: '0 4px 20px rgb(74 222 128 / 0.35)',
+            width: 56,
+            height: 56,
+            background: FAB_BG,
+            color: '#0d0f1a',
+            border: `4px solid ${FAB_BORDER}`,
+            boxShadow: '0 8px 24px rgb(74 222 128 / 0.25)',
           }}
         >
-          <FabIcon className="w-6 h-6" strokeWidth={2} />
+          <FabIcon className="w-6 h-6" strokeWidth={2.25} />
           <span className="sr-only">{t(fab.labelKey)}</span>
           <Plus aria-hidden className="hidden" />
         </Link>
@@ -90,13 +97,18 @@ function TabButton({
     <Link
       href={href}
       className={cn(
-        'flex flex-col items-center gap-1 min-w-[48px] py-1 transition-colors',
+        'flex flex-col items-center justify-center gap-1 flex-1 min-w-0 px-1 transition-colors',
       )}
-      style={{ color: active ? ACCENT : INACTIVE }}
+      style={{
+        color: active ? ACTIVE : INACTIVE,
+        minHeight: 56,
+      }}
       aria-current={active ? 'page' : undefined}
     >
       <Icon className="w-5 h-5" strokeWidth={active ? 2 : 1.75} />
-      <span className="text-[10px] font-medium">{t(labelKey)}</span>
+      <span className="text-[10px] font-medium leading-none truncate max-w-full">
+        {t(labelKey)}
+      </span>
     </Link>
   )
 }

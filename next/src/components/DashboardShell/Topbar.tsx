@@ -173,10 +173,11 @@ export function Topbar({ onOpenMenu }: { onOpenMenu: () => void }) {
         {open && (
           <div
             role="menu"
-            className="absolute end-0 mt-2 w-56 rounded-xl shadow-lg overflow-hidden z-30"
+            className="absolute end-0 mt-2 rounded-2xl shadow-2xl overflow-hidden z-30"
             style={{
               background: TOPBAR_BG,
               border: `1px solid ${TOPBAR_BORDER}`,
+              minWidth: 220,
             }}
           >
             {/* user header */}
@@ -216,17 +217,16 @@ export function Topbar({ onOpenMenu }: { onOpenMenu: () => void }) {
                 setOpen(false)
                 void signOut()
               }}
-              className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm transition-colors"
+              className="w-full flex items-center gap-2.5 px-4 py-3 text-sm transition-colors"
               style={{
-                color: '#888',
+                color: '#ef4444',
                 borderTop: `1px solid ${TOPBAR_BORDER}`,
+                minHeight: 44,
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.color = '#f87171'
-                e.currentTarget.style.background = '#1f1f1f'
+                e.currentTarget.style.background = '#1e2238'
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.color = '#888'
                 e.currentTarget.style.background = 'transparent'
               }}
             >
@@ -256,14 +256,14 @@ function DropItem({
       href={href}
       onClick={onClick}
       role="menuitem"
-      className="flex items-center gap-2.5 px-4 py-2.5 text-sm transition-colors"
-      style={{ color: '#888' }}
+      className="flex items-center gap-2.5 px-4 py-3 text-sm transition-colors"
+      style={{ color: '#8b92b8', minHeight: 44 }}
       onMouseEnter={(e) => {
         e.currentTarget.style.color = '#fff'
-        e.currentTarget.style.background = '#1f1f1f'
+        e.currentTarget.style.background = '#1e2238'
       }}
       onMouseLeave={(e) => {
-        e.currentTarget.style.color = '#888'
+        e.currentTarget.style.color = '#8b92b8'
         e.currentTarget.style.background = 'transparent'
       }}
     >

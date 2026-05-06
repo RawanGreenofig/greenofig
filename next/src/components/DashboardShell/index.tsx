@@ -60,6 +60,17 @@ export function DashboardShell({
     setDrawerOpen(false)
   }, [pathname])
 
+  // Lock body scroll while the dashboard drawer is open on mobile, and
+  // ALWAYS restore on unmount — otherwise a navigation that unmounts the
+  // shell mid-animation can leave the body locked in 'overflow: hidden'.
+  useEffect(() => {
+    const prev = document.body.style.overflow
+    if (drawerOpen) document.body.style.overflow = 'hidden'
+    return () => {
+      document.body.style.overflow = prev
+    }
+  }, [drawerOpen])
+
   return (
     <div
       data-theme="dashboard"

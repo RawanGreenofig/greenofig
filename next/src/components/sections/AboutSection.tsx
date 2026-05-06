@@ -188,20 +188,22 @@ export function AboutSection() {
 function LineReveal({
   children,
   delay = 0,
-  isAr = false,
+  isAr: _isAr = false,
 }: {
   children: React.ReactNode
   delay?: number
   isAr?: boolean
 }) {
-  // RTL: reveal from right side (clip the left). LTR: reveal from left side.
-  const initialClip = isAr ? 'inset(0 0 0 100%)' : 'inset(0 100% 0 0)'
+  // The clip-path/opacity reveal previously used here was leaving the bio
+  // text invisible on RTL because the LTR-shaped clip kept it hidden when
+  // the IntersectionObserver didn't fire. Switch to a mount-driven fade so
+  // the text is ALWAYS visible at rest — animation is cosmetic only.
+  void _isAr
   return (
     <motion.div
-      initial={{ clipPath: initialClip, opacity: 0 }}
-      whileInView={{ clipPath: 'inset(0 0% 0 0)', opacity: 1 }}
-      transition={{ duration: 0.9, ease: EASE_OUT, delay }}
-      viewport={{ once: true, margin: '-100px' }}
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5, ease: EASE_OUT, delay }}
     >
       {children}
     </motion.div>

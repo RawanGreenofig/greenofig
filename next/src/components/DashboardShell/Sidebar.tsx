@@ -5,17 +5,64 @@ import { LogOut, Settings, Home, ArrowLeft } from 'lucide-react'
 import { Link, usePathname } from '@/i18n/navigation'
 import { Wordmark } from '@/components/Wordmark'
 import { useAuth } from '@/context/AuthContext'
-import { cn } from '@/lib/cn'
 import { resolveDisplayName } from '@/lib/displayName'
 import type { DashboardNavItem } from './nav'
 
-const SIDEBAR_BG = '#0e0e0e'
-const SIDEBAR_BORDER = '#1a1a1a'
-const ACTIVE_BG = '#161616'
-const HOVER_BG = '#161616'
-const ACCENT = '#4ade80'
-const INACTIVE_TEXT = '#666666'
+const SIDEBAR_BG = '#131629'
+const SIDEBAR_BORDER = '#252a45'
+const ACTIVE_BG = '#1e2238'
+const HOVER_BG = '#1e2238'
+const ACCENT = '#60a5fa'
+const INACTIVE_TEXT = '#8b92b8'
 const ACTIVE_TEXT = '#ffffff'
+const GROUP_LABEL = '#4a5080'
+
+type SectionKey = 'main' | 'nutrition' | 'connect' | 'manage'
+
+interface SectionDef {
+  key: SectionKey
+  label: string
+  hrefs: string[]
+}
+
+const USER_SECTIONS: SectionDef[] = [
+  {
+    key: 'main',
+    label: 'MAIN',
+    hrefs: ['/dashboard', '/dashboard/scanner', '/dashboard/track', '/dashboard/progress'],
+  },
+  {
+    key: 'nutrition',
+    label: 'NUTRITION',
+    hrefs: ['/dashboard/meal-plan', '/dashboard/recipes'],
+  },
+  {
+    key: 'connect',
+    label: 'CONNECT',
+    hrefs: ['/dashboard/community', '/dashboard/messages'],
+  },
+  {
+    key: 'manage',
+    label: 'MANAGE',
+    hrefs: ['/dashboard/store', '/dashboard/orders', '/dashboard/bookings', '/dashboard/settings'],
+  },
+]
+
+/** Per-route icon tint. Items not listed fall back to a neutral slate. */
+const ICON_TINT: Record<string, string> = {
+  '/dashboard':           '#fb923c', // Today
+  '/dashboard/scanner':   '#4ade80',
+  '/dashboard/track':     '#60a5fa',
+  '/dashboard/progress':  '#a78bfa',
+  '/dashboard/meal-plan': '#4ade80',
+  '/dashboard/recipes':   '#fb923c',
+  '/dashboard/community': '#60a5fa',
+  '/dashboard/messages':  '#2dd4bf',
+  '/dashboard/store':     '#a78bfa',
+  '/dashboard/orders':    '#8b92b8',
+  '/dashboard/bookings':  '#60a5fa',
+  '/dashboard/settings':  '#8b92b8',
+}
 
 export function Sidebar({
   navItems,
@@ -32,7 +79,7 @@ export function Sidebar({
   // Root-level hrefs only match on EXACT pathname so "/dashboard" doesn't
   // also light up when the user is on "/dashboard/track" or any other
   // dashboard subpage. Children use the normal startsWith match so deep
-  // routes (e.g. /admin/users/123) still highlight their parent ("/admin/users").
+  // routes (e.g. /admin/users/123) still highlight their parent.
   const ROOT_HREFS = ['/dashboard', '/nutritionist', '/admin']
   const isActive = (href: string) => {
     if (ROOT_HREFS.includes(href)) return pathname === href
@@ -49,6 +96,17 @@ export function Sidebar({
       .slice(0, 2)
       .join('')
       .toUpperCase() || '?'
+
+  // Group nav items by URL prefix (only for the user role; nutritionist /
+  // admin nav lists are smaller and stay flat).
+  const isUserRole = navItems.some((n) => n.href.startsWith('/dashboard'))
+  const grouped: { section: SectionDef | null; items: DashboardNavItem[] }[] =
+    isUserRole
+      ? USER_SECTIONS.map((section) => ({
+          section,
+          items: navItems.filter((n) => section.hrefs.includes(n.href)),
+        })).filter((g) => g.items.length > 0)
+      : [{ section: null, items: navItems }]
 
   return (
     <nav
@@ -68,14 +126,14 @@ export function Sidebar({
         </Link>
       </div>
 
-      {/* ── Nav items ──────────────────────────────────────── */}
-      <ul className="flex-1 overflow-y-auto py-3 space-y-0.5">
+      {/* ── Nav items, grouped ─────────────────────────────── */}
+      <ul className="flex-1 overflow-y-auto py-3">
         {/* Home (back to marketing site) is the first item. */}
         <li>
           <Link
             href="/"
             onClick={onItemClick}
-            className="group mx-2 flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors"
+            className="group mx-2 flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors"
             style={{ color: INACTIVE_TEXT }}
             onMouseEnter={(e) => {
               e.currentTarget.style.background = HOVER_BG
@@ -86,69 +144,102 @@ export function Sidebar({
               e.currentTarget.style.color = INACTIVE_TEXT
             }}
           >
-            <Home className="w-4 h-4 flex-shrink-0" strokeWidth={1.75} />
+            <span
+              className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
+              style={{ background: '#1e2238' }}
+            >
+              <Home className="w-4 h-4" strokeWidth={1.75} style={{ color: '#8b92b8' }} />
+            </span>
             <span className="flex-1 truncate text-sm font-medium leading-none">
               {tNav('home')}
             </span>
           </Link>
         </li>
 
-        {navItems.map(({ href, labelKey, Icon }) => {
-          const active = isActive(href)
-          return (
-            <li key={href}>
-              <Link
-                href={href}
-                onClick={onItemClick}
-                className={cn(
-                  'group mx-2 flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors relative',
-                )}
-                style={{
-                  background: active ? ACTIVE_BG : 'transparent',
-                  color: active ? ACTIVE_TEXT : INACTIVE_TEXT,
-                  borderInlineStart: active
-                    ? `2px solid ${ACCENT}`
-                    : '2px solid transparent',
-                }}
-                onMouseEnter={(e) => {
-                  if (!active) {
-                    e.currentTarget.style.background = HOVER_BG
-                    e.currentTarget.style.color = ACTIVE_TEXT
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (!active) {
-                    e.currentTarget.style.background = 'transparent'
-                    e.currentTarget.style.color = INACTIVE_TEXT
-                  }
-                }}
-                aria-current={active ? 'page' : undefined}
+        {grouped.map(({ section, items }) => (
+          <div key={section?.key ?? 'flat'}>
+            {section && (
+              <p
+                className="px-4 pt-5 pb-1 text-[10px] uppercase font-semibold select-none"
+                style={{ letterSpacing: '0.15em', color: GROUP_LABEL }}
               >
-                {/* Active state per spec is bg + border-l + text only.
-                 * Icon inherits currentColor so it never becomes a green
-                 * circle that reads as a separate decorative dot. */}
-                <Icon
-                  className="w-4 h-4 flex-shrink-0"
-                  strokeWidth={active ? 2 : 1.75}
-                />
-                <span className="flex-1 truncate text-sm font-medium leading-none">
-                  {t(labelKey)}
-                </span>
-              </Link>
-            </li>
-          )
-        })}
+                {section.label}
+              </p>
+            )}
+            {items.map(({ href, labelKey, Icon }) => {
+              const active = isActive(href)
+              const tint = ICON_TINT[href] ?? '#8b92b8'
+              return (
+                <li key={href}>
+                  <Link
+                    href={href}
+                    onClick={onItemClick}
+                    className="group mx-2 flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors relative"
+                    style={{
+                      background: active ? ACTIVE_BG : 'transparent',
+                      color: active ? ACTIVE_TEXT : INACTIVE_TEXT,
+                    }}
+                    onMouseEnter={(e) => {
+                      if (!active) {
+                        e.currentTarget.style.background = HOVER_BG
+                        e.currentTarget.style.color = ACTIVE_TEXT
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (!active) {
+                        e.currentTarget.style.background = 'transparent'
+                        e.currentTarget.style.color = INACTIVE_TEXT
+                      }
+                    }}
+                    aria-current={active ? 'page' : undefined}
+                  >
+                    {/* Active marker: a 2px x 20px pill on the leading edge. */}
+                    {active && (
+                      <span
+                        aria-hidden
+                        className="absolute top-1/2"
+                        style={{
+                          insetInlineStart: 0,
+                          transform: 'translateY(-50%)',
+                          width: 2,
+                          height: 20,
+                          borderRadius: '0 999px 999px 0',
+                          background: ACCENT,
+                        }}
+                      />
+                    )}
+                    <span
+                      className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
+                      style={{
+                        background: `${tint}1a`,
+                      }}
+                    >
+                      <Icon
+                        className="w-4 h-4"
+                        strokeWidth={active ? 2 : 1.75}
+                        style={{ color: tint }}
+                      />
+                    </span>
+                    <span className="flex-1 truncate text-sm font-medium leading-none">
+                      {t(labelKey)}
+                    </span>
+                  </Link>
+                </li>
+              )
+            })}
+          </div>
+        ))}
       </ul>
 
       {/* ── Bottom: user card → settings, then back link, then sign out ── */}
       <div
-        className="p-3 space-y-1"
+        className="p-3 space-y-1 mt-auto"
         style={{ borderTop: `1px solid ${SIDEBAR_BORDER}` }}
       >
         <Link
           href="/dashboard/settings"
           onClick={onItemClick}
-          className="flex items-center gap-3 rounded-lg px-3 py-2.5 transition-colors"
+          className="flex items-center gap-3 rounded-xl px-3 py-2.5 transition-colors"
           style={{ color: INACTIVE_TEXT }}
           onMouseEnter={(e) => {
             e.currentTarget.style.background = HOVER_BG
@@ -162,8 +253,8 @@ export function Sidebar({
               width: 36,
               height: 36,
               borderRadius: '50%',
-              background: '#1a2e1f',
-              color: ACCENT,
+              background: 'linear-gradient(135deg, #4ade80, #60a5fa)',
+              color: '#ffffff',
               fontSize: 12,
               fontWeight: 700,
               lineHeight: '36px',
@@ -180,15 +271,15 @@ export function Sidebar({
           </span>
           <div className="flex-1 min-w-0">
             <p
-              className="text-sm font-medium truncate"
+              className="text-sm font-semibold truncate"
               style={{ color: ACTIVE_TEXT }}
             >
               {displayName}
             </p>
             {email && (
               <p
-                className="text-xs truncate"
-                style={{ color: '#666' }}
+                className="text-xs truncate mt-0.5"
+                style={{ color: GROUP_LABEL }}
                 dir="ltr"
               >
                 {email}
@@ -198,23 +289,25 @@ export function Sidebar({
           <Settings
             className="w-4 h-4 shrink-0"
             strokeWidth={1.75}
-            style={{ color: '#666' }}
+            style={{ color: GROUP_LABEL }}
           />
         </Link>
 
         <Link
           href="/"
           onClick={onItemClick}
-          className="flex items-center gap-3 rounded-lg px-4 py-2 text-xs font-medium transition-colors"
-          style={{ color: '#666' }}
+          className="flex items-center gap-2 rounded-lg px-2 py-1.5 text-xs font-medium transition-colors"
+          style={{ color: GROUP_LABEL }}
           onMouseEnter={(e) => {
             e.currentTarget.style.color = ACTIVE_TEXT
+            e.currentTarget.style.background = HOVER_BG
           }}
           onMouseLeave={(e) => {
-            e.currentTarget.style.color = '#666'
+            e.currentTarget.style.color = GROUP_LABEL
+            e.currentTarget.style.background = 'transparent'
           }}
         >
-          <ArrowLeft className="w-4 h-4" strokeWidth={1.75} />
+          <ArrowLeft className="w-3.5 h-3.5" strokeWidth={1.75} />
           <span>{tNav('backToHome')}</span>
         </Link>
 
@@ -224,16 +317,18 @@ export function Sidebar({
             void signOut()
             onItemClick?.()
           }}
-          className="w-full flex items-center gap-3 rounded-lg px-4 py-2 text-xs font-medium transition-colors"
-          style={{ color: '#666' }}
+          className="w-full flex items-center gap-2 rounded-lg px-2 py-1.5 text-xs font-medium transition-colors"
+          style={{ color: GROUP_LABEL }}
           onMouseEnter={(e) => {
             e.currentTarget.style.color = '#f87171'
+            e.currentTarget.style.background = HOVER_BG
           }}
           onMouseLeave={(e) => {
-            e.currentTarget.style.color = '#666'
+            e.currentTarget.style.color = GROUP_LABEL
+            e.currentTarget.style.background = 'transparent'
           }}
         >
-          <LogOut className="w-4 h-4" strokeWidth={1.75} />
+          <LogOut className="w-3.5 h-3.5" strokeWidth={1.75} />
           <span>{tNav('signOut')}</span>
         </button>
       </div>

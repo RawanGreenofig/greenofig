@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { useTranslations } from 'next-intl'
+import { useLocale, useTranslations } from 'next-intl'
 import { Menu, X, ChevronDown, LayoutDashboard, Settings, LogOut } from 'lucide-react'
 import { Link, usePathname } from '@/i18n/navigation'
 import { LanguageSwitcher } from '@/components/LanguageSwitcher'
@@ -20,6 +20,8 @@ import { useAuth } from '@/context/AuthContext'
  */
 export function SiteHeader() {
   const t = useTranslations('nav')
+  const locale = useLocale()
+  const isRtl = locale === 'ar'
   const { user, profile, signOut, isLoading } = useAuth()
   const pathname = usePathname()
 
@@ -39,6 +41,16 @@ export function SiteHeader() {
     setDrawerOpen(false)
     setMenuOpen(false)
   }, [pathname])
+
+  // Lock body scroll while the mobile drawer is open. Always restore on
+  // unmount so a nav-away never leaves the page in a frozen state.
+  useEffect(() => {
+    const prev = document.body.style.overflow
+    if (drawerOpen) document.body.style.overflow = 'hidden'
+    return () => {
+      document.body.style.overflow = prev
+    }
+  }, [drawerOpen])
 
   useEffect(() => {
     const onClick = (e: MouseEvent) => {
@@ -260,12 +272,18 @@ export function SiteHeader() {
           style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }}
         />
         <div
-          className={`absolute top-0 end-0 h-full w-72 max-w-[80vw] flex flex-col transform transition-transform duration-300 ease-out ${
-            drawerOpen ? 'translate-x-0' : 'rtl:-translate-x-full ltr:translate-x-full'
-          }`}
+          className="absolute top-0 end-0 h-full w-72 max-w-[80vw] flex flex-col transition-transform duration-300 ease-out"
           style={{
             background: '#0e0e0e',
             borderInlineStart: '1px solid #222',
+            // RTL: panel is at the LEFT edge (`end-0` flips to `left:0`),
+            // so to hide it we slide it OFF-LEFT (negative X).
+            // LTR: panel is at the right edge, hide by sliding off-RIGHT.
+            transform: drawerOpen
+              ? 'translateX(0)'
+              : isRtl
+                ? 'translateX(-100%)'
+                : 'translateX(100%)',
           }}
         >
           <div
