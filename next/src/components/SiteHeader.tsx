@@ -282,10 +282,8 @@ export function SiteHeader() {
                 </Link>
                 <Link
                   href="/sign-up"
-                  className="hidden sm:inline-flex items-center justify-center text-sm font-semibold px-4 py-2 rounded-full transition-colors duration-200"
-                  style={{ background: '#4ade80', color: '#000' }}
-                  onMouseEnter={(e) => (e.currentTarget.style.background = '#86efac')}
-                  onMouseLeave={(e) => (e.currentTarget.style.background = '#4ade80')}
+                  className="btn-primary hidden sm:inline-flex"
+                  style={{ height: 40, padding: '0 20px', fontSize: 14 }}
                 >
                   {t('getStarted')}
                 </Link>
@@ -417,14 +415,11 @@ export function SiteHeader() {
                 </Link>
                 <Link
                   href="/sign-up"
-                  className="text-center transition-colors"
+                  className="btn-primary"
                   style={{
-                    background: '#4ade80',
-                    color: '#000',
-                    padding: '12px 0',
+                    width: '100%',
+                    height: 48,
                     borderRadius: 12,
-                    fontSize: 15,
-                    fontWeight: 600,
                   }}
                 >
                   {t('getStarted')}
@@ -433,15 +428,8 @@ export function SiteHeader() {
             ) : (
               <Link
                 href="/dashboard"
-                className="text-center transition-colors"
-                style={{
-                  background: '#4ade80',
-                  color: '#000',
-                  padding: '12px 0',
-                  borderRadius: 12,
-                  fontSize: 15,
-                  fontWeight: 600,
-                }}
+                className="btn-primary"
+                style={{ width: '100%', height: 48, borderRadius: 12 }}
               >
                 {t('dashboard')}
               </Link>

@@ -446,10 +446,8 @@ function NoFoodCard({
         <button
           type="button"
           onClick={onRetry}
-          className="mt-3 inline-flex items-center justify-center text-sm font-semibold px-5 py-2.5 rounded-xl transition-colors"
-          style={{ background: '#4ade80', color: '#000' }}
-          onMouseEnter={(e) => (e.currentTarget.style.background = '#86efac')}
-          onMouseLeave={(e) => (e.currentTarget.style.background = '#4ade80')}
+          className="btn-primary mt-3"
+          style={{ height: 40, padding: '0 20px', borderRadius: 12 }}
         >
           Try another photo
         </button>

@@ -192,19 +192,18 @@ export default function ProductDetailPage() {
             type="button"
             onClick={handleAdd}
             disabled={out}
-            className="mt-8 w-full inline-flex items-center justify-center gap-2 rounded-xl text-sm font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-50"
-            style={{
-              background: out ? 'var(--gf-surface-raised)' : '#4ade80',
-              color: out ? 'var(--gf-fg-3)' : '#000',
-              padding: '14px',
-              minHeight: 48,
-            }}
-            onMouseEnter={(e) => {
-              if (!out) e.currentTarget.style.background = '#86efac'
-            }}
-            onMouseLeave={(e) => {
-              if (!out) e.currentTarget.style.background = '#4ade80'
-            }}
+            className={out ? 'mt-8 w-full inline-flex items-center justify-center gap-2 rounded-xl text-sm font-semibold' : 'btn-primary mt-8'}
+            style={
+              out
+                ? {
+                    background: 'var(--gf-surface-raised)',
+                    color: 'var(--gf-fg-3)',
+                    padding: 14,
+                    minHeight: 48,
+                    cursor: 'not-allowed',
+                  }
+                : { width: '100%', height: 48, borderRadius: 12 }
+            }
           >
             <Plus className="w-4 h-4" strokeWidth={2.25} />
             {out ? 'Out of stock' : 'Add to cart'}

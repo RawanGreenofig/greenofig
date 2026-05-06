@@ -299,6 +299,86 @@
 [data-dash-theme='light'] [data-theme='dashboard'] .text-lime-500    { color: #16a34a; }
 [data-dash-theme='light'] [data-theme='dashboard'] .text-primary     { color: #16a34a; }
 
+/* ── Master button styles ────────────────────────────────────────
+ * Single source of truth for primary CTAs across marketing site,
+ * dashboard, and auth pages. The hero "Book a Free Consultation"
+ * is the canonical reference.
+ *
+ * .btn-primary  — lime gradient pill on a dark-green text token,
+ *                 used wherever a CTA is the primary action.
+ * .btn-secondary — outlined version for adjacent / lower-hierarchy
+ *                  CTAs (the "non-popular" pricing cards).
+ *
+ * Inside [data-theme="dashboard"] the buttons render slightly
+ * smaller (40px tall instead of 48px) to match the tighter chrome.
+ */
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 0 24px;
+  height: 48px;
+  font-size: 15px;
+  font-weight: 600;
+  color: #0d1a12;
+  background: linear-gradient(to bottom, #a3e635, #65a30d);
+  border: 1px solid rgba(101, 163, 13, 0.6);
+  border-radius: 9999px;
+  white-space: nowrap;
+  cursor: pointer;
+  text-decoration: none;
+  transition:
+    transform 200ms ease,
+    box-shadow 200ms ease,
+    filter 200ms ease;
+}
+.btn-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 20px rgba(101, 163, 13, 0.4);
+}
+.btn-primary:active {
+  transform: translateY(0);
+}
+.btn-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 0 24px;
+  height: 48px;
+  font-size: 15px;
+  font-weight: 600;
+  color: #a3e635;
+  background: transparent;
+  border: 1px solid rgba(101, 163, 13, 0.4);
+  border-radius: 9999px;
+  white-space: nowrap;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background-color 200ms ease, border-color 200ms ease;
+}
+.btn-secondary:hover {
+  background: rgba(163, 230, 53, 0.1);
+  border-color: rgba(101, 163, 13, 0.7);
+}
+
+/* Dashboard chrome runs tighter — 40px tall buttons match the
+ * topbar / sidebar metrics. */
+[data-theme='dashboard'] .btn-primary,
+[data-theme='dashboard'] .btn-secondary {
+  height: 40px;
+  padding: 0 20px;
+  font-size: 14px;
+}
+
 @keyframes spin {
   to { transform: rotate(360deg); }
 }

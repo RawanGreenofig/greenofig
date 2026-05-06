@@ -103,17 +103,16 @@ export function PrimarySubmit({
     <button
       type="submit"
       disabled={pending}
-      className="group relative w-full inline-flex items-center justify-center rounded-xl py-3 text-sm font-semibold transition-colors duration-200 disabled:opacity-70 disabled:cursor-wait"
-      style={{ background: '#4ade80', color: '#000', border: 'none' }}
-      onMouseEnter={(e) => {
-        if (!pending) e.currentTarget.style.background = '#86efac'
+      className="btn-primary w-full"
+      style={{
+        height: 48,
+        borderRadius: 12,
       }}
-      onMouseLeave={(e) => (e.currentTarget.style.background = '#4ade80')}
     >
       {pending ? (
         <span
           className="w-5 h-5 rounded-full border-2 animate-spin"
-          style={{ borderColor: 'rgb(0 0 0 / 0.2)', borderTopColor: '#000' }}
+          style={{ borderColor: 'rgb(13 26 18 / 0.2)', borderTopColor: '#0d1a12' }}
           aria-hidden
         />
       ) : (

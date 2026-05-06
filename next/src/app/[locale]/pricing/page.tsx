@@ -520,19 +520,12 @@ function PlanCard({
         )}
       </div>
 
-      {/* CTA */}
+      {/* CTA — Premium uses the canonical lime gradient (.btn-primary);
+       *  every other tier uses the matching outline style.            */}
       <Link
         href={plan.href}
-        className={`block w-full rounded-full py-3 text-center text-sm font-semibold transition-all ${
-          isFeatured
-            ? 'bg-green-500 text-white hover:bg-green-600 hover:-translate-y-px'
-            : 'bg-transparent border hover:opacity-90'
-        }`}
-        style={
-          isFeatured
-            ? undefined
-            : { borderColor: plan.accentColor, color: plan.accentColor }
-        }
+        className={isFeatured ? 'btn-primary w-full' : 'btn-secondary w-full'}
+        style={{ width: '100%' }}
       >
         {plan.cta}
       </Link>

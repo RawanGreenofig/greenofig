@@ -144,23 +144,8 @@ export function AboutSection() {
 
           <Link
             href="/dashboard"
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '8px',
-              background: '#4ade80',
-              color: '#000000',
-              fontWeight: 600,
-              fontSize: '14px',
-              padding: '12px 24px',
-              borderRadius: '999px',
-              width: 'fit-content',
-              textDecoration: 'none',
-              transition: 'background 200ms',
-              marginTop: '4px',
-            }}
-            onMouseOver={(e) => (e.currentTarget.style.background = '#86efac')}
-            onMouseOut={(e) => (e.currentTarget.style.background = '#4ade80')}
+            className="btn-primary"
+            style={{ width: 'fit-content', marginTop: 4 }}
           >
             {t('aboutCta')}
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none">

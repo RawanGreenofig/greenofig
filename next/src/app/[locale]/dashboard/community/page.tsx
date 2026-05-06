@@ -317,20 +317,8 @@ export default function CommunityPage() {
               <button
                 type="button"
                 onClick={goToMessages}
-                className="shrink-0 transition-opacity"
-                style={{
-                  background: '#4ade80',
-                  color: '#000',
-                  fontSize: 13,
-                  fontWeight: 600,
-                  padding: '8px 16px',
-                  borderRadius: 999,
-                  border: 'none',
-                  cursor: 'pointer',
-                  whiteSpace: 'nowrap',
-                }}
-                onMouseEnter={(e) => (e.currentTarget.style.opacity = '0.9')}
-                onMouseLeave={(e) => (e.currentTarget.style.opacity = '1')}
+                className="btn-primary shrink-0"
+                style={{ height: 36, padding: '0 18px', fontSize: 13 }}
               >
                 Upgrade
               </button>
@@ -452,21 +440,13 @@ export default function CommunityPage() {
               <button
                 type="button"
                 onClick={goToMessages}
+                className="btn-primary"
                 style={{
                   width: '100%',
-                  background: '#4ade80',
-                  color: '#000',
-                  fontSize: 13,
-                  fontWeight: 600,
-                  padding: '10px 0',
-                  borderRadius: 10,
-                  border: 'none',
-                  cursor: 'pointer',
                   marginTop: 12,
-                  transition: 'opacity 200ms',
+                  height: 40,
+                  borderRadius: 10,
                 }}
-                onMouseEnter={(e) => (e.currentTarget.style.opacity = '0.9')}
-                onMouseLeave={(e) => (e.currentTarget.style.opacity = '1')}
               >
                 Send Message
               </button>
