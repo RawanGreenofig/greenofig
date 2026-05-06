@@ -96,23 +96,23 @@ export function GoogleAuthButton({ label, withDivider = true }: Props) {
           alignItems: 'center',
           justifyContent: 'center',
           gap: '12px',
-          padding: '14px',
-          background: 'rgba(255,255,255,0.06)',
-          border: '1px solid rgba(255,255,255,0.12)',
-          borderRadius: '10px',
-          color: '#f0ede6',
+          padding: '12px',
+          background: '#111',
+          border: '1px solid #222',
+          borderRadius: '12px',
+          color: '#ffffff',
           fontFamily: 'Inter, sans-serif',
-          fontSize: '15px',
+          fontSize: '14px',
           fontWeight: 500,
           cursor: pending ? 'wait' : 'pointer',
           opacity: pending ? 0.7 : 1,
-          transition: 'all 0.2s ease',
+          transition: 'background-color 0.2s ease, border-color 0.2s ease',
         }}
         onMouseOver={(e) => {
-          if (!pending) e.currentTarget.style.background = 'rgba(255,255,255,0.1)'
+          if (!pending) e.currentTarget.style.background = '#1a1a1a'
         }}
         onMouseOut={(e) => {
-          e.currentTarget.style.background = 'rgba(255,255,255,0.06)'
+          e.currentTarget.style.background = '#111'
         }}
       >
         {pending ? (

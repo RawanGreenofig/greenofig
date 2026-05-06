@@ -1,6 +1,6 @@
 import { setRequestLocale } from 'next-intl/server'
 import { HeroSequence } from '@/components/HeroSequence'
-import { GhostBar } from '@/components/GhostBar'
+import { SiteHeader } from '@/components/SiteHeader'
 import { StatsSection } from '@/components/sections/StatsSection'
 import { AboutSection } from '@/components/sections/AboutSection'
 import { ServicesSection } from '@/components/sections/ServicesSection'
@@ -23,7 +23,7 @@ export default function Home({ params }: PageProps) {
 
   return (
     <main className="bg-bg">
-      <GhostBar />
+      <SiteHeader />
       <HeroSequence />
       <StatsSection />
       <AboutSection />

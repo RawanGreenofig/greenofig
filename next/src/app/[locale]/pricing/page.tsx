@@ -321,8 +321,10 @@ export default function PricingPage() {
   const copy = COPY[locale]
 
   return (
-    <main className="min-h-screen" style={{ background: '#0d1a12' }}>
+    <main className="min-h-screen" style={{ background: '#080808' }}>
       <SiteHeader />
+      {/* Spacer for the fixed navbar (h-16 = 64px) */}
+      <div className="h-16" />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24">
         {/* Header */}
         <header className="text-center mb-12">
@@ -460,19 +462,21 @@ function PlanCard({
   const isFree = price === 0
   const isFeatured = plan.featured
 
-  // Premium = featured (highlighted with #4ade80 + green glow)
-  // Other cards use a subtle #2a4a30 border on #122018 bg.
+  // Premium = featured (highlighted with #4ade80 + green glow + subtle scale)
+  // Other cards: charcoal surface on charcoal page bg.
   const cardStyle = isFeatured
     ? {
-        background: '#122018',
-        border: '1.5px solid #4ade80',
+        background: '#0d1a12',
+        border: '2px solid #4ade80',
         boxShadow: '0 0 48px rgba(74,222,128,0.18)',
       }
-    : { background: '#122018', border: '1px solid #2a4a30' }
+    : { background: '#111', border: '1px solid #222' }
 
   return (
     <li
-      className="relative rounded-2xl p-8 transition-all"
+      className={`relative rounded-2xl p-8 transition-all ${
+        isFeatured ? 'xl:scale-[1.05]' : ''
+      }`}
       style={cardStyle}
     >
       {plan.badge && (
@@ -533,7 +537,7 @@ function PlanCard({
         {plan.cta}
       </Link>
 
-      <hr className="my-6" style={{ borderColor: '#2a4a30' }} />
+      <hr className="my-6" style={{ borderColor: '#222' }} />
 
       {/* Features */}
       <ul className="flex flex-col gap-y-3">

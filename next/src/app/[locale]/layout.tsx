@@ -12,7 +12,6 @@ import { GSAPProvider } from '@/providers/GSAPProvider'
 import { AuthProvider } from '@/context/AuthContext'
 import { ToastHost } from '@/components/ToastHost'
 import { FilmGrain } from '@/components/FilmGrain'
-import CustomCursor from '@/components/CustomCursor'
 import { routing } from '@/i18n/routing'
 
 // ── Fonts ────────────────────────────────────────────────────────────
@@ -121,7 +120,6 @@ export default async function LocaleLayout({ children, params }: LayoutProps) {
               <GSAPProvider>
                 {children}
                 <FilmGrain />
-                <CustomCursor />
                 <ToastHost />
               </GSAPProvider>
             </LenisProvider>

@@ -8,12 +8,12 @@ import { useAuth } from '@/context/AuthContext'
 import { cn } from '@/lib/cn'
 import type { DashboardNavItem } from './nav'
 
-const SIDEBAR_BG = '#111111'
-const SIDEBAR_BORDER = '#222222'
-const ACTIVE_BG = '#1a2e1f'
-const HOVER_BG = '#1f1f1f'
+const SIDEBAR_BG = '#0e0e0e'
+const SIDEBAR_BORDER = '#1a1a1a'
+const ACTIVE_BG = '#161616'
+const HOVER_BG = '#161616'
 const ACCENT = '#4ade80'
-const INACTIVE_TEXT = '#888888'
+const INACTIVE_TEXT = '#666666'
 const ACTIVE_TEXT = '#ffffff'
 
 export function Sidebar({

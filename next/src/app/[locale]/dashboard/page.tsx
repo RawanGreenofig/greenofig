@@ -563,7 +563,7 @@ function ProgressCard({ t }: { t: ReturnType<typeof useTranslations> }) {
         </span>
       </div>
       <p className="font-mono text-2xl font-bold text-fg-1" dir="ltr">
-        — kg
+        0 kg
       </p>
       <p className="mt-1 text-xs text-fg-3">
         {t('weightDelta', { delta: '0' })}

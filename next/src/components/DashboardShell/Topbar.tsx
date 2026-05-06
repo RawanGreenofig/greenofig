@@ -8,10 +8,10 @@ import { LanguageSwitcher } from '@/components/LanguageSwitcher'
 import { useAuth } from '@/context/AuthContext'
 import { cn } from '@/lib/cn'
 
-const TOPBAR_BG = '#111111'
-const TOPBAR_BORDER = '#222222'
-const FIELD_BG = '#1a1a1a'
-const FIELD_BORDER = '#2a2a2a'
+const TOPBAR_BG = '#0e0e0e'
+const TOPBAR_BORDER = '#1a1a1a'
+const FIELD_BG = '#161616'
+const FIELD_BORDER = '#222222'
 
 export function Topbar({ onOpenMenu }: { onOpenMenu: () => void }) {
   const t = useTranslations('dashboard')
@@ -38,7 +38,7 @@ export function Topbar({ onOpenMenu }: { onOpenMenu: () => void }) {
 
   return (
     <header
-      className="flex items-center gap-3 h-16 px-4 md:px-6 shrink-0"
+      className="flex items-center gap-3 h-14 px-4 md:px-6 shrink-0"
       style={{
         background: TOPBAR_BG,
         borderBottom: `1px solid ${TOPBAR_BORDER}`,

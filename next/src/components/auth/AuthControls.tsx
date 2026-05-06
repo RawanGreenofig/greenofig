@@ -50,27 +50,20 @@ export const Field = forwardRef<HTMLInputElement, FieldProps>(function Field(
           ref={ref}
           id={fieldId}
           type={effectiveType}
-          className={`block w-full rounded-[10px] px-4 py-3.5 text-[15px] text-fg-1 placeholder:text-fg-1/30 transition-all duration-fast ease-out focus:outline-none ${className ?? ''}`}
+          className={`block w-full rounded-xl px-4 py-3 text-sm text-white placeholder:text-[#444] transition-all duration-200 focus:outline-none ${className ?? ''}`}
           style={{
-            background: 'rgb(255 255 255 / 0.04)',
-            border: error
-              ? '1px solid rgb(220 38 38 / 0.6)'
-              : '1px solid rgb(255 255 255 / 0.1)',
+            background: '#111',
+            border: error ? '1px solid #ef4444' : '1px solid #222',
             paddingInlineEnd: reveal ? '44px' : undefined,
           }}
           onFocus={(e) => {
             if (!error) {
-              e.currentTarget.style.borderColor = 'var(--gf-primary)'
-              e.currentTarget.style.boxShadow =
-                '0 0 0 3px rgb(61 122 74 / 0.2)'
+              e.currentTarget.style.borderColor = '#4ade80'
             }
             rest.onFocus?.(e)
           }}
           onBlur={(e) => {
-            e.currentTarget.style.borderColor = error
-              ? 'rgb(220 38 38 / 0.6)'
-              : 'rgb(255 255 255 / 0.1)'
-            e.currentTarget.style.boxShadow = 'none'
+            e.currentTarget.style.borderColor = error ? '#ef4444' : '#222'
             rest.onBlur?.(e)
           }}
         />
@@ -110,29 +103,17 @@ export function PrimarySubmit({
     <button
       type="submit"
       disabled={pending}
-      className="group relative w-full inline-flex items-center justify-center rounded-[10px] py-[15px] text-[15px] font-semibold text-fg-1 transition-all duration-normal ease-out disabled:opacity-70 disabled:cursor-wait hover:-translate-y-px"
-      style={{
-        background: 'linear-gradient(135deg, #3d7a4a, #4a9259)',
-        boxShadow: '0 4px 24px rgba(61,122,74,0.35)',
-        border: 'none',
-      }}
+      className="group relative w-full inline-flex items-center justify-center rounded-xl py-3 text-sm font-semibold transition-colors duration-200 disabled:opacity-70 disabled:cursor-wait"
+      style={{ background: '#4ade80', color: '#000', border: 'none' }}
       onMouseEnter={(e) => {
-        if (!pending) {
-          e.currentTarget.style.background =
-            'linear-gradient(135deg, #4a9259, #56a866)'
-          e.currentTarget.style.boxShadow =
-            '0 6px 32px rgba(61,122,74,0.5)'
-        }
+        if (!pending) e.currentTarget.style.background = '#86efac'
       }}
-      onMouseLeave={(e) => {
-        e.currentTarget.style.background =
-          'linear-gradient(135deg, #3d7a4a, #4a9259)'
-        e.currentTarget.style.boxShadow = '0 4px 24px rgba(61,122,74,0.35)'
-      }}
+      onMouseLeave={(e) => (e.currentTarget.style.background = '#4ade80')}
     >
       {pending ? (
         <span
-          className="w-5 h-5 rounded-full border-2 border-fg-1/20 border-t-fg-1 animate-spin"
+          className="w-5 h-5 rounded-full border-2 animate-spin"
+          style={{ borderColor: 'rgb(0 0 0 / 0.2)', borderTopColor: '#000' }}
           aria-hidden
         />
       ) : (
@@ -170,11 +151,14 @@ export function SecondaryLink({
 export function OrDivider({ label }: { label: string }) {
   return (
     <div className="flex items-center gap-3 my-6">
-      <span className="flex-1 h-px bg-fg-1/10" />
-      <span className="text-xs uppercase tracking-eyebrow text-fg-3">
+      <span className="flex-1 h-px" style={{ background: '#222' }} />
+      <span
+        className="text-xs uppercase tracking-eyebrow"
+        style={{ color: '#444' }}
+      >
         {label}
       </span>
-      <span className="flex-1 h-px bg-fg-1/10" />
+      <span className="flex-1 h-px" style={{ background: '#222' }} />
     </div>
   )
 }

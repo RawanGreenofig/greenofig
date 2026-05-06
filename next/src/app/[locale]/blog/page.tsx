@@ -35,8 +35,9 @@ export default function BlogIndexPage() {
   )
 
   return (
-    <main className="bg-bg min-h-screen">
+    <main className="min-h-screen" style={{ background: '#080808' }}>
       <SiteHeader />
+      <div className="h-16" />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24">
         {/* Centered hero */}
         <header className="text-center mb-16">

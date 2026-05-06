@@ -60,6 +60,9 @@
     "settings": "Settings",
     "signOut": "Sign Out",
     "backToHome": "Back to home",
+    "getStarted": "Get started",
+    "openMenu": "Open menu",
+    "closeMenu": "Close menu",
     "logoTagline": "Personalized Nutrition"
   },
   "auth": {

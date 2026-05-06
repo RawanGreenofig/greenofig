@@ -60,6 +60,9 @@
     "settings": "الإعدادات",
     "signOut": "تسجيل الخروج",
     "backToHome": "العودة للرئيسية",
+    "getStarted": "ابدأ الآن",
+    "openMenu": "فتح القائمة",
+    "closeMenu": "إغلاق القائمة",
     "logoTagline": "تغذية شخصية"
   },
   "auth": {

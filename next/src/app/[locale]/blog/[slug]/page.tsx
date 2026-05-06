@@ -84,12 +84,13 @@ export default async function ArticlePage({ params }: RouteParams) {
   }
 
   return (
-    <main className="bg-bg min-h-screen">
+    <main className="min-h-screen" style={{ background: '#080808' }}>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
       <SiteHeader />
+      <div className="h-16" />
 
       <div className="max-w-5xl mx-auto px-4 md:px-8 pt-10 pb-20">
         <Link

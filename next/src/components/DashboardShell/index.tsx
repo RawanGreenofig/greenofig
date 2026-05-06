@@ -63,8 +63,8 @@ export function DashboardShell({
   return (
     <div
       data-theme="dashboard"
-      className="flex h-screen text-fg-1"
-      style={{ background: '#0a0a0a' }}
+      className="flex h-screen overflow-hidden text-fg-1"
+      style={{ background: '#080808' }}
     >
       {/* Desktop sidebar */}
       <aside className="hidden md:flex w-60 shrink-0">
@@ -104,10 +104,10 @@ export function DashboardShell({
       <div className="flex-1 flex flex-col overflow-hidden">
         <Topbar onOpenMenu={() => setDrawerOpen(true)} />
         <main
-          className="flex-1 overflow-y-auto pb-20 md:pb-0"
+          className="flex-1 overflow-y-auto overscroll-contain pb-20 md:pb-0"
           // Custom cursor disabled in dashboards; let native cursor through
           data-cursor="ignore"
-          style={{ background: '#0a0a0a' }}
+          style={{ background: '#080808' }}
         >
           {children}
         </main>

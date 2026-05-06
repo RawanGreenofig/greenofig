@@ -15,9 +15,11 @@ interface SimplePageProps {
  */
 export function SimplePage({ title, subtitle, isAr, children }: SimplePageProps) {
   return (
-    <main className="bg-bg min-h-screen">
+    <main className="min-h-screen" style={{ background: '#080808' }}>
       <SiteHeader />
-      <div className="max-w-3xl mx-auto px-4 md:px-8 py-16">
+      {/* Spacer for the fixed navbar */}
+      <div className="h-16" />
+      <div className="max-w-2xl mx-auto px-4 md:px-8 py-16">
         <Link
           href="/"
           className="inline-flex items-center gap-1.5 text-sm text-fg-2 hover:text-lime-400 transition-colors mb-8"
