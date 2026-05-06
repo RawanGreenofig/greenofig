@@ -48,22 +48,69 @@ export default function BlogIndexPage() {
             </span>
           </span>
           <h1
-            className="font-display font-bold text-fg-1 tracking-tight max-w-3xl mx-auto"
+            className="font-bold text-white tracking-tight max-w-3xl mx-auto"
             style={{
-              fontSize: 'clamp(40px, 5vw, 64px)',
-              lineHeight: 1.05,
-              fontVariationSettings: "'opsz' 144, 'wght' 700, 'SOFT' 100, 'WONK' 1",
+              fontSize: 'clamp(40px, 5vw, 60px)',
+              lineHeight: 1.1,
+              letterSpacing: '-0.02em',
             }}
           >
             {isAr
-              ? 'مقالات التغذية بقلم د. روان عثمان'
-              : 'Nutrition Articles by Dr. Rawan Othman'}
+              ? 'تغذية مدعومة بالعلم،\nمشروحة ببساطة.'
+              : 'Science-backed nutrition,\nexplained simply.'}
           </h1>
-          <p className="mt-5 text-base lg:text-lg text-fg-2 leading-relaxed max-w-xl mx-auto">
+          <p className="mt-5 text-base lg:text-lg leading-relaxed max-w-xl mx-auto" style={{ color: '#888' }}>
             {isAr
-              ? 'نصائح مدعومة بالعلم لتساعدك تأكل أفضل وتشعر بأحسن حال.'
-              : 'Science-backed advice to help you eat better and feel your best.'}
+              ? 'مقالات قائمة على الأدلة لمساعدتك على الأكل بشكل أفضل وفهم جسمك.'
+              : 'Evidence-based articles to help you eat better, feel your best, and understand your body.'}
           </p>
+
+          {/* Search + category pills */}
+          <div className="flex items-center justify-center gap-3 mt-8 px-4 flex-wrap">
+            <input
+              placeholder={isAr ? 'ابحث في المقالات…' : 'Search articles...'}
+              className="rounded-xl px-5 py-3 text-white text-sm w-72 outline-none"
+              style={{
+                background: '#111',
+                border: '1px solid #222',
+              }}
+              onFocus={(e) => (e.currentTarget.style.borderColor = '#4ade80')}
+              onBlur={(e) => (e.currentTarget.style.borderColor = '#222')}
+            />
+            <button
+              type="button"
+              className="font-semibold px-6 py-3 rounded-xl text-sm transition-colors whitespace-nowrap"
+              style={{ background: '#4ade80', color: '#000' }}
+              onMouseEnter={(e) => (e.currentTarget.style.background = '#86efac')}
+              onMouseLeave={(e) => (e.currentTarget.style.background = '#4ade80')}
+            >
+              {isAr ? 'بحث' : 'Search'}
+            </button>
+          </div>
+
+          <div className="flex items-center justify-center gap-3 mt-6 flex-wrap px-4">
+            {(isAr
+              ? ['الكل', 'فقدان الوزن', 'تخطيط الوجبات', 'مكملات', 'وصفات']
+              : ['All', 'Weight Loss', 'Meal Planning', 'Supplements', 'Recipes']
+            ).map((cat) => (
+              <button
+                key={cat}
+                type="button"
+                className="text-sm px-4 py-2 rounded-full transition-colors"
+                style={{ border: '1px solid #222', color: '#888', background: 'transparent' }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.borderColor = '#4ade80'
+                  e.currentTarget.style.color = '#4ade80'
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.borderColor = '#222'
+                  e.currentTarget.style.color = '#888'
+                }}
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
         </header>
 
         {/* Article grid: 1 col mobile, 2 col tablet, 3 col desktop */}

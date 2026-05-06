@@ -4,6 +4,7 @@ import { useEffect, useState, type ReactNode } from 'react'
 import { useTranslations } from 'next-intl'
 import { X } from 'lucide-react'
 import { usePathname } from '@/i18n/navigation'
+import { ThemeProvider } from '@/components/ThemeProvider'
 import { Sidebar } from './Sidebar'
 import { Topbar } from './Topbar'
 import { MobileNav } from './MobileNav'
@@ -72,10 +73,11 @@ export function DashboardShell({
   }, [drawerOpen])
 
   return (
+    <ThemeProvider>
     <div
       data-theme="dashboard"
       className="flex h-screen overflow-hidden text-fg-1"
-      style={{ background: '#080808' }}
+      style={{ background: 'var(--gf-bg)' }}
     >
       {/* Desktop sidebar */}
       <aside className="hidden md:flex w-60 shrink-0">
@@ -118,7 +120,7 @@ export function DashboardShell({
           className="flex-1 overflow-y-auto overscroll-contain pb-20 md:pb-0"
           // Custom cursor disabled in dashboards; let native cursor through
           data-cursor="ignore"
-          style={{ background: '#080808', scrollbarGutter: 'stable' }}
+          style={{ background: 'var(--gf-bg)', scrollbarGutter: 'stable' }}
         >
           {children}
         </main>
@@ -126,5 +128,6 @@ export function DashboardShell({
 
       <MobileNav tabs={mobileTabs} fab={mobileFab} />
     </div>
+    </ThemeProvider>
   )
 }

@@ -1,21 +1,25 @@
 'use client'
 
 import { useTranslations } from 'next-intl'
-import { LogOut, Settings, Home, ArrowLeft } from 'lucide-react'
+import { LogOut, Settings, Home, ArrowLeft, Sun, Moon } from 'lucide-react'
 import { Link, usePathname } from '@/i18n/navigation'
 import { Wordmark } from '@/components/Wordmark'
 import { useAuth } from '@/context/AuthContext'
+import { useTheme } from '@/components/ThemeProvider'
 import { resolveDisplayName } from '@/lib/displayName'
 import type { DashboardNavItem } from './nav'
 
-const SIDEBAR_BG = '#131629'
-const SIDEBAR_BORDER = '#252a45'
-const ACTIVE_BG = '#1e2238'
-const HOVER_BG = '#1e2238'
+// Use CSS vars so the theme toggle (dark/light) flips the sidebar
+// alongside the rest of the dashboard. Each ref reads `var(--gf-...)`
+// from globals.css; light-mode override is applied by ThemeProvider.
+const SIDEBAR_BG = 'var(--gf-surface)'
+const SIDEBAR_BORDER = 'var(--gf-border)'
+const ACTIVE_BG = 'var(--gf-surface-raised)'
+const HOVER_BG = 'var(--gf-surface-raised)'
 const ACCENT = '#60a5fa'
-const INACTIVE_TEXT = '#8b92b8'
-const ACTIVE_TEXT = '#ffffff'
-const GROUP_LABEL = '#4a5080'
+const INACTIVE_TEXT = 'var(--gf-fg-2)'
+const ACTIVE_TEXT = 'var(--gf-fg-1)'
+const GROUP_LABEL = 'var(--gf-fg-3)'
 
 type SectionKey = 'main' | 'nutrition' | 'connect' | 'manage'
 
@@ -48,19 +52,21 @@ const USER_SECTIONS: SectionDef[] = [
   },
 ]
 
-/** Per-route icon tint. Items not listed fall back to a neutral slate. */
+/** Single-accent icon tint per the simplified palette — kept as a record
+ * (instead of inlined) so individual routes can opt into a different
+ * color in the future without redoing the render path. */
 const ICON_TINT: Record<string, string> = {
-  '/dashboard':           '#fb923c', // Today
+  '/dashboard':           '#8b92b8',
   '/dashboard/scanner':   '#4ade80',
-  '/dashboard/track':     '#60a5fa',
-  '/dashboard/progress':  '#a78bfa',
+  '/dashboard/track':     '#8b92b8',
+  '/dashboard/progress':  '#8b92b8',
   '/dashboard/meal-plan': '#4ade80',
-  '/dashboard/recipes':   '#fb923c',
-  '/dashboard/community': '#60a5fa',
-  '/dashboard/messages':  '#2dd4bf',
-  '/dashboard/store':     '#a78bfa',
+  '/dashboard/recipes':   '#8b92b8',
+  '/dashboard/community': '#8b92b8',
+  '/dashboard/messages':  '#8b92b8',
+  '/dashboard/store':     '#8b92b8',
   '/dashboard/orders':    '#8b92b8',
-  '/dashboard/bookings':  '#60a5fa',
+  '/dashboard/bookings':  '#8b92b8',
   '/dashboard/settings':  '#8b92b8',
 }
 
@@ -75,6 +81,7 @@ export function Sidebar({
   const tNav = useTranslations('nav')
   const pathname = usePathname()
   const { user, profile, signOut } = useAuth()
+  const { theme, toggle: toggleTheme } = useTheme()
 
   // Root-level hrefs only match on EXACT pathname so "/dashboard" doesn't
   // also light up when the user is on "/dashboard/track" or any other
@@ -330,6 +337,29 @@ export function Sidebar({
         >
           <LogOut className="w-3.5 h-3.5" strokeWidth={1.75} />
           <span>{tNav('signOut')}</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={toggleTheme}
+          aria-pressed={theme === 'light'}
+          className="w-full flex items-center gap-2 rounded-lg px-2 py-1.5 text-xs font-medium transition-colors"
+          style={{ color: GROUP_LABEL }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.color = ACTIVE_TEXT
+            e.currentTarget.style.background = HOVER_BG
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.color = GROUP_LABEL
+            e.currentTarget.style.background = 'transparent'
+          }}
+        >
+          {theme === 'dark' ? (
+            <Sun className="w-3.5 h-3.5" strokeWidth={1.75} />
+          ) : (
+            <Moon className="w-3.5 h-3.5" strokeWidth={1.75} />
+          )}
+          <span>{theme === 'dark' ? 'Light mode' : 'Dark mode'}</span>
         </button>
       </div>
     </nav>

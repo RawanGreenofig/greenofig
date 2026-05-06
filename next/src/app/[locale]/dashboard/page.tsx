@@ -152,14 +152,15 @@ export default function DashboardTodayPage() {
         </p>
       </header>
 
-      {/* KPI row */}
+      {/* KPI row — uniform green accent on every card per the simplified
+       * palette spec. Per-card varied colors made the row feel busy. */}
       <section
         aria-label="Today summary"
         className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4"
       >
         <KpiCard
           Icon={Flame}
-          accent="#fb923c"
+          accent="#4ade80"
           label={t('kpiCalories')}
           current={stats.caloriesLogged}
           target={stats.caloriesTarget}
@@ -167,7 +168,7 @@ export default function DashboardTodayPage() {
         />
         <KpiCard
           Icon={Droplets}
-          accent="#2dd4bf"
+          accent="#4ade80"
           label={t('kpiWater')}
           current={stats.waterGlasses}
           target={stats.waterTarget}
@@ -287,7 +288,7 @@ function StreakCard({
   streak: number
   t: ReturnType<typeof useTranslations>
 }) {
-  const accent = '#a78bfa'
+  const accent = '#4ade80'
   return (
     <article
       className="rounded-2xl p-4 md:p-5 transition-colors"
@@ -341,7 +342,7 @@ function BookingCard({
   t: ReturnType<typeof useTranslations>
   booking: { whenLabel: string; type: string } | null
 }) {
-  const accent = '#60a5fa'
+  const accent = '#4ade80'
   return (
     <article
       className="rounded-2xl p-4 md:p-5 transition-colors"

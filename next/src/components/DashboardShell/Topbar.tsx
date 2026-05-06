@@ -9,10 +9,11 @@ import { useAuth } from '@/context/AuthContext'
 import { cn } from '@/lib/cn'
 import { resolveDisplayName } from '@/lib/displayName'
 
-const TOPBAR_BG = '#0e0e0e'
-const TOPBAR_BORDER = '#1a1a1a'
-const FIELD_BG = '#161616'
-const FIELD_BORDER = '#222222'
+// Use CSS vars so the topbar follows the dashboard theme toggle.
+const TOPBAR_BG = 'var(--gf-surface)'
+const TOPBAR_BORDER = 'var(--gf-border)'
+const FIELD_BG = 'var(--gf-surface-raised)'
+const FIELD_BORDER = 'var(--gf-border)'
 
 export function Topbar({ onOpenMenu }: { onOpenMenu: () => void }) {
   const t = useTranslations('dashboard')

@@ -58,154 +58,124 @@ export function AboutSection() {
           </div>
         </motion.div>
 
-        {/* Right — text */}
-        <div className="space-y-5">
-          <LineReveal isAr={isAr}>
-            <p className="text-xs uppercase tracking-eyebrow font-semibold text-lime-400">
-              {t('aboutEyebrow')}
-            </p>
-          </LineReveal>
-          <LineReveal isAr={isAr} delay={0.08}>
-            <h2
-              className="font-display font-bold text-fg-1 tracking-tight"
-              style={{
-                fontSize: 'clamp(40px, 5vw, 64px)',
-                lineHeight: 1.05,
-                fontVariationSettings:
-                  "'opsz' 144, 'wght' 700, 'SOFT' 100, 'WONK' 1",
-              }}
-            >
-              {t('aboutHeadline')}
-            </h2>
-          </LineReveal>
-          <LineReveal isAr={isAr} delay={0.14}>
-            <p className="font-display italic text-lg lg:text-xl text-fg-2 leading-relaxed">
-              {t('aboutSub')}
-            </p>
-          </LineReveal>
-          <LineReveal isAr={isAr} delay={0.2}>
-            <p className="text-base lg:text-lg text-fg-2 leading-relaxed">
-              {bio}
-            </p>
-          </LineReveal>
-          <LineReveal isAr={isAr} delay={0.4}>
-            <div
-              style={{
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '10px',
-                margin: '28px 0',
-              }}
-            >
-              {creds.map((cred, i) => (
-                <div
-                  key={i}
-                  style={{ display: 'flex', alignItems: 'center', gap: '10px' }}
-                >
-                  <div
-                    style={{
-                      width: '32px',
-                      height: '32px',
-                      borderRadius: '50%',
-                      background: 'rgba(61,122,74,0.15)',
-                      border: '1px solid rgba(61,122,74,0.4)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      flexShrink: 0,
-                    }}
-                  >
-                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                      <path
-                        d="M2 7l3.5 3.5L12 3"
-                        stroke="#84cc16"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
-                  </div>
-                  <span
-                    style={{
-                      fontFamily: 'Inter, sans-serif',
-                      fontSize: '0.9rem',
-                      fontWeight: 500,
-                      color: '#f0ede6',
-                    }}
-                  >
-                    {cred}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </LineReveal>
-          <LineReveal isAr={isAr} delay={0.5}>
-            <Link
-              href="/dashboard"
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '10px',
-                background: 'linear-gradient(135deg, #3d7a4a, #4a9259)',
-                color: '#f0ede6',
-                fontFamily: 'Inter, sans-serif',
-                fontWeight: 600,
-                fontSize: '0.95rem',
-                padding: '14px 28px',
-                borderRadius: '9999px',
-                textDecoration: 'none',
-                boxShadow: '0 0 32px rgba(61,122,74,0.35)',
-                transition: 'all 0.3s ease',
-                marginTop: '8px',
-              }}
-              onMouseOver={(e) => {
-                e.currentTarget.style.boxShadow = '0 0 48px rgba(61,122,74,0.55)'
-                e.currentTarget.style.transform = 'translateY(-2px)'
-              }}
-              onMouseOut={(e) => {
-                e.currentTarget.style.boxShadow = '0 0 32px rgba(61,122,74,0.35)'
-                e.currentTarget.style.transform = 'translateY(0)'
-              }}
-            >
-              {t('aboutCta')}
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                <path
-                  d={isAr ? 'M13 8H3M7 4L3 8l4 4' : 'M3 8h10M9 4l4 4-4 4'}
-                  stroke="currentColor"
-                  strokeWidth="1.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-            </Link>
-          </LineReveal>
+        {/* Right — text. Pure inline-styled / animation-free so the bio
+         * can NEVER end up at opacity:0 because of an observer that didn't
+         * fire. This regressed three times via clipPath/whileInView; we
+         * are not flirting with that again. */}
+        <div
+          style={{
+            flex: 1,
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'center',
+            gap: '24px',
+            padding: '32px 0',
+            opacity: 1,
+            transform: 'none',
+            visibility: 'visible',
+          }}
+        >
+          <span
+            style={{
+              fontSize: '11px',
+              fontWeight: 600,
+              letterSpacing: '0.2em',
+              textTransform: 'uppercase',
+              color: '#4ade80',
+            }}
+          >
+            {t('aboutEyebrow')}
+          </span>
+
+          <h2
+            style={{
+              fontSize: 'clamp(28px, 4vw, 48px)',
+              fontWeight: 700,
+              color: '#ffffff',
+              lineHeight: 1.1,
+              letterSpacing: '-0.02em',
+            }}
+          >
+            {t('aboutHeadline')}
+          </h2>
+
+          <p
+            style={{
+              fontSize: '18px',
+              fontStyle: 'italic',
+              color: '#9baf9f',
+              lineHeight: 1.6,
+              maxWidth: '520px',
+            }}
+          >
+            {t('aboutSub')}
+          </p>
+
+          <p
+            style={{
+              fontSize: '16px',
+              color: '#aaaaaa',
+              lineHeight: 1.7,
+              maxWidth: '520px',
+            }}
+          >
+            {bio}
+          </p>
+
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px' }}>
+            {creds.map((cred) => (
+              <span
+                key={cred}
+                style={{
+                  background: 'rgba(74,222,128,0.1)',
+                  color: '#4ade80',
+                  fontSize: '13px',
+                  padding: '6px 16px',
+                  borderRadius: '999px',
+                  border: '1px solid rgba(74,222,128,0.2)',
+                  fontWeight: 500,
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                {cred}
+              </span>
+            ))}
+          </div>
+
+          <Link
+            href="/dashboard"
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '8px',
+              background: '#4ade80',
+              color: '#000000',
+              fontWeight: 600,
+              fontSize: '14px',
+              padding: '12px 24px',
+              borderRadius: '999px',
+              width: 'fit-content',
+              textDecoration: 'none',
+              transition: 'background 200ms',
+              marginTop: '4px',
+            }}
+            onMouseOver={(e) => (e.currentTarget.style.background = '#86efac')}
+            onMouseOut={(e) => (e.currentTarget.style.background = '#4ade80')}
+          >
+            {t('aboutCta')}
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+              <path
+                d={isAr ? 'M13 8H3M7 4L3 8l4 4' : 'M3 8h10M9 4l4 4-4 4'}
+                stroke="currentColor"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </Link>
         </div>
       </div>
     </section>
   )
 }
 
-function LineReveal({
-  children,
-  delay = 0,
-  isAr: _isAr = false,
-}: {
-  children: React.ReactNode
-  delay?: number
-  isAr?: boolean
-}) {
-  // The clip-path/opacity reveal previously used here was leaving the bio
-  // text invisible on RTL because the LTR-shaped clip kept it hidden when
-  // the IntersectionObserver didn't fire. Switch to a mount-driven fade so
-  // the text is ALWAYS visible at rest — animation is cosmetic only.
-  void _isAr
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 8 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, ease: EASE_OUT, delay }}
-    >
-      {children}
-    </motion.div>
-  )
-}
