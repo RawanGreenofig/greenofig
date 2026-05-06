@@ -17,6 +17,8 @@ import {
 import { useUser } from '@/lib/hooks/useUser'
 import { useFeature } from '@/lib/hooks/useFeature'
 import { useSupabaseQuery } from '@/lib/hooks/useSupabaseQuery'
+import { Link } from '@/i18n/navigation'
+import { PRODUCTS as SHARED_PRODUCTS } from '@/lib/products'
 
 type Category =
   | 'all'
@@ -48,20 +50,10 @@ const CATEGORIES: Category[] = [
   'books',
 ]
 
-const PRODUCTS: Product[] = [
-  { id: 'p1',  name: 'Daily Greens Powder',         category: 'superfoods',  price: 28, stock: 14, badges: ['drPick','bestseller'],  hue: 'rgb(163 230 53 / 0.18)' },
-  { id: 'p2',  name: 'Magnesium Glycinate 200 mg',  category: 'supplements', price: 19, stock: 22, badges: ['drPick'],                hue: 'rgb(168 85 247 / 0.18)' },
-  { id: 'p3',  name: 'Vitamin D3 + K2',             category: 'supplements', price: 24, compareAt: 28, stock: 9,  badges: ['saleBadge'], hue: 'rgb(232 145 42 / 0.18)' },
-  { id: 'p4',  name: 'Omega-3 Fish Oil',            category: 'supplements', price: 32, stock: 18, badges: ['bestseller'],            hue: 'rgb(6 182 212 / 0.16)' },
-  { id: 'p5',  name: 'Mediterranean Olive Oil',     category: 'kitchen',     price: 22, stock: 30, badges: ['drPick'],                hue: 'rgb(132 204 22 / 0.18)' },
-  { id: 'p6',  name: 'Almond Butter, raw',          category: 'snacks',      price: 14, stock: 24, badges: [],                        hue: 'rgb(232 145 42 / 0.16)' },
-  { id: 'p7',  name: 'Chia Seeds 500g',             category: 'superfoods',  price: 8,  stock: 50, badges: ['newBadge'],              hue: 'rgb(168 85 247 / 0.16)' },
-  { id: 'p8',  name: 'Dark Chocolate 85%',          category: 'snacks',      price: 6,  stock: 0,  badges: [],                        hue: 'rgb(120 53 15 / 0.18)' },
-  { id: 'p9',  name: 'Cold-Pressed Tahini',         category: 'kitchen',     price: 11, stock: 20, badges: ['drPick'],                hue: 'rgb(234 179 8 / 0.18)' },
-  { id: 'p10', name: 'Probiotic 25 Billion',        category: 'supplements', price: 38, stock: 6,  badges: ['drPick','newBadge'],     hue: 'rgb(34 197 94 / 0.18)' },
-  { id: 'p11', name: 'Roasted Almonds (unsalted)',  category: 'snacks',      price: 10, stock: 28, badges: [],                        hue: 'rgb(217 119 6 / 0.16)' },
-  { id: 'p12', name: 'Eat Real — Dr. Rawan',        category: 'books',       price: 18, stock: 12, badges: ['drPick','newBadge'],     hue: 'rgb(61 122 74 / 0.22)' },
-]
+// Source of truth lives in lib/products.ts so the per-product detail
+// page reads the same catalog. The local `Product` type is structurally
+// a subset of the shared one, so the cast is sound.
+const PRODUCTS: Product[] = SHARED_PRODUCTS as unknown as Product[]
 
 const TIER_DISCOUNT_PCT: Record<string, number> = {
   premium: 10,
@@ -331,6 +323,10 @@ function ProductCard({
     : 0
   return (
     <li className="rounded-xl border border-border bg-surface overflow-hidden hover:border-primary/40 transition-colors">
+      <Link
+        href={`/dashboard/store/${product.id}` as `/dashboard/store/${string}`}
+        className="block cursor-pointer"
+      >
       {/* Visual */}
       <div
         className="relative aspect-square w-full"
@@ -378,11 +374,20 @@ function ProductCard({
             </span>
           )}
         </div>
+      </div>
+      </Link>
+      {/* Add-to-cart sits outside the wrapping Link so its onClick fires
+       * cleanly without navigating away to the detail page. */}
+      <div className="px-4 pb-4">
         <button
           type="button"
-          onClick={onAdd}
+          onClick={(e) => {
+            e.preventDefault()
+            e.stopPropagation()
+            onAdd()
+          }}
           disabled={out}
-          className={`mt-3 w-full inline-flex items-center justify-center gap-1.5 rounded-pill h-9 text-xs font-semibold transition-all ${
+          className={`w-full inline-flex items-center justify-center gap-1.5 rounded-pill h-9 text-xs font-semibold transition-all ${
             out
               ? 'bg-surface-raised text-fg-3 cursor-not-allowed'
               : 'bg-primary/15 text-lime-400 hover:bg-primary/25'

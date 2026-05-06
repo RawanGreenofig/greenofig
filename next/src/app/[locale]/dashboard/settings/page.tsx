@@ -231,13 +231,31 @@ export default function SettingsPage() {
       {/* Profile summary */}
       <section
         className="rounded-2xl p-5 flex flex-wrap items-center gap-5"
-        style={{ background: '#1a1a1a', border: '1px solid #2a2a2a' }}
+        style={{
+          background: 'var(--gf-surface-raised)',
+          border: '1px solid var(--gf-border)',
+        }}
       >
         <span
-          className="w-16 h-16 rounded-full inline-flex items-center justify-center text-lg font-bold shrink-0"
-          style={{ background: '#1a2e1f', color: '#4ade80' }}
+          style={{
+            width: 48,
+            height: 48,
+            borderRadius: '50%',
+            background: '#1a2e1f',
+            color: '#4ade80',
+            fontSize: 16,
+            fontWeight: 700,
+            lineHeight: 1,
+            textAlign: 'center',
+            flexShrink: 0,
+            overflow: 'hidden',
+            userSelect: 'none',
+            display: 'inline-flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
         >
-          {initials}
+          {initials.slice(0, 2).toUpperCase()}
         </span>
         <div className="flex-1 min-w-0">
           <div className="flex flex-wrap items-center gap-2">
@@ -294,7 +312,7 @@ export default function SettingsPage() {
         {/* Sidebar tabs (lg+) / horizontal scroll (sm) */}
         <nav
           aria-label="Settings tabs"
-          className="lg:col-span-3 flex lg:flex-col gap-1 overflow-x-auto -mx-1 px-1 lg:overflow-visible lg:mx-0 lg:px-0 pb-1 lg:pb-0"
+          className="lg:col-span-3 flex lg:flex-col gap-2 overflow-x-auto -mx-1 px-1 lg:overflow-visible lg:mx-0 lg:px-0 pb-1 lg:pb-0"
         >
           {TABS.map(({ key, Icon }) => {
             const active = tab === key
@@ -303,13 +321,18 @@ export default function SettingsPage() {
                 key={key}
                 type="button"
                 onClick={() => setTab(key)}
-                className={`shrink-0 inline-flex items-center gap-2.5 rounded-lg h-10 px-3 text-sm font-medium transition-colors lg:w-full lg:text-start ${
+                className={`shrink-0 inline-flex items-center gap-3 rounded-[10px] px-4 py-[10px] text-[14px] font-medium transition-colors lg:w-full lg:text-start ${
                   active
                     ? 'bg-primary/15 text-lime-400'
                     : 'text-fg-2 hover:text-fg-1 hover:bg-surface'
                 }`}
+                style={{ minHeight: 44 }}
               >
-                <Icon className="w-4 h-4 shrink-0" strokeWidth={1.75} />
+                <Icon
+                  className="flex-shrink-0"
+                  strokeWidth={1.75}
+                  style={{ width: 18, height: 18 }}
+                />
                 {t(`tabs.${key}` as 'tabs.profile')}
               </button>
             )
@@ -403,10 +426,26 @@ function ProfilePane({
       <Section title={t('profile.sectionPhoto')}>
         <div className="flex flex-wrap items-center gap-5">
           <span
-            className="w-20 h-20 rounded-full bg-gradient-to-br from-lime-400 to-lime-600 text-bg inline-flex items-center justify-center font-display text-2xl font-bold"
             aria-hidden
+            style={{
+              width: 64,
+              height: 64,
+              borderRadius: '50%',
+              background: 'linear-gradient(135deg, #4ade80, #65a30d)',
+              color: '#0d1a12',
+              fontSize: 18,
+              fontWeight: 700,
+              lineHeight: 1,
+              textAlign: 'center',
+              flexShrink: 0,
+              overflow: 'hidden',
+              userSelect: 'none',
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
           >
-            {form.fullName ? initialsOf(form.fullName) : <Camera className="w-7 h-7" strokeWidth={1.5} />}
+            {form.fullName ? initialsOf(form.fullName) : <Camera className="w-6 h-6" strokeWidth={1.5} />}
           </span>
           <div className="flex flex-wrap items-center gap-2">
             <button
