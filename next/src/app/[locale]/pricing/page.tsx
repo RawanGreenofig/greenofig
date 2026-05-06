@@ -375,6 +375,39 @@ export default function PricingPage() {
   const { user, tier: rawTier } = useAuth()
   const isLoggedIn = !!user
   const currentTier = (rawTier ?? 'free') as TierKey
+  const [loadingTier, setLoadingTier] = useState<TierKey | null>(null)
+
+  const handleUpgrade = async (tier: TierKey) => {
+    if (loadingTier || tier === 'free') return
+    setLoadingTier(tier)
+    try {
+      const origin = window.location.origin
+      const res = await fetch('/api/stripe/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          kind: 'subscription',
+          tier,
+          cycle: billing === 'annual' ? 'yearly' : 'monthly',
+          successUrl: `${origin}/${locale}/dashboard?upgraded=1`,
+          cancelUrl: `${origin}/${locale}/pricing`,
+        }),
+      })
+      const data = (await res.json().catch(() => null)) as
+        | { url?: string }
+        | null
+      if (data?.url) {
+        window.location.href = data.url
+        return
+      }
+      alert("Couldn't start checkout. Please try again.")
+    } catch (e) {
+      console.error('Checkout error:', e)
+      alert('Something went wrong. Please try again.')
+    } finally {
+      setLoadingTier(null)
+    }
+  }
 
   const plans = PLANS[locale]
   const faqs = FAQS[locale]
@@ -457,6 +490,8 @@ export default function PricingPage() {
               isLoggedIn={isLoggedIn}
               currentTier={currentTier}
               isAr={isAr}
+              loadingTier={loadingTier}
+              onUpgrade={handleUpgrade}
             />
           ))}
         </ul>
@@ -524,6 +559,8 @@ function PlanCard({
   isLoggedIn,
   currentTier,
   isAr,
+  loadingTier,
+  onUpgrade,
 }: {
   plan: Plan
   billing: 'monthly' | 'annual'
@@ -531,6 +568,8 @@ function PlanCard({
   isLoggedIn: boolean
   currentTier: TierKey
   isAr: boolean
+  loadingTier: TierKey | null
+  onUpgrade: (tier: TierKey) => void
 }) {
   const price = billing === 'monthly' ? plan.price.monthly : plan.price.annual
   const isFree = price === 0
@@ -655,7 +694,8 @@ function PlanCard({
         )}
       </div>
 
-      {/* CTA — three states: current, downgrade-disabled, upgrade. */}
+      {/* CTA — three states: current, downgrade-disabled, upgrade.
+       * Logged-in upgrades skip /sign-up and go straight to Stripe. */}
       {isCurrent || isLowerThanCurrent ? (
         <button
           type="button"
@@ -674,10 +714,43 @@ function PlanCard({
         >
           {ctaText}
         </button>
+      ) : isLoggedIn && plan.tier !== 'free' ? (
+        <button
+          type="button"
+          onClick={() => onUpgrade(plan.tier)}
+          disabled={loadingTier !== null}
+          className={
+            (plan.tier === 'premium' ? 'btn-primary' : 'btn-secondary') +
+            ' w-full disabled:cursor-wait disabled:opacity-70'
+          }
+          style={{ width: '100%' }}
+        >
+          {loadingTier === plan.tier ? (
+            <>
+              <span
+                aria-hidden
+                className="w-4 h-4 rounded-full border-2 animate-spin"
+                style={{
+                  borderColor:
+                    plan.tier === 'premium'
+                      ? 'rgba(13,26,18,0.2)'
+                      : 'rgba(163,230,53,0.25)',
+                  borderTopColor:
+                    plan.tier === 'premium' ? '#0d1a12' : '#a3e635',
+                }}
+              />
+              {isAr ? 'جارٍ التوجيه…' : 'Redirecting…'}
+            </>
+          ) : (
+            ctaText
+          )}
+        </button>
       ) : (
         <Link
           href={plan.href}
-          className={plan.tier === 'premium' ? 'btn-primary w-full' : 'btn-secondary w-full'}
+          className={
+            plan.tier === 'premium' ? 'btn-primary w-full' : 'btn-secondary w-full'
+          }
           style={{ width: '100%' }}
         >
           {ctaText}

@@ -18,7 +18,8 @@ const FIELD_BORDER = 'var(--gf-border)'
 export function Topbar({ onOpenMenu }: { onOpenMenu: () => void }) {
   const t = useTranslations('dashboard')
   const tNav = useTranslations('nav')
-  const { user, profile, signOut } = useAuth()
+  const { user, profile, signOut, tier } = useAuth()
+  const userTier = (tier ?? 'free') as 'free' | 'basic' | 'premium' | 'vip'
   const displayName = resolveDisplayName(profile, user, 'Guest')
   const initials =
     displayName
@@ -62,17 +63,45 @@ export function Topbar({ onOpenMenu }: { onOpenMenu: () => void }) {
       {/* Search */}
       <div
         className="hidden sm:flex flex-1 max-w-md items-center gap-2 rounded-xl px-3 h-10"
-        style={{ background: FIELD_BG, border: `1px solid ${FIELD_BORDER}` }}
+        style={{
+          background: FIELD_BG,
+          border: `1px solid ${FIELD_BORDER}`,
+        }}
       >
-        <Search className="w-4 h-4" strokeWidth={1.75} style={{ color: '#555' }} />
+        <Search
+          className="w-4 h-4"
+          strokeWidth={1.75}
+          style={{ color: 'var(--gf-fg-3)' }}
+        />
         <input
           type="search"
           placeholder={t('searchPlaceholder')}
           aria-label={t('search')}
           className="flex-1 bg-transparent text-sm focus:outline-none"
-          style={{ color: '#ffffff' }}
+          style={{ color: 'var(--gf-fg-1)' }}
         />
       </div>
+
+      {/* Tier pill — subtle reminder of the user's plan, only on desktop */}
+      <span
+        className="hidden md:inline-flex items-center"
+        style={{
+          fontSize: 10,
+          fontWeight: 700,
+          textTransform: 'uppercase',
+          letterSpacing: '0.1em',
+          color: 'var(--tier-badge-text)',
+          background: 'var(--tier-badge-bg)',
+          padding: '3px 10px',
+          borderRadius: 999,
+          border: '1px solid var(--tier-color)',
+          opacity: 0.85,
+          whiteSpace: 'nowrap',
+        }}
+      >
+        {userTier} plan
+      </span>
+
       <div className="sm:hidden flex-1" />
 
       {/* Back to site */}

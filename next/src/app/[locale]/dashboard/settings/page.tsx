@@ -809,6 +809,72 @@ function UpgradeSuccessBanner() {
   )
 }
 
+type TierKey = 'free' | 'basic' | 'premium' | 'vip'
+
+const TIER_CONFIG: Record<TierKey, {
+  name: string
+  color: string
+  badge: string
+  price: string
+  currency: string
+  features: string
+}> = {
+  free: {
+    name: 'Free',
+    color: '#6b7280',
+    badge: '#1f2937',
+    price: '0',
+    currency: '',
+    features:
+      '3 food scans/day · Community read access · Basic tracking',
+  },
+  basic: {
+    name: 'Basic',
+    color: '#60a5fa',
+    badge: '#1e3a5f',
+    price: '29',
+    currency: 'SAR/mo',
+    features:
+      'Unlimited scans · Full community · Progress charts · Recipe library',
+  },
+  premium: {
+    name: 'Premium',
+    color: '#a3e635',
+    badge: '#1a2e0a',
+    price: '79',
+    currency: 'SAR/mo',
+    features:
+      'Everything in Basic · Direct messaging · Custom meal plans · AI assistant',
+  },
+  vip: {
+    name: 'VIP',
+    color: '#fbbf24',
+    badge: '#2d1f00',
+    price: '149',
+    currency: 'SAR/mo',
+    features:
+      'Everything in Premium · Monthly consultation · Priority support · Exclusive products',
+  },
+}
+
+const TIER_ORDER: TierKey[] = ['free', 'basic', 'premium', 'vip']
+
+interface ComparisonRow {
+  feature: string
+  values: Record<TierKey, string | true | false>
+}
+
+const COMPARISON: ComparisonRow[] = [
+  { feature: 'Food scans/day',  values: { free: '3',    basic: '∞',    premium: '∞',    vip: '∞'    } },
+  { feature: 'Meal tracking',   values: { free: true,   basic: true,   premium: true,   vip: true   } },
+  { feature: 'Community',       values: { free: 'Read', basic: 'Full', premium: 'Full', vip: 'Full' } },
+  { feature: 'Recipe library',  values: { free: false,  basic: true,   premium: true,   vip: true   } },
+  { feature: 'Direct messaging',values: { free: false,  basic: false,  premium: true,   vip: true   } },
+  { feature: 'Custom meal plan',values: { free: false,  basic: false,  premium: true,   vip: true   } },
+  { feature: 'Monthly consult', values: { free: false,  basic: false,  premium: false,  vip: true   } },
+  { feature: 'Priority support',values: { free: false,  basic: false,  premium: false,  vip: true   } },
+]
+
 function SubscriptionPane({
   t,
   tier,
@@ -816,69 +882,361 @@ function SubscriptionPane({
   t: ReturnType<typeof useTranslations>
   tier: string
 }) {
-  const tCommon = useTranslations('tiers')
-  const benefitsKey = `${tier}Benefits` as
-    | 'freeBenefits'
-    | 'basicBenefits'
-    | 'premiumBenefits'
-    | 'vipBenefits'
-  const isFree = tier === 'free'
+  const safeTier = (TIER_ORDER as readonly string[]).includes(tier)
+    ? (tier as TierKey)
+    : 'free'
+  const cfg = TIER_CONFIG[safeTier]
+  const isFree = safeTier === 'free'
+  const isVip = safeTier === 'vip'
   const renewISO = '2026-06-03'
   const [confirmCancel, setConfirmCancel] = useState(false)
+  const [upgrading, setUpgrading] = useState(false)
+
+  const startUpgrade = async (target: TierKey) => {
+    if (upgrading || target === safeTier) return
+    setUpgrading(true)
+    try {
+      const origin = window.location.origin
+      const res = await fetch('/api/stripe/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          kind: 'subscription',
+          tier: target,
+          cycle: 'monthly',
+          successUrl: `${origin}/dashboard?upgraded=1`,
+          cancelUrl: `${origin}/dashboard/settings?tab=subscription`,
+        }),
+      })
+      const data = (await res.json().catch(() => null)) as
+        | { url?: string }
+        | null
+      if (data?.url) {
+        window.location.href = data.url
+        return
+      }
+      alert("Couldn't start checkout. Please try again.")
+    } catch (e) {
+      console.error('Checkout error:', e)
+      alert('Something went wrong. Please try again.')
+    } finally {
+      setUpgrading(false)
+    }
+  }
+
   return (
     <div className="space-y-6">
       <Suspense fallback={null}>
         <UpgradeSuccessBanner />
       </Suspense>
-      <article className="rounded-xl border border-primary/30 bg-gradient-to-b from-primary/15 to-transparent p-5 md:p-6">
+
+      {/* ── Big current-plan card ─────────────────────────── */}
+      <article
+        className="rounded-3xl"
+        style={{
+          background: 'var(--gf-surface-raised)',
+          border: `2px solid ${cfg.color}`,
+          boxShadow: `0 0 24px ${cfg.color}22`,
+          padding: 28,
+        }}
+      >
         <div className="flex items-start justify-between gap-4 flex-wrap">
-          <div>
-            <p className="text-xs uppercase tracking-eyebrow text-fg-3 font-semibold">
-              {t('sub.currentPlan')}
-            </p>
-            <p className="mt-1 font-display text-2xl md:text-3xl font-bold text-fg-1 tracking-tight">
-              {tCommon(`${tier as 'free'}.name`)}
-            </p>
-            {!isFree && (
-              <p className="mt-1 text-xs text-fg-3 font-mono" dir="ltr">
-                {t('sub.renewsOn', {
-                  date: new Date(renewISO).toLocaleDateString(undefined, {
-                    month: 'short',
-                    day: 'numeric',
-                    year: 'numeric',
-                  }),
-                })}
-              </p>
-            )}
-          </div>
-          <div className="flex flex-wrap items-center gap-2">
-            <button
-              type="button"
-              className="inline-flex items-center gap-1.5 rounded-pill bg-gradient-to-b from-lime-400 to-lime-600 text-bg font-semibold h-10 px-5 text-sm shadow-lime-glow border border-lime-600/60 hover:-translate-y-px transition-transform"
+          <span
+            className="inline-flex items-center"
+            style={{
+              background: cfg.badge,
+              color: cfg.color,
+              fontSize: 13,
+              fontWeight: 700,
+              letterSpacing: '0.08em',
+              textTransform: 'uppercase',
+              padding: '6px 20px',
+              borderRadius: 999,
+            }}
+          >
+            {cfg.name}
+          </span>
+          <p className="font-mono" dir="ltr">
+            <span
+              style={{ fontSize: 32, fontWeight: 700, color: 'var(--gf-fg-1)' }}
             >
-              <Sparkles className="w-3.5 h-3.5" strokeWidth={2} />
-              {t('sub.upgrade')}
-            </button>
-            {!isFree && (
+              {cfg.price}
+            </span>
+            {cfg.currency && (
+              <span
+                className="ms-1"
+                style={{ fontSize: 16, color: 'var(--gf-fg-3)' }}
+              >
+                {cfg.currency}
+              </span>
+            )}
+          </p>
+        </div>
+
+        <p
+          className="mt-4"
+          style={{ fontSize: 18, fontWeight: 600, color: 'var(--gf-fg-1)' }}
+        >
+          You are on the {cfg.name} plan
+        </p>
+        <p className="mt-2" style={{ fontSize: 14, color: 'var(--gf-fg-3)' }}>
+          {cfg.features}
+        </p>
+
+        {!isFree && (
+          <p
+            className="mt-2 font-mono"
+            style={{ fontSize: 12, color: 'var(--gf-fg-3)' }}
+            dir="ltr"
+          >
+            {t('sub.renewsOn', {
+              date: new Date(renewISO).toLocaleDateString(undefined, {
+                month: 'short',
+                day: 'numeric',
+                year: 'numeric',
+              }),
+            })}
+          </p>
+        )}
+
+        {/* Action row */}
+        <div className="mt-6 flex flex-wrap items-center gap-3">
+          {isVip ? (
+            <>
               <button
                 type="button"
-                onClick={() => setConfirmCancel(true)}
-                className="inline-flex items-center gap-1.5 rounded-pill bg-surface-raised border border-border h-10 px-4 text-sm font-medium text-fg-2 hover:text-fg-1"
+                onClick={async () => {
+                  try {
+                    const res = await fetch('/api/stripe/portal', {
+                      method: 'POST',
+                    })
+                    if (res.ok) {
+                      const { url } = (await res.json()) as { url: string }
+                      if (url) window.location.href = url
+                    }
+                  } catch {
+                    /* noop */
+                  }
+                }}
+                className="btn-secondary"
               >
-                {t('sub.cancelPlan')}
+                Manage billing
               </button>
-            )}
-          </div>
-        </div>
-        <div className="mt-5 pt-5 border-t border-primary/20">
-          <p className="text-xs uppercase tracking-eyebrow text-fg-3 font-semibold mb-2">
-            {t('sub.tierBenefits')}
-          </p>
-          <p className="text-sm text-fg-1">
-            {isFree ? t('sub.freePlanNote') : t(`sub.${benefitsKey}`)}
-          </p>
+              <span style={{ fontSize: 14, color: 'var(--gf-fg-2)' }}>
+                You&apos;re on our best plan! 🎉
+              </span>
+            </>
+          ) : safeTier === 'premium' ? (
+            <>
+              <button
+                type="button"
+                onClick={() => startUpgrade('vip')}
+                disabled={upgrading}
+                className="inline-flex items-center justify-center gap-2 rounded-full font-semibold transition-transform hover:-translate-y-px disabled:cursor-wait disabled:opacity-70"
+                style={{
+                  background:
+                    'linear-gradient(to bottom, #fbbf24, #d97706)',
+                  color: '#0d1a12',
+                  border: '1px solid rgba(217, 119, 6, 0.6)',
+                  height: 40,
+                  padding: '0 20px',
+                  fontSize: 14,
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                {upgrading ? (
+                  <>
+                    <span
+                      aria-hidden
+                      className="w-4 h-4 rounded-full border-2 animate-spin"
+                      style={{
+                        borderColor: 'rgba(13,26,18,0.2)',
+                        borderTopColor: '#0d1a12',
+                      }}
+                    />
+                    Redirecting…
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="w-3.5 h-3.5" strokeWidth={2} />
+                    Upgrade to VIP →
+                  </>
+                )}
+              </button>
+              <button
+                type="button"
+                onClick={async () => {
+                  const res = await fetch('/api/stripe/portal', {
+                    method: 'POST',
+                  })
+                  if (res.ok) {
+                    const { url } = (await res.json()) as { url: string }
+                    if (url) window.location.href = url
+                  }
+                }}
+                className="btn-secondary"
+              >
+                Manage billing
+              </button>
+            </>
+          ) : (
+            <button
+              type="button"
+              onClick={() => startUpgrade('premium')}
+              disabled={upgrading}
+              className="btn-primary disabled:cursor-wait disabled:opacity-70"
+            >
+              {upgrading ? (
+                <>
+                  <span
+                    aria-hidden
+                    className="w-4 h-4 rounded-full border-2 animate-spin"
+                    style={{
+                      borderColor: 'rgba(13,26,18,0.2)',
+                      borderTopColor: '#0d1a12',
+                    }}
+                  />
+                  Redirecting…
+                </>
+              ) : (
+                <>
+                  <Sparkles className="w-3.5 h-3.5" strokeWidth={2} />
+                  Upgrade to Premium →
+                </>
+              )}
+            </button>
+          )}
         </div>
       </article>
+
+      {/* ── Plan comparison table ───────────────────────── */}
+      <article
+        className="rounded-2xl overflow-hidden"
+        style={{
+          background: 'var(--gf-surface-raised)',
+          border: '1px solid var(--gf-border)',
+        }}
+      >
+        <header
+          className="px-5 py-4"
+          style={{ borderBottom: '1px solid var(--gf-border)' }}
+        >
+          <p
+            className="text-xs uppercase font-semibold"
+            style={{ letterSpacing: '0.15em', color: 'var(--gf-fg-3)' }}
+          >
+            Plan comparison
+          </p>
+        </header>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr style={{ borderBottom: '1px solid var(--gf-border)' }}>
+                <th className="text-start px-5 py-3" style={{ color: 'var(--gf-fg-3)' }}>
+                  Feature
+                </th>
+                {TIER_ORDER.map((k) => {
+                  const isCurr = k === safeTier
+                  const c = TIER_CONFIG[k]
+                  return (
+                    <th
+                      key={k}
+                      className="px-3 py-3 text-center"
+                      style={{
+                        color: isCurr ? c.color : 'var(--gf-fg-2)',
+                        background: isCurr ? `${c.color}1a` : 'transparent',
+                        fontWeight: 700,
+                        fontSize: 12,
+                        letterSpacing: '0.08em',
+                        textTransform: 'uppercase',
+                      }}
+                    >
+                      {c.name}
+                    </th>
+                  )
+                })}
+              </tr>
+            </thead>
+            <tbody>
+              {COMPARISON.map((row, i) => (
+                <tr
+                  key={row.feature}
+                  style={{
+                    borderTop: i === 0 ? 'none' : '1px solid var(--gf-border)',
+                  }}
+                >
+                  <td
+                    className="px-5 py-3"
+                    style={{ color: 'var(--gf-fg-2)' }}
+                  >
+                    {row.feature}
+                  </td>
+                  {TIER_ORDER.map((k) => {
+                    const v = row.values[k]
+                    const isCurr = k === safeTier
+                    const c = TIER_CONFIG[k]
+                    return (
+                      <td
+                        key={k}
+                        className="px-3 py-3 text-center"
+                        style={{
+                          background: isCurr ? `${c.color}0d` : 'transparent',
+                        }}
+                      >
+                        {v === true ? (
+                          <Check
+                            className="inline w-4 h-4"
+                            strokeWidth={2.5}
+                            style={{ color: c.color }}
+                          />
+                        ) : v === false ? (
+                          <X
+                            className="inline w-4 h-4"
+                            strokeWidth={2}
+                            style={{ color: 'var(--gf-fg-4, #94a3b8)' }}
+                          />
+                        ) : (
+                          <span
+                            style={{
+                              fontSize: 13,
+                              fontWeight: 600,
+                              color: isCurr ? c.color : 'var(--gf-fg-1)',
+                            }}
+                          >
+                            {v}
+                          </span>
+                        )}
+                      </td>
+                    )
+                  })}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </article>
+
+      {/* Subtle cancel link — funnels users to the Stripe billing portal
+       * which handles cancellation. Hidden on free tier where there's
+       * nothing to cancel. */}
+      {!isFree && (
+        <div className="flex justify-center">
+          <button
+            type="button"
+            onClick={() => setConfirmCancel(true)}
+            className="transition-colors hover:underline"
+            style={{
+              fontSize: 12,
+              color: 'var(--gf-fg-4, #94a3b8)',
+              background: 'transparent',
+              border: 'none',
+              cursor: 'pointer',
+            }}
+          >
+            {t('sub.cancelPlan')}
+          </button>
+        </div>
+      )}
 
       <Section title={t('sub.paymentMethod')}>
         {isFree ? (

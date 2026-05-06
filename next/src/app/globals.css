@@ -290,11 +290,9 @@
   --tier-badge-text: #fbbf24;
 }
 
-/* Sidebar gets a thin tier-colored top accent so the user can read
- * their tier from the chrome alone. */
-[data-theme='dashboard'][data-tier] aside > nav {
-  border-top: 3px solid var(--tier-color, #6b7280);
-}
+/* The previous design used a 3px tier-colored top border on the
+ * sidebar — replaced with an inline tier pill in the topbar (cleaner
+ * visual, no smudgy 3px line at the top of the chrome). */
 
 /* ── Dashboard light mode ────────────────────────────────────────
  * Set inside <ThemeProvider> via a wrapping `data-dash-theme` div.
