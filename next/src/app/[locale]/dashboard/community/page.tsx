@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import Image from 'next/image'
 import { useLocale } from 'next-intl'
 import { useRouter } from 'next/navigation'
 import {
@@ -211,7 +212,21 @@ export default function CommunityPage() {
             }}
           >
             <header className="flex items-center gap-3">
-              <Avatar text="DR" size={40} />
+              <Image
+                src="/images/dr-rawan-othman.jpg"
+                alt="Dr. Rawan Othman"
+                width={40}
+                height={40}
+                style={{
+                  width: 40,
+                  height: 40,
+                  borderRadius: '50%',
+                  objectFit: 'cover',
+                  objectPosition: 'center top',
+                  flexShrink: 0,
+                  border: '2px solid #4ade80',
+                }}
+              />
               <div className="min-w-0">
                 <p
                   className="truncate"
@@ -407,16 +422,21 @@ export default function CommunityPage() {
           >
             <div
               style={{
+                position: 'relative',
+                width: '100%',
                 height: 112,
-                background:
-                  'linear-gradient(135deg, #1a2e1f 0%, #0d1a12 100%)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: 48,
               }}
             >
-              🥗
+              <Image
+                src="/images/dr-rawan-othman.jpg"
+                alt="Dr. Rawan Othman"
+                fill
+                sizes="280px"
+                style={{
+                  objectFit: 'cover',
+                  objectPosition: 'center top',
+                }}
+              />
             </div>
             <div style={{ padding: 16 }}>
               <p
