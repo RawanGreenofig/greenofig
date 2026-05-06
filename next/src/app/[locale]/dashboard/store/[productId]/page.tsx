@@ -57,6 +57,7 @@ export default function ProductDetailPage() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
         {/* ── Visual ─────────────────────────────────────── */}
         <div
+          data-product-hue
           className="relative w-full aspect-square rounded-2xl overflow-hidden"
           style={{ background: product.hue }}
         >

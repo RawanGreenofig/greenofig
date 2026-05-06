@@ -383,15 +383,33 @@ function MacroBar({
 }) {
   const pct = target > 0 ? Math.min(100, Math.round((value / target) * 100)) : 0
   return (
-    <div className="rounded-lg border border-border bg-bg-deeper/50 p-3">
-      <p className="text-[11px] uppercase tracking-eyebrow text-fg-3 font-medium">
+    <div
+      className="rounded-lg p-3"
+      style={{
+        background: 'var(--gf-surface-raised)',
+        border: '1px solid var(--gf-border)',
+      }}
+    >
+      <p
+        className="text-[11px] uppercase tracking-eyebrow font-medium"
+        style={{ color: 'var(--gf-fg-3)' }}
+      >
         {label}
       </p>
-      <p className="mt-1 font-mono text-base font-bold text-fg-1" dir="ltr">
+      <p
+        className="mt-1 font-mono text-base font-bold"
+        style={{ color: 'var(--gf-fg-1)' }}
+        dir="ltr"
+      >
         {Math.round(value)}
-        <span className="text-xs text-fg-3 ms-0.5">/{target}{unit}</span>
+        <span className="text-xs ms-0.5" style={{ color: 'var(--gf-fg-3)' }}>
+          /{target}{unit}
+        </span>
       </p>
-      <div className="mt-2 h-1 rounded-pill bg-bg-deeper overflow-hidden">
+      <div
+        className="mt-2 h-1 rounded-pill overflow-hidden"
+        style={{ background: 'var(--gf-border)' }}
+      >
         <div
           className="h-full rounded-pill transition-all duration-300"
           style={{ width: `${pct}%`, background: color }}

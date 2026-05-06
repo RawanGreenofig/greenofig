@@ -159,18 +159,25 @@ export function Topbar({ onOpenMenu }: { onOpenMenu: () => void }) {
               minWidth: 220,
             }}
           >
-            {/* user header */}
+            {/* user header — flips to a tinted card in light mode */}
             <div
-              className="px-4 py-3"
-              style={{ borderBottom: `1px solid ${TOPBAR_BORDER}` }}
+              className="m-2"
+              style={{
+                background: 'var(--gf-card-hover)',
+                padding: '12px 16px',
+                borderRadius: 10,
+              }}
             >
-              <p className="text-sm font-medium" style={{ color: '#fff' }}>
+              <p
+                className="text-sm font-semibold truncate"
+                style={{ color: 'var(--gf-fg-1)' }}
+              >
                 {displayName}
               </p>
               {user?.email && (
                 <p
                   className="mt-0.5 text-xs truncate"
-                  style={{ color: '#666' }}
+                  style={{ color: 'var(--gf-fg-3)' }}
                   dir="ltr"
                 >
                   {user.email}
@@ -198,16 +205,16 @@ export function Topbar({ onOpenMenu }: { onOpenMenu: () => void }) {
               }}
               className="w-full flex items-center gap-2.5 px-4 py-3 text-sm transition-colors"
               style={{
-                color: '#ef4444',
+                color: '#dc2626',
                 borderTop: `1px solid ${TOPBAR_BORDER}`,
                 minHeight: 44,
               }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.background = '#1e2238'
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background = 'transparent'
-              }}
+              onMouseEnter={(e) =>
+                (e.currentTarget.style.background = 'rgba(220,38,38,0.08)')
+              }
+              onMouseLeave={(e) =>
+                (e.currentTarget.style.background = 'transparent')
+              }
             >
               <LogOut className="w-4 h-4" strokeWidth={1.75} />
               <span>{tNav('signOut')}</span>
@@ -279,26 +286,38 @@ function NotificationBell({ label }: { label: string }) {
         aria-haspopup="menu"
         aria-expanded={open}
         onClick={() => setOpen((o) => !o)}
-        className="relative w-10 h-10 rounded-full transition-colors flex items-center justify-center"
+        className="relative inline-flex items-center justify-center transition-colors"
         style={{
-          background: 'var(--gf-surface-raised)',
-          border: '1px solid var(--gf-border)',
+          width: 36,
+          height: 36,
+          borderRadius: 8,
+          padding: 8,
+          background: 'transparent',
+          border: 'none',
           color: 'var(--gf-fg-2)',
+          cursor: 'pointer',
         }}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.color = 'var(--gf-fg-1)'
-          e.currentTarget.style.background = '#1e2238'
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.color = 'var(--gf-fg-2)'
-          e.currentTarget.style.background = 'var(--gf-surface-raised)'
-        }}
+        onMouseEnter={(e) =>
+          (e.currentTarget.style.color = 'var(--gf-fg-1)')
+        }
+        onMouseLeave={(e) =>
+          (e.currentTarget.style.color = 'var(--gf-fg-2)')
+        }
       >
-        <Bell className="w-4 h-4" strokeWidth={1.75} />
+        <Bell className="w-[22px] h-[22px]" strokeWidth={1.75} />
         {unreadCount > 0 && (
           <span
-            className="absolute top-1.5 end-1.5 w-2 h-2 rounded-full"
-            style={{ background: '#f87171' }}
+            aria-label={`${unreadCount} unread`}
+            style={{
+              position: 'absolute',
+              top: 6,
+              insetInlineEnd: 6,
+              width: 8,
+              height: 8,
+              borderRadius: '50%',
+              background: '#ef4444',
+              border: '2px solid var(--gf-surface)',
+            }}
           />
         )}
       </button>
@@ -431,13 +450,13 @@ function DropItem({
       onClick={onClick}
       role="menuitem"
       className="flex items-center gap-2.5 px-4 py-3 text-sm transition-colors"
-      style={{ color: '#8b92b8', minHeight: 44 }}
+      style={{ color: 'var(--gf-fg-2)', minHeight: 44 }}
       onMouseEnter={(e) => {
-        e.currentTarget.style.color = '#fff'
-        e.currentTarget.style.background = '#1e2238'
+        e.currentTarget.style.color = 'var(--gf-fg-1)'
+        e.currentTarget.style.background = 'var(--gf-card-hover)'
       }}
       onMouseLeave={(e) => {
-        e.currentTarget.style.color = '#8b92b8'
+        e.currentTarget.style.color = 'var(--gf-fg-2)'
         e.currentTarget.style.background = 'transparent'
       }}
     >

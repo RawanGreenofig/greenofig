@@ -299,23 +299,62 @@
 /* ── Dashboard light mode ────────────────────────────────────────
  * Set inside <ThemeProvider> via a wrapping `data-dash-theme` div.
  * Only the dashboard scope responds — the marketing site keeps its
- * green-on-dark palette regardless. */
+ * green-on-dark palette regardless.
+ *
+ * Variable contract (read by all dashboard chrome):
+ *   --gf-bg              page background
+ *   --gf-surface         elevated cards / sidebar / topbar
+ *   --gf-surface-raised  cards with their own background (KPI, lists)
+ *   --gf-border          1px hairline color
+ *   --gf-fg-1 / 2 / 3    primary / secondary / muted text
+ *   --gf-card-hover      hover background (rows, buttons, links)
+ *   --gf-input-bg        form fields / search bars
+ *   --gf-primary         accent (lime in dark, forest in light) */
 [data-dash-theme='light'] [data-theme='dashboard'] {
-  --gf-bg:            #f8fafc;
-  --gf-bg-deeper:     #e2e8f0;
-  --gf-surface:       #ffffff;
-  --gf-surface-raised:#ffffff;
-  --gf-border:        #e2e8f0;
-  --gf-fg-1:          #0f172a;
-  --gf-fg-2:          #475569;
-  /* Bumped from #94a3b8 → #64748b so muted labels stay readable on
-   * white surfaces. */
-  --gf-fg-3:          #64748b;
-  --gf-primary:       #16a34a;
-  --gf-lime-400:      #16a34a;
+  --gf-bg:             #f8fafc;
+  --gf-bg-deeper:      #e2e8f0;
+  --gf-surface:        #ffffff;
+  --gf-surface-raised: #ffffff;
+  --gf-card-hover:     #f1f5f9;
+  --gf-border:         #e2e8f0;
+  --gf-border-hover:   #cbd5e1;
+  --gf-fg-1:           #0f172a;
+  --gf-fg-2:           #475569;
+  --gf-fg-3:           #64748b;
+  --gf-fg-4:           #94a3b8;
+  --gf-input-bg:       #f8fafc;
+  --gf-input-border:   #e2e8f0;
+  --gf-primary:        #16a34a;
+  --gf-primary-bg:     rgba(22, 163, 74, 0.08);
+  --gf-lime-400:       #16a34a;
 
   background: #f8fafc;
   color: #0f172a;
+}
+
+/* Dark mode also gets the matching hover/input vars so component code
+ * can reference --gf-card-hover / --gf-input-bg unconditionally. */
+[data-theme='dashboard'] {
+  --gf-card-hover: #1e2238;
+  --gf-border-hover: #363d60;
+  --gf-input-bg: #181b2e;
+  --gf-primary-bg: rgba(74, 222, 128, 0.10);
+}
+
+/* Tailwind hover utilities on dashboard surfaces — flip to a light
+ * card-hover token when the dashboard is in light mode. Otherwise the
+ * dark-blue #1e2238 bleeds through and looks broken. */
+[data-dash-theme='light'] [data-theme='dashboard'] .hover\:bg-surface-raised:hover,
+[data-dash-theme='light'] [data-theme='dashboard'] [class*='hover\\:bg-surface']:hover {
+  background-color: #f1f5f9 !important;
+}
+
+/* Store product cards in light mode — the per-product pastel `hue`
+ * fills (rgb(...) / 0.18) read OK on charcoal but look chalky on
+ * white. Shrink the opacity inside the dashboard light theme so the
+ * card image area mostly defers to the white surface. */
+[data-dash-theme='light'] [data-theme='dashboard'] [data-product-hue] {
+  opacity: 0.5;
 }
 
 [data-dash-theme='light'] [data-theme='dashboard'] .bg-bg            { background-color: #f8fafc; }

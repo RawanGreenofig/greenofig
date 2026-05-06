@@ -323,15 +323,13 @@ export function Sidebar({
             onItemClick?.()
           }}
           className="w-full flex items-center gap-2 rounded-lg p-2 text-[13px] font-medium transition-colors"
-          style={{ color: GROUP_LABEL, minHeight: 36 }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.color = '#f87171'
-            e.currentTarget.style.background = HOVER_BG
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.color = GROUP_LABEL
-            e.currentTarget.style.background = 'transparent'
-          }}
+          style={{ color: '#dc2626', minHeight: 36 }}
+          onMouseEnter={(e) =>
+            (e.currentTarget.style.background = 'rgba(220,38,38,0.08)')
+          }
+          onMouseLeave={(e) =>
+            (e.currentTarget.style.background = 'transparent')
+          }
         >
           <LogOut className="w-4 h-4" strokeWidth={1.75} />
           <span>{tNav('signOut')}</span>

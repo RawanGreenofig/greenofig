@@ -327,8 +327,11 @@ function ProductCard({
         href={`/dashboard/store/${product.id}` as `/dashboard/store/${string}`}
         className="block cursor-pointer"
       >
-      {/* Visual */}
+      {/* Visual — `data-product-hue` lets the global stylesheet
+       *  shrink this pastel fill in light mode where it would
+       *  otherwise look chalky on a white card. */}
       <div
+        data-product-hue
         className="relative aspect-square w-full"
         style={{ background: product.hue }}
       >
