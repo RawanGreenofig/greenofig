@@ -155,7 +155,7 @@ export function SiteHeader() {
                 <div
                   role="menu"
                   aria-hidden={!menuOpen}
-                  className={`absolute end-0 top-12 w-56 rounded-2xl overflow-hidden z-30 transition-all duration-200 ${
+                  className={`absolute end-0 top-14 rounded-2xl overflow-hidden z-30 transition-all duration-200 ${
                     menuOpen
                       ? 'opacity-100 scale-100 pointer-events-auto'
                       : 'opacity-0 scale-95 pointer-events-none'
@@ -164,22 +164,51 @@ export function SiteHeader() {
                     background: '#111',
                     border: '1px solid #222',
                     transformOrigin: 'top right',
+                    minWidth: 220,
+                    boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
                   }}
                 >
                     {user.email && (
                       <div
-                        className="px-4 py-3"
-                        style={{ borderBottom: '1px solid #1a1a1a' }}
+                        className="px-3 py-3 mb-1 flex items-center gap-3"
+                        style={{ borderBottom: '1px solid #222' }}
                       >
-                        <p className="text-xs text-[#666]">
-                          {profile?.full_name ?? t('dashboard')}
-                        </p>
-                        <p
-                          className="text-xs text-white truncate mt-0.5"
-                          dir="ltr"
+                        <span
+                          style={{
+                            width: 40,
+                            height: 40,
+                            borderRadius: '50%',
+                            background: '#1a2e1f',
+                            color: '#4ade80',
+                            fontSize: 12,
+                            fontWeight: 700,
+                            lineHeight: 1,
+                            textAlign: 'center',
+                            flexShrink: 0,
+                            overflow: 'hidden',
+                            userSelect: 'none',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                          }}
                         >
-                          {user.email}
-                        </p>
+                          {initials.slice(0, 2).toUpperCase()}
+                        </span>
+                        <div className="min-w-0 flex-1">
+                          <p
+                            className="truncate"
+                            style={{ fontSize: 14, fontWeight: 700, color: '#fff' }}
+                          >
+                            {profile?.full_name ?? t('dashboard')}
+                          </p>
+                          <p
+                            className="truncate"
+                            style={{ fontSize: 11, color: '#666', marginTop: 2 }}
+                            dir="ltr"
+                          >
+                            {user.email}
+                          </p>
+                        </div>
                       </div>
                     )}
                     <DropLink
@@ -200,18 +229,22 @@ export function SiteHeader() {
                         setMenuOpen(false)
                         void signOut()
                       }}
-                      className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-[#888] transition-colors"
-                      style={{ borderTop: '1px solid #1a1a1a' }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.color = '#ef4444'
-                        e.currentTarget.style.background = '#1a1a1a'
+                      className="w-full flex items-center gap-3 rounded-[10px] px-3 py-3 text-sm font-medium transition-colors"
+                      style={{
+                        color: '#f87171',
+                        marginTop: 4,
+                        minHeight: 44,
+                        borderTop: '1px solid #222',
                       }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.color = '#888'
-                        e.currentTarget.style.background = 'transparent'
-                      }}
+                      onMouseEnter={(e) =>
+                        (e.currentTarget.style.background =
+                          'rgba(248,113,113,0.08)')
+                      }
+                      onMouseLeave={(e) =>
+                        (e.currentTarget.style.background = 'transparent')
+                      }
                     >
-                      <LogOut className="w-4 h-4" strokeWidth={1.75} />
+                      <LogOut className="w-4 h-4 shrink-0" strokeWidth={1.75} />
                       <span>{t('signOut')}</span>
                     </button>
                 </div>
@@ -370,17 +403,18 @@ function DropLink({
       href={href}
       onClick={onClick}
       role="menuitem"
-      className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-[#888] transition-colors"
-      onMouseEnter={(e) => {
-        e.currentTarget.style.color = '#fff'
-        e.currentTarget.style.background = '#1a1a1a'
-      }}
-      onMouseLeave={(e) => {
-        e.currentTarget.style.color = '#888'
-        e.currentTarget.style.background = 'transparent'
-      }}
+      className="flex items-center gap-3 rounded-[10px] px-3 py-3 text-sm font-medium transition-colors"
+      style={{ color: '#fff', minHeight: 44 }}
+      onMouseEnter={(e) => (e.currentTarget.style.background = '#1a1a1a')}
+      onMouseLeave={(e) =>
+        (e.currentTarget.style.background = 'transparent')
+      }
     >
-      <Icon className="w-4 h-4" strokeWidth={1.75} />
+      <Icon
+        className="w-4 h-4 shrink-0"
+        strokeWidth={1.75}
+        style={{ color: '#888' }}
+      />
       <span>{label}</span>
     </Link>
   )

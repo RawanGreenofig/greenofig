@@ -11,6 +11,7 @@
     "setup:stripe": "tsx scripts/setup-stripe-products.ts",
     "setup:accounts": "tsx scripts/setup-accounts.ts",
     "fix:subscriptions": "tsx scripts/fix-subscriptions.ts",
+    "set:nutritionist": "tsx scripts/set-nutritionist.ts",
     "webhook:listen": "stripe listen --forward-to localhost:3000/api/webhooks/stripe"
   },
   "dependencies": {

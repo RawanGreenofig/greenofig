@@ -1,7 +1,7 @@
 'use client'
 
 import { useTranslations } from 'next-intl'
-import { LogOut, Settings, Home, ArrowLeft, Sun, Moon } from 'lucide-react'
+import { LogOut, Settings, ArrowLeft, Sun, Moon } from 'lucide-react'
 import { Link, usePathname } from '@/i18n/navigation'
 import { Wordmark } from '@/components/Wordmark'
 import { useAuth } from '@/context/AuthContext'
@@ -133,36 +133,13 @@ export function Sidebar({
         </Link>
       </div>
 
-      {/* ── Nav items, grouped ─────────────────────────────── */}
+      {/* ── Nav items, grouped ─────────────────────────────────
+       * No standalone "Home" link at the top of the sidebar — the
+       * MAIN group's first item ("Today") already routes to /dashboard,
+       * and the "Back to site" link at the bottom handles exiting to
+       * the marketing homepage. Two "Home" items both pointing at
+       * /dashboard was confusing. */}
       <ul className="flex-1 overflow-y-auto py-3">
-        {/* Home (back to marketing site) is the first item. */}
-        <li>
-          <Link
-            href="/"
-            onClick={onItemClick}
-            className="group mx-2 flex items-center gap-3 rounded-xl px-3 py-[11px] text-[14px] font-medium transition-colors"
-            style={{ color: INACTIVE_TEXT }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.background = HOVER_BG
-              e.currentTarget.style.color = ACTIVE_TEXT
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background = 'transparent'
-              e.currentTarget.style.color = INACTIVE_TEXT
-            }}
-          >
-            <span
-              className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
-              style={{ background: '#1e2238' }}
-            >
-              <Home className="w-4 h-4" strokeWidth={1.75} style={{ color: '#8b92b8' }} />
-            </span>
-            <span className="flex-1 truncate text-[14px] font-medium leading-none">
-              {tNav('home')}
-            </span>
-          </Link>
-        </li>
-
         {grouped.map(({ section, items }) => (
           <div key={section?.key ?? 'flat'}>
             {section && (

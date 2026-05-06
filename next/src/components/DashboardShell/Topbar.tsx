@@ -100,30 +100,8 @@ export function Topbar({ onOpenMenu }: { onOpenMenu: () => void }) {
 
       <LanguageSwitcher />
 
-      <button
-        type="button"
-        aria-label={t('notifications')}
-        className="relative w-10 h-10 rounded-full transition-colors flex items-center justify-center"
-        style={{
-          background: FIELD_BG,
-          border: `1px solid ${FIELD_BORDER}`,
-          color: '#888',
-        }}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.color = '#fff'
-          e.currentTarget.style.background = '#222'
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.color = '#888'
-          e.currentTarget.style.background = FIELD_BG
-        }}
-      >
-        <Bell className="w-4 h-4" strokeWidth={1.75} />
-        <span
-          className="absolute top-2 end-2 w-1.5 h-1.5 rounded-full"
-          style={{ background: '#e8912a' }}
-        />
-      </button>
+      <NotificationBell label={t('notifications')} />
+
 
       {/* Avatar dropdown */}
       <div className="relative" ref={wrapRef}>
@@ -238,6 +216,201 @@ export function Topbar({ onOpenMenu }: { onOpenMenu: () => void }) {
         )}
       </div>
     </header>
+  )
+}
+
+/* ── Notification bell + dropdown ──────────────────────────────────
+ * Self-contained component so the open/close state lives next to the
+ * markup. Uses three hardcoded notifications by default — wire up to a
+ * Supabase notifications table later when the schema lands. */
+interface Notif {
+  icon: string
+  title: string
+  body: string
+  time: string
+  unread?: boolean
+}
+
+const SEED_NOTIFS: Notif[] = [
+  {
+    icon: '🍎',
+    title: 'New meal plan added',
+    body: 'Dr. Rawan added your weekly plan',
+    time: '1h',
+    unread: true,
+  },
+  {
+    icon: '💧',
+    title: 'Hydration reminder',
+    body: "You're 750ml short of today's goal",
+    time: '2h',
+    unread: true,
+  },
+  {
+    icon: '⭐',
+    title: 'Keep up your streak!',
+    body: "You've logged meals 3 days in a row",
+    time: '1d',
+  },
+]
+
+function NotificationBell({ label }: { label: string }) {
+  const [open, setOpen] = useState(false)
+  const [notifs, setNotifs] = useState<Notif[]>(SEED_NOTIFS)
+  const wrapRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const onClick = (e: MouseEvent) => {
+      if (!wrapRef.current?.contains(e.target as Node)) setOpen(false)
+    }
+    if (open) document.addEventListener('mousedown', onClick)
+    return () => document.removeEventListener('mousedown', onClick)
+  }, [open])
+
+  const unreadCount = notifs.filter((n) => n.unread).length
+  const markAllRead = () =>
+    setNotifs((curr) => curr.map((n) => ({ ...n, unread: false })))
+
+  return (
+    <div className="relative" ref={wrapRef}>
+      <button
+        type="button"
+        aria-label={label}
+        aria-haspopup="menu"
+        aria-expanded={open}
+        onClick={() => setOpen((o) => !o)}
+        className="relative w-10 h-10 rounded-full transition-colors flex items-center justify-center"
+        style={{
+          background: 'var(--gf-surface-raised)',
+          border: '1px solid var(--gf-border)',
+          color: 'var(--gf-fg-2)',
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.color = 'var(--gf-fg-1)'
+          e.currentTarget.style.background = '#1e2238'
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.color = 'var(--gf-fg-2)'
+          e.currentTarget.style.background = 'var(--gf-surface-raised)'
+        }}
+      >
+        <Bell className="w-4 h-4" strokeWidth={1.75} />
+        {unreadCount > 0 && (
+          <span
+            className="absolute top-1.5 end-1.5 w-2 h-2 rounded-full"
+            style={{ background: '#f87171' }}
+          />
+        )}
+      </button>
+
+      {open && (
+        <div
+          role="menu"
+          className="absolute end-0 mt-2 rounded-2xl shadow-2xl overflow-hidden z-30"
+          style={{
+            background: 'var(--gf-surface)',
+            border: '1px solid var(--gf-border)',
+            minWidth: 320,
+            maxHeight: 420,
+            display: 'flex',
+            flexDirection: 'column',
+          }}
+        >
+          <header
+            className="flex items-center justify-between px-4 py-3"
+            style={{ borderBottom: '1px solid var(--gf-border)' }}
+          >
+            <p
+              className="font-semibold"
+              style={{ fontSize: 14, color: 'var(--gf-fg-1)' }}
+            >
+              Notifications
+            </p>
+            {unreadCount > 0 && (
+              <button
+                type="button"
+                onClick={markAllRead}
+                className="text-xs hover:underline"
+                style={{ color: '#60a5fa', cursor: 'pointer' }}
+              >
+                Mark all read
+              </button>
+            )}
+          </header>
+
+          <ul className="overflow-y-auto" style={{ maxHeight: 340 }}>
+            {notifs.length === 0 ? (
+              <li
+                className="text-center py-12 text-sm"
+                style={{ color: 'var(--gf-fg-3)' }}
+              >
+                No notifications yet
+              </li>
+            ) : (
+              notifs.map((n, i) => (
+                <li
+                  key={i}
+                  className="flex gap-3 px-4 py-3"
+                  style={{
+                    borderBottom:
+                      i === notifs.length - 1
+                        ? 'none'
+                        : '1px solid var(--gf-border)',
+                  }}
+                >
+                  <span
+                    style={{
+                      fontSize: 20,
+                      width: 28,
+                      flexShrink: 0,
+                      textAlign: 'center',
+                    }}
+                  >
+                    {n.icon}
+                  </span>
+                  <div className="flex-1 min-w-0">
+                    <p
+                      className="truncate"
+                      style={{
+                        fontSize: 13,
+                        fontWeight: 600,
+                        color: 'var(--gf-fg-1)',
+                      }}
+                    >
+                      {n.title}
+                    </p>
+                    <p
+                      style={{
+                        fontSize: 12,
+                        color: 'var(--gf-fg-2)',
+                        marginTop: 2,
+                        lineHeight: 1.5,
+                      }}
+                    >
+                      {n.body}
+                    </p>
+                  </div>
+                  <div className="flex flex-col items-end gap-1.5 shrink-0">
+                    <span
+                      style={{ fontSize: 11, color: 'var(--gf-fg-3)' }}
+                    >
+                      {n.time}
+                    </span>
+                    {n.unread && (
+                      <span
+                        aria-label="Unread"
+                        className="w-2 h-2 rounded-full"
+                        style={{ background: '#60a5fa' }}
+                      />
+                    )}
+                  </div>
+                </li>
+              ))
+            )}
+          </ul>
+        </div>
+      )}
+    </div>
   )
 }
 

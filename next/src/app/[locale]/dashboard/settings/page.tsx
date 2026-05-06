@@ -129,8 +129,14 @@ export default function SettingsPage() {
 
   useEffect(() => {
     if (!profile) return
+    // Fall back to Google's user_metadata.full_name when profile.full_name
+    // hasn't been set (Google sign-ups land here on first login).
+    const metaFullName =
+      typeof user?.user_metadata?.full_name === 'string'
+        ? (user.user_metadata.full_name as string)
+        : ''
     setProfileForm({
-      fullName: profile.full_name ?? '',
+      fullName: profile.full_name ?? metaFullName ?? '',
       phone: profile.phone ?? '',
       dob: profile.date_of_birth ?? '',
       gender: (profile.gender as ProfileForm['gender']) ?? '',
@@ -148,7 +154,7 @@ export default function SettingsPage() {
       allergies: profile.allergies ?? [],
       conditions: profile.health_conditions ?? [],
     })
-  }, [profile])
+  }, [profile, user?.user_metadata])
 
   const markDirty = () => {
     if (!dirty) setDirty(true)
@@ -315,7 +321,7 @@ export default function SettingsPage() {
           {tab === 'profile' && (
             <ProfilePane
               t={t}
-              email={profile?.id ? `${profile.id.slice(0, 8)}@greenofig.local` : ''}
+              email={user?.email ?? ''}
               form={profileForm}
               onChange={(f) => {
                 setProfileForm(f)
@@ -353,7 +359,7 @@ export default function SettingsPage() {
           {tab === 'account' && (
             <AccountPane
               t={t}
-              email={profile?.id ? `${profile.id.slice(0, 8)}@greenofig.local` : ''}
+              email={user?.email ?? ''}
             />
           )}
         </div>

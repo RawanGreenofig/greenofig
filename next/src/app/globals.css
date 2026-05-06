@@ -266,25 +266,27 @@
  * Only the dashboard scope responds — the marketing site keeps its
  * green-on-dark palette regardless. */
 [data-dash-theme='light'] [data-theme='dashboard'] {
-  --gf-bg:            #f1f5f9;
+  --gf-bg:            #f8fafc;
   --gf-bg-deeper:     #e2e8f0;
   --gf-surface:       #ffffff;
-  --gf-surface-raised:#f8fafc;
+  --gf-surface-raised:#ffffff;
   --gf-border:        #e2e8f0;
   --gf-fg-1:          #0f172a;
   --gf-fg-2:          #475569;
-  --gf-fg-3:          #94a3b8;
+  /* Bumped from #94a3b8 → #64748b so muted labels stay readable on
+   * white surfaces. */
+  --gf-fg-3:          #64748b;
   --gf-primary:       #16a34a;
   --gf-lime-400:      #16a34a;
 
-  background: #f1f5f9;
+  background: #f8fafc;
   color: #0f172a;
 }
 
-[data-dash-theme='light'] [data-theme='dashboard'] .bg-bg            { background-color: #f1f5f9; }
+[data-dash-theme='light'] [data-theme='dashboard'] .bg-bg            { background-color: #f8fafc; }
 [data-dash-theme='light'] [data-theme='dashboard'] .bg-bg-deeper     { background-color: #e2e8f0; }
 [data-dash-theme='light'] [data-theme='dashboard'] .bg-surface       { background-color: #ffffff; }
-[data-dash-theme='light'] [data-theme='dashboard'] .bg-surface-raised{ background-color: #f8fafc; }
+[data-dash-theme='light'] [data-theme='dashboard'] .bg-surface-raised{ background-color: #ffffff; }
 [data-dash-theme='light'] [data-theme='dashboard'] .border-border    { border-color: #e2e8f0; }
 [data-dash-theme='light'] [data-theme='dashboard'] .border-e         { border-inline-end-color: #e2e8f0; }
 [data-dash-theme='light'] [data-theme='dashboard'] .border-s         { border-inline-start-color: #e2e8f0; }
@@ -292,7 +294,7 @@
 [data-dash-theme='light'] [data-theme='dashboard'] .border-b         { border-bottom-color: #e2e8f0; }
 [data-dash-theme='light'] [data-theme='dashboard'] .text-fg-1        { color: #0f172a; }
 [data-dash-theme='light'] [data-theme='dashboard'] .text-fg-2        { color: #475569; }
-[data-dash-theme='light'] [data-theme='dashboard'] .text-fg-3        { color: #94a3b8; }
+[data-dash-theme='light'] [data-theme='dashboard'] .text-fg-3        { color: #64748b; }
 [data-dash-theme='light'] [data-theme='dashboard'] .text-lime-400    { color: #16a34a; }
 [data-dash-theme='light'] [data-theme='dashboard'] .text-lime-500    { color: #16a34a; }
 [data-dash-theme='light'] [data-theme='dashboard'] .text-primary     { color: #16a34a; }

@@ -2,9 +2,10 @@
 
 import { motion } from 'framer-motion'
 import { useTranslations } from 'next-intl'
-import { Lock, Heart, FileText, Puzzle, type LucideIcon } from 'lucide-react'
+import { Lock, Heart, FileText, Puzzle, ArrowRight, type LucideIcon } from 'lucide-react'
 import { Link } from '@/i18n/navigation'
 import { ease } from '@/lib/tokens'
+import { useAuth } from '@/context/AuthContext'
 
 const EASE_OUT: [number, number, number, number] = [...ease.out]
 
@@ -50,6 +51,8 @@ const MILESTONES: BlurMilestone[] = [
 
 export function CommunitySection() {
   const t = useTranslations('marketing')
+  const { user } = useAuth()
+  const isLoggedIn = !!user
   return (
     <section
       id="community"
@@ -136,43 +139,66 @@ export function CommunitySection() {
                 border: '1px solid rgb(255 255 255 / 0.08)',
               }}
             >
-              <div className="inline-flex items-center justify-center w-12 h-12 rounded-pill bg-lime-500/10 text-lime-500 mb-4">
-                <Lock className="w-5 h-5" />
-              </div>
-              <p className="inline-block text-xs font-semibold uppercase tracking-eyebrow text-amber bg-amber/15 rounded-pill px-3 py-1 mb-4">
-                {t('communityLocked')}
-              </p>
-              <h3 className="font-display text-2xl font-bold tracking-tight text-fg-1">
-                {t('communityLockedTitle')}
-              </h3>
-              <p className="mt-3 text-sm text-fg-2 leading-relaxed">
-                {t('communityLockedBody')}
-              </p>
-              <Link
-                href="/sign-up"
-                className="mt-5 inline-flex items-center justify-center rounded-full bg-gradient-to-b from-lime-400 to-lime-600 text-bg px-6 py-3 text-sm font-semibold shadow-lime-glow border border-lime-600/60 hover:shadow-lime-glow-lg transition-all duration-normal ease-out"
-              >
-                {t('communityLockedCta')}
-              </Link>
-              <div className="mt-3 text-xs text-fg-3">
-                <Link
-                  href="/sign-in"
-                  className="hover:text-lime-400 transition-colors"
-                >
-                  {t('communityLockedSignIn')}
-                </Link>
-              </div>
+              {isLoggedIn ? (
+                <>
+                  <div className="inline-flex items-center justify-center w-12 h-12 rounded-pill bg-lime-500/10 text-lime-500 mb-4">
+                    <Heart className="w-5 h-5" />
+                  </div>
+                  <h3 className="font-display text-2xl font-bold tracking-tight text-fg-1">
+                    Welcome back!
+                  </h3>
+                  <p className="mt-3 text-sm text-fg-2 leading-relaxed">
+                    Your community is waiting.
+                  </p>
+                  <Link
+                    href="/dashboard/community"
+                    className="mt-5 inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-b from-lime-400 to-lime-600 text-bg px-6 py-3 text-sm font-semibold shadow-lime-glow border border-lime-600/60 hover:shadow-lime-glow-lg transition-all duration-normal ease-out"
+                  >
+                    Go to Community
+                    <ArrowRight className="w-4 h-4 rtl:rotate-180" />
+                  </Link>
+                </>
+              ) : (
+                <>
+                  <div className="inline-flex items-center justify-center w-12 h-12 rounded-pill bg-lime-500/10 text-lime-500 mb-4">
+                    <Lock className="w-5 h-5" />
+                  </div>
+                  <p className="inline-block text-xs font-semibold uppercase tracking-eyebrow text-amber bg-amber/15 rounded-pill px-3 py-1 mb-4">
+                    {t('communityLocked')}
+                  </p>
+                  <h3 className="font-display text-2xl font-bold tracking-tight text-fg-1">
+                    {t('communityLockedTitle')}
+                  </h3>
+                  <p className="mt-3 text-sm text-fg-2 leading-relaxed">
+                    {t('communityLockedBody')}
+                  </p>
+                  <Link
+                    href="/sign-up"
+                    className="mt-5 inline-flex items-center justify-center rounded-full bg-gradient-to-b from-lime-400 to-lime-600 text-bg px-6 py-3 text-sm font-semibold shadow-lime-glow border border-lime-600/60 hover:shadow-lime-glow-lg transition-all duration-normal ease-out"
+                  >
+                    {t('communityLockedCta')}
+                  </Link>
+                  <div className="mt-3 text-xs text-fg-3">
+                    <Link
+                      href="/sign-in"
+                      className="hover:text-lime-400 transition-colors"
+                    >
+                      {t('communityLockedSignIn')}
+                    </Link>
+                  </div>
 
-              {/* Divider + social-proof stats — INSIDE the overlay */}
-              <div className="border-t border-fg-1/10 my-6" />
-              <div className="flex flex-wrap justify-center gap-x-8 gap-y-4">
-                <ProofStat
-                  Icon={Heart}
-                  label={`500+ ${t('communityMembers')}`}
-                />
-                <ProofStat Icon={FileText} label={t('communityPosted')} />
-                <ProofStat Icon={Puzzle} label={t('communityPrivate')} />
-              </div>
+                  {/* Divider + social-proof stats — INSIDE the overlay */}
+                  <div className="border-t border-fg-1/10 my-6" />
+                  <div className="flex flex-wrap justify-center gap-x-8 gap-y-4">
+                    <ProofStat
+                      Icon={Heart}
+                      label={`500+ ${t('communityMembers')}`}
+                    />
+                    <ProofStat Icon={FileText} label={t('communityPosted')} />
+                    <ProofStat Icon={Puzzle} label={t('communityPrivate')} />
+                  </div>
+                </>
+              )}
             </div>
           </motion.div>
         </div>
