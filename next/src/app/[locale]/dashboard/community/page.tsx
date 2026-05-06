@@ -1,602 +1,713 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
-import { getBrowserSupabase } from '@/lib/supabase/client'
-import { useTranslations } from 'next-intl'
+import { useEffect, useState } from 'react'
+import { useLocale } from 'next-intl'
+import { useRouter } from 'next/navigation'
 import {
   Heart,
   MessageCircle,
   Share2,
-  Sparkles,
-  Award,
-  Pin,
   Lock,
-  type LucideIcon,
+  BadgeCheck,
+  Pin,
 } from 'lucide-react'
-import UpgradeButton from '@/components/UpgradeButton'
 import { useUser } from '@/lib/hooks/useUser'
-import { tierAtLeast } from '@/lib/tier'
-import { NUTRITIONIST } from '@/lib/tokens'
+import { getBrowserSupabase } from '@/lib/supabase/client'
+import { resolveDisplayName } from '@/lib/displayName'
 
-type MilestoneType =
-  | 'weight_loss'
-  | 'weight_gain'
-  | 'energy'
-  | 'goal_reached'
-  | 'streak'
-  | 'custom'
+/**
+ * /dashboard/community
+ *
+ * Three-column social layout (LEFT: people · CENTER: feed · RIGHT: profile + notifications)
+ * Mobile collapses to the center column only.
+ */
 
-interface Author {
+interface PersonRow {
+  id: string
+  full_name: string | null
+  email: string | null
+  role: 'user' | 'nutritionist' | 'admin'
+}
+
+interface Person {
+  id: string
   name: string
   initials: string
-  isStaff: boolean
-}
-
-interface Post {
-  id: string
-  author: Author
-  body: string
-  type: 'milestone' | 'announcement'
-  milestoneType?: MilestoneType
-  hoursAgo: number
-  supports: number
-  comments: number
-  pinned?: boolean
-  /** Sticky from current user (so own milestones show prefilled state) */
-  ownPost?: boolean
-}
-
-const MILESTONE_TYPES: MilestoneType[] = [
-  'weight_loss',
-  'energy',
-  'goal_reached',
-  'streak',
-  'custom',
-]
-
-const MILESTONE_TINT: Record<MilestoneType, string> = {
-  weight_loss:  '#a3e635',
-  weight_gain:  '#06b6d4',
-  energy:       '#e8912a',
-  goal_reached: '#84cc16',
-  streak:       '#a855f7',
-  custom:       '#9baf9f',
-}
-
-/** Demo feed — replaced by `posts` table in Cluster H */
-function buildSeed(drName: string): Post[] {
-  return [
-    {
-      id: 'p1',
-      author: { name: drName, initials: 'RO', isStaff: true },
-      body:
-        "Reminder for the week: aim for 30 g of protein at breakfast. It steadies blood sugar and the rest of your day reads differently. Tag me if you'd like a 5-min recipe shortlist.",
-      type: 'announcement',
-      hoursAgo: 4,
-      supports: 38,
-      comments: 12,
-      pinned: true,
-    },
-    {
-      id: 'p2',
-      author: { name: 'Layla H.', initials: 'LH', isStaff: false },
-      body:
-        'Down 3 kg since I started in March — first time I have actually enjoyed eating breakfast. Tabbouleh + boiled eggs is my new normal.',
-      type: 'milestone',
-      milestoneType: 'weight_loss',
-      hoursAgo: 14,
-      supports: 21,
-      comments: 5,
-    },
-    {
-      id: 'p3',
-      author: { name: 'Omar S.', initials: 'OS', isStaff: false },
-      body:
-        '14-day streak of logging every meal. Started seeing patterns I never noticed — I overeat carbs after a bad sleep night.',
-      type: 'milestone',
-      milestoneType: 'streak',
-      hoursAgo: 28,
-      supports: 17,
-      comments: 4,
-    },
-    {
-      id: 'p4',
-      author: { name: 'Maya K.', initials: 'MK', isStaff: false },
-      body:
-        'Hit my goal weight today. The Mediterranean reset Dr. Rawan put me on changed how I eat, not just what I eat. Grateful.',
-      type: 'milestone',
-      milestoneType: 'goal_reached',
-      hoursAgo: 38,
-      supports: 64,
-      comments: 19,
-    },
-    {
-      id: 'p5',
-      author: { name: 'Yousef A.', initials: 'YA', isStaff: false },
-      body:
-        'Energy levels through the roof since cutting refined sugar. First week was rough, second week is unrecognizable.',
-      type: 'milestone',
-      milestoneType: 'energy',
-      hoursAgo: 52,
-      supports: 12,
-      comments: 3,
-    },
-  ]
+  isNutritionist: boolean
 }
 
 export default function CommunityPage() {
-  const t = useTranslations('community')
-  const { tier, profile } = useUser()
-  const canPost = tierAtLeast(tier, 'basic')
+  const router = useRouter()
+  const locale = useLocale()
+  const { user, profile, tier } = useUser()
+  const isFree = (tier ?? 'free') === 'free'
 
-  const [feed, setFeed] = useState<Post[]>(() => buildSeed(NUTRITIONIST.name))
-  const [supported, setSupported] = useState<Set<string>>(new Set())
-  const [type, setType] = useState<MilestoneType>('weight_loss')
-  const [draft, setDraft] = useState('')
-  const [posting, setPosting] = useState(false)
+  const [people, setPeople] = useState<Person[]>([])
+  const [search, setSearch] = useState('')
+  const [feedSearch, setFeedSearch] = useState('')
 
-  // Hydrate the feed from the posts table.
   useEffect(() => {
     const supabase = getBrowserSupabase()
-    if (!supabase) return
+    if (!supabase || !user?.id) return
     let cancelled = false
 
     void (async () => {
-      type Row = {
-        id: string
-        author_id: string
-        title: string
-        body: string
-        category: string
-        publish_at: string | null
-        likes: number | null
-        comments: number | null
-        pinned: boolean | null
-      }
       const { data } = await supabase
-        .from('posts')
-        .select('id, author_id, title, body, category, publish_at, likes, comments, pinned')
-        .eq('status', 'published')
-        .order('pinned', { ascending: false })
-        .order('publish_at', { ascending: false })
-        .limit(40)
-
-      const rows = (data as Row[] | null) ?? []
-      if (rows.length === 0 || cancelled) return
-
-      // Hydrate author names (only the rows we have)
-      const ids = Array.from(new Set(rows.map((r) => r.author_id)))
-      const { data: authors } = await supabase
         .from('profiles')
-        .select('id, full_name, role')
-        .in('id', ids)
-      type AuthorRow = { id: string; full_name: string | null; role: string }
-      const authorOf = new Map(
-        ((authors as AuthorRow[] | null) ?? []).map((a) => [a.id, a]),
+        .select('id, full_name, email, role')
+        .neq('id', user.id)
+        .limit(10)
+      if (cancelled) return
+      const rows = (data as PersonRow[] | null) ?? []
+      setPeople(
+        rows.map((r) => {
+          const fallback = (r.full_name ?? r.email ?? '?').toString()
+          const initials = fallback
+            .split(/\s+|@|\./)
+            .map((p) => p[0])
+            .filter(Boolean)
+            .slice(0, 2)
+            .join('')
+            .toUpperCase()
+          return {
+            id: r.id,
+            name: r.full_name ?? r.email?.split('@')[0] ?? 'User',
+            initials: initials || '?',
+            isNutritionist: r.role === 'nutritionist',
+          }
+        }),
       )
-
-      const now = Date.now()
-      const next: Post[] = rows.map((r) => {
-        const a = authorOf.get(r.author_id)
-        const name = a?.full_name?.trim() || 'Anonymous'
-        const isStaff = a?.role === 'nutritionist' || a?.role === 'admin'
-        const ts = r.publish_at ? new Date(r.publish_at).getTime() : now
-        const milestoneFromCategory = ([
-          'weight_loss', 'weight_gain', 'energy', 'goal_reached',
-          'streak', 'custom',
-        ] as MilestoneType[]).includes(r.category as MilestoneType)
-          ? (r.category as MilestoneType)
-          : undefined
-
-        return {
-          id: r.id,
-          author: { name, initials: initialsOf(name), isStaff },
-          body: r.body,
-          type: r.category === 'announcement' ? 'announcement' : 'milestone',
-          milestoneType: milestoneFromCategory,
-          hoursAgo: Math.max(0, Math.floor((now - ts) / 3_600_000)),
-          supports: r.likes ?? 0,
-          comments: r.comments ?? 0,
-          pinned: !!r.pinned,
-        }
-      })
-      if (!cancelled) setFeed(next)
     })()
 
-    return () => { cancelled = true }
-  }, [])
-
-  const toggleSupport = (id: string) => {
-    setSupported((prev) => {
-      const next = new Set(prev)
-      const isOn = next.has(id)
-      if (isOn) next.delete(id)
-      else next.add(id)
-      setFeed((curr) =>
-        curr.map((p) =>
-          p.id === id
-            ? { ...p, supports: Math.max(0, p.supports + (isOn ? -1 : 1)) }
-            : p,
-        ),
-      )
-      return next
-    })
-  }
-
-  const submit = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!canPost || !draft.trim() || !profile?.id) return
-    setPosting(true)
-
-    const localId = `me-${Date.now()}`
-    const text = draft.trim()
-    const newPost: Post = {
-      id: localId,
-      author: {
-        name: profile.full_name ?? 'You',
-        initials: initialsOf(profile.full_name ?? 'You'),
-        isStaff: false,
-      },
-      body: text,
-      type: 'milestone',
-      milestoneType: type,
-      hoursAgo: 0,
-      supports: 0,
-      comments: 0,
-      ownPost: true,
+    return () => {
+      cancelled = true
     }
+  }, [user?.id])
 
-    // Optimistic insert into the feed
-    setFeed((curr) => [
-      ...curr.filter((p) => p.pinned),
-      newPost,
-      ...curr.filter((p) => !p.pinned),
-    ])
+  const goToMessages = () => router.push(`/${locale}/dashboard/messages`)
 
-    void (async () => {
-      const supabase = getBrowserSupabase()
-      if (supabase) {
-        const { data } = await supabase
-          .from('posts')
-          .insert({
-            author_id: profile.id,
-            title: text.slice(0, 80),
-            body: text,
-            category: type,
-            status: 'published',
-            audience: 'all',
-            publish_at: new Date().toISOString(),
-          } as never)
-          .select('id')
-          .maybeSingle()
-        const realId = (data as { id?: string } | null)?.id
-        if (realId) {
-          setFeed((curr) =>
-            curr.map((p) => (p.id === localId ? { ...p, id: realId } : p)),
-          )
-        }
-      }
-      setDraft('')
-      setPosting(false)
-    })()
-  }
-
-  const sorted = useMemo(
-    () =>
-      [...feed].sort((a, b) => {
-        if (a.pinned && !b.pinned) return -1
-        if (!a.pinned && b.pinned) return 1
-        return a.hoursAgo - b.hoursAgo
-      }),
-    [feed],
-  )
+  const filteredPeople = search.trim()
+    ? people.filter((p) =>
+        p.name.toLowerCase().includes(search.trim().toLowerCase()),
+      )
+    : people
 
   return (
-    <div className="px-4 md:px-8 py-6 md:py-8 max-w-screen-md mx-auto space-y-6">
-      {/* Header */}
-      <header>
-        <h1
-          className="font-display font-bold text-fg-1 tracking-tight"
-          style={{ fontSize: 'clamp(28px, 4vw, 40px)', lineHeight: 1.1 }}
+    <div
+      className="grid gap-5 p-5 overflow-hidden"
+      style={{
+        height: 'calc(100vh - 64px)',
+        gridTemplateColumns: 'minmax(0, 1fr)',
+        background: 'var(--gf-bg)',
+      }}
+    >
+      {/* Desktop layout uses 3 columns; we drop into a single column on
+       * narrow widths via the inline media query below. CSS-in-JS would
+       * be cleaner but we want these styles co-located with the JSX. */}
+      <style>{`
+        @media (min-width: 1024px) {
+          .gf-community-grid {
+            grid-template-columns: 260px minmax(0,1fr) 280px !important;
+          }
+          .gf-community-rail { display: flex !important; }
+        }
+      `}</style>
+      <div
+        className="gf-community-grid grid gap-5 overflow-hidden"
+        style={{
+          gridTemplateColumns: '1fr',
+          height: '100%',
+        }}
+      >
+        {/* ── LEFT — People ─────────────────────────────────── */}
+        <aside
+          className="gf-community-rail flex-col hidden"
+          style={{
+            background: 'var(--gf-surface)',
+            border: '1px solid var(--gf-border)',
+            borderRadius: 16,
+            padding: 16,
+            overflowY: 'auto',
+            display: 'none',
+          }}
         >
-          {t('title')}
-        </h1>
-        <p className="mt-2 text-sm md:text-base text-fg-2">{t('subtitle')}</p>
-      </header>
-
-      {/* Composer or gate */}
-      {canPost ? (
-        <Composer
-          t={t}
-          authorName={profile?.full_name ?? 'You'}
-          type={type}
-          setType={setType}
-          draft={draft}
-          setDraft={setDraft}
-          posting={posting}
-          onSubmit={submit}
-        />
-      ) : (
-        <FreeGateCard t={t} />
-      )}
-
-      {/* Feed */}
-      <section aria-label={t('feed')} className="space-y-4">
-        {sorted.map((post) => (
-          <PostCard
-            key={post.id}
-            t={t}
-            post={post}
-            supported={supported.has(post.id)}
-            onToggleSupport={() => toggleSupport(post.id)}
+          <input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search people..."
+            className="outline-none"
+            style={{
+              width: '100%',
+              background: 'var(--gf-surface-raised)',
+              border: '1px solid var(--gf-border)',
+              borderRadius: 10,
+              padding: '8px 12px',
+              fontSize: 13,
+              color: 'var(--gf-fg-1)',
+              marginBottom: 16,
+            }}
           />
-        ))}
-      </section>
+
+          <p
+            style={{
+              fontSize: 11,
+              textTransform: 'uppercase',
+              letterSpacing: '0.12em',
+              color: 'var(--gf-fg-3)',
+              fontWeight: 600,
+              marginBottom: 8,
+            }}
+          >
+            Community
+          </p>
+
+          <ul className="space-y-0.5">
+            {filteredPeople.length === 0 && (
+              <li
+                style={{
+                  fontSize: 13,
+                  color: 'var(--gf-fg-3)',
+                  padding: '24px 8px',
+                  textAlign: 'center',
+                }}
+              >
+                {search ? 'No matches' : 'No one to show yet.'}
+              </li>
+            )}
+            {filteredPeople.map((p) => (
+              <PersonRow key={p.id} person={p} />
+            ))}
+          </ul>
+        </aside>
+
+        {/* ── CENTER — Feed ─────────────────────────────────── */}
+        <main
+          className="flex flex-col gap-4 min-w-0"
+          style={{ overflowY: 'auto' }}
+        >
+          <input
+            value={feedSearch}
+            onChange={(e) => setFeedSearch(e.target.value)}
+            placeholder="Search feed..."
+            className="outline-none"
+            style={{
+              width: '100%',
+              background: 'var(--gf-surface-raised)',
+              border: '1px solid var(--gf-border)',
+              borderRadius: 10,
+              padding: '10px 14px',
+              fontSize: 14,
+              color: 'var(--gf-fg-1)',
+            }}
+          />
+
+          {/* Pinned post — Dr. Rawan */}
+          <article
+            style={{
+              background: 'var(--gf-surface-raised)',
+              border: '1px solid var(--gf-border)',
+              borderRadius: 16,
+              padding: 20,
+            }}
+          >
+            <header className="flex items-center gap-3">
+              <Avatar text="DR" size={40} />
+              <div className="min-w-0">
+                <p
+                  className="truncate"
+                  style={{ fontSize: 14, fontWeight: 700, color: 'var(--gf-fg-1)' }}
+                >
+                  Dr. Rawan Othman
+                </p>
+                <div className="mt-1 flex items-center gap-2 flex-wrap">
+                  <span
+                    className="inline-flex items-center gap-1 rounded-full"
+                    style={{
+                      fontSize: 11,
+                      padding: '2px 8px',
+                      background: 'rgba(96,165,250,0.10)',
+                      color: '#60a5fa',
+                      border: '1px solid rgba(96,165,250,0.20)',
+                    }}
+                  >
+                    <BadgeCheck className="w-3 h-3" strokeWidth={2} />
+                    Verified Nutritionist
+                  </span>
+                  <span
+                    className="inline-flex items-center gap-1"
+                    style={{ fontSize: 11, color: 'var(--gf-fg-3)' }}
+                  >
+                    <Pin className="w-3 h-3" strokeWidth={2} />
+                    Pinned
+                  </span>
+                </div>
+              </div>
+              <span
+                className="ms-auto"
+                style={{ fontSize: 12, color: 'var(--gf-fg-3)' }}
+              >
+                4h
+              </span>
+            </header>
+
+            <p
+              style={{
+                fontSize: 14,
+                color: 'var(--gf-fg-2)',
+                lineHeight: 1.6,
+                marginTop: 12,
+              }}
+            >
+              Reminder for the week: aim for 30g of protein at breakfast.
+              It steadies blood sugar and the rest of your day reads
+              differently. Drop a 🙋 if you&apos;d like a quick 5-min recipe
+              shortlist!
+            </p>
+
+            <div
+              className="flex gap-2 flex-wrap"
+              style={{
+                borderTop: '1px solid var(--gf-border)',
+                paddingTop: 12,
+                marginTop: 12,
+              }}
+            >
+              <ActionButton Icon={Heart} label="Support" count={38} />
+              <ActionButton Icon={MessageCircle} label="Comment" count={12} />
+              <ActionButton Icon={Share2} label="Share" />
+            </div>
+          </article>
+
+          {/* Upgrade banner — only when free */}
+          {isFree && (
+            <div
+              className="flex items-center gap-3"
+              style={{
+                background: 'var(--gf-surface-raised)',
+                border: '1px solid var(--gf-border)',
+                borderRadius: 16,
+                padding: 16,
+              }}
+            >
+              <Lock
+                className="w-5 h-5 shrink-0"
+                strokeWidth={1.75}
+                style={{ color: 'var(--gf-fg-3)' }}
+              />
+              <div className="flex-1 min-w-0">
+                <p
+                  style={{
+                    fontSize: 14,
+                    fontWeight: 600,
+                    color: 'var(--gf-fg-1)',
+                  }}
+                >
+                  Posting unlocks at Basic plan
+                </p>
+                <p
+                  style={{
+                    fontSize: 12,
+                    color: 'var(--gf-fg-2)',
+                    marginTop: 4,
+                  }}
+                >
+                  You can still read and react to every post.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={goToMessages}
+                className="shrink-0 transition-opacity"
+                style={{
+                  background: '#4ade80',
+                  color: '#000',
+                  fontSize: 13,
+                  fontWeight: 600,
+                  padding: '8px 16px',
+                  borderRadius: 999,
+                  border: 'none',
+                  cursor: 'pointer',
+                  whiteSpace: 'nowrap',
+                }}
+                onMouseEnter={(e) => (e.currentTarget.style.opacity = '0.9')}
+                onMouseLeave={(e) => (e.currentTarget.style.opacity = '1')}
+              >
+                Upgrade
+              </button>
+            </div>
+          )}
+
+          {/* Tip of the week */}
+          <article
+            style={{
+              background: 'var(--gf-surface-raised)',
+              border: '1px solid var(--gf-border)',
+              borderRadius: 16,
+              padding: 20,
+            }}
+          >
+            <header className="flex items-center gap-3">
+              <span
+                style={{
+                  width: 40,
+                  height: 40,
+                  borderRadius: '50%',
+                  background: 'rgba(74,222,128,0.10)',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: 20,
+                }}
+              >
+                💡
+              </span>
+              <div>
+                <p style={{ fontSize: 14, fontWeight: 700, color: 'var(--gf-fg-1)' }}>
+                  Tip of the week
+                </p>
+                <p style={{ fontSize: 12, color: 'var(--gf-fg-3)', marginTop: 2 }}>
+                  Greenofig community
+                </p>
+              </div>
+              <span className="ms-auto" style={{ fontSize: 12, color: 'var(--gf-fg-3)' }}>
+                2d
+              </span>
+            </header>
+            <p
+              style={{
+                fontSize: 14,
+                color: 'var(--gf-fg-2)',
+                lineHeight: 1.6,
+                marginTop: 12,
+              }}
+            >
+              Eat the rainbow — pick three different colored vegetables this
+              week. Variety in pigment usually means variety in
+              micronutrients, and your gut bacteria notice within 48 hours.
+            </p>
+            <div
+              className="flex gap-2 flex-wrap"
+              style={{
+                borderTop: '1px solid var(--gf-border)',
+                paddingTop: 12,
+                marginTop: 12,
+              }}
+            >
+              <ActionButton Icon={Heart} label="Support" count={14} />
+              <ActionButton Icon={MessageCircle} label="Comment" count={3} />
+              <ActionButton Icon={Share2} label="Share" />
+            </div>
+          </article>
+        </main>
+
+        {/* ── RIGHT — Profile + Notifications ───────────────── */}
+        <aside
+          className="gf-community-rail flex-col gap-4 hidden"
+          style={{
+            overflowY: 'auto',
+            display: 'none',
+          }}
+        >
+          {/* Dr. Rawan profile card */}
+          <div
+            style={{
+              background: 'var(--gf-surface)',
+              border: '1px solid var(--gf-border)',
+              borderRadius: 16,
+              overflow: 'hidden',
+            }}
+          >
+            <div
+              style={{
+                height: 112,
+                background:
+                  'linear-gradient(135deg, #1a2e1f 0%, #0d1a12 100%)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: 48,
+              }}
+            >
+              🥗
+            </div>
+            <div style={{ padding: 16 }}>
+              <p
+                style={{ fontSize: 15, fontWeight: 700, color: 'var(--gf-fg-1)' }}
+              >
+                Dr. Rawan Othman
+              </p>
+              <p
+                style={{ fontSize: 12, color: 'var(--gf-fg-3)', marginTop: 2 }}
+              >
+                Certified Clinical Nutritionist
+              </p>
+              <div
+                className="grid grid-cols-3 gap-2 text-center"
+                style={{ marginTop: 12 }}
+              >
+                <ProfileStat value="24" label="Posts" />
+                <ProfileStat value="1.2k" label="Followers" />
+                <ProfileStat value="15" label="Articles" />
+              </div>
+              <button
+                type="button"
+                onClick={goToMessages}
+                style={{
+                  width: '100%',
+                  background: '#4ade80',
+                  color: '#000',
+                  fontSize: 13,
+                  fontWeight: 600,
+                  padding: '10px 0',
+                  borderRadius: 10,
+                  border: 'none',
+                  cursor: 'pointer',
+                  marginTop: 12,
+                  transition: 'opacity 200ms',
+                }}
+                onMouseEnter={(e) => (e.currentTarget.style.opacity = '0.9')}
+                onMouseLeave={(e) => (e.currentTarget.style.opacity = '1')}
+              >
+                Send Message
+              </button>
+            </div>
+          </div>
+
+          {/* Notifications card */}
+          <div
+            style={{
+              background: 'var(--gf-surface)',
+              border: '1px solid var(--gf-border)',
+              borderRadius: 16,
+              padding: 16,
+            }}
+          >
+            <header
+              className="flex items-center justify-between"
+              style={{ marginBottom: 12 }}
+            >
+              <p
+                style={{ fontSize: 14, fontWeight: 600, color: 'var(--gf-fg-1)' }}
+              >
+                Notifications
+              </p>
+              <button
+                type="button"
+                style={{
+                  fontSize: 13,
+                  color: '#60a5fa',
+                  cursor: 'pointer',
+                  border: 'none',
+                  background: 'none',
+                }}
+              >
+                See all
+              </button>
+            </header>
+            <NotifRow icon="🍎" title="New meal plan added" body="Dr. Rawan added your weekly plan" time="1h" />
+            <NotifRow icon="💧" title="Hydration reminder" body="You need 750ml more to hit your goal" time="2h" />
+            <NotifRow icon="⭐" title="Streak milestone" body="You've logged meals 3 days in a row!" time="1d" last />
+          </div>
+
+          {/* Current user identity (small, footer-like) */}
+          {user && (
+            <p
+              style={{
+                fontSize: 11,
+                color: 'var(--gf-fg-3)',
+                textAlign: 'center',
+                marginTop: 'auto',
+              }}
+            >
+              Signed in as {resolveDisplayName(profile, user, 'guest')}
+            </p>
+          )}
+        </aside>
+      </div>
     </div>
   )
 }
 
-/* ── Components ──────────────────────────────────────────────────── */
+/* ── Sub-components ─────────────────────────────────────────────── */
 
-function Composer({
-  t,
-  authorName,
-  type,
-  setType,
-  draft,
-  setDraft,
-  posting,
-  onSubmit,
-}: {
-  t: ReturnType<typeof useTranslations>
-  authorName: string
-  type: MilestoneType
-  setType: (t: MilestoneType) => void
-  draft: string
-  setDraft: (s: string) => void
-  posting: boolean
-  onSubmit: (e: React.FormEvent) => void
-}) {
+function PersonRow({ person }: { person: Person }) {
   return (
-    <form
-      onSubmit={onSubmit}
-      className="rounded-xl border border-border bg-surface p-5"
+    <li
+      className="flex items-center gap-2.5 cursor-pointer transition-colors"
+      style={{
+        padding: '10px 8px',
+        borderRadius: 10,
+      }}
+      onMouseEnter={(e) =>
+        (e.currentTarget.style.background = 'var(--gf-surface-raised)')
+      }
+      onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
     >
-      <div className="flex items-start gap-3">
-        <Avatar name={authorName} />
-        <div className="flex-1 min-w-0">
-          <p className="text-xs uppercase tracking-eyebrow text-fg-3 font-semibold">
-            {t('composeTitle')}
-          </p>
-          <textarea
-            value={draft}
-            onChange={(e) => setDraft(e.target.value)}
-            placeholder={t('composePlaceholder')}
-            rows={3}
-            maxLength={500}
-            className="mt-2 w-full bg-transparent border-none resize-none text-sm text-fg-1 placeholder-fg-3 focus:outline-none leading-relaxed"
-          />
-        </div>
-      </div>
-
-      <div className="mt-4 pt-4 border-t border-border flex flex-wrap items-center justify-between gap-3">
-        <div className="flex flex-wrap items-center gap-1.5">
-          <span className="text-[11px] uppercase tracking-eyebrow text-fg-3 font-semibold me-1">
-            {t('selectType')}
-          </span>
-          {MILESTONE_TYPES.map((mt) => (
-            <button
-              key={mt}
-              type="button"
-              onClick={() => setType(mt)}
-              className={`rounded-pill h-7 px-3 text-[11px] font-medium transition-colors ${
-                type === mt
-                  ? 'bg-primary/20 text-lime-400 border border-primary/40'
-                  : 'bg-surface-raised border border-border text-fg-2 hover:border-primary/40'
-              }`}
-            >
-              {t(`milestoneTypes.${mt}` as 'milestoneTypes.weight_loss')}
-            </button>
-          ))}
-        </div>
-        <button
-          type="submit"
-          disabled={!draft.trim() || posting}
-          className="inline-flex items-center gap-2 rounded-pill bg-gradient-to-b from-lime-400 to-lime-600 text-bg font-semibold h-9 px-5 text-xs shadow-lime-glow border border-lime-600/60 hover:-translate-y-px transition-transform disabled:opacity-40 disabled:hover:translate-y-0"
-        >
-          {posting ? '…' : t('post')}
-        </button>
-      </div>
-    </form>
-  )
-}
-
-function FreeGateCard({ t }: { t: ReturnType<typeof useTranslations> }) {
-  return (
-    <article className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-5 md:p-6">
-      <div className="flex items-start gap-4">
-        <span
-          className="shrink-0 w-11 h-11 rounded-lg flex items-center justify-center"
-          style={{ background: 'rgb(232 145 42 / 0.18)', color: '#e8912a' }}
-        >
-          <Lock className="w-5 h-5" strokeWidth={1.75} />
-        </span>
-        <div className="flex-1 min-w-0">
-          <h2 className="text-base font-semibold text-fg-1">
-            {t('lockedFreeTitle')}
-          </h2>
-          <p className="mt-1.5 text-sm text-fg-2 leading-relaxed">
-            {t('lockedFreeBody')}
-          </p>
-          <div className="mt-4">
-            <UpgradeButton tier="basic" label={t('lockedFreeCta')} />
-          </div>
-        </div>
-      </div>
-    </article>
-  )
-}
-
-function PostCard({
-  t,
-  post,
-  supported,
-  onToggleSupport,
-}: {
-  t: ReturnType<typeof useTranslations>
-  post: Post
-  supported: boolean
-  onToggleSupport: () => void
-}) {
-  const isAnnouncement = post.type === 'announcement'
-  const tint = post.milestoneType
-    ? MILESTONE_TINT[post.milestoneType]
-    : undefined
-
-  return (
-    <article
-      className={`rounded-xl border bg-surface p-5 transition-colors ${
-        post.pinned
-          ? 'border-primary/30 bg-primary/5'
-          : 'border-border hover:border-primary/30'
-      }`}
-    >
-      <header className="flex items-start gap-3">
-        <Avatar name={post.author.name} staff={post.author.isStaff} />
-        <div className="flex-1 min-w-0">
-          <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
-            <p className="text-sm font-semibold text-fg-1">
-              {post.author.name}
-            </p>
-            {post.author.isStaff && (
-              <span className="inline-flex items-center gap-1 rounded-pill bg-primary/15 text-lime-400 px-2 h-5 text-[10px] font-semibold">
-                <Sparkles className="w-2.5 h-2.5" strokeWidth={2} />
-                {t('verifiedNutritionist')}
-              </span>
-            )}
-            <span className="text-xs text-fg-3">·</span>
-            <span className="text-xs text-fg-3" dir="ltr">
-              {timeAgo(post.hoursAgo, t)}
-            </span>
-          </div>
-
-          <div className="mt-1 flex flex-wrap items-center gap-1.5">
-            {post.pinned && (
-              <span className="inline-flex items-center gap-1 rounded-pill bg-amber-500/10 px-2 h-5 text-[10px] font-semibold text-amber-300" style={{ color: '#e8912a' }}>
-                <Pin className="w-2.5 h-2.5" strokeWidth={2} />
-                {t('pinned')}
-              </span>
-            )}
-            {post.milestoneType && tint && (
-              <span
-                className="inline-flex items-center gap-1 rounded-pill px-2 h-5 text-[10px] font-semibold"
-                style={{ background: `${tint}1a`, color: tint }}
-              >
-                <Award className="w-2.5 h-2.5" strokeWidth={2} />
-                {t(`milestoneTypes.${post.milestoneType}` as 'milestoneTypes.weight_loss')}
-              </span>
-            )}
-          </div>
-        </div>
-      </header>
-
-      <p
-        className={`mt-3 text-sm leading-relaxed ${
-          isAnnouncement ? 'text-fg-1' : 'text-fg-1'
-        }`}
+      <Avatar text={person.initials} size={36} />
+      <span
+        className="flex-1 truncate"
+        style={{ fontSize: 14, fontWeight: 500, color: 'var(--gf-fg-1)' }}
       >
-        {post.body}
-      </p>
-
-      <footer className="mt-4 pt-3 border-t border-border flex items-center gap-1">
-        <FooterAction
-          Icon={Heart}
-          label={t('support')}
-          count={post.supports}
-          active={supported}
-          onClick={onToggleSupport}
+        {person.name}
+      </span>
+      {person.isNutritionist && (
+        <BadgeCheck
+          className="w-4 h-4 shrink-0"
+          strokeWidth={2}
+          style={{ color: '#60a5fa' }}
         />
-        <FooterAction
-          Icon={MessageCircle}
-          label={t('comment')}
-          count={post.comments}
-        />
-        <FooterAction Icon={Share2} label={t('share')} />
-      </footer>
-    </article>
+      )}
+      <button
+        type="button"
+        aria-label="Like"
+        className="shrink-0 inline-flex items-center justify-center transition-colors"
+        style={{
+          background: 'none',
+          border: 'none',
+          padding: 4,
+          cursor: 'pointer',
+          color: 'var(--gf-fg-3)',
+        }}
+        onMouseEnter={(e) => (e.currentTarget.style.color = '#f87171')}
+        onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--gf-fg-3)')}
+      >
+        <Heart className="w-4 h-4" strokeWidth={1.75} />
+      </button>
+    </li>
   )
 }
 
-function FooterAction({
+function ActionButton({
   Icon,
   label,
   count,
-  active,
-  onClick,
 }: {
-  Icon: LucideIcon
+  Icon: typeof Heart
   label: string
   count?: number
-  active?: boolean
-  onClick?: () => void
 }) {
   return (
     <button
       type="button"
-      onClick={onClick}
-      className={`inline-flex items-center gap-1.5 rounded-md h-8 px-3 text-xs font-medium transition-colors ${
-        active
-          ? 'text-lime-400 bg-primary/15'
-          : 'text-fg-2 hover:text-fg-1 hover:bg-surface-raised'
-      }`}
+      className="inline-flex items-center gap-1.5 transition-colors"
+      style={{
+        fontSize: 13,
+        color: 'var(--gf-fg-2)',
+        padding: '8px 12px',
+        borderRadius: 8,
+        minHeight: 36,
+        background: 'none',
+        border: 'none',
+        cursor: 'pointer',
+      }}
+      onMouseEnter={(e) =>
+        (e.currentTarget.style.background = 'var(--gf-surface)')
+      }
+      onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
     >
-      <Icon
-        className="w-3.5 h-3.5"
-        strokeWidth={1.75}
-        fill={active ? 'currentColor' : 'none'}
-      />
+      <Icon className="w-4 h-4" strokeWidth={1.75} />
       <span>{label}</span>
-      {typeof count === 'number' && count > 0 && (
-        <span className="font-mono text-[11px] text-fg-3" dir="ltr">
-          · {count}
-        </span>
+      {typeof count === 'number' && (
+        <span style={{ fontSize: 12, color: 'var(--gf-fg-3)' }}>{count}</span>
       )}
     </button>
   )
 }
 
-function Avatar({ name, staff }: { name: string; staff?: boolean }) {
-  const initials = initialsOf(name)
+function Avatar({ text, size }: { text: string; size: number }) {
   return (
     <span
-      className="shrink-0 w-10 h-10 rounded-full flex items-center justify-center font-display text-sm font-bold"
-      style={
-        staff
-          ? {
-              background: 'linear-gradient(135deg,#a3e635,#65a30d)',
-              color: '#0d1a12',
-            }
-          : { background: 'var(--gf-bg-deeper)', color: 'var(--gf-fg-2)' }
-      }
+      style={{
+        width: size,
+        height: size,
+        borderRadius: '50%',
+        background: 'linear-gradient(135deg, #4ade80, #60a5fa)',
+        color: '#fff',
+        fontSize: size <= 36 ? 13 : 14,
+        fontWeight: 700,
+        lineHeight: `${size}px`,
+        textAlign: 'center',
+        flexShrink: 0,
+        overflow: 'hidden',
+        userSelect: 'none',
+        display: 'inline-flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+      }}
     >
-      {initials}
+      {text.slice(0, 2)}
     </span>
   )
 }
 
-function initialsOf(name: string): string {
-  return name
-    .split(/\s+/)
-    .filter(Boolean)
-    .map((n) => n[0])
-    .slice(0, 2)
-    .join('')
-    .toUpperCase()
+function ProfileStat({ value, label }: { value: string; label: string }) {
+  return (
+    <div>
+      <p style={{ fontSize: 16, fontWeight: 700, color: 'var(--gf-fg-1)' }}>
+        {value}
+      </p>
+      <p style={{ fontSize: 11, color: 'var(--gf-fg-3)', marginTop: 2 }}>
+        {label}
+      </p>
+    </div>
+  )
 }
 
-function timeAgo(hours: number, t: ReturnType<typeof useTranslations>): string {
-  if (hours < 1) return t('timeAgo.now')
-  if (hours < 24) return t('timeAgo.hour', { n: Math.round(hours) })
-  if (hours < 24 * 7) return t('timeAgo.day', { n: Math.round(hours / 24) })
-  return t('timeAgo.week', { n: Math.round(hours / (24 * 7)) })
+function NotifRow({
+  icon,
+  title,
+  body,
+  time,
+  last,
+}: {
+  icon: string
+  title: string
+  body: string
+  time: string
+  last?: boolean
+}) {
+  return (
+    <div
+      className="flex gap-2.5"
+      style={{
+        padding: '10px 0',
+        borderBottom: last ? 'none' : '1px solid var(--gf-border)',
+      }}
+    >
+      <span
+        style={{
+          fontSize: 18,
+          width: 28,
+          textAlign: 'center',
+          flexShrink: 0,
+        }}
+      >
+        {icon}
+      </span>
+      <div className="flex-1 min-w-0">
+        <p
+          className="truncate"
+          style={{ fontSize: 13, fontWeight: 600, color: 'var(--gf-fg-1)' }}
+        >
+          {title}
+        </p>
+        <p
+          style={{
+            fontSize: 12,
+            color: 'var(--gf-fg-2)',
+            lineHeight: 1.5,
+            marginTop: 2,
+          }}
+        >
+          {body}
+        </p>
+      </div>
+      <span
+        className="shrink-0"
+        style={{ fontSize: 11, color: 'var(--gf-fg-3)' }}
+      >
+        {time}
+      </span>
+    </div>
+  )
 }
