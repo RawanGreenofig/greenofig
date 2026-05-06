@@ -30,8 +30,9 @@ interface TodayQueryResult {
 export default function DashboardTodayPage() {
   const t = useTranslations('dashboard')
   const tCommon = useTranslations('common')
-  const { user, profile } = useUser()
+  const { user, profile, tier } = useUser()
   const firstName = resolveFirstName(profile, user, t('guest'))
+  const userTier = (tier ?? 'free') as 'free' | 'basic' | 'premium' | 'vip'
   const greetingKey = pickGreeting()
   const today = new Date().toLocaleDateString(undefined, {
     weekday: 'long',
@@ -141,16 +142,33 @@ export default function DashboardTodayPage() {
         >
           {today}
         </p>
-        <h1
-          className="font-sans font-bold tracking-tight text-3xl md:text-4xl"
-          style={{
-            color: 'var(--gf-fg-1)',
-            lineHeight: 1.1,
-            fontFamily: 'var(--font-sans), system-ui, sans-serif',
-          }}
-        >
-          {t(greetingKey)}, {displayFirstName}
-        </h1>
+        <div className="flex items-center gap-3 flex-wrap">
+          <h1
+            className="font-sans font-bold tracking-tight text-3xl md:text-4xl"
+            style={{
+              color: 'var(--gf-fg-1)',
+              lineHeight: 1.1,
+              fontFamily: 'var(--font-sans), system-ui, sans-serif',
+            }}
+          >
+            {t(greetingKey)}, {displayFirstName}
+          </h1>
+          <span
+            className="inline-flex items-center"
+            style={{
+              background: 'var(--tier-badge-bg)',
+              color: 'var(--tier-badge-text)',
+              fontSize: 11,
+              fontWeight: 700,
+              letterSpacing: '0.06em',
+              textTransform: 'uppercase',
+              padding: '4px 10px',
+              borderRadius: 999,
+            }}
+          >
+            {userTier}
+          </span>
+        </div>
         <p
           className="mt-2 text-sm"
           style={{ color: 'var(--gf-fg-2)' }}

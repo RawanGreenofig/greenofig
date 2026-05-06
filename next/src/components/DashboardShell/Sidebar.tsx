@@ -95,6 +95,7 @@ export function Sidebar({
 
   const displayName = resolveDisplayName(profile, user, 'Guest')
   const email = user?.email ?? ''
+  const tier = (profile?.tier ?? 'free') as 'free' | 'basic' | 'premium' | 'vip'
   const initials =
     displayName
       .split(/\s+/)
@@ -257,12 +258,29 @@ export function Sidebar({
             {initials.slice(0, 2).toUpperCase()}
           </span>
           <div className="flex-1 min-w-0">
-            <p
-              className="text-sm font-semibold truncate"
-              style={{ color: ACTIVE_TEXT }}
-            >
-              {displayName}
-            </p>
+            <div className="flex items-center gap-1.5 min-w-0">
+              <p
+                className="text-sm font-semibold truncate"
+                style={{ color: ACTIVE_TEXT }}
+              >
+                {displayName}
+              </p>
+              <span
+                className="shrink-0 inline-flex items-center"
+                style={{
+                  background: 'var(--tier-badge-bg, #1f2937)',
+                  color: 'var(--tier-badge-text, #9ca3af)',
+                  fontSize: 10,
+                  fontWeight: 700,
+                  letterSpacing: '0.04em',
+                  textTransform: 'uppercase',
+                  padding: '2px 8px',
+                  borderRadius: 999,
+                }}
+              >
+                {tier}
+              </span>
+            </div>
             {email && (
               <p
                 className="text-xs truncate mt-0.5"

@@ -7,6 +7,63 @@ import { Link } from '@/i18n/navigation'
 import { Check, X, Plus, Minus } from 'lucide-react'
 import { NUTRITIONIST } from '@/lib/tokens'
 import { SiteHeader } from '@/components/SiteHeader'
+import { useAuth } from '@/context/AuthContext'
+
+type TierKey = 'free' | 'basic' | 'premium' | 'vip'
+const TIER_RANK: Record<TierKey, number> = {
+  free: 0,
+  basic: 1,
+  premium: 2,
+  vip: 3,
+}
+
+/** Per-tier visual identity. Each tier owns a single accent color used
+ *  for the card border, badge tint, checkmark, and price. */
+const TIER_THEME: Record<TierKey, {
+  border: string
+  badgeBg: string
+  badgeText: string
+  check: string
+  price: string
+  glow?: string
+  ringWidth: number
+}> = {
+  free: {
+    border: '#374151',
+    badgeBg: '#1f2937',
+    badgeText: '#9ca3af',
+    check: '#6b7280',
+    price: '#ffffff',
+    ringWidth: 1,
+  },
+  basic: {
+    border: 'rgba(96,165,250,0.4)',
+    badgeBg: 'rgba(96,165,250,0.1)',
+    badgeText: '#60a5fa',
+    check: '#60a5fa',
+    price: '#60a5fa',
+    glow: '0 0 20px rgba(96,165,250,0.1)',
+    ringWidth: 1,
+  },
+  premium: {
+    border: 'rgba(163,230,53,0.6)',
+    badgeBg: 'rgba(163,230,53,0.1)',
+    badgeText: '#a3e635',
+    check: '#a3e635',
+    price: '#a3e635',
+    glow: '0 0 30px rgba(163,230,53,0.15)',
+    ringWidth: 2,
+  },
+  vip: {
+    border: 'rgba(251,191,36,0.4)',
+    badgeBg: 'rgba(251,191,36,0.1)',
+    badgeText: '#fbbf24',
+    check: '#fbbf24',
+    price: '#fbbf24',
+    glow: '0 0 20px rgba(251,191,36,0.1)',
+    ringWidth: 1,
+  },
+}
 
 interface Plan {
   name: string
@@ -315,6 +372,9 @@ export default function PricingPage() {
   const isAr = locale === 'ar'
   const [billing, setBilling] = useState<'monthly' | 'annual'>('monthly')
   const [openFaq, setOpenFaq] = useState<number | null>(0)
+  const { user, tier: rawTier } = useAuth()
+  const isLoggedIn = !!user
+  const currentTier = (rawTier ?? 'free') as TierKey
 
   const plans = PLANS[locale]
   const faqs = FAQS[locale]
@@ -389,7 +449,15 @@ export default function PricingPage() {
           className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 items-start mt-16"
         >
           {plans.map((plan) => (
-            <PlanCard key={plan.tier} plan={plan} billing={billing} copy={copy} />
+            <PlanCard
+              key={plan.tier}
+              plan={plan}
+              billing={billing}
+              copy={copy}
+              isLoggedIn={isLoggedIn}
+              currentTier={currentTier}
+              isAr={isAr}
+            />
           ))}
         </ul>
 
@@ -453,45 +521,102 @@ function PlanCard({
   plan,
   billing,
   copy,
+  isLoggedIn,
+  currentTier,
+  isAr,
 }: {
   plan: Plan
   billing: 'monthly' | 'annual'
   copy: typeof COPY.en
+  isLoggedIn: boolean
+  currentTier: TierKey
+  isAr: boolean
 }) {
   const price = billing === 'monthly' ? plan.price.monthly : plan.price.annual
   const isFree = price === 0
-  const isFeatured = plan.featured
+  const theme = TIER_THEME[plan.tier]
 
-  // Premium = featured (highlighted with #4ade80 + green glow + subtle scale)
-  // Other cards: charcoal surface on charcoal page bg.
-  const cardStyle = isFeatured
-    ? {
-        background: '#0d1a12',
-        border: '2px solid #4ade80',
-        boxShadow: '0 0 48px rgba(74,222,128,0.18)',
-      }
-    : { background: '#111', border: '1px solid #222' }
+  // Tier comparison drives the entire CTA — what it says, where it
+  // routes, whether it's clickable.
+  const cardRank = TIER_RANK[plan.tier]
+  const userRank = TIER_RANK[currentTier]
+  const isCurrent = isLoggedIn && plan.tier === currentTier
+  const isLowerThanCurrent = isLoggedIn && cardRank < userRank
+  const isHigherThanCurrent = isLoggedIn && cardRank > userRank
+
+  // Sign-up flow uses the existing /sign-up?plan= deep link; signed-in
+  // upgrades go straight to Stripe via /api/stripe/checkout when we add
+  // an inline upgrade — for now reuse the same href so it works.
+  const ctaText = (() => {
+    if (isCurrent) {
+      return isAr ? '✓ خطتك الحالية' : '✓ Current Plan'
+    }
+    if (isLowerThanCurrent) {
+      return isAr ? '✓ مُتضمَّن' : '✓ Included'
+    }
+    if (isHigherThanCurrent) {
+      return isAr
+        ? `الترقية إلى ${plan.name}`
+        : `Upgrade to ${plan.name}`
+    }
+    return plan.cta
+  })()
 
   return (
     <li
-      className={`relative rounded-2xl p-8 transition-all ${
-        isFeatured ? 'xl:scale-[1.05]' : ''
-      }`}
-      style={cardStyle}
+      className="relative rounded-2xl p-8 transition-all"
+      style={{
+        background: '#0d1117',
+        border: `${theme.ringWidth}px solid ${theme.border}`,
+        boxShadow: theme.glow,
+        transform: plan.featured ? undefined : undefined,
+      }}
     >
+      {/* Per-tier label badge above the card (Most Popular / Best Value) */}
       {plan.badge && (
-        <span className="absolute -top-3 start-1/2 -translate-x-1/2 bg-green-500 text-white text-xs px-3 py-1 rounded-full font-semibold whitespace-nowrap">
+        <span
+          className="absolute -top-3 start-1/2 -translate-x-1/2 text-xs px-3 py-1 rounded-full font-semibold whitespace-nowrap"
+          style={{
+            background: theme.badgeBg,
+            color: theme.badgeText,
+            border: `1px solid ${theme.border}`,
+          }}
+        >
           {plan.badge}
         </span>
       )}
 
-      <div className="mb-3">
-        <h3 className="font-sans font-bold text-white text-2xl mb-1">{plan.name}</h3>
+      {/* Current-plan ribbon (only when logged-in user owns this tier) */}
+      {isCurrent && (
+        <span
+          className="absolute start-1/2 -translate-x-1/2 -translate-y-1/2 whitespace-nowrap"
+          style={{
+            top: 0,
+            background: 'linear-gradient(to bottom, #a3e635, #65a30d)',
+            color: '#0d1a12',
+            fontSize: 11,
+            fontWeight: 700,
+            padding: '4px 16px',
+            borderRadius: 999,
+            border: '1px solid rgba(101, 163, 13, 0.6)',
+            letterSpacing: '0.04em',
+            textTransform: 'uppercase',
+          }}
+        >
+          ✓ {isAr ? 'خطتك الحالية' : 'Your Current Plan'}
+        </span>
+      )}
+
+      <div className="mb-3" style={{ marginTop: isCurrent ? 12 : 0 }}>
+        <h3 className="font-sans font-bold text-white text-2xl mb-1">
+          {plan.name}
+        </h3>
         <span
           className="inline-block rounded-full text-[10px] uppercase tracking-eyebrow font-bold px-2 py-0.5"
           style={{
-            border: `1px solid ${plan.accentColor}`,
-            color: plan.accentColor,
+            background: theme.badgeBg,
+            color: theme.badgeText,
+            border: `1px solid ${theme.border}`,
           }}
         >
           {plan.tier}
@@ -500,17 +625,27 @@ function PlanCard({
 
       <p className="text-sm text-fg-2 mb-6 leading-relaxed">{plan.description}</p>
 
-      {/* Price */}
+      {/* Price — colored to match the tier */}
       <div className="mb-6 min-h-[80px]">
         {isFree ? (
-          <p className="text-4xl font-bold text-white leading-none">{copy.free}</p>
+          <p
+            className="text-4xl font-bold leading-none"
+            style={{ color: theme.price }}
+          >
+            {copy.free}
+          </p>
         ) : (
           <>
             <div className="flex items-baseline gap-2" dir="ltr">
-              <span className="text-4xl font-bold text-white leading-none">
+              <span
+                className="text-4xl font-bold leading-none"
+                style={{ color: theme.price }}
+              >
                 {price}
               </span>
-              <span className="text-sm text-fg-2 font-semibold">{plan.currency}</span>
+              <span className="text-sm text-fg-2 font-semibold">
+                {plan.currency}
+              </span>
               <span className="text-xs text-fg-3">{copy.perMo}</span>
             </div>
             {billing === 'annual' && (
@@ -520,19 +655,38 @@ function PlanCard({
         )}
       </div>
 
-      {/* CTA — Premium uses the canonical lime gradient (.btn-primary);
-       *  every other tier uses the matching outline style.            */}
-      <Link
-        href={plan.href}
-        className={isFeatured ? 'btn-primary w-full' : 'btn-secondary w-full'}
-        style={{ width: '100%' }}
-      >
-        {plan.cta}
-      </Link>
+      {/* CTA — three states: current, downgrade-disabled, upgrade. */}
+      {isCurrent || isLowerThanCurrent ? (
+        <button
+          type="button"
+          disabled
+          aria-disabled
+          className="w-full inline-flex items-center justify-center font-semibold whitespace-nowrap"
+          style={{
+            background: 'rgba(255,255,255,0.06)',
+            border: '1px solid rgba(255,255,255,0.15)',
+            color: 'rgba(255,255,255,0.5)',
+            cursor: 'not-allowed',
+            borderRadius: 9999,
+            height: 48,
+            fontSize: 15,
+          }}
+        >
+          {ctaText}
+        </button>
+      ) : (
+        <Link
+          href={plan.href}
+          className={plan.tier === 'premium' ? 'btn-primary w-full' : 'btn-secondary w-full'}
+          style={{ width: '100%' }}
+        >
+          {ctaText}
+        </Link>
+      )}
 
       <hr className="my-6" style={{ borderColor: '#222' }} />
 
-      {/* Features */}
+      {/* Features — checkmarks colored per tier */}
       <ul className="flex flex-col gap-y-3">
         {plan.features.map((f) => {
           const text = f.replace(/^✉️\s*/, '')
@@ -542,15 +696,19 @@ function PlanCard({
                 aria-hidden
                 className="shrink-0 w-5 h-5 rounded-full inline-flex items-center justify-center mt-0.5"
                 style={{
-                  background: 'rgba(74,222,128,0.15)',
-                  border: '1px solid rgba(74,222,128,0.45)',
+                  background: theme.badgeBg,
+                  border: `1px solid ${theme.border}`,
                 }}
               >
-                <Check className="w-3 h-3 text-green-400" strokeWidth={2.5} />
+                <Check
+                  className="w-3 h-3"
+                  strokeWidth={2.5}
+                  style={{ color: theme.check }}
+                />
               </span>
               <span
                 className="text-sm leading-relaxed"
-                style={{ color: '#d1fae5' }}
+                style={{ color: '#d1d5db' }}
               >
                 {text}
               </span>

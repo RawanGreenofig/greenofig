@@ -5,6 +5,7 @@ import { useTranslations } from 'next-intl'
 import { X } from 'lucide-react'
 import { usePathname } from '@/i18n/navigation'
 import { ThemeProvider } from '@/components/ThemeProvider'
+import { useAuth } from '@/context/AuthContext'
 import { Sidebar } from './Sidebar'
 import { Topbar } from './Topbar'
 import { MobileNav } from './MobileNav'
@@ -55,6 +56,8 @@ export function DashboardShell({
   const t = useTranslations('dashboard')
   const [drawerOpen, setDrawerOpen] = useState(false)
   const pathname = usePathname()
+  const { tier } = useAuth()
+  const dataTier = (tier ?? 'free') as 'free' | 'basic' | 'premium' | 'vip'
 
   // Close drawer on route change
   useEffect(() => {
@@ -76,6 +79,7 @@ export function DashboardShell({
     <ThemeProvider>
     <div
       data-theme="dashboard"
+      data-tier={dataTier}
       className="flex h-screen overflow-hidden text-fg-1"
       style={{ background: 'var(--gf-bg)' }}
     >

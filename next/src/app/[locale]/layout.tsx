@@ -71,6 +71,16 @@ export const metadata: Metadata = {
     'online nutritionist',
     'Greenofig',
   ],
+  // Next 13+ auto-detects src/app/favicon.ico, but be explicit so any
+  // CDN / browser doesn't fall back to a stale cached default.
+  icons: {
+    icon: [
+      { url: '/favicon.ico', sizes: 'any' },
+      { url: '/logo.png', type: 'image/png' },
+    ],
+    shortcut: '/favicon.ico',
+    apple: '/logo.png',
+  },
 }
 
 export const viewport: Viewport = {
