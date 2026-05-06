@@ -178,6 +178,64 @@
   }
 }
 
+/* ── Dashboard charcoal theme ─────────────────────────────────────
+ * The marketing site is green. The signed-in app is sleek dark gray —
+ * Notion / Linear feel, with green used SPARINGLY as accent.
+ *
+ * Scoped to [data-theme="dashboard"] (set on DashboardShell). Tailwind
+ * utilities like `bg-bg`, `bg-surface`, `border-border`, `text-fg-1`
+ * are remapped here without touching the marketing site.
+ *
+ * The mapping deliberately does NOT change `text-lime-400` — green
+ * still highlights icons, badges, active states. We DO change the
+ * forest-`primary/15` chip background to a subtle green-tinted ink
+ * so active sidebar items don't look saturated.
+ * ──────────────────────────────────────────────────────────────── */
+[data-theme='dashboard'] {
+  --gf-bg: #0a0a0a;
+  --gf-bg-deeper: #050505;
+  --gf-surface: #1a1a1a;
+  --gf-surface-raised: #222222;
+  --gf-border: #2a2a2a;
+  --gf-fg-1: #ffffff;
+  --gf-fg-2: #888888;
+  --gf-fg-3: #555555;
+  --gf-primary: #4ade80;
+  --gf-primary-hover: #22c55e;
+  --gf-lime-400: #4ade80;
+
+  background: #0a0a0a;
+  color: #ffffff;
+}
+
+/* Re-route Tailwind utilities to the charcoal palette inside the dashboard scope.
+ * Each color utility from tailwind.config.ts that we use in dashboard chrome
+ * gets a matching override here. */
+[data-theme='dashboard'] .bg-bg            { background-color: #0a0a0a; }
+[data-theme='dashboard'] .bg-bg-deeper     { background-color: #050505; }
+[data-theme='dashboard'] .bg-surface       { background-color: #1a1a1a; }
+[data-theme='dashboard'] .bg-surface-raised{ background-color: #222222; }
+[data-theme='dashboard'] .border-border    { border-color: #2a2a2a; }
+[data-theme='dashboard'] .border-e         { border-inline-end-color: #2a2a2a; }
+[data-theme='dashboard'] .border-s         { border-inline-start-color: #2a2a2a; }
+[data-theme='dashboard'] .border-t         { border-top-color: #2a2a2a; }
+[data-theme='dashboard'] .border-b         { border-bottom-color: #2a2a2a; }
+[data-theme='dashboard'] .divide-border > :not([hidden]) ~ :not([hidden]) { border-color: #2a2a2a; }
+[data-theme='dashboard'] .text-fg-1        { color: #ffffff; }
+[data-theme='dashboard'] .text-fg-2        { color: #888888; }
+[data-theme='dashboard'] .text-fg-3        { color: #555555; }
+[data-theme='dashboard'] .text-lime-400    { color: #4ade80; }
+[data-theme='dashboard'] .text-lime-500    { color: #4ade80; }
+[data-theme='dashboard'] .text-primary     { color: #4ade80; }
+[data-theme='dashboard'] .bg-primary\/15   { background-color: rgb(74 222 128 / 0.10); }
+[data-theme='dashboard'] .bg-primary\/40   { background-color: rgb(74 222 128 / 0.30); }
+[data-theme='dashboard'] .border-primary   { border-color: #4ade80; }
+[data-theme='dashboard'] .border-primary\/40 { border-color: rgb(74 222 128 / 0.45); }
+[data-theme='dashboard'] .hover\:bg-surface-raised:hover { background-color: #222222; }
+[data-theme='dashboard'] .hover\:border-primary\/40:hover { border-color: rgb(74 222 128 / 0.55); }
+[data-theme='dashboard'] .hover\:border-primary:hover     { border-color: #4ade80; }
+[data-theme='dashboard'] .hover\:text-fg-1:hover { color: #ffffff; }
+
 @keyframes spin {
   to { transform: rotate(360deg); }
 }

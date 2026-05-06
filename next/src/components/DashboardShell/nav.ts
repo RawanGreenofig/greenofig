@@ -109,11 +109,12 @@ export const ADMIN_MOBILE_TABS: DashboardNavItem[] = [
 ]
 export const ADMIN_MOBILE_FAB = ADMIN_NAV[5] // Content — center FAB
 
-/** Top-level mobile tabs (4 + FAB). Picked from USER_NAV. */
+/** Top-level mobile tabs (4 + FAB). Picked from USER_NAV.
+ * Layout: Home · Track | (Scanner FAB) | Meals · Profile  */
 export const USER_MOBILE_TABS: DashboardNavItem[] = [
-  USER_NAV[0],  // Today
-  USER_NAV[2],  // Track
-  USER_NAV[3],  // Progress
-  USER_NAV[6],  // Community
+  USER_NAV[0],   // Home / Today
+  USER_NAV[2],   // Track
+  USER_NAV[4],   // Meal plan
+  USER_NAV[11],  // Settings / Profile
 ]
 export const USER_MOBILE_FAB = USER_NAV[1] // Scanner — center FAB

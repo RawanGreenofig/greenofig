@@ -61,7 +61,11 @@ export function DashboardShell({
   }, [pathname])
 
   return (
-    <div className="flex h-screen bg-bg text-fg-1">
+    <div
+      data-theme="dashboard"
+      className="flex h-screen text-fg-1"
+      style={{ background: '#0a0a0a' }}
+    >
       {/* Desktop sidebar */}
       <aside className="hidden md:flex w-60 shrink-0">
         <Sidebar navItems={navItems} />
@@ -74,7 +78,8 @@ export function DashboardShell({
             type="button"
             aria-label={t('closeSidebar')}
             onClick={() => setDrawerOpen(false)}
-            className="md:hidden fixed inset-0 z-40 bg-bg-deeper/70 backdrop-blur-sm"
+            className="md:hidden fixed inset-0 z-40 backdrop-blur-sm"
+            style={{ background: 'rgb(0 0 0 / 0.7)' }}
           />
           <aside className="md:hidden fixed inset-y-0 start-0 z-50 w-72 max-w-[80vw] shadow-2xl">
             <div className="absolute end-3 top-3 z-10">
@@ -102,6 +107,7 @@ export function DashboardShell({
           className="flex-1 overflow-y-auto pb-20 md:pb-0"
           // Custom cursor disabled in dashboards; let native cursor through
           data-cursor="ignore"
+          style={{ background: '#0a0a0a' }}
         >
           {children}
         </main>

@@ -2,11 +2,16 @@
 
 import { useState, useRef, useEffect } from 'react'
 import { useTranslations } from 'next-intl'
-import { Bell, Menu, Search, ChevronDown, User, Settings, LogOut } from 'lucide-react'
+import { Bell, Menu, Search, ChevronDown, User, Settings, LogOut, Home } from 'lucide-react'
 import { Link } from '@/i18n/navigation'
 import { LanguageSwitcher } from '@/components/LanguageSwitcher'
 import { useAuth } from '@/context/AuthContext'
 import { cn } from '@/lib/cn'
+
+const TOPBAR_BG = '#111111'
+const TOPBAR_BORDER = '#222222'
+const FIELD_BG = '#1a1a1a'
+const FIELD_BORDER = '#2a2a2a'
 
 export function Topbar({ onOpenMenu }: { onOpenMenu: () => void }) {
   const t = useTranslations('dashboard')
@@ -32,37 +37,89 @@ export function Topbar({ onOpenMenu }: { onOpenMenu: () => void }) {
   }, [open])
 
   return (
-    <header className="flex items-center gap-3 h-16 px-4 md:px-6 bg-bg border-b border-border shrink-0">
+    <header
+      className="flex items-center gap-3 h-16 px-4 md:px-6 shrink-0"
+      style={{
+        background: TOPBAR_BG,
+        borderBottom: `1px solid ${TOPBAR_BORDER}`,
+      }}
+    >
       <button
         type="button"
         onClick={onOpenMenu}
         aria-label={t('openSidebar')}
-        className="md:hidden inline-flex items-center justify-center w-10 h-10 rounded-md text-fg-2 hover:bg-surface-raised hover:text-fg-1 transition-colors"
+        className="md:hidden inline-flex items-center justify-center w-10 h-10 rounded-md transition-colors"
+        style={{ color: '#888' }}
+        onMouseEnter={(e) => (e.currentTarget.style.background = '#1f1f1f')}
+        onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
       >
         <Menu className="w-5 h-5" strokeWidth={1.75} />
       </button>
 
-      {/* Search — hidden on small mobile */}
-      <div className="hidden sm:flex flex-1 max-w-md items-center gap-2 rounded-full bg-surface border border-border px-3 h-10">
-        <Search className="w-4 h-4 text-fg-3" strokeWidth={1.75} />
+      {/* Search */}
+      <div
+        className="hidden sm:flex flex-1 max-w-md items-center gap-2 rounded-xl px-3 h-10"
+        style={{ background: FIELD_BG, border: `1px solid ${FIELD_BORDER}` }}
+      >
+        <Search className="w-4 h-4" strokeWidth={1.75} style={{ color: '#555' }} />
         <input
           type="search"
           placeholder={t('searchPlaceholder')}
           aria-label={t('search')}
-          className="flex-1 bg-transparent text-sm text-fg-1 placeholder:text-fg-3 focus:outline-none"
+          className="flex-1 bg-transparent text-sm focus:outline-none"
+          style={{ color: '#ffffff' }}
         />
       </div>
       <div className="sm:hidden flex-1" />
+
+      {/* Back to site */}
+      <Link
+        href="/"
+        aria-label={tNav('backToHome')}
+        title={tNav('backToHome')}
+        className="inline-flex items-center justify-center w-10 h-10 rounded-full transition-colors"
+        style={{
+          background: FIELD_BG,
+          border: `1px solid ${FIELD_BORDER}`,
+          color: '#888',
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.color = '#4ade80'
+          e.currentTarget.style.borderColor = '#4ade80'
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.color = '#888'
+          e.currentTarget.style.borderColor = FIELD_BORDER
+        }}
+      >
+        <Home className="w-4 h-4" strokeWidth={1.75} />
+      </Link>
 
       <LanguageSwitcher />
 
       <button
         type="button"
         aria-label={t('notifications')}
-        className="relative w-10 h-10 rounded-full bg-surface border border-border text-fg-2 hover:bg-surface-raised hover:text-fg-1 transition-colors flex items-center justify-center"
+        className="relative w-10 h-10 rounded-full transition-colors flex items-center justify-center"
+        style={{
+          background: FIELD_BG,
+          border: `1px solid ${FIELD_BORDER}`,
+          color: '#888',
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.color = '#fff'
+          e.currentTarget.style.background = '#222'
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.color = '#888'
+          e.currentTarget.style.background = FIELD_BG
+        }}
       >
         <Bell className="w-4 h-4" strokeWidth={1.75} />
-        <span className="absolute top-2 end-2 w-1.5 h-1.5 rounded-full bg-amber" />
+        <span
+          className="absolute top-2 end-2 w-1.5 h-1.5 rounded-full"
+          style={{ background: '#e8912a' }}
+        />
       </button>
 
       {/* Avatar dropdown */}
@@ -70,26 +127,71 @@ export function Topbar({ onOpenMenu }: { onOpenMenu: () => void }) {
         <button
           type="button"
           onClick={() => setOpen((o) => !o)}
-          className="inline-flex items-center gap-2 pe-2 ps-0.5 h-10 rounded-full bg-surface border border-border hover:bg-surface-raised transition-colors"
+          className="inline-flex items-center gap-2 pe-2 ps-0.5 h-10 rounded-full transition-colors"
+          style={{
+            background: FIELD_BG,
+            border: `1px solid ${FIELD_BORDER}`,
+          }}
+          onMouseEnter={(e) => (e.currentTarget.style.background = '#222')}
+          onMouseLeave={(e) => (e.currentTarget.style.background = FIELD_BG)}
           aria-haspopup="menu"
           aria-expanded={open}
         >
-          <span className="w-9 h-9 rounded-full bg-gradient-to-br from-lime-500 to-lime-600 text-bg flex items-center justify-center text-xs font-bold">
+          <span
+            className="w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold"
+            style={{ background: '#1a2e1f', color: '#4ade80' }}
+          >
             {initials}
           </span>
           <ChevronDown
-            className={cn('hidden md:block w-4 h-4 text-fg-3 transition-transform', open && 'rotate-180')}
+            className={cn(
+              'hidden md:block w-4 h-4 transition-transform',
+              open && 'rotate-180',
+            )}
             strokeWidth={1.75}
+            style={{ color: '#888' }}
           />
         </button>
 
         {open && (
           <div
             role="menu"
-            className="absolute end-0 mt-2 w-52 rounded-xl border border-border bg-surface shadow-lg overflow-hidden z-30"
+            className="absolute end-0 mt-2 w-56 rounded-xl shadow-lg overflow-hidden z-30"
+            style={{
+              background: TOPBAR_BG,
+              border: `1px solid ${TOPBAR_BORDER}`,
+            }}
           >
-            <DropItem href="/dashboard/settings" Icon={User} label={t('profile')} onClick={() => setOpen(false)} />
-            <DropItem href="/dashboard/settings" Icon={Settings} label={tNav('settings')} onClick={() => setOpen(false)} />
+            {/* user header */}
+            <div
+              className="px-4 py-3"
+              style={{ borderBottom: `1px solid ${TOPBAR_BORDER}` }}
+            >
+              <p className="text-sm font-medium" style={{ color: '#fff' }}>
+                {profile?.full_name?.trim() || tNav('dashboard')}
+              </p>
+              {user?.email && (
+                <p
+                  className="mt-0.5 text-xs truncate"
+                  style={{ color: '#666' }}
+                  dir="ltr"
+                >
+                  {user.email}
+                </p>
+              )}
+            </div>
+            <DropItem
+              href="/dashboard/settings"
+              Icon={User}
+              label={t('profile')}
+              onClick={() => setOpen(false)}
+            />
+            <DropItem
+              href="/dashboard/settings"
+              Icon={Settings}
+              label={tNav('settings')}
+              onClick={() => setOpen(false)}
+            />
             <button
               role="menuitem"
               type="button"
@@ -97,7 +199,19 @@ export function Topbar({ onOpenMenu }: { onOpenMenu: () => void }) {
                 setOpen(false)
                 void signOut()
               }}
-              className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-fg-2 hover:bg-surface-raised hover:text-fg-1 transition-colors border-t border-border"
+              className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm transition-colors"
+              style={{
+                color: '#888',
+                borderTop: `1px solid ${TOPBAR_BORDER}`,
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.color = '#f87171'
+                e.currentTarget.style.background = '#1f1f1f'
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.color = '#888'
+                e.currentTarget.style.background = 'transparent'
+              }}
             >
               <LogOut className="w-4 h-4" strokeWidth={1.75} />
               <span>{tNav('signOut')}</span>
@@ -125,7 +239,16 @@ function DropItem({
       href={href}
       onClick={onClick}
       role="menuitem"
-      className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-fg-2 hover:bg-surface-raised hover:text-fg-1 transition-colors"
+      className="flex items-center gap-2.5 px-4 py-2.5 text-sm transition-colors"
+      style={{ color: '#888' }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.color = '#fff'
+        e.currentTarget.style.background = '#1f1f1f'
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.color = '#888'
+        e.currentTarget.style.background = 'transparent'
+      }}
     >
       <Icon className="w-4 h-4" strokeWidth={1.75} />
       <span>{label}</span>

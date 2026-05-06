@@ -59,6 +59,7 @@
     "dashboard": "لوحة التحكم",
     "settings": "الإعدادات",
     "signOut": "تسجيل الخروج",
+    "backToHome": "العودة للرئيسية",
     "logoTagline": "تغذية شخصية"
   },
   "auth": {
@@ -200,6 +201,7 @@
     "greetingMorning": "صباح الخير",
     "greetingAfternoon": "مساء الخير",
     "greetingEvening": "مساء النور",
+    "overviewSubtitle": "نظرة عامة على تغذيتك",
     "guest": "بك",
     "todayDate": "اليوم",
     "todayHeading": "اليوم",

@@ -59,6 +59,7 @@
     "dashboard": "Dashboard",
     "settings": "Settings",
     "signOut": "Sign Out",
+    "backToHome": "Back to home",
     "logoTagline": "Personalized Nutrition"
   },
   "auth": {
@@ -200,6 +201,7 @@
     "greetingMorning": "Good morning",
     "greetingAfternoon": "Good afternoon",
     "greetingEvening": "Good evening",
+    "overviewSubtitle": "Here's your nutrition overview",
     "guest": "there",
     "todayDate": "Today",
     "todayHeading": "Today",

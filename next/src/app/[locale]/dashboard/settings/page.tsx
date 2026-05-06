@@ -25,7 +25,9 @@ import {
   type LucideIcon,
 } from 'lucide-react'
 import { useUser } from '@/lib/hooks/useUser'
+import { useAuth } from '@/context/AuthContext'
 import { getBrowserSupabase } from '@/lib/supabase/client'
+import { Link } from '@/i18n/navigation'
 
 type TabKey =
   | 'profile'
@@ -85,7 +87,9 @@ const TABS: { key: TabKey; Icon: LucideIcon }[] = [
 
 export default function SettingsPage() {
   const t = useTranslations('settings')
+  const tNav = useTranslations('nav')
   const { profile, tier } = useUser()
+  const { user, signOut } = useAuth()
   const [tab, setTab] = useState<TabKey>('profile')
   const [dirty, setDirty] = useState(false)
   const [saveState, setSaveState] = useState<'idle' | 'saving' | 'saved'>('idle')
@@ -186,8 +190,90 @@ export default function SettingsPage() {
     })()
   }
 
+  const fullName = profile?.full_name?.trim()
+  const displayName =
+    fullName ||
+    user?.email?.split('@')[0]?.replace(/[._]/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()) ||
+    'Guest'
+  const initials =
+    (fullName ?? user?.email ?? '?')
+      .split(/\s+|@/)[0]
+      .slice(0, 2)
+      .toUpperCase() || '?'
+  const tierColor: Record<string, { bg: string; text: string }> = {
+    free:    { bg: '#1f1f1f', text: '#888' },
+    basic:   { bg: 'rgb(6 182 212 / 0.15)',  text: '#06b6d4' },
+    premium: { bg: 'rgb(74 222 128 / 0.15)', text: '#4ade80' },
+    vip:     { bg: 'rgb(168 85 247 / 0.15)', text: '#a855f7' },
+  }
+  const tierStyle = tierColor[tier ?? 'free'] ?? tierColor.free
+
   return (
     <div className="px-4 md:px-8 py-6 md:py-8 max-w-screen-xl mx-auto space-y-6">
+      {/* Back to dashboard */}
+      <Link
+        href="/dashboard"
+        className="inline-flex items-center gap-1.5 text-xs font-medium transition-colors"
+        style={{ color: '#666' }}
+        onMouseEnter={(e) => (e.currentTarget.style.color = '#4ade80')}
+        onMouseLeave={(e) => (e.currentTarget.style.color = '#666')}
+      >
+        <ArrowRight className="w-3 h-3 rtl:rotate-0 rotate-180" strokeWidth={2} />
+        <span>{t('title')}</span>
+      </Link>
+
+      {/* Profile summary */}
+      <section
+        className="rounded-2xl p-5 flex flex-wrap items-center gap-5"
+        style={{ background: '#1a1a1a', border: '1px solid #2a2a2a' }}
+      >
+        <span
+          className="w-16 h-16 rounded-full inline-flex items-center justify-center text-lg font-bold shrink-0"
+          style={{ background: '#1a2e1f', color: '#4ade80' }}
+        >
+          {initials}
+        </span>
+        <div className="flex-1 min-w-0">
+          <div className="flex flex-wrap items-center gap-2">
+            <p className="text-xl font-bold" style={{ color: '#fff' }}>
+              {displayName}
+            </p>
+            <span
+              className="inline-flex items-center rounded-pill px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-eyebrow"
+              style={{ background: tierStyle.bg, color: tierStyle.text }}
+            >
+              {tier ?? 'free'}
+            </span>
+          </div>
+          {user?.email && (
+            <p className="mt-1 text-sm truncate" style={{ color: '#888' }} dir="ltr">
+              {user.email}
+            </p>
+          )}
+        </div>
+        <button
+          type="button"
+          onClick={() => void signOut()}
+          className="inline-flex items-center gap-2 rounded-lg px-4 h-10 text-sm font-medium transition-colors"
+          style={{
+            background: '#222',
+            border: '1px solid #2a2a2a',
+            color: '#888',
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.color = '#f87171'
+            e.currentTarget.style.borderColor = '#f87171'
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.color = '#888'
+            e.currentTarget.style.borderColor = '#2a2a2a'
+          }}
+        >
+          <LogOut className="w-4 h-4" strokeWidth={1.75} />
+          {tNav('signOut')}
+        </button>
+      </section>
+
       <header>
         <h1
           className="font-display font-bold text-fg-1 tracking-tight"
