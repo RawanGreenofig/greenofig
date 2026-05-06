@@ -243,14 +243,14 @@
 }
 
 /* ── Premium scrollbar ────────────────────────────────────────── */
-::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar { width: 4px; height: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb {
-  background: #2a2a2a;
+  background: #1f1f1f;
   border-radius: 999px;
 }
-::-webkit-scrollbar-thumb:hover { background: #3a3a3a; }
-* { scrollbar-width: thin; scrollbar-color: #2a2a2a transparent; }
+::-webkit-scrollbar-thumb:hover { background: #2a2a2a; }
+* { scrollbar-width: thin; scrollbar-color: #1f1f1f transparent; }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {

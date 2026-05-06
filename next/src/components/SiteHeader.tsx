@@ -115,10 +115,25 @@ export function SiteHeader() {
                   aria-expanded={menuOpen}
                 >
                   <span
-                    className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 overflow-hidden select-none"
-                    style={{ background: '#1a2e1f', color: '#4ade80', lineHeight: 1 }}
+                    style={{
+                      width: 32,
+                      height: 32,
+                      borderRadius: '50%',
+                      background: '#1a2e1f',
+                      color: '#4ade80',
+                      fontSize: 11,
+                      fontWeight: 700,
+                      lineHeight: '32px',
+                      textAlign: 'center',
+                      flexShrink: 0,
+                      overflow: 'hidden',
+                      userSelect: 'none',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
                   >
-                    {initials.slice(0, 2)}
+                    {initials.slice(0, 2).toUpperCase()}
                   </span>
                   <ChevronDown
                     className="hidden md:block w-4 h-4 text-[#666]"

@@ -6,6 +6,7 @@ import { Link, usePathname } from '@/i18n/navigation'
 import { Wordmark } from '@/components/Wordmark'
 import { useAuth } from '@/context/AuthContext'
 import { cn } from '@/lib/cn'
+import { resolveDisplayName } from '@/lib/displayName'
 import type { DashboardNavItem } from './nav'
 
 const SIDEBAR_BG = '#0e0e0e'
@@ -38,16 +39,15 @@ export function Sidebar({
     return pathname === href || pathname.startsWith(`${href}/`)
   }
 
-  const fullName = profile?.full_name?.trim()
-  const displayName =
-    fullName ||
-    user?.email?.split('@')[0]?.replace(/[._]/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()) ||
-    'Guest'
+  const displayName = resolveDisplayName(profile, user, 'Guest')
   const email = user?.email ?? ''
   const initials =
-    (fullName ?? user?.email ?? '?')
-      .split(/\s+|@/)[0]
+    displayName
+      .split(/\s+/)
+      .map((w) => w[0])
+      .filter(Boolean)
       .slice(0, 2)
+      .join('')
       .toUpperCase() || '?'
 
   return (
@@ -75,7 +75,7 @@ export function Sidebar({
           <Link
             href="/"
             onClick={onItemClick}
-            className="group mx-2 flex items-center gap-3 rounded-lg px-4 py-2.5 text-sm font-medium transition-colors"
+            className="group mx-2 flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors"
             style={{ color: INACTIVE_TEXT }}
             onMouseEnter={(e) => {
               e.currentTarget.style.background = HOVER_BG
@@ -86,8 +86,10 @@ export function Sidebar({
               e.currentTarget.style.color = INACTIVE_TEXT
             }}
           >
-            <Home className="w-[18px] h-[18px] shrink-0" strokeWidth={1.75} />
-            <span className="flex-1 truncate">{tNav('home')}</span>
+            <Home className="w-4 h-4 flex-shrink-0" strokeWidth={1.75} />
+            <span className="flex-1 truncate text-sm font-medium leading-none">
+              {tNav('home')}
+            </span>
           </Link>
         </li>
 
@@ -99,12 +101,14 @@ export function Sidebar({
                 href={href}
                 onClick={onItemClick}
                 className={cn(
-                  'group mx-2 flex items-center gap-3 rounded-lg px-4 py-2.5 text-sm font-medium transition-colors relative',
+                  'group mx-2 flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors relative',
                 )}
                 style={{
                   background: active ? ACTIVE_BG : 'transparent',
                   color: active ? ACTIVE_TEXT : INACTIVE_TEXT,
-                  borderInlineStart: active ? `2px solid ${ACCENT}` : '2px solid transparent',
+                  borderInlineStart: active
+                    ? `2px solid ${ACCENT}`
+                    : '2px solid transparent',
                 }}
                 onMouseEnter={(e) => {
                   if (!active) {
@@ -120,12 +124,16 @@ export function Sidebar({
                 }}
                 aria-current={active ? 'page' : undefined}
               >
+                {/* Active state per spec is bg + border-l + text only.
+                 * Icon inherits currentColor so it never becomes a green
+                 * circle that reads as a separate decorative dot. */}
                 <Icon
-                  className="w-[18px] h-[18px] shrink-0"
+                  className="w-4 h-4 flex-shrink-0"
                   strokeWidth={active ? 2 : 1.75}
-                  style={{ color: active ? ACCENT : 'currentColor' }}
                 />
-                <span className="flex-1 truncate">{t(labelKey)}</span>
+                <span className="flex-1 truncate text-sm font-medium leading-none">
+                  {t(labelKey)}
+                </span>
               </Link>
             </li>
           )
@@ -150,10 +158,25 @@ export function Sidebar({
           }}
         >
           <span
-            className="w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold shrink-0 overflow-hidden select-none"
-            style={{ background: '#1a2e1f', color: ACCENT, lineHeight: 1 }}
+            style={{
+              width: 36,
+              height: 36,
+              borderRadius: '50%',
+              background: '#1a2e1f',
+              color: ACCENT,
+              fontSize: 12,
+              fontWeight: 700,
+              lineHeight: '36px',
+              textAlign: 'center',
+              flexShrink: 0,
+              overflow: 'hidden',
+              userSelect: 'none',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
           >
-            {initials.slice(0, 2)}
+            {initials.slice(0, 2).toUpperCase()}
           </span>
           <div className="flex-1 min-w-0">
             <p

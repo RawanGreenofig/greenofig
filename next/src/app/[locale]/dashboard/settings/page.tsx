@@ -28,6 +28,7 @@ import { useUser } from '@/lib/hooks/useUser'
 import { useAuth } from '@/context/AuthContext'
 import { getBrowserSupabase } from '@/lib/supabase/client'
 import { Link } from '@/i18n/navigation'
+import { resolveDisplayName } from '@/lib/displayName'
 
 type TabKey =
   | 'profile'
@@ -190,15 +191,14 @@ export default function SettingsPage() {
     })()
   }
 
-  const fullName = profile?.full_name?.trim()
-  const displayName =
-    fullName ||
-    user?.email?.split('@')[0]?.replace(/[._]/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()) ||
-    'Guest'
+  const displayName = resolveDisplayName(profile, user, 'Guest')
   const initials =
-    (fullName ?? user?.email ?? '?')
-      .split(/\s+|@/)[0]
+    displayName
+      .split(/\s+/)
+      .map((w) => w[0])
+      .filter(Boolean)
       .slice(0, 2)
+      .join('')
       .toUpperCase() || '?'
   const tierColor: Record<string, { bg: string; text: string }> = {
     free:    { bg: '#1f1f1f', text: '#888' },

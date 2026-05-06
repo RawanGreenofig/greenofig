@@ -5,8 +5,6 @@ import Image from 'next/image'
 import { useTranslations } from 'next-intl'
 import { ArrowRight } from 'lucide-react'
 import { heroFrames } from '@/lib/tokens'
-import { Wordmark } from '@/components/Wordmark'
-import { Link } from '@/i18n/navigation'
 import { FrameCanvas, type FrameCanvasHandle } from './FrameCanvas'
 import { WordReveal } from './WordReveal'
 import { useScrollFrames } from './useScrollFrames'
@@ -160,14 +158,6 @@ export function HeroSequence() {
         className="relative h-screen w-full overflow-hidden"
         aria-label="Hero — Nourish Better."
       >
-        {/* Always-visible wordmark, top-start corner */}
-        <Link
-          href="/"
-          aria-label="Greenofig"
-          className="absolute top-6 start-8 z-[5]"
-        >
-          <Wordmark size="md" />
-        </Link>
         {/* Static <img> fallback for reduced-motion / low-CPU devices */}
         {staticMode && (
           <Image

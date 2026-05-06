@@ -19,6 +19,7 @@ import { Link } from '@/i18n/navigation'
 import { useUser } from '@/lib/hooks/useUser'
 import { NUTRITIONIST } from '@/lib/tokens'
 import { useSupabaseQuery } from '@/lib/hooks/useSupabaseQuery'
+import { resolveFirstName } from '@/lib/displayName'
 
 interface TodayQueryResult {
   todayLogs: { calories: number | null; protein_g: number | null; carbs_g: number | null; fat_g: number | null }[]
@@ -30,19 +31,7 @@ export default function DashboardTodayPage() {
   const t = useTranslations('dashboard')
   const tCommon = useTranslations('common')
   const { user, profile } = useUser()
-  // Cascade through every place a name might live before falling back to
-  // the localized "guest" label. profiles.full_name → Google metadata →
-  // local-part of the email address.
-  const metaFullName =
-    typeof user?.user_metadata?.full_name === 'string'
-      ? (user.user_metadata.full_name as string)
-      : null
-  const emailLocal = user?.email?.split('@')[0]?.replace(/[._]/g, ' ')
-  const firstName =
-    profile?.full_name?.trim().split(' ')[0] ||
-    metaFullName?.trim().split(' ')[0] ||
-    emailLocal?.trim().split(' ')[0] ||
-    t('guest')
+  const firstName = resolveFirstName(profile, user, t('guest'))
   const greetingKey = pickGreeting()
   const today = new Date().toLocaleDateString(undefined, {
     weekday: 'long',
@@ -139,12 +128,8 @@ export default function DashboardTodayPage() {
     fat:     { current: Math.round(totals.fat),     target: targets.fat },
   }
 
-  // Capitalize the first letter of the user's first name regardless of how
-  // it was stored ("ahmed" → "Ahmed"). Skip if empty / placeholder.
-  const displayFirstName =
-    firstName && firstName !== t('guest')
-      ? firstName.charAt(0).toUpperCase() + firstName.slice(1).toLowerCase()
-      : firstName
+  // resolveFirstName already strips digits and capitalizes — use it directly.
+  const displayFirstName = firstName
 
   return (
     <div className="px-4 md:px-8 py-6 md:py-8 max-w-screen-xl mx-auto space-y-8">
@@ -249,9 +234,9 @@ function KpiCard({
   return (
     <article
       className="rounded-2xl p-5 transition-colors"
-      style={{ background: '#1a1a1a', border: '1px solid #2a2a2a' }}
-      onMouseEnter={(e) => (e.currentTarget.style.borderColor = '#4ade80')}
-      onMouseLeave={(e) => (e.currentTarget.style.borderColor = '#2a2a2a')}
+      style={{ background: '#111', border: '1px solid #1a1a1a' }}
+      onMouseEnter={(e) => (e.currentTarget.style.borderColor = '#2a2a2a')}
+      onMouseLeave={(e) => (e.currentTarget.style.borderColor = '#1a1a1a')}
     >
       <div className="flex items-center gap-2.5 mb-3">
         <span
@@ -296,9 +281,9 @@ function StreakCard({
   return (
     <article
       className="rounded-2xl p-5 transition-colors"
-      style={{ background: '#1a1a1a', border: '1px solid #2a2a2a' }}
-      onMouseEnter={(e) => (e.currentTarget.style.borderColor = '#4ade80')}
-      onMouseLeave={(e) => (e.currentTarget.style.borderColor = '#2a2a2a')}
+      style={{ background: '#111', border: '1px solid #1a1a1a' }}
+      onMouseEnter={(e) => (e.currentTarget.style.borderColor = '#2a2a2a')}
+      onMouseLeave={(e) => (e.currentTarget.style.borderColor = '#1a1a1a')}
     >
       <div className="flex items-center gap-2.5 mb-3">
         <span
@@ -340,9 +325,9 @@ function BookingCard({
   return (
     <article
       className="rounded-2xl p-5 transition-colors"
-      style={{ background: '#1a1a1a', border: '1px solid #2a2a2a' }}
-      onMouseEnter={(e) => (e.currentTarget.style.borderColor = '#4ade80')}
-      onMouseLeave={(e) => (e.currentTarget.style.borderColor = '#2a2a2a')}
+      style={{ background: '#111', border: '1px solid #1a1a1a' }}
+      onMouseEnter={(e) => (e.currentTarget.style.borderColor = '#2a2a2a')}
+      onMouseLeave={(e) => (e.currentTarget.style.borderColor = '#1a1a1a')}
     >
       <div className="flex items-center gap-2.5 mb-3">
         <span
@@ -389,28 +374,26 @@ function QuickAction({
   Icon,
   label,
   href,
-  accent,
 }: {
   Icon: LucideIcon
   label: string
   href: string
+  /** kept in the type for backwards compat with callers; visual treatment
+   *  is now identical regardless of `accent` to keep the row uniform. */
   accent?: boolean
 }) {
   return (
     <Link
       href={href}
-      className="group flex items-center gap-3 rounded-2xl p-4 transition-colors shrink-0 min-w-[160px] sm:min-w-0"
-      style={{
-        background: '#1a1a1a',
-        border: `1px solid ${accent ? 'rgb(74 222 128 / 0.4)' : '#2a2a2a'}`,
-      }}
+      className="group flex items-center gap-3 rounded-xl p-4 transition-colors shrink-0 min-w-[160px] sm:min-w-0"
+      style={{ background: '#111', border: '1px solid #1a1a1a' }}
       onMouseEnter={(e) => {
-        e.currentTarget.style.background = '#222'
-        e.currentTarget.style.borderColor = '#4ade80'
+        e.currentTarget.style.background = '#161616'
+        e.currentTarget.style.borderColor = '#2a2a2a'
       }}
       onMouseLeave={(e) => {
-        e.currentTarget.style.background = '#1a1a1a'
-        e.currentTarget.style.borderColor = accent ? 'rgb(74 222 128 / 0.4)' : '#2a2a2a'
+        e.currentTarget.style.background = '#111'
+        e.currentTarget.style.borderColor = '#1a1a1a'
       }}
     >
       <span

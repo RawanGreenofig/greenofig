@@ -107,7 +107,7 @@ export function DashboardShell({
           className="flex-1 overflow-y-auto overscroll-contain pb-20 md:pb-0"
           // Custom cursor disabled in dashboards; let native cursor through
           data-cursor="ignore"
-          style={{ background: '#080808' }}
+          style={{ background: '#080808', scrollbarGutter: 'stable' }}
         >
           {children}
         </main>

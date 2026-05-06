@@ -7,6 +7,7 @@ import { Link } from '@/i18n/navigation'
 import { LanguageSwitcher } from '@/components/LanguageSwitcher'
 import { useAuth } from '@/context/AuthContext'
 import { cn } from '@/lib/cn'
+import { resolveDisplayName } from '@/lib/displayName'
 
 const TOPBAR_BG = '#0e0e0e'
 const TOPBAR_BORDER = '#1a1a1a'
@@ -17,9 +18,10 @@ export function Topbar({ onOpenMenu }: { onOpenMenu: () => void }) {
   const t = useTranslations('dashboard')
   const tNav = useTranslations('nav')
   const { user, profile, signOut } = useAuth()
+  const displayName = resolveDisplayName(profile, user, 'Guest')
   const initials =
-    (profile?.full_name ?? user?.email ?? '?')
-      .split(' ')
+    displayName
+      .split(/\s+/)
       .map((p) => p[0])
       .filter(Boolean)
       .slice(0, 2)
@@ -138,10 +140,25 @@ export function Topbar({ onOpenMenu }: { onOpenMenu: () => void }) {
           aria-expanded={open}
         >
           <span
-            className="w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 overflow-hidden select-none"
-            style={{ background: '#1a2e1f', color: '#4ade80', lineHeight: 1 }}
+            style={{
+              width: 32,
+              height: 32,
+              borderRadius: '50%',
+              background: '#1a2e1f',
+              color: '#4ade80',
+              fontSize: 11,
+              fontWeight: 700,
+              lineHeight: '32px',
+              textAlign: 'center',
+              flexShrink: 0,
+              overflow: 'hidden',
+              userSelect: 'none',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
           >
-            {initials.slice(0, 2)}
+            {initials.slice(0, 2).toUpperCase()}
           </span>
           <ChevronDown
             className={cn(
@@ -168,7 +185,7 @@ export function Topbar({ onOpenMenu }: { onOpenMenu: () => void }) {
               style={{ borderBottom: `1px solid ${TOPBAR_BORDER}` }}
             >
               <p className="text-sm font-medium" style={{ color: '#fff' }}>
-                {profile?.full_name?.trim() || tNav('dashboard')}
+                {displayName}
               </p>
               {user?.email && (
                 <p
