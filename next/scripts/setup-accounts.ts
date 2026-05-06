@@ -31,7 +31,9 @@ if (existsSync(envPath)) loadEnv({ path: envPath })
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL
 const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://greenofig.com'
-const RECOVERY_REDIRECT = `${APP_URL}/auth/callback`
+// `?next=/reset-password` lands the user on the password form right after
+// the code exchange — without it they'd hit /dashboard with a temp session.
+const RECOVERY_REDIRECT = `${APP_URL}/auth/callback?next=/reset-password`
 
 if (!SUPABASE_URL || !SERVICE_KEY) {
   console.error(

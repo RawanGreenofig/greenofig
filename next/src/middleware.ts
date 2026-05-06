@@ -98,5 +98,13 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: '/((?!api|_next|_vercel|.*\\..*).*)',
+  // Skip i18n + auth gate on:
+  //   /api/*       — Next.js API routes
+  //   /_next/*     — framework chunks
+  //   /_vercel/*   — Vercel runtime
+  //   /auth/*      — non-localized OAuth / recovery callback (must NOT be
+  //                  rewritten under /[locale]/, since Supabase only knows
+  //                  the canonical `${APP_URL}/auth/callback`)
+  //   anything with a dot — static files
+  matcher: '/((?!api|_next|_vercel|auth|.*\\..*).*)',
 }
