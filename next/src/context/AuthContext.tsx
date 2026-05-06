@@ -88,11 +88,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         void refresh()
       }
     }
+    const onFocus = () => {
+      void refresh()
+    }
     document.addEventListener('visibilitychange', onVisible)
+    window.addEventListener('focus', onFocus)
 
     return () => {
       sub.subscription.unsubscribe()
       document.removeEventListener('visibilitychange', onVisible)
+      window.removeEventListener('focus', onFocus)
     }
   }, [supabase, refresh, fetchProfile])
 

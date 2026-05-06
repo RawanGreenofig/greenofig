@@ -9,7 +9,9 @@
     "lint": "next lint",
     "seed:blog": "tsx scripts/seed-blog.ts",
     "setup:stripe": "tsx scripts/setup-stripe-products.ts",
-    "setup:accounts": "tsx scripts/setup-accounts.ts"
+    "setup:accounts": "tsx scripts/setup-accounts.ts",
+    "fix:subscriptions": "tsx scripts/fix-subscriptions.ts",
+    "webhook:listen": "stripe listen --forward-to localhost:3000/api/webhooks/stripe"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

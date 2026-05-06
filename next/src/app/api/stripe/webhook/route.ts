@@ -109,8 +109,25 @@ async function handleCheckoutCompleted(
   service: ServiceClient,
 ) {
   const meta = session.metadata ?? {}
-  const userId = meta.userId
-  if (!userId) return
+  // Primary: userId is on the session metadata (set by /api/stripe/checkout).
+  // Fallback: look the user up by email — covers sessions created without
+  // metadata (Stripe Payment Links, one-off dashboard sessions, etc.).
+  let userId = meta.userId
+  if (!userId) {
+    const email =
+      session.customer_email ?? session.customer_details?.email ?? null
+    if (email) {
+      const resolved = await resolveUserIdByEmail(service, email)
+      if (resolved) userId = resolved
+    }
+  }
+  if (!userId) {
+    console.error(
+      '[stripe webhook] checkout.session.completed: no userId or email match',
+      session.id,
+    )
+    return
+  }
 
   // Subscriptions: fully resolved via the customer.subscription.* events;
   // we just need to make sure the customer id is on file. Also mirror the
@@ -118,7 +135,41 @@ async function handleCheckoutCompleted(
   // they land back on the app — without waiting for customer.subscription.*
   // to land seconds later.
   if (meta.kind === 'subscription' && session.customer) {
-    const tier = (meta.tier as Tier) ?? 'free'
+    // Tier resolution priority: session metadata → line-item price id lookup.
+    // The lookup needs the line items expanded; fetch them lazily so we
+    // don't pay the round-trip when metadata is already authoritative.
+    let tier: Tier = (meta.tier as Tier) ?? 'free'
+    if (!meta.tier) {
+      const stripe = getStripe()
+      if (stripe) {
+        try {
+          const items = await stripe.checkout.sessions.listLineItems(
+            session.id,
+            { limit: 5 },
+          )
+          for (const item of items.data) {
+            const priceId = item.price?.id
+            if (!priceId) continue
+            const map: Record<string, Tier> = {
+              [process.env.STRIPE_PRICE_BASIC_MONTHLY ?? '']:   'basic',
+              [process.env.STRIPE_PRICE_BASIC_YEARLY ?? '']:    'basic',
+              [process.env.STRIPE_PRICE_PREMIUM_MONTHLY ?? '']: 'premium',
+              [process.env.STRIPE_PRICE_PREMIUM_YEARLY ?? '']:  'premium',
+              [process.env.STRIPE_PRICE_VIP_MONTHLY ?? '']:     'vip',
+              [process.env.STRIPE_PRICE_VIP_YEARLY ?? '']:      'vip',
+            }
+            const matched = map[priceId]
+            if (matched) {
+              tier = matched
+              break
+            }
+          }
+        } catch {
+          /* fall through to the default tier */
+        }
+      }
+    }
+
     await service
       .from('subscriptions')
       .upsert({
@@ -204,10 +255,36 @@ async function handleSubscriptionUpsert(
   sub: Stripe.Subscription,
   service: ServiceClient,
 ) {
-  const userId = sub.metadata?.userId
-  if (!userId) return
+  // Primary: userId on the subscription metadata (we set this on create).
+  // Fallback: pull the customer from Stripe and resolve their email →
+  // auth.users.id so manual / Stripe-dashboard-created subs still work.
+  let userId = sub.metadata?.userId
+  if (!userId) {
+    const customerId =
+      typeof sub.customer === 'string' ? sub.customer : sub.customer.id
+    const stripe = getStripe()
+    if (stripe) {
+      try {
+        const customer = await stripe.customers.retrieve(customerId)
+        const email = (customer as Stripe.Customer).email
+        if (email) {
+          const resolved = await resolveUserIdByEmail(service, email)
+          if (resolved) userId = resolved
+        }
+      } catch {
+        /* noop — fall through to the explicit error below */
+      }
+    }
+  }
+  if (!userId) {
+    console.error(
+      '[stripe webhook] subscription.* event: no userId resolved',
+      sub.id,
+    )
+    return
+  }
 
-  const tier = (sub.metadata?.tier as Tier) ?? 'basic'
+  const tier = (sub.metadata?.tier as Tier) ?? priceIdToTier(sub) ?? 'basic'
 
   await service
     .from('subscriptions')
@@ -299,6 +376,47 @@ async function handlePaymentIntentSucceeded(
   // Currently a no-op — checkout.session.completed already records orders.
   // Reserved for future flows (e.g. saved-card off-session charges for
   // recurring product top-ups).
+}
+
+/** Look up an internal user_id by email via the Supabase admin API.
+ *  Used as a fallback when a Stripe webhook fires for a session/sub that
+ *  was created without our `userId` metadata (e.g. via the Stripe
+ *  dashboard or a Payment Link). */
+async function resolveUserIdByEmail(
+  service: ServiceClient,
+  email: string,
+): Promise<string | null> {
+  // listUsers is paginated; in practice our user counts fit on page 1 with
+  // perPage=200. Walk a few pages defensively before giving up.
+  const lower = email.toLowerCase()
+  for (let page = 1; page < 10; page++) {
+    const { data, error } = await service.auth.admin.listUsers({
+      page,
+      perPage: 200,
+    })
+    if (error) return null
+    const hit = data.users.find((u) => u.email?.toLowerCase() === lower)
+    if (hit) return hit.id
+    if (data.users.length < 200) return null
+  }
+  return null
+}
+
+/** Map a subscription's price id back to a tier name by walking the env-
+ *  configured price ids. Used as a fallback when subscription metadata
+ *  doesn't carry the tier (manual subs created in the Stripe dashboard). */
+function priceIdToTier(sub: Stripe.Subscription): Tier | null {
+  const priceId = sub.items.data[0]?.price?.id
+  if (!priceId) return null
+  const map: Record<string, Tier> = {
+    [process.env.STRIPE_PRICE_BASIC_MONTHLY ?? '']:   'basic',
+    [process.env.STRIPE_PRICE_BASIC_YEARLY ?? '']:    'basic',
+    [process.env.STRIPE_PRICE_PREMIUM_MONTHLY ?? '']: 'premium',
+    [process.env.STRIPE_PRICE_PREMIUM_YEARLY ?? '']:  'premium',
+    [process.env.STRIPE_PRICE_VIP_MONTHLY ?? '']:     'vip',
+    [process.env.STRIPE_PRICE_VIP_YEARLY ?? '']:      'vip',
+  }
+  return map[priceId] ?? null
 }
 
 /** Period timestamps moved off the subscription onto the line item in
