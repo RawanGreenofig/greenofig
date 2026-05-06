@@ -33,6 +33,23 @@ interface CheckoutBody {
   items?: { productId: string; qty: number }[]
   couponCode?: string
   bookingId?: string
+  /** Optional caller-supplied destinations. Validated as same-origin. */
+  successUrl?: string
+  cancelUrl?: string
+}
+
+/** Only honor caller-supplied checkout return URLs when they live on the
+ *  same origin we're serving from — prevents the open-redirect smell. */
+function safeReturnUrl(candidate: string | undefined, fallback: string): string {
+  if (!candidate) return fallback
+  try {
+    const url = new URL(candidate)
+    const fb = new URL(fallback)
+    if (url.origin !== fb.origin) return fallback
+    return url.toString()
+  } catch {
+    return fallback
+  }
 }
 
 export const POST = withAuth(async (req: NextRequest, ctx: AuthedContext) => {
@@ -70,8 +87,14 @@ export const POST = withAuth(async (req: NextRequest, ctx: AuthedContext) => {
         mode: 'subscription',
         customer: stripeCustomerId,
         line_items: [{ price: priceId, quantity: 1 }],
-        success_url: `${baseUrl}/dashboard/settings?upgrade=success&tier=${tier}`,
-        cancel_url:  `${baseUrl}/pricing?upgrade=cancelled`,
+        success_url: safeReturnUrl(
+          body.successUrl,
+          `${baseUrl}/dashboard/settings?upgrade=success&tier=${tier}`,
+        ),
+        cancel_url: safeReturnUrl(
+          body.cancelUrl,
+          `${baseUrl}/pricing?upgrade=cancelled`,
+        ),
         metadata: {
           userId: ctx.userId,
           kind: 'subscription',
