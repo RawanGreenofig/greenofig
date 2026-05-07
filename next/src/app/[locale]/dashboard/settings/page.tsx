@@ -20,7 +20,6 @@ import {
   AlertTriangle,
   LogOut,
   KeyRound,
-  Languages,
   Trash2,
   ArrowRight,
   Eye,
@@ -30,7 +29,9 @@ import { useUser } from '@/lib/hooks/useUser'
 import { useAuth } from '@/context/AuthContext'
 import { usePushNotifications } from '@/lib/hooks/usePushNotifications'
 import { getBrowserSupabase } from '@/lib/supabase/client'
-import { Link } from '@/i18n/navigation'
+import { Link, useRouter, usePathname } from '@/i18n/navigation'
+import { useLocale } from 'next-intl'
+import type { Locale } from '@/i18n/routing'
 import { resolveDisplayName } from '@/lib/displayName'
 
 type TabKey =
@@ -1509,7 +1510,19 @@ function AccountPane({
 }) {
   const [twoFa, setTwoFa] = useState(false)
   const [units, setUnits] = useState<'metric' | 'imperial'>('metric')
-  const [language, setLanguage] = useState<'en' | 'ar'>('en')
+  const locale = useLocale() as Locale
+  const router = useRouter()
+  const pathname = usePathname()
+  const switchLocale = (next: Locale) => {
+    if (next === locale) return
+    try {
+      window.localStorage.setItem('greenofig.locale', next)
+    } catch {
+      /* fine */
+    }
+    document.cookie = `NEXT_LOCALE=${next}; Path=/; Max-Age=${60 * 60 * 24 * 365}; SameSite=Lax`
+    router.replace(pathname, { locale: next })
+  }
   const [confirmDel, setConfirmDel] = useState(false)
   const [delEmail, setDelEmail] = useState('')
   const canDelete = delEmail.trim().toLowerCase() === email.toLowerCase()
@@ -1519,15 +1532,30 @@ function AccountPane({
       <Section title={t('account.sectionLanguage')}>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <Field label={t('account.language')}>
-            <SelectInput
-              value={language}
-              onChange={(v) => setLanguage(v as 'en' | 'ar')}
-              options={[
-                ['en', t('account.languageEn')],
-                ['ar', t('account.languageAr')],
-              ]}
-              leftIcon={Languages}
-            />
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => switchLocale('en')}
+                className={`px-4 py-2 rounded-full text-sm font-medium transition-all border ${
+                  locale === 'en'
+                    ? 'bg-primary/15 border-primary/40 text-primary'
+                    : 'glass-effect border-border text-fg-3'
+                }`}
+              >
+                {t('account.languageEn')}
+              </button>
+              <button
+                type="button"
+                onClick={() => switchLocale('ar')}
+                className={`px-4 py-2 rounded-full text-sm font-medium transition-all border ${
+                  locale === 'ar'
+                    ? 'bg-primary/15 border-primary/40 text-primary'
+                    : 'glass-effect border-border text-fg-3'
+                }`}
+              >
+                {t('account.languageAr')}
+              </button>
+            </div>
           </Field>
           <Field label={t('account.units')}>
             <SelectInput

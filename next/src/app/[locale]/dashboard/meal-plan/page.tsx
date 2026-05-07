@@ -382,7 +382,7 @@ function PlanView({ t }: { t: ReturnType<typeof useTranslations> }) {
             className="mt-1.5 font-display font-bold text-fg-1 tracking-tight"
             style={{ fontSize: 'clamp(28px, 4vw, 40px)', lineHeight: 1.1 }}
           >
-            {plan.title}
+            <span className="gradient-text">{plan.title}</span>
           </h1>
         </div>
         <Link
@@ -396,7 +396,7 @@ function PlanView({ t }: { t: ReturnType<typeof useTranslations> }) {
 
       {/* Adherence + day pager */}
       <section className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <article className="rounded-xl border border-border bg-surface p-4 md:p-5 md:col-span-1">
+        <article className="glass-effect rounded-xl p-4 md:p-5 md:col-span-1">
           <p className="text-xs uppercase tracking-eyebrow text-fg-3 font-semibold mb-2">
             {t('weekProgress')}
           </p>
@@ -419,7 +419,7 @@ function PlanView({ t }: { t: ReturnType<typeof useTranslations> }) {
           </div>
         </article>
 
-        <article className="rounded-xl border border-border bg-surface p-4 md:p-5 md:col-span-2">
+        <article className="glass-effect rounded-xl p-4 md:p-5 md:col-span-2">
           <div className="flex items-center justify-between gap-3 mb-3">
             <p className="text-xs uppercase tracking-eyebrow text-fg-3 font-semibold">
               {t('thisWeek')}
@@ -635,7 +635,7 @@ function DrFootnote({
 }) {
   void t
   return (
-    <article className="rounded-xl border border-border bg-surface p-5 flex items-center gap-4">
+    <article className="glass-effect rounded-xl p-5 flex items-center gap-4">
       <span
         className="w-11 h-11 rounded-full flex items-center justify-center font-display text-base font-bold"
         style={{

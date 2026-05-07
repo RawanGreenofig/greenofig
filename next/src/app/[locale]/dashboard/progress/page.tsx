@@ -13,6 +13,8 @@ import {
   Plus,
   Camera,
   Trophy,
+  Flame,
+  Star,
   X,
 } from '@/icons'
 import {
@@ -475,11 +477,56 @@ function AchievementsGrid({
 }: {
   t: ReturnType<typeof useTranslations>
 }) {
-  const items = [
-    { id: 'first_log',    title: t('ach_first_log'),    body: t('ach_first_log_body'),    earned: true,  tint: '#a3e635' },
-    { id: 'week_streak',  title: t('ach_week_streak'),  body: t('ach_week_streak_body'),  earned: false, tint: '#06b6d4' },
-    { id: 'first_kg',     title: t('ach_first_kg'),     body: t('ach_first_kg_body'),     earned: false, tint: '#e8912a' },
-    { id: 'consistent',   title: t('ach_consistent'),   body: t('ach_consistent_body'),   earned: false, tint: '#a855f7' },
+  const items: {
+    id: string
+    title: string
+    body: string
+    earned: boolean
+    Icon: typeof Trophy
+    color: string
+    bg: string
+    borderColor: string
+  }[] = [
+    {
+      id: 'first_log',
+      title: t('ach_first_log'),
+      body: t('ach_first_log_body'),
+      earned: true,
+      Icon: Trophy,
+      color: '#fbbf24',
+      bg: 'rgba(251,191,36,0.12)',
+      borderColor: 'rgba(251,191,36,0.2)',
+    },
+    {
+      id: 'week_streak',
+      title: t('ach_week_streak'),
+      body: t('ach_week_streak_body'),
+      earned: false,
+      Icon: Flame,
+      color: '#fb923c',
+      bg: 'rgba(251,146,60,0.12)',
+      borderColor: 'rgba(251,146,60,0.2)',
+    },
+    {
+      id: 'first_kg',
+      title: t('ach_first_kg'),
+      body: t('ach_first_kg_body'),
+      earned: false,
+      Icon: Scale,
+      color: '#60a5fa',
+      bg: 'rgba(96,165,250,0.12)',
+      borderColor: 'rgba(96,165,250,0.2)',
+    },
+    {
+      id: 'consistent',
+      title: t('ach_consistent'),
+      body: t('ach_consistent_body'),
+      earned: false,
+      Icon: Star,
+      color: '#fbbf24',
+      bg: 'rgba(251,191,36,0.12)',
+      borderColor: 'rgba(251,191,36,0.2)',
+    },
   ]
 
   return (
@@ -496,22 +543,21 @@ function AchievementsGrid({
             }`}
           >
             <div
-              className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0"
+              className="flex items-center justify-center flex-shrink-0"
               style={{
-                background: item.earned
-                  ? 'rgba(251,191,36,0.12)'
-                  : 'var(--gf-bg-deeper)',
+                width: 44,
+                height: 44,
+                borderRadius: 10,
+                background: item.earned ? item.bg : 'var(--gf-bg-deeper)',
                 border: item.earned
-                  ? '1px solid rgba(251,191,36,0.2)'
+                  ? `1px solid ${item.borderColor}`
                   : '1px solid var(--gf-border)',
               }}
             >
-              <Trophy
-                className="w-6 h-6"
+              <item.Icon
+                className="w-5 h-5"
                 strokeWidth={1.75}
-                style={{
-                  color: item.earned ? '#fbbf24' : 'var(--gf-fg-3)',
-                }}
+                style={{ color: item.earned ? item.color : 'var(--gf-fg-3)' }}
               />
             </div>
             <div className="min-w-0 flex-1">

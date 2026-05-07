@@ -211,10 +211,10 @@ function Library({ t }: { t: ReturnType<typeof useTranslations> }) {
             key={c}
             type="button"
             onClick={() => setCategory(c)}
-            className={`shrink-0 rounded-pill h-9 px-4 text-xs font-semibold transition-colors ${
+            className={`shrink-0 px-4 py-2 rounded-full text-sm font-medium cursor-pointer transition-all border ${
               category === c
-                ? 'bg-primary/20 text-lime-400 border border-primary/40'
-                : 'bg-surface border border-border text-fg-2 hover:border-primary/40'
+                ? 'bg-primary/15 border-primary/40 text-primary'
+                : 'glass-effect border-border text-fg-3 hover:border-primary/30'
             }`}
           >
             {t(`categories.${c}` as 'categories.all')}
@@ -235,10 +235,10 @@ function Library({ t }: { t: ReturnType<typeof useTranslations> }) {
               key={tag}
               type="button"
               onClick={() => toggleTag(tag)}
-              className={`rounded-pill h-7 px-3 text-[11px] font-medium transition-colors ${
+              className={`rounded-full px-3 py-1 text-xs font-medium transition-all border ${
                 on
-                  ? 'bg-primary/20 text-lime-400 border border-primary/40'
-                  : 'bg-surface-raised border border-border text-fg-2 hover:border-primary/40'
+                  ? 'bg-primary/15 border-primary/40 text-primary'
+                  : 'glass-effect border-border text-fg-3 hover:border-primary/30'
               }`}
             >
               {t(`dietary.${tag}` as 'dietary.vegan')}

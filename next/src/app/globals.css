@@ -898,5 +898,8 @@
     overscroll-behavior-y: contain;
     height: 100dvh;
     position: relative;
+    /* Add room at the bottom so scroll content isn't clipped by the
+     * fixed mobile bottom nav (≈64-72px tall + safe-area inset). */
+    padding-bottom: calc(96px + env(safe-area-inset-bottom)) !important;
   }
 }

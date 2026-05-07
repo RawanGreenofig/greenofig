@@ -51,22 +51,22 @@ const USER_SECTIONS: SectionDef[] = [
   },
 ]
 
-/** Single-accent icon tint per the simplified palette — kept as a record
- * (instead of inlined) so individual routes can opt into a different
- * color in the future without redoing the render path. */
-const ICON_TINT: Record<string, string> = {
-  '/dashboard':           '#8b92b8',
-  '/dashboard/scanner':   '#4ade80',
-  '/dashboard/track':     '#8b92b8',
-  '/dashboard/progress':  '#8b92b8',
-  '/dashboard/meal-plan': '#4ade80',
-  '/dashboard/recipes':   '#8b92b8',
-  '/dashboard/community': '#8b92b8',
-  '/dashboard/messages':  '#8b92b8',
-  '/dashboard/store':     '#8b92b8',
-  '/dashboard/orders':    '#8b92b8',
-  '/dashboard/bookings':  '#8b92b8',
-  '/dashboard/settings':  '#8b92b8',
+/** Per-route icon tint + tile background. Each tile uses an
+ * rgba(...,0.15) shade of the matching colour so the icon reads
+ * against the sidebar surface without being a pure flat circle. */
+const ICON_TINT: Record<string, { color: string; bg: string }> = {
+  '/dashboard':           { color: '#a3e635', bg: 'rgba(132,204,22,0.15)' },
+  '/dashboard/scanner':   { color: '#a78bfa', bg: 'rgba(167,139,250,0.15)' },
+  '/dashboard/track':     { color: '#fbbf24', bg: 'rgba(251,191,36,0.15)' },
+  '/dashboard/progress':  { color: '#60a5fa', bg: 'rgba(96,165,250,0.15)' },
+  '/dashboard/meal-plan': { color: '#4ade80', bg: 'rgba(74,222,128,0.15)' },
+  '/dashboard/recipes':   { color: '#fb7185', bg: 'rgba(251,113,133,0.15)' },
+  '/dashboard/community': { color: '#a3e635', bg: 'rgba(132,204,22,0.15)' },
+  '/dashboard/messages':  { color: '#6366f1', bg: 'rgba(99,102,241,0.15)' },
+  '/dashboard/store':     { color: '#fbbf24', bg: 'rgba(251,191,36,0.15)' },
+  '/dashboard/orders':    { color: '#60a5fa', bg: 'rgba(96,165,250,0.15)' },
+  '/dashboard/bookings':  { color: '#4ade80', bg: 'rgba(74,222,128,0.15)' },
+  '/dashboard/settings':  { color: '#94a3b8', bg: 'rgba(148,163,184,0.15)' },
 }
 
 export function Sidebar({
@@ -152,7 +152,10 @@ export function Sidebar({
             )}
             {items.map(({ href, labelKey, Icon }) => {
               const active = isActive(href)
-              const tint = ICON_TINT[href] ?? '#8b92b8'
+              const tint = ICON_TINT[href] ?? {
+                color: '#94a3b8',
+                bg: 'rgba(148,163,184,0.15)',
+              }
               return (
                 <li key={href}>
                   <Link
@@ -183,15 +186,18 @@ export function Sidebar({
                     aria-current={active ? 'page' : undefined}
                   >
                     <span
-                      className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
+                      className="flex items-center justify-center flex-shrink-0"
                       style={{
-                        background: active ? 'rgba(132,204,22,0.15)' : `${tint}1a`,
+                        width: 28,
+                        height: 28,
+                        borderRadius: 8,
+                        background: active ? 'rgba(132,204,22,0.2)' : tint.bg,
                       }}
                     >
                       <Icon
-                        className="w-4 h-4"
-                        strokeWidth={active ? 2 : 1.75}
-                        style={{ color: active ? 'var(--gf-primary-text)' : tint }}
+                        size={14}
+                        strokeWidth={1.75}
+                        style={{ color: tint.color }}
                       />
                     </span>
                     <span className="flex-1 truncate text-[14px] leading-none">

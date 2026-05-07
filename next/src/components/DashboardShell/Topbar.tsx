@@ -110,22 +110,16 @@ export function Topbar({ onOpenMenu }: { onOpenMenu: () => void }) {
         href="/"
         aria-label={tNav('backToHome')}
         title={tNav('backToHome')}
-        className="inline-flex items-center justify-center w-10 h-10 rounded-full transition-colors"
+        className="inline-flex items-center justify-center transition-colors"
         style={{
-          background: FIELD_BG,
-          border: `1px solid ${FIELD_BORDER}`,
-          color: '#888',
-        }}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.color = '#4ade80'
-          e.currentTarget.style.borderColor = '#4ade80'
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.color = '#888'
-          e.currentTarget.style.borderColor = FIELD_BORDER
+          width: 32,
+          height: 32,
+          borderRadius: 8,
+          background: 'rgba(132,204,22,0.12)',
+          cursor: 'pointer',
         }}
       >
-        <Home className="w-4 h-4" strokeWidth={1.75} />
+        <Home className="w-4 h-4" strokeWidth={1.75} style={{ color: '#a3e635' }} />
       </Link>
 
       <LanguageSwitcher />
