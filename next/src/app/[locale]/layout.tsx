@@ -72,14 +72,19 @@ export const metadata: Metadata = {
     'Greenofig',
   ],
   // Next 13+ auto-detects src/app/favicon.ico, but be explicit so any
-  // CDN / browser doesn't fall back to a stale cached default.
+  // CDN / browser doesn't fall back to a stale cached default. The
+  // multi-size set in /public/logo/ (16, 32, apple, android 192/512)
+  // covers iOS home-screen and Android PWA install icons.
   icons: {
     icon: [
       { url: '/favicon.ico', sizes: 'any' },
-      { url: '/logo.png', type: 'image/png' },
+      { url: '/logo/favicon-32x32.png', sizes: '32x32', type: 'image/png' },
+      { url: '/logo/favicon-16x16.png', sizes: '16x16', type: 'image/png' },
+      { url: '/logo/android-chrome-192x192.png', sizes: '192x192', type: 'image/png' },
+      { url: '/logo/android-chrome-512x512.png', sizes: '512x512', type: 'image/png' },
     ],
     shortcut: '/favicon.ico',
-    apple: '/logo.png',
+    apple: '/apple-touch-icon.png',
   },
 }
 
