@@ -14,6 +14,7 @@
     "fix:roles": "tsx scripts/fix-roles.ts",
     "fix:nutritionist-email": "tsx scripts/fix-nutritionist-email.ts",
     "inspect:tier": "tsx scripts/inspect-tier.ts",
+    "test:push": "tsx scripts/test-push.ts",
     "set:nutritionist": "tsx scripts/set-nutritionist.ts",
     "webhook:listen": "stripe listen --forward-to localhost:3000/api/webhooks/stripe"
   },
