@@ -266,7 +266,7 @@ function KpiCard({
         borderInlineStartWidth: 3,
         borderInlineStartColor: accent,
       }}
-      onMouseEnter={(e) => (e.currentTarget.style.borderColor = '#363d60')}
+      onMouseEnter={(e) => (e.currentTarget.style.borderColor = 'var(--gf-border-hover)')}
       onMouseLeave={(e) =>
         (e.currentTarget.style.borderColor = 'var(--gf-border)')
       }
@@ -297,7 +297,7 @@ function KpiCard({
       </p>
       <div
         className="mt-3 h-1.5 rounded-pill overflow-hidden"
-        style={{ background: '#0d0f1a' }}
+        style={{ background: 'var(--gf-bg)' }}
       >
         <div
           className="h-full rounded-pill"
@@ -325,7 +325,7 @@ function StreakCard({
         borderInlineStartWidth: 3,
         borderInlineStartColor: accent,
       }}
-      onMouseEnter={(e) => (e.currentTarget.style.borderColor = '#363d60')}
+      onMouseEnter={(e) => (e.currentTarget.style.borderColor = 'var(--gf-border-hover)')}
       onMouseLeave={(e) =>
         (e.currentTarget.style.borderColor = 'var(--gf-border)')
       }
@@ -356,7 +356,7 @@ function StreakCard({
           <span
             key={i}
             className="h-1.5 flex-1 rounded-pill"
-            style={{ background: i < streak ? accent : '#0d0f1a' }}
+            style={{ background: i < streak ? accent : 'var(--gf-bg)' }}
           />
         ))}
       </div>
@@ -381,7 +381,7 @@ function BookingCard({
         borderInlineStartWidth: 3,
         borderInlineStartColor: accent,
       }}
-      onMouseEnter={(e) => (e.currentTarget.style.borderColor = '#363d60')}
+      onMouseEnter={(e) => (e.currentTarget.style.borderColor = 'var(--gf-border-hover)')}
       onMouseLeave={(e) =>
         (e.currentTarget.style.borderColor = 'var(--gf-border)')
       }
@@ -450,7 +450,7 @@ function QuickAction({
       }}
       onMouseEnter={(e) => {
         e.currentTarget.style.background = 'var(--gf-surface)'
-        e.currentTarget.style.borderColor = '#363d60'
+        e.currentTarget.style.borderColor = 'var(--gf-border-hover)'
       }}
       onMouseLeave={(e) => {
         e.currentTarget.style.background = 'var(--gf-surface-raised)'
@@ -459,7 +459,10 @@ function QuickAction({
     >
       <span
         className="rounded-xl p-2.5 flex items-center justify-center shrink-0"
-        style={{ background: 'rgb(74 222 128 / 0.10)', color: '#4ade80' }}
+        style={{
+          background: 'rgba(163, 230, 53, 0.10)',
+          color: '#a3e635',
+        }}
       >
         <Icon className="w-4 h-4" strokeWidth={1.75} />
       </span>

@@ -6,12 +6,13 @@ import { Link, usePathname } from '@/i18n/navigation'
 import { cn } from '@/lib/cn'
 import type { DashboardNavItem } from './nav'
 
-const NAV_BG = '#0e1124'
-const NAV_BORDER = '#252a45'
-const FAB_BG = '#4ade80'
-const FAB_BORDER = '#0d0f1a'
-const ACTIVE = '#60a5fa'
-const INACTIVE = '#4a5080'
+// All chrome reads from CSS vars so the bar tracks the dashboard
+// theme automatically. FAB stays a literal lime gradient — that's
+// the brand action color, not a theme token.
+const NAV_BG = 'var(--gf-surface)'
+const NAV_BORDER = 'var(--gf-border)'
+const ACTIVE = '#a3e635'
+const INACTIVE = 'var(--gf-fg-3)'
 
 export function MobileNav({
   tabs,
@@ -51,21 +52,24 @@ export function MobileNav({
           />
         ))}
 
-        {/* Center FAB — larger, ringed in the page bg so it floats */}
+        {/* Center FAB — lime gradient, ringed in the page bg so it
+         * lifts above the bar. Slightly raised with a soft glow. */}
         <Link
           href={fab.href}
           aria-label={t(fab.labelKey)}
-          className="relative -mt-6 inline-flex items-center justify-center rounded-full transition-transform active:scale-95"
+          className="relative inline-flex items-center justify-center rounded-full transition-transform active:scale-95"
           style={{
             width: 56,
             height: 56,
-            background: FAB_BG,
-            color: '#0d0f1a',
-            border: `4px solid ${FAB_BORDER}`,
-            boxShadow: '0 8px 24px rgb(74 222 128 / 0.25)',
+            marginTop: -20,
+            background:
+              'linear-gradient(to bottom, #a3e635, #65a30d)',
+            color: '#0a0f0a',
+            border: '3px solid var(--gf-bg)',
+            boxShadow: '0 4px 16px rgba(163, 230, 53, 0.4)',
           }}
         >
-          <FabIcon className="w-6 h-6" strokeWidth={2.25} />
+          <FabIcon className="w-6 h-6" strokeWidth={2.5} />
           <span className="sr-only">{t(fab.labelKey)}</span>
           <Plus aria-hidden className="hidden" />
         </Link>
@@ -97,15 +101,20 @@ function TabButton({
     <Link
       href={href}
       className={cn(
-        'flex flex-col items-center justify-center gap-1 flex-1 min-w-0 px-1 transition-colors',
+        'flex flex-col items-center justify-center flex-1 min-w-0 px-1 transition-colors',
       )}
       style={{
         color: active ? ACTIVE : INACTIVE,
         minHeight: 56,
+        gap: 4,
       }}
       aria-current={active ? 'page' : undefined}
     >
-      <Icon className="w-5 h-5" strokeWidth={active ? 2 : 1.75} />
+      <Icon
+        className="shrink-0"
+        strokeWidth={active ? 2 : 1.75}
+        size={22}
+      />
       <span className="text-[10px] font-medium leading-none truncate max-w-full">
         {t(labelKey)}
       </span>

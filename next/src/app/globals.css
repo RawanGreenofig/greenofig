@@ -195,61 +195,69 @@
  * so active sidebar items don't look saturated.
  * ──────────────────────────────────────────────────────────────── */
 [data-theme='dashboard'] {
-  /* Warmer indigo-tinted charcoal so the dashboard feels less cold.
-   * The marketing site stays on its forest-green theme — these vars
-   * only apply inside the [data-theme="dashboard"] subtree. */
-  --gf-bg: #0d0f1a;
-  --gf-bg-deeper: #080a14;
-  --gf-surface: #131629;
-  --gf-surface-raised: #181b2e;
-  --gf-border: #252a45;
-  --gf-fg-1: #ffffff;
-  --gf-fg-2: #8b92b8;
-  --gf-fg-3: #4a5080;
-  --gf-primary: #4ade80;
-  --gf-primary-hover: #86efac;
-  --gf-lime-400: #4ade80;
+  /* Charcoal-green tinted dark palette. The previous indigo-blue
+   * base (#131629 etc) clashed with the lime accent; this set warms
+   * the chrome so the lime sits naturally instead of fighting blue.
+   * The marketing site is unaffected — these vars only apply inside
+   * the [data-theme="dashboard"] subtree. */
+  --gf-bg:             #0a0f0a;
+  --gf-bg-deeper:      #060906;
+  --gf-surface:        #111811;
+  --gf-surface-raised: #161e16;
+  --gf-card-hover:     #1c261c;
+  --gf-border:         #223022;
+  --gf-border-hover:   #2e422e;
+  --gf-fg-1:           #f0f7f0;
+  --gf-fg-2:           #8faa8f;
+  --gf-fg-3:           #4a634a;
+  --gf-fg-4:           #2a3d2a;
+  --gf-input-bg:       #161e16;
+  --gf-primary:        #a3e635;
+  --gf-primary-hover:  #84cc16;
+  --gf-primary-bg:     rgba(163, 230, 53, 0.10);
+  --gf-lime-400:       #a3e635;
 
-  /* Per-card accent palette referenced by KPI cards, sidebar icons,
-   * and the rest of the dashboard chrome. */
-  --dash-accent-green:  #4ade80;
+  /* Per-card accent palette — kept as-is for KPI cards / sidebar
+   * tints / tier indicators. Tier colors (free/basic/premium/vip)
+   * also unchanged. */
+  --dash-accent-green:  #a3e635;
   --dash-accent-blue:   #60a5fa;
   --dash-accent-purple: #a78bfa;
   --dash-accent-orange: #fb923c;
   --dash-accent-teal:   #2dd4bf;
   --dash-accent-pink:   #f472b6;
 
-  background: #0d0f1a;
-  color: #ffffff;
+  background: #0a0f0a;
+  color: #f0f7f0;
 }
 
-/* Re-route Tailwind utilities to the warmer dashboard palette. Each color
- * utility from tailwind.config.ts that we use in dashboard chrome gets a
- * matching override here so existing sub-pages inherit the new theme. */
-[data-theme='dashboard'] .bg-bg            { background-color: #0d0f1a; }
-[data-theme='dashboard'] .bg-bg-deeper     { background-color: #080a14; }
-[data-theme='dashboard'] .bg-surface       { background-color: #131629; }
-[data-theme='dashboard'] .bg-surface-raised{ background-color: #181b2e; }
-[data-theme='dashboard'] .border-border    { border-color: #252a45; }
-[data-theme='dashboard'] .border-e         { border-inline-end-color: #252a45; }
-[data-theme='dashboard'] .border-s         { border-inline-start-color: #252a45; }
-[data-theme='dashboard'] .border-t         { border-top-color: #252a45; }
-[data-theme='dashboard'] .border-b         { border-bottom-color: #252a45; }
-[data-theme='dashboard'] .divide-border > :not([hidden]) ~ :not([hidden]) { border-color: #252a45; }
-[data-theme='dashboard'] .text-fg-1        { color: #ffffff; }
-[data-theme='dashboard'] .text-fg-2        { color: #8b92b8; }
-[data-theme='dashboard'] .text-fg-3        { color: #4a5080; }
-[data-theme='dashboard'] .text-lime-400    { color: #4ade80; }
-[data-theme='dashboard'] .text-lime-500    { color: #4ade80; }
-[data-theme='dashboard'] .text-primary     { color: #4ade80; }
-[data-theme='dashboard'] .bg-primary\/15   { background-color: rgb(74 222 128 / 0.10); }
-[data-theme='dashboard'] .bg-primary\/40   { background-color: rgb(74 222 128 / 0.30); }
-[data-theme='dashboard'] .border-primary   { border-color: #4ade80; }
-[data-theme='dashboard'] .border-primary\/40 { border-color: rgb(74 222 128 / 0.45); }
-[data-theme='dashboard'] .hover\:bg-surface-raised:hover { background-color: #1e2238; }
-[data-theme='dashboard'] .hover\:border-primary\/40:hover { border-color: rgb(74 222 128 / 0.55); }
-[data-theme='dashboard'] .hover\:border-primary:hover     { border-color: #4ade80; }
-[data-theme='dashboard'] .hover\:text-fg-1:hover { color: #ffffff; }
+/* Re-route Tailwind utilities to the charcoal-green palette. Each color
+ * utility from tailwind.config.ts used in dashboard chrome gets a
+ * matching override so existing sub-pages inherit the new theme. */
+[data-theme='dashboard'] .bg-bg            { background-color: #0a0f0a; }
+[data-theme='dashboard'] .bg-bg-deeper     { background-color: #060906; }
+[data-theme='dashboard'] .bg-surface       { background-color: #111811; }
+[data-theme='dashboard'] .bg-surface-raised{ background-color: #161e16; }
+[data-theme='dashboard'] .border-border    { border-color: #223022; }
+[data-theme='dashboard'] .border-e         { border-inline-end-color: #223022; }
+[data-theme='dashboard'] .border-s         { border-inline-start-color: #223022; }
+[data-theme='dashboard'] .border-t         { border-top-color: #223022; }
+[data-theme='dashboard'] .border-b         { border-bottom-color: #223022; }
+[data-theme='dashboard'] .divide-border > :not([hidden]) ~ :not([hidden]) { border-color: #223022; }
+[data-theme='dashboard'] .text-fg-1        { color: #f0f7f0; }
+[data-theme='dashboard'] .text-fg-2        { color: #8faa8f; }
+[data-theme='dashboard'] .text-fg-3        { color: #4a634a; }
+[data-theme='dashboard'] .text-lime-400    { color: #a3e635; }
+[data-theme='dashboard'] .text-lime-500    { color: #a3e635; }
+[data-theme='dashboard'] .text-primary     { color: #a3e635; }
+[data-theme='dashboard'] .bg-primary\/15   { background-color: rgb(163 230 53 / 0.10); }
+[data-theme='dashboard'] .bg-primary\/40   { background-color: rgb(163 230 53 / 0.30); }
+[data-theme='dashboard'] .border-primary   { border-color: #a3e635; }
+[data-theme='dashboard'] .border-primary\/40 { border-color: rgb(163 230 53 / 0.45); }
+[data-theme='dashboard'] .hover\:bg-surface-raised:hover { background-color: #1c261c; }
+[data-theme='dashboard'] .hover\:border-primary\/40:hover { border-color: rgb(163 230 53 / 0.55); }
+[data-theme='dashboard'] .hover\:border-primary:hover     { border-color: #a3e635; }
+[data-theme='dashboard'] .hover\:text-fg-1:hover { color: #f0f7f0; }
 
 /* Dashboard page titles use sans-serif consistently. The marketing-site
  * Fraunces serif made admin pages feel like marketing copy and clashed
@@ -330,14 +338,9 @@
   color: #0f172a;
 }
 
-/* Dark mode also gets the matching hover/input vars so component code
- * can reference --gf-card-hover / --gf-input-bg unconditionally. */
-[data-theme='dashboard'] {
-  --gf-card-hover: #1e2238;
-  --gf-border-hover: #363d60;
-  --gf-input-bg: #181b2e;
-  --gf-primary-bg: rgba(74, 222, 128, 0.10);
-}
+/* (Hover / input tokens already defined inside the main
+ * [data-theme='dashboard'] block above — kept here as a no-op
+ * comment so future grep for --gf-card-hover lands somewhere.) */
 
 /* Tailwind hover utilities on dashboard surfaces — flip to a light
  * card-hover token when the dashboard is in light mode. Otherwise the
@@ -474,11 +477,19 @@
   }
 }
 
-/* iOS / mobile scroll: native momentum + contained overscroll inside the
- * dashboard <main> so the body doesn't pull-to-refresh while scrolling. */
+/* iOS / mobile scroll. Two purposes:
+ *  1. Native momentum scrolling on the dashboard <main>.
+ *  2. Avoid the "scroll frozen after navigating" bug — body inherits
+ *     `overflow: hidden` from a closed modal etc. We force the
+ *     dashboard main to scroll regardless and pin it to 100dvh so
+ *     the keyboard / address-bar don't shrink the viewport mid-scroll. */
 @media (max-width: 768px) {
-  [data-theme='dashboard'] main {
-    -webkit-overflow-scrolling: touch;
-    overscroll-behavior: contain;
+  [data-theme='dashboard'] main,
+  .dashboard-main {
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    overscroll-behavior-y: contain;
+    height: 100dvh;
+    position: relative;
   }
 }

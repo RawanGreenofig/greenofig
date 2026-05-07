@@ -245,7 +245,7 @@ export function Sidebar({
               color: '#ffffff',
               fontSize: 12,
               fontWeight: 700,
-              lineHeight: '36px',
+              lineHeight: 1,
               textAlign: 'center',
               flexShrink: 0,
               overflow: 'hidden',

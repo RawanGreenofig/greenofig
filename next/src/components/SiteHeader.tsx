@@ -173,7 +173,7 @@ export function SiteHeader() {
                       color: '#4ade80',
                       fontSize: 11,
                       fontWeight: 700,
-                      lineHeight: '32px',
+                      lineHeight: 1,
                       textAlign: 'center',
                       flexShrink: 0,
                       overflow: 'hidden',

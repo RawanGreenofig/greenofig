@@ -121,10 +121,14 @@ export function DashboardShell({
       <div className="flex-1 flex flex-col overflow-hidden">
         <Topbar onOpenMenu={() => setDrawerOpen(true)} />
         <main
-          className="flex-1 overflow-y-auto overscroll-contain pb-20 md:pb-0"
+          className="dashboard-main flex-1 overflow-y-auto overscroll-contain pb-20 md:pb-0"
           // Custom cursor disabled in dashboards; let native cursor through
           data-cursor="ignore"
-          style={{ background: 'var(--gf-bg)', scrollbarGutter: 'stable' }}
+          style={{
+            background: 'var(--gf-bg)',
+            scrollbarGutter: 'stable',
+            WebkitOverflowScrolling: 'touch',
+          }}
         >
           {children}
         </main>

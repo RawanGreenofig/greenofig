@@ -40,6 +40,7 @@ interface DetectedFood {
   protein: number
   carbs: number
   fat: number
+  isIngredient?: boolean
 }
 
 interface ScannerResponse {
@@ -49,6 +50,8 @@ interface ScannerResponse {
   scanId?: string
   detected?: boolean
   reason?: string
+  type?: 'recipe' | 'meal' | 'single_item' | 'snack' | 'label'
+  totals?: { calories: number; protein: number; carbs: number; fat: number }
 }
 
 // Confidence scores below 70 are considered "no food detected" — the scanner
@@ -57,29 +60,49 @@ const FOOD_CONFIDENCE_THRESHOLD = 70
 
 const SYSTEM_PROMPT = `You are Dr. Rawan Othman's clinical food-scanner assistant.
 
-ONLY analyze actual food items in the photo. If the image does not clearly
-show food (e.g. a wall, floor, person, animal, random surface, blurry blank
-frame), you MUST return EXACTLY this JSON and nothing else:
-{ "detected": false, "reason": "No food detected" }
+The image may show ANY of:
+  - a single food item (apple, sandwich, salad)
+  - a full meal or plate
+  - a printed or written RECIPE (extract every listed ingredient)
+  - a menu item
+  - a packaged-food label
 
-Otherwise, identify the foods on the plate and return realistic nutrition
-estimates as JSON in this exact shape, no prose, no markdown:
+If the image clearly contains NO food at all (a wall, floor, person,
+animal, blank frame), respond with EXACTLY this JSON:
+  { "detected": false, "reason": "No food detected" }
+
+Otherwise return JSON in this shape — no prose, no markdown fences:
 {
   "detected": true,
+  "type": "recipe" | "meal" | "single_item" | "snack" | "label",
   "foods": [
-    { "name": string, "confidence": number 0..100, "servingLabel": string, "calories": number, "protein": number, "carbs": number, "fat": number }
+    {
+      "name": string,
+      "confidence": number 0..100,
+      "servingLabel": string,
+      "calories": number,
+      "protein": number,
+      "carbs": number,
+      "fat": number,
+      "isIngredient"?: boolean
+    }
   ],
+  "totals"?: { "calories": number, "protein": number, "carbs": number, "fat": number },
   "drNote": string,
   "alternatives": [string]
 }
 
 Guidelines:
-- 1 to 5 foods, ranked by visual prominence
-- "confidence" is 0..100; only return foods with confidence >= 70
-- "servingLabel" should be human-readable ("120 g chicken breast", "1 medium banana")
-- Macros are per-serving and integers
-- "drNote" is one to two sentences in Dr. Rawan's clinical-but-warm voice (Mediterranean, evidence-led, no shame)
-- "alternatives" is 0-3 brief swap suggestions ("Swap white rice for quinoa for more protein and fiber")
+- For meals / single items: 1–5 entries ranked by visual prominence;
+  each entry's macros are per-serving integers.
+- For RECIPES: list EVERY ingredient as its own entry with
+  isIngredient=true and macros for the amount used in one serving.
+  Also fill "totals" with the sum across all ingredients (one serving).
+- "confidence" is 0..100; only return entries with confidence >= 70.
+- "servingLabel" is human-readable ("120 g chicken breast", "1 medium banana", "2 tbsp olive oil").
+- "drNote" is one to two sentences in Dr. Rawan's clinical-but-warm voice
+  (Mediterranean, evidence-led, no shame).
+- "alternatives" is 0–3 brief swap suggestions.
 - Do NOT guess or assume an item is food. If unsure, set detected=false.`
 
 export const POST = withAuth(async (req: NextRequest, ctx: AuthedContext) => {
@@ -205,10 +228,25 @@ export const POST = withAuth(async (req: NextRequest, ctx: AuthedContext) => {
     scanId = (row as { id?: string } | null)?.id
   }
 
+  // Recipe responses can carry an explicit `totals` (sum across all
+  // ingredients for one serving). Compute a fallback if the model
+  // didn't fill it in.
+  const computedTotals = analysis.foods.reduce(
+    (acc, f) => ({
+      calories: acc.calories + (f.calories ?? 0),
+      protein: acc.protein + (f.protein ?? 0),
+      carbs: acc.carbs + (f.carbs ?? 0),
+      fat: acc.fat + (f.fat ?? 0),
+    }),
+    { calories: 0, protein: 0, carbs: 0, fat: 0 },
+  )
+
   return json<ScannerResponse>({
     foods: analysis.foods,
     drNote: analysis.drNote ?? '',
     alternatives: analysis.alternatives ?? [],
     scanId,
+    type: analysis.type,
+    totals: analysis.totals ?? computedTotals,
   })
 })

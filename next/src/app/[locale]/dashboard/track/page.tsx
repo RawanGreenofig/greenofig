@@ -199,14 +199,34 @@ export default function TrackPage() {
   }
 
   const removeEntry = (meal: MealType, id: string) => {
-    const supabase = getBrowserSupabase()
-    if (supabase && userId && /^[0-9a-f-]{32,}$/i.test(id)) {
-      void supabase.from('nutrition_logs').delete().eq('id', id)
-    }
+    // Optimistic update — drop the entry from local state immediately
+    // so the UI doesn't wait on the network round-trip. We restore
+    // only if the server-side delete fails (RLS, network, etc.).
+    const previous = entries[meal]
     setEntries((prev) => ({
       ...prev,
       [meal]: prev[meal].filter((e) => e.id !== id),
     }))
+
+    const supabase = getBrowserSupabase()
+    const isPersistedId = /^[0-9a-f-]{32,}$/i.test(id)
+    if (!supabase || !userId || !isPersistedId) return
+
+    void (async () => {
+      const { error } = await supabase
+        .from('nutrition_logs')
+        .delete()
+        .eq('id', id)
+        .eq('user_id', userId)
+
+      if (error) {
+        console.error('[track] delete failed:', error.message)
+        // Restore the entry so the UI matches the canonical DB state.
+        setEntries((prev) => ({ ...prev, [meal]: previous }))
+      }
+      // No re-fetch on success — local state already reflects the
+      // canonical post-delete state.
+    })()
   }
 
   const isToday = isSameDay(date, new Date())
