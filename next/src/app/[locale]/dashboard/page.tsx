@@ -330,9 +330,6 @@ function KpiCard({
   unit,
 }: {
   Icon: LucideIcon
-  /** Kept for backwards compat with existing callers; the per-card
-   *  accent is no longer rendered as a left border. All KPI cards
-   *  share the lime accent for icons + progress bar. */
   accent?: string
   label: string
   current: number
@@ -341,53 +338,19 @@ function KpiCard({
 }) {
   const pct = target > 0 ? Math.min(100, Math.round((current / target) * 100)) : 0
   return (
-    <article
-      className="dash-card-lift"
-      style={{
-        background: 'var(--gf-card)',
-        border: '1px solid var(--gf-border)',
-        borderRadius: 16,
-        padding: 20,
-      }}
-    >
-      <div
-        style={{
-          width: 44,
-          height: 44,
-          borderRadius: 12,
-          background:
-            'linear-gradient(135deg, rgb(163 230 53 / 0.22), rgb(132 204 22 / 0.10))',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          marginBottom: 14,
-          boxShadow: '0 4px 12px rgb(132 204 22 / 0.12)',
-        }}
-      >
-        <Icon size={20} strokeWidth={1.75} color="var(--gf-primary-text)" />
+    <article className="glass-effect rounded-xl p-4 sm:p-6 h-full">
+      <div className="flex flex-row items-center justify-between space-y-0 pb-2">
+        <p className="text-xs sm:text-sm font-medium text-fg-1">{label}</p>
+        <Icon
+          className="h-4 w-4 sm:h-5 sm:w-5 text-fg-3"
+          strokeWidth={1.75}
+        />
       </div>
-      <p
-        className="text-[11px] uppercase font-medium"
-        style={{
-          color: 'var(--gf-fg-3)',
-          letterSpacing: '0.08em',
-          marginBottom: 6,
-        }}
-      >
-        {label}
-      </p>
-      <p
-        className="font-mono"
-        style={{ color: 'var(--gf-fg-1)', fontSize: 28, fontWeight: 700 }}
-        dir="ltr"
-      >
+      <div className="text-xl sm:text-2xl lg:text-3xl font-bold text-fg-1" dir="ltr">
         {current.toLocaleString()}
-        <span
-          className="ms-1.5 font-normal"
-          style={{ color: 'var(--gf-fg-3)', fontSize: 14 }}
-        >
-          / {target.toLocaleString()} {unit}
-        </span>
+      </div>
+      <p className="text-xs text-fg-3 mt-1" dir="ltr">
+        / {target.toLocaleString()} {unit}
       </p>
       <div
         className="mt-3 h-1.5 rounded-pill overflow-hidden"
@@ -410,48 +373,19 @@ function StreakCard({
   t: ReturnType<typeof useTranslations>
 }) {
   return (
-    <article
-      className="dash-card-lift"
-      style={{
-        background: 'var(--gf-card)',
-        border: '1px solid var(--gf-border)',
-        borderRadius: 16,
-        padding: 20,
-      }}
-    >
-      <div
-        style={{
-          width: 44,
-          height: 44,
-          borderRadius: 12,
-          background:
-            'linear-gradient(135deg, rgb(251 191 36 / 0.22), rgb(245 158 11 / 0.10))',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          marginBottom: 14,
-          boxShadow: '0 4px 12px rgb(251 191 36 / 0.12)',
-        }}
-      >
-        <Sparkles size={20} strokeWidth={1.75} color="#fbbf24" />
+    <article className="glass-effect rounded-xl p-4 sm:p-6 h-full">
+      <div className="flex flex-row items-center justify-between space-y-0 pb-2">
+        <p className="text-xs sm:text-sm font-medium text-fg-1">
+          {t('kpiStreak')}
+        </p>
+        <Sparkles
+          className="h-4 w-4 sm:h-5 sm:w-5 text-yellow-500"
+          strokeWidth={1.75}
+        />
       </div>
-      <p
-        className="text-[11px] uppercase font-medium"
-        style={{
-          color: 'var(--gf-fg-3)',
-          letterSpacing: '0.08em',
-          marginBottom: 6,
-        }}
-      >
-        {t('kpiStreak')}
-      </p>
-      <p
-        className="font-mono"
-        style={{ color: 'var(--gf-fg-1)', fontSize: 28, fontWeight: 700 }}
-        dir="ltr"
-      >
+      <div className="text-xl sm:text-2xl lg:text-3xl font-bold text-fg-1" dir="ltr">
         {t('streakDays', { count: streak })}
-      </p>
+      </div>
       <div className="mt-3 flex gap-1">
         {Array.from({ length: 7 }).map((_, i) => (
           <span
@@ -475,41 +409,16 @@ function BookingCard({
   booking: { whenLabel: string; type: string } | null
 }) {
   return (
-    <article
-      className="dash-card-lift"
-      style={{
-        background: 'var(--gf-card)',
-        border: '1px solid var(--gf-border)',
-        borderRadius: 16,
-        padding: 20,
-      }}
-    >
-      <div
-        style={{
-          width: 44,
-          height: 44,
-          borderRadius: 12,
-          background:
-            'linear-gradient(135deg, rgb(96 165 250 / 0.22), rgb(59 130 246 / 0.10))',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          marginBottom: 14,
-          boxShadow: '0 4px 12px rgb(96 165 250 / 0.12)',
-        }}
-      >
-        <Calendar size={20} strokeWidth={1.75} color="#60a5fa" />
+    <article className="glass-effect rounded-xl p-4 sm:p-6 h-full">
+      <div className="flex flex-row items-center justify-between space-y-0 pb-2">
+        <p className="text-xs sm:text-sm font-medium text-fg-1">
+          {t('kpiNextBooking')}
+        </p>
+        <Calendar
+          className="h-4 w-4 sm:h-5 sm:w-5 text-fg-3"
+          strokeWidth={1.75}
+        />
       </div>
-      <p
-        className="text-[11px] uppercase font-medium"
-        style={{
-          color: 'var(--gf-fg-3)',
-          letterSpacing: '0.08em',
-          marginBottom: 6,
-        }}
-      >
-        {t('kpiNextBooking')}
-      </p>
       {booking ? (
         <>
           <p
@@ -555,13 +464,11 @@ function QuickAction({
   return (
     <Link
       href={href}
-      className="glass-effect rounded-2xl h-20 flex items-center gap-4 px-5 cursor-pointer relative overflow-hidden group transition-all hover:-translate-y-1 hover:border-primary/30 shrink-0 min-w-[160px] sm:min-w-0"
+      className="glass-effect rounded-xl h-24 flex flex-col items-center justify-center gap-2 cursor-pointer relative overflow-hidden group transition-all hover:-translate-y-1 hover:border-primary/30 shrink-0 min-w-[140px] sm:min-w-0"
     >
-      <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-primary/10 opacity-0 group-hover:opacity-100 transition-opacity" />
-      <Icon className="w-6 h-6 text-primary relative" strokeWidth={1.75} />
-      <span className="text-sm font-medium whitespace-nowrap relative">
-        {label}
-      </span>
+      <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-green-400/10 opacity-0 group-hover:opacity-100 transition-opacity" />
+      <Icon className="h-6 w-6 text-primary relative" strokeWidth={1.75} />
+      <span className="text-sm font-medium relative">{label}</span>
     </Link>
   )
 }

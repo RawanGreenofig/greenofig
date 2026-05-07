@@ -185,21 +185,13 @@ export function Sidebar({
                     }}
                     aria-current={active ? 'page' : undefined}
                   >
-                    <span
-                      className="flex items-center justify-center flex-shrink-0"
+                    <Icon
+                      className="w-5 h-5 flex-shrink-0"
+                      strokeWidth={1.75}
                       style={{
-                        width: 28,
-                        height: 28,
-                        borderRadius: 8,
-                        background: active ? 'rgba(132,204,22,0.2)' : tint.bg,
+                        color: active ? 'var(--gf-primary-text)' : tint.color,
                       }}
-                    >
-                      <Icon
-                        size={14}
-                        strokeWidth={1.75}
-                        style={{ color: tint.color }}
-                      />
-                    </span>
+                    />
                     <span className="flex-1 truncate text-[14px] leading-none">
                       {t(labelKey)}
                     </span>
