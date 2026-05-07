@@ -2,6 +2,7 @@
 
 
 import { motion } from 'framer-motion'
+import toast from 'react-hot-toast'
 import { Suspense, useEffect, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { useTranslations } from 'next-intl'
@@ -1157,12 +1158,19 @@ function SubscriptionPane({
                     const res = await fetch('/api/stripe/portal', {
                       method: 'POST',
                     })
-                    if (res.ok) {
-                      const { url } = (await res.json()) as { url: string }
-                      if (url) window.location.href = url
+                    const data = (await res.json()) as {
+                      url?: string
+                      error?: string
+                    }
+                    if (res.ok && data.url) {
+                      window.location.href = data.url
+                    } else {
+                      toast.error(
+                        data.error ?? 'Could not open billing portal',
+                      )
                     }
                   } catch {
-                    /* noop */
+                    toast.error('Network error — please try again')
                   }
                 }}
                 className="btn-secondary"
@@ -1213,12 +1221,23 @@ function SubscriptionPane({
               <button
                 type="button"
                 onClick={async () => {
-                  const res = await fetch('/api/stripe/portal', {
-                    method: 'POST',
-                  })
-                  if (res.ok) {
-                    const { url } = (await res.json()) as { url: string }
-                    if (url) window.location.href = url
+                  try {
+                    const res = await fetch('/api/stripe/portal', {
+                      method: 'POST',
+                    })
+                    const data = (await res.json()) as {
+                      url?: string
+                      error?: string
+                    }
+                    if (res.ok && data.url) {
+                      window.location.href = data.url
+                    } else {
+                      toast.error(
+                        data.error ?? 'Could not open billing portal',
+                      )
+                    }
+                  } catch {
+                    toast.error('Network error — please try again')
                   }
                 }}
                 className="btn-secondary"
@@ -1481,12 +1500,17 @@ function SubscriptionPane({
             setConfirmCancel(false)
             try {
               const res = await fetch('/api/stripe/portal', { method: 'POST' })
-              if (res.ok) {
-                const { url } = (await res.json()) as { url: string }
-                if (url) window.location.href = url
+              const data = (await res.json()) as {
+                url?: string
+                error?: string
+              }
+              if (res.ok && data.url) {
+                window.location.href = data.url
+              } else {
+                toast.error(data.error ?? 'Could not open billing portal')
               }
             } catch {
-              /* ignore — user can retry from the same button */
+              toast.error('Network error — please try again')
             }
           }}
         />

@@ -108,7 +108,22 @@
 
 /* RTL — Arabic locale switches font family and mirrors directional layout */
 [dir='rtl'] {
-  font-family: var(--font-arabic);
+  font-family: var(--font-arabic), 'Noto Sans Arabic', 'IBM Plex Sans Arabic',
+    system-ui, sans-serif;
+  line-height: 1.7;
+}
+html[dir='rtl'] body {
+  font-family: var(--font-arabic), 'Noto Sans Arabic', 'IBM Plex Sans Arabic',
+    system-ui, sans-serif;
+  line-height: 1.7;
+}
+/* Flip directional control icons under RTL — chevrons, arrows,
+ * back buttons. Don't flip logos, photos, charts, or numerals. */
+html[dir='rtl'] .lucide-chevron-left,
+html[dir='rtl'] .lucide-chevron-right,
+html[dir='rtl'] .lucide-arrow-left,
+html[dir='rtl'] .lucide-arrow-right {
+  transform: scaleX(-1);
 }
 
 [dir='rtl'] h1,
