@@ -110,16 +110,9 @@ export function Topbar({ onOpenMenu }: { onOpenMenu: () => void }) {
         href="/"
         aria-label={tNav('backToHome')}
         title={tNav('backToHome')}
-        className="inline-flex items-center justify-center transition-colors"
-        style={{
-          width: 32,
-          height: 32,
-          borderRadius: 8,
-          background: 'rgba(132,204,22,0.12)',
-          cursor: 'pointer',
-        }}
+        className="inline-flex items-center justify-center p-2 transition-colors hover:opacity-80"
       >
-        <Home className="w-4 h-4" strokeWidth={1.75} style={{ color: '#a3e635' }} />
+        <Home className="w-5 h-5 text-muted-foreground" strokeWidth={1.75} />
       </Link>
 
       <LanguageSwitcher />
@@ -386,7 +379,7 @@ function NotificationBell({ label }: { label: string }) {
           (e.currentTarget.style.color = 'var(--gf-fg-2)')
         }
       >
-        <Bell className="w-[22px] h-[22px]" strokeWidth={1.75} />
+        <Bell className="w-5 h-5 text-muted-foreground" strokeWidth={1.75} />
         {unreadCount > 0 && (
           <span
             aria-label={`${unreadCount} unread`}

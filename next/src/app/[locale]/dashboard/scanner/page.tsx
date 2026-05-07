@@ -294,7 +294,7 @@ function QuotaPill({
           color: '#a3e635',
         }}
       >
-        <Sparkles className="w-4 h-4" strokeWidth={2} />
+        <Sparkles className="h-4 w-4 text-yellow-500" strokeWidth={2} />
         {unlimitedLabel}
       </span>
     )
@@ -346,10 +346,8 @@ function DropZone({
         onDragLeave={onDragLeave}
         onDragOver={onDragOver}
         onDrop={onDrop}
-        className={`relative flex flex-col items-center justify-center min-h-[280px] md:min-h-[360px] rounded-xl border-2 border-dashed transition-colors duration-fast cursor-pointer ${
-          dragOver
-            ? 'border-lime-400 bg-primary/10'
-            : 'border-border bg-surface hover:border-primary/60'
+        className={`glass-effect relative flex flex-col items-center justify-center min-h-[280px] md:min-h-[360px] rounded-xl border-2 border-dashed transition-colors duration-fast cursor-pointer ${
+          dragOver ? 'border-lime-400' : 'hover:border-primary/60'
         }`}
       >
         <input
@@ -369,17 +367,7 @@ function DropZone({
         />
 
         <div className="flex flex-col items-center gap-4 py-2">
-          <div
-            className="w-20 h-20 rounded-2xl flex items-center justify-center"
-            style={{
-              background:
-                'linear-gradient(135deg, rgba(132,204,22,0.2), rgba(132,204,22,0.08))',
-              border: '1px solid rgba(132,204,22,0.3)',
-              boxShadow: '0 8px 32px rgba(132,204,22,0.15)',
-            }}
-          >
-            <Camera className="w-9 h-9 text-primary" strokeWidth={1.5} />
-          </div>
+          <Camera className="h-8 w-8 text-purple-500" strokeWidth={1.75} />
           <div className="text-center">
             <p className="text-base font-semibold mb-1 text-fg-1">
               {t('dropHere')}{' '}

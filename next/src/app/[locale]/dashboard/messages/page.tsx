@@ -662,17 +662,20 @@ function Bubble({ msg }: { msg: Msg }) {
     >
       {!msg.fromMe && <DrAvatar drName={NUTRITIONIST.name} small />}
       <div
-        className="max-w-[75%] md:max-w-[60%] px-4 py-2.5 text-sm leading-relaxed"
-        style={{
-          background: msg.fromMe
-            ? 'rgba(132,204,22,0.15)'
-            : 'var(--gf-card)',
-          color: 'var(--gf-fg-1)',
-          border: msg.fromMe
-            ? '1px solid rgba(132,204,22,0.2)'
-            : '1px solid var(--gf-border)',
-          borderRadius: msg.fromMe ? '16px 16px 4px 16px' : '16px 16px 16px 4px',
-        }}
+        className={
+          msg.fromMe
+            ? 'rounded-2xl px-4 py-3 max-w-[70%] ml-auto text-sm leading-relaxed'
+            : 'glass-effect rounded-2xl px-4 py-3 max-w-[70%] text-sm leading-relaxed'
+        }
+        style={
+          msg.fromMe
+            ? {
+                background: 'hsl(var(--primary) / 0.15)',
+                border: '1px solid hsl(var(--primary) / 0.2)',
+                color: 'var(--gf-fg-1)',
+              }
+            : { color: 'var(--gf-fg-1)' }
+        }
       >
         <p>{msg.body}</p>
         <div

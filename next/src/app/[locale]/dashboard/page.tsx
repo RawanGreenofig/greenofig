@@ -295,11 +295,41 @@ export default function DashboardTodayPage() {
         {/* Horizontal scroll on mobile, grid on sm+ */}
         <div className="-mx-4 px-4 sm:mx-0 sm:px-0 overflow-x-auto sm:overflow-visible">
           <div className="flex gap-3 sm:grid sm:grid-cols-3 lg:grid-cols-5 sm:gap-3 min-w-max sm:min-w-0">
-            <QuickAction Icon={Plus}     label={t('logMeal')}      href="/dashboard/track" />
-            <QuickAction Icon={Droplets} label={t('logWater')}     href="/dashboard/track" />
-            <QuickAction Icon={Camera}   label={t('scanFood')}     href="/dashboard/scanner" accent />
-            <QuickAction Icon={Scale}    label={t('logWeight')}    href="/dashboard/progress" />
-            <QuickAction Icon={Pill}     label={t('logSupplement')} href="/dashboard/track" />
+            <QuickAction
+              Icon={Plus}
+              label={t('logMeal')}
+              href="/dashboard/track"
+              gradient="from-primary/10 to-green-400/10"
+              iconColor="text-primary"
+            />
+            <QuickAction
+              Icon={Droplets}
+              label={t('logWater')}
+              href="/dashboard/track"
+              gradient="from-blue-500/10 to-cyan-500/10"
+              iconColor="text-blue-500"
+            />
+            <QuickAction
+              Icon={Camera}
+              label={t('scanFood')}
+              href="/dashboard/scanner"
+              gradient="from-purple-500/10 to-pink-500/10"
+              iconColor="text-purple-500"
+            />
+            <QuickAction
+              Icon={Scale}
+              label={t('logWeight')}
+              href="/dashboard/progress"
+              gradient="from-orange-500/10 to-red-500/10"
+              iconColor="text-orange-500"
+            />
+            <QuickAction
+              Icon={Pill}
+              label={t('logSupplement')}
+              href="/dashboard/track"
+              gradient="from-yellow-500/10 to-amber-500/10"
+              iconColor="text-yellow-500"
+            />
           </div>
         </div>
       </section>
@@ -453,12 +483,14 @@ function QuickAction({
   Icon,
   label,
   href,
+  gradient = 'from-primary/10 to-green-400/10',
+  iconColor = 'text-primary',
 }: {
   Icon: LucideIcon
   label: string
   href: string
-  /** kept in the type for backwards compat with callers; visual treatment
-   *  is now identical regardless of `accent` to keep the row uniform. */
+  gradient?: string
+  iconColor?: string
   accent?: boolean
 }) {
   return (
@@ -466,8 +498,10 @@ function QuickAction({
       href={href}
       className="glass-effect rounded-xl h-24 flex flex-col items-center justify-center gap-2 cursor-pointer relative overflow-hidden group transition-all hover:-translate-y-1 hover:border-primary/30 shrink-0 min-w-[140px] sm:min-w-0"
     >
-      <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-green-400/10 opacity-0 group-hover:opacity-100 transition-opacity" />
-      <Icon className="h-6 w-6 text-primary relative" strokeWidth={1.75} />
+      <div
+        className={`absolute inset-0 bg-gradient-to-br ${gradient} opacity-0 group-hover:opacity-100 transition-opacity`}
+      />
+      <Icon className={`h-6 w-6 ${iconColor} relative`} strokeWidth={1.75} />
       <span className="text-sm font-medium relative">{label}</span>
     </Link>
   )

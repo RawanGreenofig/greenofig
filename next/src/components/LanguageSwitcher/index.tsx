@@ -48,13 +48,10 @@ export function LanguageSwitcher({ className }: { className?: string }) {
     <div
       role="group"
       aria-label={t('switchTo', { language: '' }).trim() || 'Language'}
-      className={cn('inline-flex items-center', className)}
+      className={cn('inline-flex items-center rounded-full p-0.5', className)}
       style={{
-        background: 'rgba(255,255,255,0.08)',
-        border: '1px solid rgba(255,255,255,0.15)',
-        borderRadius: 999,
-        padding: 3,
-        gap: 0,
+        background: 'hsl(var(--secondary, 220 10% 25%))',
+        border: '1px solid hsl(var(--border, 220 10% 25%))',
         flexShrink: 0,
       }}
     >
@@ -69,28 +66,17 @@ export function LanguageSwitcher({ className }: { className?: string }) {
             aria-label={t('switchTo', {
               language: code === 'en' ? t('english') : t('arabic'),
             })}
-            className="font-semibold transition-colors duration-fast ease-out"
+            className="px-3 py-1 rounded-full text-xs font-bold transition-all"
             style={{
-              padding: '4px 14px',
-              borderRadius: 999,
               border: 'none',
               cursor: isActive ? 'default' : 'pointer',
-              fontSize: 13,
               background: isActive
-                ? 'rgba(255,255,255,0.18)'
+                ? 'hsl(var(--card, 220 15% 15%))'
                 : 'transparent',
-              color: isActive ? '#ffffff' : 'rgba(255,255,255,0.5)',
+              color: isActive
+                ? 'hsl(var(--foreground, 220 10% 95%))'
+                : 'hsl(var(--muted-foreground, 220 10% 65%))',
               userSelect: 'none',
-              position: 'relative',
-              zIndex: 1,
-            }}
-            onMouseEnter={(e) => {
-              if (!isActive)
-                e.currentTarget.style.color = 'rgba(255,255,255,0.8)'
-            }}
-            onMouseLeave={(e) => {
-              if (!isActive)
-                e.currentTarget.style.color = 'rgba(255,255,255,0.5)'
             }}
           >
             {LABELS[code]}
