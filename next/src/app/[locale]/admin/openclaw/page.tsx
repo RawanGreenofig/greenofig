@@ -158,22 +158,19 @@ export default function AdminOpenClawPage() {
       >
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="flex items-start gap-3 min-w-0">
-            <span
-              className="shrink-0 w-12 h-12 rounded-lg inline-flex items-center justify-center"
-              style={
-                status === 'connected'
-                  ? { background: 'rgb(61 122 74 / 0.18)', color: 'var(--gf-lime-400)' }
-                  : status === 'misconfigured'
-                    ? { background: 'rgb(244 63 94 / 0.14)', color: '#f43f5e' }
-                    : { background: 'rgb(232 145 42 / 0.18)', color: '#e8912a' }
-              }
-            >
-              {status === 'connected' ? (
-                <CheckCircle2 className="w-5 h-5" strokeWidth={1.75} />
-              ) : (
-                <AlertTriangle className="w-5 h-5" strokeWidth={1.75} />
-              )}
-            </span>
+            {status === 'connected' ? (
+              <CheckCircle2
+                className="w-6 h-6 text-primary flex-shrink-0"
+                strokeWidth={1.75}
+              />
+            ) : (
+              <AlertTriangle
+                className={`w-6 h-6 flex-shrink-0 ${
+                  status === 'misconfigured' ? 'text-rose-500' : 'text-yellow-500'
+                }`}
+                strokeWidth={1.75}
+              />
+            )}
             <div className="min-w-0">
               <p className="text-xs uppercase tracking-eyebrow text-fg-3 font-semibold">
                 Connection

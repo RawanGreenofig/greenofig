@@ -577,12 +577,10 @@ function DangerPane({
       </h2>
 
       <article className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-5 flex flex-wrap items-start gap-4">
-        <span
-          className="shrink-0 w-10 h-10 rounded-lg inline-flex items-center justify-center"
-          style={{ background: 'rgb(232 145 42 / 0.18)', color: '#e8912a' }}
-        >
-          <Ban className="w-4 h-4" strokeWidth={1.75} />
-        </span>
+        <Ban
+          className="w-6 h-6 text-yellow-500 flex-shrink-0"
+          strokeWidth={1.75}
+        />
         <div className="flex-1 min-w-[200px]">
           <p className="text-sm font-medium text-fg-1">
             {status === 'suspended'
@@ -605,12 +603,10 @@ function DangerPane({
       </article>
 
       <article className="rounded-xl border border-rose-500/30 bg-rose-500/5 p-5 flex flex-wrap items-start gap-4">
-        <span
-          className="shrink-0 w-10 h-10 rounded-lg inline-flex items-center justify-center"
-          style={{ background: 'rgb(244 63 94 / 0.14)', color: '#f43f5e' }}
-        >
-          <Trash2 className="w-4 h-4" strokeWidth={1.75} />
-        </span>
+        <Trash2
+          className="w-6 h-6 text-rose-500 flex-shrink-0"
+          strokeWidth={1.75}
+        />
         <div className="flex-1 min-w-[200px]">
           <p className="text-sm font-medium text-fg-1">
             {t('actions.deleteAccount')}

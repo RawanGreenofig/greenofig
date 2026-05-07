@@ -569,12 +569,10 @@ function ProductForm({
 
         <aside className="space-y-4">
           <article className="rounded-xl border border-border bg-surface p-5 flex items-start gap-4">
-            <span
-              className="shrink-0 w-10 h-10 rounded-lg flex items-center justify-center"
-              style={{ background: 'rgb(61 122 74 / 0.18)', color: 'var(--gf-lime-400)' }}
-            >
-              <Sparkles className="w-4 h-4" strokeWidth={1.75} />
-            </span>
+            <Sparkles
+              className="w-6 h-6 text-yellow-500 flex-shrink-0"
+              strokeWidth={1.75}
+            />
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium text-fg-1">{t('form.drPick')}</p>
             </div>
@@ -582,12 +580,10 @@ function ProductForm({
           </article>
 
           <article className="rounded-xl border border-border bg-surface p-5 flex items-start gap-4">
-            <span
-              className="shrink-0 w-10 h-10 rounded-lg flex items-center justify-center"
-              style={{ background: 'rgb(6 182 212 / 0.16)', color: '#06b6d4' }}
-            >
-              <Eye className="w-4 h-4" strokeWidth={1.75} />
-            </span>
+            <Eye
+              className="w-6 h-6 text-blue-500 flex-shrink-0"
+              strokeWidth={1.75}
+            />
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium text-fg-1">{t('form.visible')}</p>
             </div>

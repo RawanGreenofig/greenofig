@@ -528,9 +528,9 @@ function ResultPanel({
             type="button"
             onClick={onRescan}
             aria-label={t('rescan')}
-            className="absolute top-3 end-3 w-9 h-9 rounded-full bg-bg/70 backdrop-blur-sm border border-border text-fg-1 hover:bg-bg flex items-center justify-center"
+            className="absolute top-3 end-3 p-2 text-white"
           >
-            <X className="w-4 h-4" strokeWidth={1.75} />
+            <X className="w-5 h-5" strokeWidth={2} />
           </button>
         </div>
         <div className="p-4 border-t border-border">

@@ -377,12 +377,10 @@ function EmptyPrompt({
 }) {
   return (
     <div className="max-w-2xl mx-auto py-8 text-center">
-      <span
-        className="inline-flex w-14 h-14 rounded-full items-center justify-center mb-5"
-        style={{ background: 'rgb(61 122 74 / 0.18)', color: 'var(--gf-lime-400)' }}
-      >
-        <Microscope className="w-6 h-6" strokeWidth={1.75} />
-      </span>
+      <Microscope
+        className="w-8 h-8 text-primary mx-auto mb-5"
+        strokeWidth={1.75}
+      />
       <h2 className="font-display text-xl md:text-2xl font-bold text-fg-1 tracking-tight">
         {t('askPrompt.title')}
       </h2>

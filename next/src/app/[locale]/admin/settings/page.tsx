@@ -424,12 +424,10 @@ function LegalPane({ tS }: { tS: ReturnType<typeof useTranslations> }) {
           key={d.key}
           className="rounded-xl border border-border bg-surface p-5 flex flex-wrap items-center gap-4"
         >
-          <span
-            className="shrink-0 w-10 h-10 rounded-lg inline-flex items-center justify-center"
-            style={{ background: 'rgb(168 85 247 / 0.16)', color: '#a855f7' }}
-          >
-            <FileText className="w-4 h-4" strokeWidth={1.75} />
-          </span>
+          <FileText
+            className="w-6 h-6 text-purple-500 flex-shrink-0"
+            strokeWidth={1.75}
+          />
           <div className="flex-1 min-w-0">
             <p className="text-sm font-semibold text-fg-1">
               {tS(`legal.${d.key}` as 'legal.termsTitle')}

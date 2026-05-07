@@ -877,15 +877,16 @@ function BookingsPane({ t }: { t: ReturnType<typeof useTranslations> }) {
             key={b.id}
             className="flex items-center gap-4 px-5 py-3"
           >
-            <span
-              className="shrink-0 w-10 h-10 rounded-lg inline-flex items-center justify-center"
+            <CalIcon
+              className="w-6 h-6 flex-shrink-0"
+              strokeWidth={1.75}
               style={{
-                background: b.status === 'upcoming' ? 'rgb(61 122 74 / 0.18)' : 'var(--gf-bg-deeper)',
-                color: b.status === 'upcoming' ? 'var(--gf-lime-400)' : 'var(--gf-fg-3)',
+                color:
+                  b.status === 'upcoming'
+                    ? 'var(--gf-primary-text)'
+                    : 'var(--gf-fg-3)',
               }}
-            >
-              <CalIcon className="w-4 h-4" strokeWidth={1.75} />
-            </span>
+            />
             <div className="flex-1 min-w-0">
               <p className="text-sm font-semibold text-fg-1">{b.type}</p>
               <p className="text-xs text-fg-3 font-mono" dir="ltr">

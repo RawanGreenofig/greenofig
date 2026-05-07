@@ -206,12 +206,11 @@ export default function AdminDataExportPage() {
                 }`}
               >
                 <div className="flex items-center gap-3">
-                  <span
-                    className="shrink-0 w-10 h-10 rounded-lg flex items-center justify-center"
-                    style={{ background: `${BULK_TINT[kind]}1a`, color: BULK_TINT[kind] }}
-                  >
-                    <FileSpreadsheet className="w-4 h-4" strokeWidth={1.75} />
-                  </span>
+                  <FileSpreadsheet
+                    className="w-6 h-6 flex-shrink-0"
+                    strokeWidth={1.75}
+                    style={{ color: BULK_TINT[kind] }}
+                  />
                   <div className="min-w-0 flex-1">
                     <p className="text-sm font-semibold text-fg-1">
                       {tD(`bulkExports.${kind}` as 'bulkExports.users')}

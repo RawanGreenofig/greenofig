@@ -518,12 +518,11 @@ function QuickActions({
             href={item.href}
             className="group flex items-start gap-3 rounded-xl border border-border bg-surface p-4 hover:border-primary/40 transition-colors"
           >
-            <span
-              className="shrink-0 w-10 h-10 rounded-lg flex items-center justify-center"
-              style={{ background: `${item.tint}1a`, color: item.tint }}
-            >
-              <item.Icon className="w-4 h-4" strokeWidth={1.75} />
-            </span>
+            <item.Icon
+              className="w-6 h-6 flex-shrink-0"
+              strokeWidth={1.75}
+              style={{ color: item.tint }}
+            />
             <div className="min-w-0">
               <p className="text-sm font-semibold text-fg-1">{item.title}</p>
               <p className="mt-0.5 text-xs text-fg-3 leading-relaxed">
@@ -559,12 +558,10 @@ function OpenClawWidget() {
     >
       <header className="flex items-center justify-between gap-3 mb-4 flex-wrap">
         <div className="flex items-center gap-3">
-          <span
-            className="shrink-0 w-10 h-10 rounded-lg inline-flex items-center justify-center"
-            style={{ background: 'rgb(61 122 74 / 0.18)', color: 'var(--gf-lime-400)' }}
-          >
-            <Bot className="w-4 h-4" strokeWidth={1.75} />
-          </span>
+          <Bot
+            className="w-6 h-6 text-primary flex-shrink-0"
+            strokeWidth={1.75}
+          />
           <div>
             <h2 className="text-base font-semibold text-fg-1">
               Quick actions via WhatsApp

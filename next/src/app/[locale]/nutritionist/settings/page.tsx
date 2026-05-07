@@ -555,12 +555,11 @@ function SessionRow({
 }) {
   return (
     <div className="flex flex-wrap items-center gap-4">
-      <span
-        className="shrink-0 w-10 h-10 rounded-lg inline-flex items-center justify-center"
-        style={{ background: `${tint}1a`, color: tint }}
-      >
-        <Video className="w-4 h-4" strokeWidth={1.75} />
-      </span>
+      <Video
+        className="w-6 h-6 flex-shrink-0"
+        strokeWidth={1.75}
+        style={{ color: tint }}
+      />
       <p className="text-sm font-semibold text-fg-1 flex-1 min-w-0">{name}</p>
       <div className="flex items-center gap-2 ms-auto">
         <Field label={t('sessions.duration')} compact>

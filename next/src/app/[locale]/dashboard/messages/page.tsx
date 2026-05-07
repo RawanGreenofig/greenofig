@@ -638,14 +638,13 @@ function Thread() {
           type="submit"
           aria-label={t('send')}
           disabled={!draft.trim() || sending}
-          className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 transition-transform disabled:opacity-40 hover:-translate-y-px disabled:hover:translate-y-0"
-          style={{
-            background: 'linear-gradient(to bottom, #a3e635, #65a30d)',
-            border: 'none',
-            cursor: 'pointer',
-          }}
+          className="flex-shrink-0 p-2 transition-transform disabled:opacity-40 hover:-translate-y-px disabled:hover:translate-y-0"
+          style={{ background: 'transparent', border: 'none', cursor: 'pointer' }}
         >
-          <Send className="w-4 h-4 text-black rtl:-scale-x-100" strokeWidth={2.25} />
+          <Send
+            className="w-5 h-5 text-primary rtl:-scale-x-100"
+            strokeWidth={2}
+          />
         </button>
       </form>
     </motion.div>
@@ -708,13 +707,10 @@ function DrAvatar({ drName, small }: { drName: string; small?: boolean }) {
     .toUpperCase()
   return (
     <span
-      className={`shrink-0 rounded-full flex items-center justify-center font-bold ${
-        small ? 'w-7 h-7 text-[11px]' : 'w-10 h-10 text-sm'
+      className={`shrink-0 inline-flex items-center justify-center font-bold ${
+        small ? 'w-7 text-[11px]' : 'w-10 text-sm'
       }`}
-      style={{
-        background: 'linear-gradient(135deg, #4ade80, #60a5fa)',
-        color: '#fff',
-      }}
+      style={{ color: 'var(--gf-primary-text)' }}
     >
       {initials}
     </span>

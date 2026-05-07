@@ -160,19 +160,17 @@ export default function AdminStorePage() {
       >
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="flex items-start gap-3 min-w-0">
-            <span
-              className="shrink-0 w-12 h-12 rounded-lg inline-flex items-center justify-center"
-              style={{
-                background: live ? 'rgb(61 122 74 / 0.18)' : 'rgb(244 63 94 / 0.14)',
-                color: live ? 'var(--gf-lime-400)' : '#f43f5e',
-              }}
-            >
-              {live ? (
-                <ToggleRight className="w-5 h-5" strokeWidth={1.75} />
-              ) : (
-                <ToggleLeft className="w-5 h-5" strokeWidth={1.75} />
-              )}
-            </span>
+            {live ? (
+              <ToggleRight
+                className="w-7 h-7 text-primary flex-shrink-0"
+                strokeWidth={1.75}
+              />
+            ) : (
+              <ToggleLeft
+                className="w-7 h-7 text-rose-500 flex-shrink-0"
+                strokeWidth={1.75}
+              />
+            )}
             <div className="min-w-0">
               <p className="text-xs uppercase tracking-eyebrow text-fg-3 font-semibold">
                 {tS('masterToggle')}
@@ -201,15 +199,13 @@ export default function AdminStorePage() {
 
       {/* Maintenance mode */}
       <article className="rounded-xl border border-border bg-surface p-5 flex flex-wrap items-start gap-4">
-        <span
-          className="shrink-0 w-10 h-10 rounded-lg inline-flex items-center justify-center"
+        <Wrench
+          className="w-6 h-6 flex-shrink-0"
+          strokeWidth={1.75}
           style={{
-            background: maintenance ? 'rgb(232 145 42 / 0.18)' : 'var(--gf-bg-deeper)',
-            color: maintenance ? '#e8912a' : 'var(--gf-fg-3)',
+            color: maintenance ? '#fbbf24' : 'var(--gf-fg-3)',
           }}
-        >
-          <Wrench className="w-4 h-4" strokeWidth={1.75} />
-        </span>
+        />
         <div className="flex-1 min-w-0">
           <p className="text-sm font-medium text-fg-1">{tS('maintenance')}</p>
           <p className="mt-0.5 text-xs text-fg-3 leading-relaxed">

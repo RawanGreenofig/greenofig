@@ -432,12 +432,12 @@ function PlanView({ t }: { t: ReturnType<typeof useTranslations> }) {
                 key={i}
                 type="button"
                 onClick={() => setSelectedDay(i)}
-                className={`shrink-0 w-12 h-14 rounded-lg flex flex-col items-center justify-center text-xs font-medium transition-colors ${
+                className={`shrink-0 px-2 py-2 flex flex-col items-center justify-center text-xs font-medium transition-colors ${
                   selectedDay === i
-                    ? 'bg-primary/20 text-lime-400 border border-primary/40'
+                    ? 'text-primary'
                     : d.isToday
-                      ? 'bg-surface-raised text-fg-1 border border-primary/20'
-                      : 'bg-bg-deeper/50 text-fg-3 border border-border hover:text-fg-1'
+                      ? 'text-fg-1'
+                      : 'text-fg-3 hover:text-fg-1'
                 }`}
               >
                 <span className="text-[10px] uppercase tracking-eyebrow text-fg-3">
@@ -594,10 +594,10 @@ function MealCard({
             {meal.steps.map((step, i) => (
               <li key={i} className="flex items-start gap-3">
                 <span
-                  className="shrink-0 w-5 h-5 rounded-full bg-primary/15 text-lime-400 text-[11px] font-bold inline-flex items-center justify-center"
+                  className="shrink-0 text-primary text-sm font-bold inline-flex items-center"
                   dir="ltr"
                 >
-                  {i + 1}
+                  {i + 1}.
                 </span>
                 <span className="leading-relaxed">{step}</span>
               </li>
@@ -633,11 +633,8 @@ function DrFootnote({
   return (
     <article className="glass-effect rounded-xl p-5 flex items-center gap-4">
       <span
-        className="w-11 h-11 rounded-full flex items-center justify-center font-display text-base font-bold"
-        style={{
-          background: 'linear-gradient(135deg,#a3e635,#65a30d)',
-          color: '#0d1a12',
-        }}
+        className="font-display text-base font-bold"
+        style={{ color: 'var(--gf-primary-text)' }}
       >
         {drName
           .split(' ')
