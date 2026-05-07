@@ -786,6 +786,66 @@
   box-shadow: 0 10px 40px rgb(0 0 0 / 0.06) !important;
 }
 
+/* ── Bilingual EN ⇄ ع toggle pill ─────────────────────────────────
+ * Used by <LanguageSwitcher>. Active side is filled with the
+ * primary lime. Inactive side is transparent with a 1px primary
+ * border + primary text. Hover on inactive = primary/8 tint. */
+.lang-toggle-pill {
+  height: 36px;
+  padding: 0 14px;
+  border-radius: 9999px;
+  font-weight: 600;
+  font-size: 13px;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  user-select: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+  background: transparent;
+  border: 1px solid var(--gf-primary, #84cc16);
+  color: var(--gf-primary, #84cc16);
+}
+.lang-toggle-pill:hover[data-active='false'] {
+  background: rgba(132, 204, 22, 0.08);
+}
+.lang-toggle-pill[data-active='true'] {
+  background: var(--gf-primary, #84cc16);
+  color: #0d1a12;
+  border-color: var(--gf-primary, #84cc16);
+  cursor: default;
+}
+.lang-toggle-pill:focus-visible {
+  outline: 2px solid var(--gf-primary, #84cc16);
+  outline-offset: 2px;
+}
+
+/* ── Sitewide input chrome ────────────────────────────────────────
+ * Flat input style for every form field outside the dashboard
+ * (the dashboard scope already overrides this with its own
+ * !important rules). Light hairline, var-driven so light/dark
+ * dashboard variants both read it. */
+input:not([type='checkbox']):not([type='radio']):not([type='range']):not([type='color']):not([type='file']),
+select,
+textarea {
+  border-radius: 10px;
+  border: 1px solid var(--gf-border, rgba(255, 255, 255, 0.08));
+  background: var(--gf-input-bg, rgba(255, 255, 255, 0.04));
+  color: var(--gf-fg-1, #f0f3f7);
+  transition:
+    border-color 150ms ease,
+    box-shadow 150ms ease;
+}
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: none;
+  border-color: var(--gf-primary, #84cc16);
+  box-shadow: 0 0 0 3px rgba(132, 204, 22, 0.12);
+}
+
 /* Themed scrollbar opt-in. Add `custom-scrollbar` to any scrolling
  * container to get a 6px thumb on the dashboard token border. */
 .custom-scrollbar {

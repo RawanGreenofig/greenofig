@@ -226,18 +226,12 @@ export function Sidebar({
           <span
             style={{
               width: 36,
-              height: 36,
-              borderRadius: '50%',
-              background: 'linear-gradient(135deg, #4ade80, #60a5fa)',
-              color: '#ffffff',
-              fontSize: 12,
+              fontSize: 13,
               fontWeight: 700,
-              lineHeight: 1,
-              textAlign: 'center',
+              color: 'var(--gf-primary-text)',
               flexShrink: 0,
-              overflow: 'hidden',
               userSelect: 'none',
-              display: 'flex',
+              display: 'inline-flex',
               alignItems: 'center',
               justifyContent: 'center',
             }}

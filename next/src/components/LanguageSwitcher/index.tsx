@@ -48,12 +48,8 @@ export function LanguageSwitcher({ className }: { className?: string }) {
     <div
       role="group"
       aria-label={t('switchTo', { language: '' }).trim() || 'Language'}
-      className={cn('inline-flex items-center rounded-full p-0.5', className)}
-      style={{
-        background: 'hsl(var(--secondary, 220 10% 25%))',
-        border: '1px solid hsl(var(--border, 220 10% 25%))',
-        flexShrink: 0,
-      }}
+      className={cn('inline-flex items-center', className)}
+      style={{ gap: 6, flexShrink: 0 }}
     >
       {routing.locales.map((code) => {
         const isActive = code === locale
@@ -66,18 +62,8 @@ export function LanguageSwitcher({ className }: { className?: string }) {
             aria-label={t('switchTo', {
               language: code === 'en' ? t('english') : t('arabic'),
             })}
-            className="px-3 py-1 rounded-full text-xs font-bold transition-all"
-            style={{
-              border: 'none',
-              cursor: isActive ? 'default' : 'pointer',
-              background: isActive
-                ? 'hsl(var(--card, 220 15% 15%))'
-                : 'transparent',
-              color: isActive
-                ? 'hsl(var(--foreground, 220 10% 95%))'
-                : 'hsl(var(--muted-foreground, 220 10% 65%))',
-              userSelect: 'none',
-            }}
+            className="lang-toggle-pill"
+            data-active={isActive}
           >
             {LABELS[code]}
           </button>

@@ -278,26 +278,13 @@ function SettingsPageInner() {
       </Link>
 
       {/* Profile summary */}
-      <section
-        className="rounded-2xl p-5 flex flex-wrap items-center gap-5"
-        style={{
-          background: 'var(--gf-surface-raised)',
-          border: '1px solid var(--gf-border)',
-        }}
-      >
+      <section className="glass-effect rounded-2xl p-5 flex flex-wrap items-center gap-5">
         <span
           style={{
-            width: 48,
-            height: 48,
-            borderRadius: '50%',
-            background: '#1a2e1f',
-            color: '#4ade80',
-            fontSize: 16,
+            fontSize: 18,
             fontWeight: 700,
-            lineHeight: 1,
-            textAlign: 'center',
+            color: 'var(--gf-primary-text)',
             flexShrink: 0,
-            overflow: 'hidden',
             userSelect: 'none',
             display: 'inline-flex',
             alignItems: 'center',
@@ -308,7 +295,10 @@ function SettingsPageInner() {
         </span>
         <div className="flex-1 min-w-0">
           <div className="flex flex-wrap items-center gap-2">
-            <p className="text-xl font-bold" style={{ color: '#fff' }}>
+            <p
+              className="text-xl font-bold"
+              style={{ color: 'var(--gf-fg-1)' }}
+            >
               {displayName}
             </p>
             <span
@@ -319,7 +309,11 @@ function SettingsPageInner() {
             </span>
           </div>
           {user?.email && (
-            <p className="mt-1 text-sm truncate" style={{ color: '#888' }} dir="ltr">
+            <p
+              className="mt-1 text-sm truncate"
+              style={{ color: 'var(--gf-fg-3)' }}
+              dir="ltr"
+            >
               {user.email}
             </p>
           )}
