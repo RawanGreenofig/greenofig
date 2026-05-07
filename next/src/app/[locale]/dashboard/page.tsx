@@ -543,22 +543,12 @@ function QuickAction({
   return (
     <Link
       href={href}
-      className="group flex items-center gap-3 transition-all shrink-0 min-w-[160px] sm:min-w-0"
+      className="dash-card-lift group flex items-center gap-3 shrink-0 min-w-[160px] sm:min-w-0"
       style={{
         background: 'var(--gf-card)',
         border: '1px solid var(--gf-border)',
         borderRadius: 14,
         padding: '14px 16px',
-      }}
-      onMouseEnter={(e) => {
-        e.currentTarget.style.background = 'var(--gf-card-hover)'
-        e.currentTarget.style.borderColor = 'var(--gf-border-hover)'
-        e.currentTarget.style.transform = 'translateY(-1px)'
-      }}
-      onMouseLeave={(e) => {
-        e.currentTarget.style.background = 'var(--gf-card)'
-        e.currentTarget.style.borderColor = 'var(--gf-border)'
-        e.currentTarget.style.transform = 'translateY(0)'
       }}
     >
       <span
@@ -593,7 +583,7 @@ function MacroCard({
   totalKcal: number
 }) {
   return (
-    <article className="rounded-2xl p-5 lg:p-6" style={{ background: 'var(--gf-surface-raised)', border: '1px solid var(--gf-border)' }}>
+    <article className="dash-card-lift rounded-2xl p-5 lg:p-6" style={{ background: 'var(--gf-surface-raised)', border: '1px solid var(--gf-border)' }}>
       <h2 className="text-base font-semibold text-fg-1">{t('macroToday')}</h2>
       <div className="mt-4 grid grid-cols-3 gap-4 items-end">
         <Ring
@@ -706,7 +696,7 @@ function PlanCard({
 }) {
   void tCommon
   return (
-    <article className="rounded-2xl p-5 lg:p-6" style={{ background: 'var(--gf-surface-raised)', border: '1px solid var(--gf-border)' }}>
+    <article className="dash-card-lift rounded-2xl p-5 lg:p-6" style={{ background: 'var(--gf-surface-raised)', border: '1px solid var(--gf-border)' }}>
       <div className="flex items-center justify-between gap-4 mb-3">
         <h2 className="text-base font-semibold text-fg-1">{t('todayPlan')}</h2>
         <Link
@@ -738,7 +728,7 @@ function LatestPostCard({
   drName: string
 }) {
   return (
-    <article className="rounded-2xl p-5" style={{ background: 'var(--gf-surface-raised)', border: '1px solid var(--gf-border)' }}>
+    <article className="dash-card-lift rounded-2xl p-5" style={{ background: 'var(--gf-surface-raised)', border: '1px solid var(--gf-border)' }}>
       <p className="text-xs uppercase tracking-eyebrow text-fg-3 font-semibold">
         {t('latestPost', { name: drName })}
       </p>
@@ -758,7 +748,7 @@ function LatestPostCard({
 
 function ProgressCard({ t }: { t: ReturnType<typeof useTranslations> }) {
   return (
-    <article className="rounded-2xl p-5" style={{ background: 'var(--gf-surface-raised)', border: '1px solid var(--gf-border)' }}>
+    <article className="dash-card-lift rounded-2xl p-5" style={{ background: 'var(--gf-surface-raised)', border: '1px solid var(--gf-border)' }}>
       <div className="flex items-center gap-2.5 mb-3">
         <TrendingUp className="w-4 h-4 text-lime-400" strokeWidth={1.75} />
         <span className="text-xs uppercase tracking-eyebrow text-fg-3 font-medium">
@@ -787,7 +777,7 @@ function NotificationsCard({
   t: ReturnType<typeof useTranslations>
 }) {
   return (
-    <article className="rounded-2xl p-5" style={{ background: 'var(--gf-surface-raised)', border: '1px solid var(--gf-border)' }}>
+    <article className="dash-card-lift rounded-2xl p-5" style={{ background: 'var(--gf-surface-raised)', border: '1px solid var(--gf-border)' }}>
       <p className="text-xs uppercase tracking-eyebrow text-fg-3 font-semibold mb-3">
         {t('notifications')}
       </p>

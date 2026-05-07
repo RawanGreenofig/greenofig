@@ -810,7 +810,7 @@ function NotifPane({
       </div>
 
       <Section title={t('notif.sectionEmail')}>
-        <ul className="rounded-xl border border-border bg-surface divide-y divide-border">
+        <ul className="dash-card-lift rounded-xl border border-border bg-surface divide-y divide-border">
           {NOTIF_TOPICS.map((topic) => {
             const ch = prefs.channels[topic]
             return (
@@ -871,7 +871,7 @@ function NotifPane({
       </Section>
 
       <Section title={t('notif.quietHours')}>
-        <div className="rounded-xl border border-border bg-surface p-5 flex flex-wrap items-center gap-4">
+        <div className="dash-card-lift rounded-xl border border-border bg-surface p-5 flex flex-wrap items-center gap-4">
           <div className="flex-1 min-w-0">
             <p className="text-sm font-medium text-fg-1">
               {t('notif.quietHours')}
@@ -1380,7 +1380,7 @@ function SubscriptionPane({
             {t('sub.noPaymentMethod')}
           </div>
         ) : (
-          <div className="rounded-xl border border-border bg-surface p-5 flex items-center gap-4">
+          <div className="dash-card-lift rounded-xl border border-border bg-surface p-5 flex items-center gap-4">
             <span
               className="w-12 h-9 rounded-md bg-gradient-to-br from-fg-2/20 to-bg-deeper border border-border inline-flex items-center justify-center font-mono text-[10px] uppercase tracking-eyebrow text-fg-3 font-bold"
               aria-hidden
@@ -1411,7 +1411,7 @@ function SubscriptionPane({
             {t('sub.noInvoices')}
           </div>
         ) : (
-          <ul className="rounded-xl border border-border bg-surface divide-y divide-border">
+          <ul className="dash-card-lift rounded-xl border border-border bg-surface divide-y divide-border">
             {[
               { id: 'INV-20480', date: '2026-05-03', amount: 15 },
               { id: 'INV-20422', date: '2026-04-03', amount: 15 },
@@ -1534,7 +1534,7 @@ function AccountPane({
       </Section>
 
       <Section title={t('account.sectionSecurity')}>
-        <div className="rounded-xl border border-border bg-surface p-5 space-y-5">
+        <div className="dash-card-lift rounded-xl border border-border bg-surface p-5 space-y-5">
           <div>
             <p className="text-sm font-medium text-fg-1 mb-3 inline-flex items-center gap-2">
               <KeyRound className="w-4 h-4 text-fg-3" strokeWidth={1.75} />
@@ -1603,7 +1603,7 @@ function AccountPane({
       </Section>
 
       <Section title={t('account.sectionData')}>
-        <div className="rounded-xl border border-border bg-surface p-5 flex flex-wrap items-center gap-4">
+        <div className="dash-card-lift rounded-xl border border-border bg-surface p-5 flex flex-wrap items-center gap-4">
           <div className="flex-1 min-w-0">
             <p className="text-sm font-medium text-fg-1">
               {t('account.exportData')}

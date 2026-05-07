@@ -200,35 +200,35 @@
    * reference index.css and converted to hex. The marketing site is
    * unaffected — these vars only apply inside the
    * [data-theme="dashboard"] subtree. */
-  --gf-bg:             #16191f;   /* main content area              */
+  --gf-bg:             #16191f;   /* page background                */
   --gf-bg-deeper:      #0f1217;
-  --gf-surface:        #111811;   /* sidebar + topbar               */
-  --gf-surface-raised: #1e2128;   /* card                           */
-  --gf-card:           #1e2128;
-  --gf-card-hover:     #252830;   /* card hover + inner card + input */
-  --gf-overlay:        #252830;   /* dropdowns, modals              */
-  --gf-border:         rgba(255,255,255,0.08);
-  --gf-border-hover:   rgba(255,255,255,0.14);
-  --gf-border-focus:   #84cc16;
-  --gf-fg-1:           #f0f3f7;
-  --gf-fg-2:           rgba(255,255,255,0.55);
-  --gf-fg-3:           rgba(255,255,255,0.45);
-  --gf-fg-4:           rgba(255,255,255,0.35);
-  --gf-input-bg:       #252830;
-  --gf-primary:        #84cc16;
-  --gf-primary-hover:  #a3e635;
-  --gf-primary-dark:   #65a30d;
-  --gf-primary-bg:     rgba(132,204,22,0.12);
-  --gf-primary-dim:    rgba(132,204,22,0.12);
+  --gf-surface:        #1b1f26;   /* sidebar / topbar               */
+  --gf-surface-raised: #21252e;   /* card                           */
+  --gf-card:           #21252e;
+  --gf-card-hover:     #2e333a;
+  --gf-overlay:        #2e333a;   /* dropdowns, modals              */
+  --gf-border:         #393e47;
+  --gf-border-hover:   #4a4f59;
+  --gf-border-focus:   #80d93d;
+  --gf-fg-1:           #f8f9fa;
+  --gf-fg-2:           #abafba;
+  --gf-fg-3:           #6f7480;
+  --gf-fg-4:           #4a4f59;
+  --gf-input-bg:       #292d34;
+  --gf-primary:        #80d93d;
+  --gf-primary-hover:  #93e15a;
+  --gf-primary-dark:   #5fb028;
+  --gf-primary-bg:     rgba(132,217,61,0.12);
+  --gf-primary-dim:    rgba(132,217,61,0.12);
   --gf-primary-text:   #a3e635;
   --gf-lime-400:       #a3e635;
   --gf-danger:         #f87171;
   --gf-danger-dim:     rgba(248,113,113,0.1);
   --gf-success:        #4ade80;
   --gf-warning:        #fbbf24;
-  --gf-hover-bg:       rgba(255,255,255,0.05);
-  --gf-active-bg:      rgba(132,204,22,0.12);
-  --gf-active-border:  rgba(132,204,22,0.35);
+  --gf-hover-bg:       rgba(255,255,255,0.04);
+  --gf-active-bg:      rgba(132,217,61,0.12);
+  --gf-active-border:  rgba(132,217,61,0.3);
 
   /* Per-card accent palette — kept for tier indicators (free/basic/
    * premium/vip). KPI cards no longer use these; the dashboard
@@ -241,7 +241,7 @@
   --dash-accent-pink:   #f472b6;
 
   background: #16191f;
-  color: #f0f3f7;
+  color: #f8f9fa;
 }
 
 /* Re-route Tailwind utilities to the new dashboard palette. Each
@@ -383,41 +383,39 @@
  *   --gf-input-bg        form fields / search bars
  *   --gf-primary         accent (lime in dark, forest in light) */
 [data-dash-theme='light'] [data-theme='dashboard'] {
-  /* Reference-app light palette: cool off-white bg, white cards,
-   * deeper lime primary so it stays readable on white. */
-  --gf-bg:             #f0f3f7;   /* hsl(220 20% 96%)               */
-  --gf-bg-deeper:      #dfe3eb;
+  --gf-bg:             #f5f5f5;
+  --gf-bg-deeper:      #e5e5e5;
   --gf-surface:        #ffffff;
   --gf-surface-raised: #ffffff;
   --gf-card:           #ffffff;
-  --gf-card-hover:     #f6f8fb;
+  --gf-card-hover:     #fafafa;
   --gf-overlay:        #ffffff;
-  --gf-border:         #dadee5;   /* hsl(220 15% 88%)               */
-  --gf-border-hover:   #c1c6d0;
-  --gf-border-focus:   #5fb028;
-  --gf-fg-1:           #161a21;   /* hsl(220 15% 10%)               */
-  --gf-fg-2:           #4f535c;   /* hsl(220 10% 35%)               */
-  --gf-fg-3:           #686d78;   /* hsl(220 10% 45%)               */
-  --gf-fg-4:           #b9bdc6;   /* hsl(220 10% 75%)               */
-  --gf-input-bg:       #ffffff;
-  --gf-input-border:   #dadee5;
-  --gf-primary:        #5fb028;   /* deeper lime that still reads   */
-  --gf-primary-hover:  #4d9b1d;
-  --gf-primary-dark:   #3d7a17;
-  --gf-primary-bg:     rgba(95,176,40,0.1);
-  --gf-primary-dim:    rgba(95,176,40,0.1);
-  --gf-primary-text:   #4d9b1d;
-  --gf-lime-400:       #4d9b1d;
+  --gf-border:         #e8e8e8;
+  --gf-border-hover:   #d4d4d4;
+  --gf-border-focus:   #4d7c0f;
+  --gf-fg-1:           #1a1a1a;
+  --gf-fg-2:           #444444;
+  --gf-fg-3:           #888888;
+  --gf-fg-4:           #b0b0b0;
+  --gf-input-bg:       #f8f8f8;
+  --gf-input-border:   #e8e8e8;
+  --gf-primary:        #4d7c0f;
+  --gf-primary-hover:  #65a30d;
+  --gf-primary-dark:   #365314;
+  --gf-primary-bg:     rgba(77,124,15,0.1);
+  --gf-primary-dim:    rgba(77,124,15,0.1);
+  --gf-primary-text:   #4d7c0f;
+  --gf-lime-400:       #4d7c0f;
   --gf-danger:         #dc2626;
   --gf-danger-dim:     rgba(220,38,38,0.08);
   --gf-success:        #16a34a;
   --gf-warning:        #d97706;
-  --gf-hover-bg:       rgba(22,26,33,0.04);
-  --gf-active-bg:      rgba(95,176,40,0.1);
-  --gf-active-border:  rgba(95,176,40,0.35);
+  --gf-hover-bg:       rgba(0,0,0,0.04);
+  --gf-active-bg:      rgba(77,124,15,0.1);
+  --gf-active-border:  rgba(77,124,15,0.3);
 
-  background: #f0f3f7;
-  color: #161a21;
+  background: #f5f5f5;
+  color: #1a1a1a;
 }
 
 /* (Hover / input tokens already defined inside the main
@@ -656,12 +654,66 @@
  * override drift in pages that hardcoded their own card/input
  * colors. Fewer files to touch, one place to retune. */
 
-/* Reusable card class. Page authors can opt in by adding
- * `dash-card` to a wrapper div for the canonical card chrome. */
+/* Canonical card class. Page authors can opt in via `dash-card`. */
 .dash-card {
   background: var(--gf-card) !important;
   border: 1px solid var(--gf-border) !important;
   border-radius: 16px !important;
+}
+
+/* Translucent glass card. Used for the floating chrome (toasts,
+ * push-banner, dropdowns) where backdrop-blur reads well over
+ * the page background. */
+[data-theme='dashboard'] .dash-glass {
+  background: rgb(22 32 22 / 0.6);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--gf-border);
+  box-shadow: 0 10px 40px rgb(0 0 0 / 0.18);
+}
+[data-dash-theme='light'] [data-theme='dashboard'] .dash-glass {
+  background: rgb(255 255 255 / 0.7);
+  box-shadow: 0 10px 40px rgb(0 0 0 / 0.06);
+}
+
+/* Hover-lift behaviour shared by every clickable card (KPI,
+ * quick-action, list rows). The 1px lime ring uses a separate
+ * box-shadow layer so it doesn't fight the elevation shadow. */
+[data-theme='dashboard'] .dash-card-lift {
+  transition:
+    transform 200ms cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 200ms cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 200ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+[data-theme='dashboard'] .dash-card-lift:hover {
+  transform: translateY(-4px);
+  border-color: var(--gf-border-hover);
+  box-shadow:
+    0 8px 28px rgb(0 0 0 / 0.20),
+    0 0 0 1px rgb(132 204 22 / 0.20);
+}
+
+/* Active sidebar nav row — gradient + 2px inset stripe. The
+ * !important on background defeats any inline `background:` left
+ * over from prior iterations of the Sidebar component. */
+[data-theme='dashboard'] .dash-sidebar-active {
+  background: linear-gradient(
+    to right,
+    rgb(132 204 22 / 0.18),
+    rgb(163 230 53 / 0.10)
+  ) !important;
+  color: var(--gf-primary-text) !important;
+  box-shadow: inset 2px 0 0 0 var(--gf-primary);
+}
+
+/* Lime gradient text — used on the wordmark in the sidebar logo
+ * row. Falls back to currentColor if background-clip:text is not
+ * supported. */
+.gradient-text {
+  background: linear-gradient(90deg, #84cc16, #a3e635);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }
 
 /* Inputs / selects / textareas inside the dashboard. Catches
