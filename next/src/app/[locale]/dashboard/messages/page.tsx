@@ -655,33 +655,30 @@ function Bubble({ msg }: { msg: Msg }) {
   const time = formatAgo(msg.ago)
   return (
     <div
-      className={`flex items-end gap-2 ${
-        msg.fromMe ? 'justify-end' : 'justify-start'
-      }`}
+      className={`flex ${msg.fromMe ? 'justify-end' : 'justify-start'} mb-4`}
     >
       {!msg.fromMe && <DrAvatar drName={NUTRITIONIST.name} small />}
       <div
-        className={
-          msg.fromMe
-            ? 'rounded-2xl px-4 py-3 max-w-[70%] ml-auto text-sm leading-relaxed'
-            : 'glass-effect rounded-2xl px-4 py-3 max-w-[70%] text-sm leading-relaxed'
-        }
+        className="max-w-[70%] rounded-lg p-3"
         style={
           msg.fromMe
             ? {
-                background: 'hsl(var(--primary) / 0.15)',
-                border: '1px solid hsl(var(--primary) / 0.2)',
-                color: 'var(--gf-fg-1)',
+                background: 'hsl(var(--primary))',
+                color: 'hsl(var(--primary-foreground))',
               }
-            : { color: 'var(--gf-fg-1)' }
+            : {
+                background: 'hsl(var(--muted))',
+                color: 'hsl(var(--foreground))',
+              }
         }
       >
-        <p>{msg.body}</p>
+        <p className="text-sm whitespace-pre-wrap break-words">{msg.body}</p>
         <div
-          className="mt-1 flex items-center gap-1 text-[11px] font-mono"
+          className="flex items-center justify-end gap-1 mt-1 text-xs"
           style={{
-            color: 'var(--gf-fg-3)',
-            justifyContent: msg.fromMe ? 'flex-end' : 'flex-start',
+            color: msg.fromMe
+              ? 'hsl(var(--primary-foreground) / 0.7)'
+              : 'hsl(var(--muted-foreground))',
           }}
           dir="ltr"
         >

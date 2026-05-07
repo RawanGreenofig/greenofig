@@ -13,6 +13,8 @@
  * still owns the locale + translations.
  */
 
+import { Search } from 'lucide-react'
+
 interface Props {
   isAr: boolean
 }
@@ -25,29 +27,49 @@ export function BlogSearchAndFilters({ isAr }: Props) {
   return (
     <>
       <div className="flex items-center justify-center gap-3 mt-8 px-4 flex-wrap">
-        <input
-          placeholder={isAr ? 'ابحث في المقالات…' : 'Search articles...'}
-          className="rounded-xl px-4 text-sm w-72 outline-none transition-colors"
-          style={{
-            height: 40,
-            background: 'var(--gf-surface)',
-            border: '1px solid var(--gf-border)',
-            color: 'var(--gf-fg-1)',
-          }}
-          onFocus={(e) => {
-            e.currentTarget.style.borderColor = 'rgb(163 230 53 / 0.5)'
-            e.currentTarget.style.boxShadow =
-              '0 0 0 3px rgb(163 230 53 / 0.12)'
-          }}
-          onBlur={(e) => {
-            e.currentTarget.style.borderColor = 'var(--gf-border)'
-            e.currentTarget.style.boxShadow = 'none'
-          }}
-        />
+        <div className="relative w-72 max-w-full">
+          <Search
+            className="absolute start-3 top-1/2 -translate-y-1/2 w-5 h-5 pointer-events-none"
+            style={{ color: 'hsl(var(--muted-foreground))' }}
+            strokeWidth={1.75}
+            aria-hidden
+          />
+          <input
+            placeholder={isAr ? 'ابحث في المقالات…' : 'Search articles...'}
+            className="h-12 w-full rounded-2xl ps-10 pe-4 text-base transition-all duration-200"
+            style={{
+              background: 'hsl(var(--background) / 0.5)',
+              backdropFilter: 'blur(4px)',
+              WebkitBackdropFilter: 'blur(4px)',
+              border: '1px solid hsl(var(--input))',
+              color: 'hsl(var(--foreground))',
+              outline: 'none',
+            }}
+            onFocus={(e) => {
+              e.currentTarget.style.borderColor = 'hsl(var(--primary))'
+              e.currentTarget.style.boxShadow = '0 0 0 2px hsl(var(--ring))'
+            }}
+            onBlur={(e) => {
+              e.currentTarget.style.borderColor = 'hsl(var(--input))'
+              e.currentTarget.style.boxShadow = 'none'
+            }}
+            onMouseEnter={(e) => {
+              if (document.activeElement !== e.currentTarget) {
+                e.currentTarget.style.borderColor =
+                  'hsl(var(--primary) / 0.5)'
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (document.activeElement !== e.currentTarget) {
+                e.currentTarget.style.borderColor = 'hsl(var(--input))'
+              }
+            }}
+          />
+        </div>
         <button
           type="button"
           className="btn-primary"
-          style={{ height: 40, padding: '0 18px', fontSize: 14 }}
+          style={{ height: 48, padding: '0 24px', fontSize: 14 }}
         >
           {isAr ? 'بحث' : 'Search'}
         </button>

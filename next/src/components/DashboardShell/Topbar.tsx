@@ -62,25 +62,43 @@ export function Topbar({ onOpenMenu }: { onOpenMenu: () => void }) {
       </button>
 
       {/* Search */}
-      <div
-        className="glass-effect hidden sm:flex flex-1 max-w-md items-center gap-2 rounded-full px-4 h-10"
-      >
+      <div className="relative hidden sm:block flex-1 max-w-md">
         <Search
-          className="w-4 h-4"
+          className="absolute start-3 top-1/2 -translate-y-1/2 w-5 h-5 pointer-events-none"
+          style={{ color: 'hsl(var(--muted-foreground))' }}
           strokeWidth={1.75}
-          style={{ color: 'var(--gf-fg-3)' }}
+          aria-hidden
         />
         <input
           type="search"
           placeholder={t('searchPlaceholder')}
           aria-label={t('search')}
-          className="flex-1 text-sm placeholder:text-fg-3"
+          className="h-12 w-full rounded-2xl ps-10 pe-4 text-base transition-all duration-200"
           style={{
-            background: 'transparent',
-            border: 'none',
+            background: 'hsl(var(--background) / 0.5)',
+            backdropFilter: 'blur(4px)',
+            WebkitBackdropFilter: 'blur(4px)',
+            border: '1px solid hsl(var(--input))',
+            color: 'hsl(var(--foreground))',
             outline: 'none',
-            boxShadow: 'none',
-            color: 'var(--gf-fg-1)',
+          }}
+          onFocus={(e) => {
+            e.currentTarget.style.borderColor = 'hsl(var(--primary))'
+            e.currentTarget.style.boxShadow = '0 0 0 2px hsl(var(--ring))'
+          }}
+          onBlur={(e) => {
+            e.currentTarget.style.borderColor = 'hsl(var(--input))'
+            e.currentTarget.style.boxShadow = 'none'
+          }}
+          onMouseEnter={(e) => {
+            if (document.activeElement !== e.currentTarget) {
+              e.currentTarget.style.borderColor = 'hsl(var(--primary) / 0.5)'
+            }
+          }}
+          onMouseLeave={(e) => {
+            if (document.activeElement !== e.currentTarget) {
+              e.currentTarget.style.borderColor = 'hsl(var(--input))'
+            }
           }}
         />
       </div>
