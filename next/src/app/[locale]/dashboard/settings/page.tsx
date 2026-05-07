@@ -816,9 +816,10 @@ function NotifPane({
             return (
               <li
                 key={topic}
-                className="flex flex-wrap items-center gap-4 px-5 py-4"
+                className="flex items-center gap-4 px-5 py-4 w-full overflow-hidden"
+                style={{ minWidth: 0 }}
               >
-                <div className="flex-1 min-w-0">
+                <div className="flex-1 overflow-hidden" style={{ minWidth: 0 }}>
                   <p className="text-sm font-medium text-fg-1">
                     {t(`notif.topics.${topic}` as 'notif.topics.dailyReminders')}
                   </p>
@@ -828,11 +829,17 @@ function NotifPane({
                     )}
                   </p>
                 </div>
-                <div className="flex items-center gap-5 shrink-0">
-                  <div className="flex flex-col items-center gap-1">
+                <div
+                  className="flex items-center shrink-0"
+                  style={{ gap: 20, marginInlineStart: 16 }}
+                >
+                  <div className="flex flex-col items-center" style={{ gap: 6 }}>
                     <span
                       className="text-[10px] uppercase text-fg-3 font-medium"
-                      style={{ letterSpacing: '0.08em' }}
+                      style={{
+                        letterSpacing: '0.08em',
+                        whiteSpace: 'nowrap',
+                      }}
                     >
                       {t('notif.channelEmail')}
                     </span>
@@ -841,10 +848,13 @@ function NotifPane({
                       onChange={(v) => setChannel(topic, 'email', v)}
                     />
                   </div>
-                  <div className="flex flex-col items-center gap-1">
+                  <div className="flex flex-col items-center" style={{ gap: 6 }}>
                     <span
                       className="text-[10px] uppercase text-fg-3 font-medium"
-                      style={{ letterSpacing: '0.08em' }}
+                      style={{
+                        letterSpacing: '0.08em',
+                        whiteSpace: 'nowrap',
+                      }}
                     >
                       {t('notif.channelPush')}
                     </span>
