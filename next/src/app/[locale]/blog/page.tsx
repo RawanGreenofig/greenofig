@@ -43,10 +43,63 @@ export default function BlogIndexPage() {
     >
       <SiteHeader />
       <div className="h-16" />
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24">
-        {/* Centered hero */}
-        <header className="text-center mb-16">
-          <span className="blog-chip mb-6">
+
+      {/* Hero: full-bleed photo background + dark green glass overlay,
+          with the actual headline content sitting on a frosted glass
+          card above both layers. */}
+      <section
+        style={{
+          position: 'relative',
+          overflow: 'hidden',
+          minHeight: 420,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '64px 16px',
+        }}
+      >
+        <div
+          aria-hidden
+          style={{
+            position: 'absolute',
+            inset: 0,
+            backgroundImage:
+              'url(https://images.unsplash.com/photo-1490645935967-10de6ba17061?w=1600&q=80)',
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            zIndex: 0,
+          }}
+        />
+        <div
+          aria-hidden
+          style={{
+            position: 'absolute',
+            inset: 0,
+            background:
+              'linear-gradient(to bottom, rgba(5,25,5,0.55) 0%, rgba(5,25,5,0.75) 100%)',
+            backdropFilter: 'blur(2px)',
+            WebkitBackdropFilter: 'blur(2px)',
+            zIndex: 1,
+          }}
+        />
+
+        <header
+          className="text-center"
+          style={{
+            background: 'rgba(255,255,255,0.04)',
+            backdropFilter: 'blur(12px)',
+            WebkitBackdropFilter: 'blur(12px)',
+            border: '1px solid rgba(255,255,255,0.1)',
+            borderRadius: 24,
+            padding: '48px 32px',
+            maxWidth: 720,
+            width: '100%',
+            margin: '0 auto',
+            position: 'relative',
+            zIndex: 2,
+          }}
+        >
+          <span className="blog-chip" style={{ marginBottom: 24 }}>
             {isAr ? 'رؤى التغذية' : 'NUTRITION INSIGHTS'}
           </span>
           <h1
@@ -55,7 +108,8 @@ export default function BlogIndexPage() {
               fontSize: 'clamp(40px, 5vw, 60px)',
               lineHeight: 1.1,
               letterSpacing: '-0.02em',
-              color: 'var(--gf-fg-1)',
+              color: '#ffffff',
+              marginTop: 16,
             }}
           >
             {isAr
@@ -64,7 +118,7 @@ export default function BlogIndexPage() {
           </h1>
           <p
             className="mt-5 text-base lg:text-lg leading-relaxed max-w-xl mx-auto"
-            style={{ color: 'var(--gf-fg-2)' }}
+            style={{ color: 'rgba(255,255,255,0.85)' }}
           >
             {isAr
               ? 'مقالات قائمة على الأدلة لمساعدتك على الأكل بشكل أفضل وفهم جسمك.'
@@ -76,7 +130,9 @@ export default function BlogIndexPage() {
               Component). */}
           <BlogSearchAndFilters isAr={isAr} />
         </header>
+      </section>
 
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24">
         {/* Article grid: 1 col mobile, 2 col tablet, 3 col desktop */}
         <ul className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
           {articles.map((article) => (

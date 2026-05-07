@@ -92,14 +92,16 @@ export function SiteHeader() {
 
   const headerStyle: React.CSSProperties = scrolled
     ? {
-        background: 'rgba(8,8,8,0.85)',
-        backdropFilter: 'blur(12px)',
-        WebkitBackdropFilter: 'blur(12px)',
-        borderBottom: '1px solid #222',
+        background: 'rgba(5, 20, 5, 0.75)',
+        backdropFilter: 'blur(20px)',
+        WebkitBackdropFilter: 'blur(20px)',
+        borderBottom: '1px solid rgba(255,255,255,0.06)',
       }
     : {
-        background: 'transparent',
-        borderBottom: '1px solid transparent',
+        background: 'rgba(5, 20, 5, 0.4)',
+        backdropFilter: 'blur(12px)',
+        WebkitBackdropFilter: 'blur(12px)',
+        borderBottom: '1px solid rgba(255,255,255,0.04)',
       }
 
   return (
@@ -120,7 +122,14 @@ export function SiteHeader() {
               <a
                 key={l.href}
                 href={l.href}
-                className="text-sm text-[#888] hover:text-white transition-colors duration-200"
+                className="text-sm transition-colors duration-200"
+                style={{ color: 'rgba(255,255,255,0.8)' }}
+                onMouseEnter={(e) =>
+                  (e.currentTarget.style.color = '#ffffff')
+                }
+                onMouseLeave={(e) =>
+                  (e.currentTarget.style.color = 'rgba(255,255,255,0.8)')
+                }
               >
                 {l.label}
               </a>
@@ -295,7 +304,14 @@ export function SiteHeader() {
               <>
                 <Link
                   href="/sign-in"
-                  className="hidden sm:inline-flex items-center text-sm text-[#888] hover:text-white transition-colors duration-200"
+                  className="hidden sm:inline-flex items-center text-sm transition-colors duration-200"
+                  style={{ color: 'rgba(255,255,255,0.8)' }}
+                  onMouseEnter={(e) =>
+                    (e.currentTarget.style.color = '#ffffff')
+                  }
+                  onMouseLeave={(e) =>
+                    (e.currentTarget.style.color = 'rgba(255,255,255,0.8)')
+                  }
                 >
                   {t('signIn')}
                 </Link>
