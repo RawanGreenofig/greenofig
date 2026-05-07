@@ -51,7 +51,7 @@ export default function BlogIndexPage() {
         style={{
           position: 'relative',
           overflow: 'hidden',
-          minHeight: 420,
+          height: 320,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
@@ -66,7 +66,7 @@ export default function BlogIndexPage() {
             backgroundImage:
               'url(https://images.unsplash.com/photo-1490645935967-10de6ba17061?w=1600&q=80)',
             backgroundSize: 'cover',
-            backgroundPosition: 'center',
+            backgroundPosition: 'center 40%',
             zIndex: 0,
           }}
         />
@@ -91,7 +91,7 @@ export default function BlogIndexPage() {
             WebkitBackdropFilter: 'blur(12px)',
             border: '1px solid rgba(255,255,255,0.1)',
             borderRadius: 24,
-            padding: '48px 32px',
+            padding: '32px 48px',
             maxWidth: 720,
             width: '100%',
             margin: '0 auto',
