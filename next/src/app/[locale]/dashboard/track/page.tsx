@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { useUser } from '@/lib/hooks/useUser'
 import { getBrowserSupabase } from '@/lib/supabase/client'
+import { IconTile } from '@/components/ui/IconTile'
 import {
   ChevronLeft,
   ChevronRight,
@@ -463,19 +464,7 @@ function MealSection({
     <article className="rounded-xl border border-border bg-surface overflow-hidden">
       <header className="flex items-center justify-between gap-3 px-5 py-4 border-b border-border">
         <div className="flex items-center gap-3">
-          <span
-            className="flex items-center justify-center"
-            style={{
-              width: 32,
-              height: 32,
-              borderRadius: 8,
-              background: `${tint}1f`,
-              color: tint,
-              flexShrink: 0,
-            }}
-          >
-            <Icon size={16} strokeWidth={1.75} />
-          </span>
+          <IconTile icon={Icon} bg={`${tint}1f`} color={tint} />
           <div>
             <h3 className="text-sm font-semibold text-fg-1">
               {tScanner(type)}
@@ -551,19 +540,11 @@ function WaterCard({
     <article className="rounded-xl border border-border bg-surface p-5">
       <div className="flex items-center justify-between gap-3 mb-4">
         <div className="flex items-center gap-3">
-          <span
-            className="flex items-center justify-center"
-            style={{
-              width: 32,
-              height: 32,
-              borderRadius: 8,
-              background: 'rgb(6 182 212 / 0.15)',
-              color: '#06b6d4',
-              flexShrink: 0,
-            }}
-          >
-            <Droplets size={16} strokeWidth={1.75} />
-          </span>
+          <IconTile
+            icon={Droplets}
+            bg="rgb(6 182 212 / 0.15)"
+            color="#06b6d4"
+          />
           <div>
             <h3 className="text-sm font-semibold text-fg-1">{t('water')}</h3>
             <p className="text-xs text-fg-3 font-mono" dir="ltr">
@@ -636,19 +617,11 @@ function SupplementsCard({
     <article className="rounded-xl border border-border bg-surface p-5">
       <div className="flex items-center justify-between gap-3 mb-4">
         <div className="flex items-center gap-3">
-          <span
-            className="flex items-center justify-center"
-            style={{
-              width: 32,
-              height: 32,
-              borderRadius: 8,
-              background: 'rgb(168 85 247 / 0.15)',
-              color: '#a855f7',
-              flexShrink: 0,
-            }}
-          >
-            <Pill size={16} strokeWidth={1.75} />
-          </span>
+          <IconTile
+            icon={Pill}
+            bg="rgb(168 85 247 / 0.15)"
+            color="#a855f7"
+          />
           <h3 className="text-sm font-semibold text-fg-1">{t('supplements')}</h3>
         </div>
         {!adding && (

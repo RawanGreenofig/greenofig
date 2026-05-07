@@ -16,6 +16,7 @@ import {
   type LucideIcon,
 } from 'lucide-react'
 import { Link } from '@/i18n/navigation'
+import { IconTile } from '@/components/ui/IconTile'
 import UpgradeButton from '@/components/UpgradeButton'
 import { useUser } from '@/lib/hooks/useUser'
 import { useSupabaseQuery } from '@/lib/hooks/useSupabaseQuery'
@@ -527,15 +528,7 @@ function MealCard({
     >
       <header className="flex items-start justify-between gap-4 p-5">
         <div className="flex items-start gap-3 min-w-0">
-          <span
-            className="w-10 h-10 shrink-0 rounded-lg flex items-center justify-center"
-            style={{
-              background: 'rgb(61 122 74 / 0.15)',
-              color: 'var(--gf-lime-400)',
-            }}
-          >
-            <Icon className="w-4 h-4" strokeWidth={1.75} />
-          </span>
+          <IconTile icon={Icon} tileSize={40} radius={10} />
           <div className="min-w-0">
             <p className="text-[11px] uppercase tracking-eyebrow text-fg-3 font-semibold">
               {t(`meals.${meal.key}` as 'meals.breakfast')}

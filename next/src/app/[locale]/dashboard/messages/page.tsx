@@ -647,10 +647,15 @@ function Thread() {
           type="submit"
           aria-label={t('send')}
           disabled={!draft.trim() || sending}
-          className="shrink-0 inline-flex items-center justify-center w-10 h-10 rounded-full transition-transform disabled:opacity-40 hover:-translate-y-px disabled:hover:translate-y-0"
+          className="shrink-0 inline-flex items-center justify-center transition-transform disabled:opacity-40 hover:-translate-y-px disabled:hover:translate-y-0"
           style={{
-            background: 'var(--gf-primary)',
-            color: '#000',
+            width: 40,
+            height: 40,
+            borderRadius: 10,
+            background: 'linear-gradient(to bottom, #a3e635, #65a30d)',
+            color: '#0a0f0a',
+            border: 'none',
+            cursor: 'pointer',
           }}
         >
           <Send className="w-4 h-4 rtl:-scale-x-100" strokeWidth={2.25} />
@@ -672,9 +677,13 @@ function Bubble({ msg }: { msg: Msg }) {
       <div
         className="max-w-[75%] md:max-w-[60%] px-4 py-2.5 text-sm leading-relaxed"
         style={{
-          background: msg.fromMe ? 'var(--gf-primary)' : 'var(--gf-surface-raised)',
-          color: msg.fromMe ? '#000' : 'var(--gf-fg-1)',
-          border: msg.fromMe ? 'none' : '1px solid var(--gf-border)',
+          background: msg.fromMe
+            ? 'rgba(132,204,22,0.15)'
+            : 'var(--gf-card)',
+          color: 'var(--gf-fg-1)',
+          border: msg.fromMe
+            ? '1px solid rgba(132,204,22,0.2)'
+            : '1px solid var(--gf-border)',
           borderRadius: msg.fromMe ? '16px 16px 4px 16px' : '16px 16px 16px 4px',
         }}
       >
@@ -682,7 +691,7 @@ function Bubble({ msg }: { msg: Msg }) {
         <div
           className="mt-1 flex items-center gap-1 text-[11px] font-mono"
           style={{
-            color: msg.fromMe ? 'rgba(0,0,0,0.6)' : 'var(--gf-fg-3)',
+            color: 'var(--gf-fg-3)',
             justifyContent: msg.fromMe ? 'flex-end' : 'flex-start',
           }}
           dir="ltr"
