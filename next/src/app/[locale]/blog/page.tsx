@@ -35,31 +35,36 @@ export default function BlogIndexPage() {
   )
 
   return (
-    <main className="min-h-screen" style={{ background: '#080808' }}>
+    <main
+      data-blog-theme=""
+      className="min-h-screen"
+      style={{ background: 'var(--gf-bg)' }}
+    >
       <SiteHeader />
       <div className="h-16" />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24">
         {/* Centered hero */}
         <header className="text-center mb-16">
-          <span className="inline-flex items-center gap-2 rounded-full bg-surface border border-primary/40 px-5 py-2 mb-6">
-            <span aria-hidden className="w-1.5 h-1.5 rounded-full bg-lime-400" />
-            <span className="text-xs uppercase tracking-eyebrow font-semibold text-lime-400">
-              {isAr ? 'رؤى التغذية' : 'NUTRITION INSIGHTS'}
-            </span>
+          <span className="blog-chip mb-6">
+            {isAr ? 'رؤى التغذية' : 'NUTRITION INSIGHTS'}
           </span>
           <h1
-            className="font-bold text-white tracking-tight max-w-3xl mx-auto"
+            className="font-bold tracking-tight max-w-3xl mx-auto"
             style={{
               fontSize: 'clamp(40px, 5vw, 60px)',
               lineHeight: 1.1,
               letterSpacing: '-0.02em',
+              color: 'var(--gf-fg-1)',
             }}
           >
             {isAr
               ? 'تغذية مدعومة بالعلم،\nمشروحة ببساطة.'
               : 'Science-backed nutrition,\nexplained simply.'}
           </h1>
-          <p className="mt-5 text-base lg:text-lg leading-relaxed max-w-xl mx-auto" style={{ color: '#888' }}>
+          <p
+            className="mt-5 text-base lg:text-lg leading-relaxed max-w-xl mx-auto"
+            style={{ color: 'var(--gf-fg-2)' }}
+          >
             {isAr
               ? 'مقالات قائمة على الأدلة لمساعدتك على الأكل بشكل أفضل وفهم جسمك.'
               : 'Evidence-based articles to help you eat better, feel your best, and understand your body.'}
@@ -69,20 +74,27 @@ export default function BlogIndexPage() {
           <div className="flex items-center justify-center gap-3 mt-8 px-4 flex-wrap">
             <input
               placeholder={isAr ? 'ابحث في المقالات…' : 'Search articles...'}
-              className="rounded-xl px-5 py-3 text-white text-sm w-72 outline-none"
+              className="rounded-xl px-4 text-sm w-72 outline-none transition-colors"
               style={{
-                background: '#111',
-                border: '1px solid #222',
+                height: 40,
+                background: 'var(--gf-surface)',
+                border: '1px solid var(--gf-border)',
+                color: 'var(--gf-fg-1)',
               }}
-              onFocus={(e) => (e.currentTarget.style.borderColor = '#4ade80')}
-              onBlur={(e) => (e.currentTarget.style.borderColor = '#222')}
+              onFocus={(e) => {
+                e.currentTarget.style.borderColor = 'rgb(163 230 53 / 0.5)'
+                e.currentTarget.style.boxShadow =
+                  '0 0 0 3px rgb(163 230 53 / 0.12)'
+              }}
+              onBlur={(e) => {
+                e.currentTarget.style.borderColor = 'var(--gf-border)'
+                e.currentTarget.style.boxShadow = 'none'
+              }}
             />
             <button
               type="button"
-              className="font-semibold px-6 py-3 rounded-xl text-sm transition-colors whitespace-nowrap"
-              style={{ background: '#4ade80', color: '#000' }}
-              onMouseEnter={(e) => (e.currentTarget.style.background = '#86efac')}
-              onMouseLeave={(e) => (e.currentTarget.style.background = '#4ade80')}
+              className="btn-primary"
+              style={{ height: 40, padding: '0 18px', fontSize: 14 }}
             >
               {isAr ? 'بحث' : 'Search'}
             </button>
@@ -96,15 +108,24 @@ export default function BlogIndexPage() {
               <button
                 key={cat}
                 type="button"
-                className="text-sm px-4 py-2 rounded-full transition-colors"
-                style={{ border: '1px solid #222', color: '#888', background: 'transparent' }}
+                className="rounded-full transition-colors"
+                style={{
+                  height: 32,
+                  padding: '0 14px',
+                  background: 'var(--gf-surface)',
+                  border: '1px solid var(--gf-border)',
+                  color: 'var(--gf-fg-2)',
+                  fontSize: 13,
+                  fontWeight: 500,
+                }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.borderColor = '#4ade80'
-                  e.currentTarget.style.color = '#4ade80'
+                  e.currentTarget.style.borderColor =
+                    'rgba(255,255,255,0.14)'
+                  e.currentTarget.style.color = 'var(--gf-fg-1)'
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.borderColor = '#222'
-                  e.currentTarget.style.color = '#888'
+                  e.currentTarget.style.borderColor = 'var(--gf-border)'
+                  e.currentTarget.style.color = 'var(--gf-fg-2)'
                 }}
               >
                 {cat}
@@ -147,31 +168,78 @@ function ArticleCard({ article, isAr }: { article: BlogArticle; isAr: boolean })
     <li>
       <Link
         href={`/blog/${article.slug}` as `/blog/${string}`}
-        className="group block rounded-xl bg-surface border border-border overflow-hidden transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-lime-glow hover:border-primary/40"
+        className="blog-card-lift group block bg-surface overflow-hidden"
+        style={{
+          background: 'var(--gf-surface)',
+          border: '1px solid var(--gf-border)',
+          borderRadius: 16,
+        }}
       >
-        <div className="relative w-full aspect-video overflow-hidden">
+        <div className="blog-img-zoom relative w-full aspect-video">
           <ArticleImage
             src={article.imageUrl}
             alt={isAr ? article.imageAltAr : article.imageAlt}
             width={800}
             height={450}
-            className="w-full h-full object-cover transition-transform duration-slow ease-out group-hover:scale-105"
+            className="w-full h-full object-cover"
           />
         </div>
-        <div className="p-5 space-y-3">
-          <span className="inline-flex items-center rounded-full bg-lime-400 text-bg px-3 py-1 text-[11px] font-bold uppercase tracking-eyebrow">
-            {categoryLabel}
-          </span>
-          <h2 className="font-display font-semibold text-lg text-fg-1 leading-snug group-hover:text-lime-400 transition-colors">
+        <div className="space-y-3" style={{ padding: '20px 22px 24px' }}>
+          <span className="blog-chip">{categoryLabel}</span>
+          <h2
+            className="font-display font-semibold leading-snug group-hover:text-lime-400 transition-colors"
+            style={{
+              fontSize: 18,
+              fontWeight: 700,
+              lineHeight: 1.3,
+              color: 'var(--gf-fg-1)',
+              marginTop: 10,
+              display: '-webkit-box',
+              WebkitLineClamp: 2,
+              WebkitBoxOrient: 'vertical',
+              overflow: 'hidden',
+            }}
+          >
             {title}
           </h2>
-          <p className="text-sm text-fg-2 leading-relaxed line-clamp-2">{excerpt}</p>
-          <div className="flex items-center justify-between text-xs text-fg-3 pt-2" dir="ltr">
+          <p
+            style={{
+              fontSize: 14,
+              color: 'var(--gf-fg-2)',
+              lineHeight: 1.55,
+              marginTop: 8,
+              display: '-webkit-box',
+              WebkitLineClamp: 3,
+              WebkitBoxOrient: 'vertical',
+              overflow: 'hidden',
+            }}
+          >
+            {excerpt}
+          </p>
+          <div
+            className="flex items-center justify-between"
+            style={{ fontSize: 12, color: 'var(--gf-fg-3)', marginTop: 14 }}
+            dir="ltr"
+          >
             <span className="inline-flex items-center gap-1.5">
               <Clock className="w-3 h-3" strokeWidth={1.75} />
-              {article.readTimeMinutes} min read · {date}
+              {article.readTimeMinutes} min read
+              <span
+                aria-hidden
+                className="inline-block rounded-full"
+                style={{
+                  width: 4,
+                  height: 4,
+                  background: 'var(--gf-lime-400)',
+                  margin: '0 4px',
+                }}
+              />
+              {date}
             </span>
-            <span className="inline-flex items-center gap-1 text-lime-400 font-medium text-sm">
+            <span
+              className="inline-flex items-center gap-1 font-medium text-sm transition-all"
+              style={{ color: 'var(--gf-lime-400)' }}
+            >
               {isAr ? 'اقرأ المزيد' : 'Read more'}
               <ArrowRight
                 className={`w-3.5 h-3.5 transition-transform ${

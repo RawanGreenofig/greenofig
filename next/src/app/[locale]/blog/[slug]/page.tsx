@@ -84,7 +84,11 @@ export default async function ArticlePage({ params }: RouteParams) {
   }
 
   return (
-    <main className="min-h-screen" style={{ background: '#080808' }}>
+    <main
+      data-blog-theme=""
+      className="min-h-screen"
+      style={{ background: 'var(--gf-bg)' }}
+    >
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
@@ -102,7 +106,13 @@ export default async function ArticlePage({ params }: RouteParams) {
         </Link>
 
         {/* Hero image */}
-        <div className="relative w-full aspect-video rounded-2xl overflow-hidden mb-8">
+        <div
+          className="relative w-full aspect-video overflow-hidden mb-8"
+          style={{
+            borderRadius: 20,
+            border: '1px solid var(--gf-border)',
+          }}
+        >
           <ArticleImage
             src={article.imageUrl}
             alt={imageAlt}
@@ -115,10 +125,12 @@ export default async function ArticlePage({ params }: RouteParams) {
 
         {/* Article header */}
         <header className="max-w-3xl mx-auto mb-10">
-          <div className="flex flex-wrap items-center gap-3 text-xs text-fg-3 font-mono mb-4" dir="ltr">
-            <span className="inline-flex items-center rounded-full bg-lime-400 text-bg px-3 py-1 text-[11px] font-bold uppercase tracking-eyebrow">
-              {categoryLabel}
-            </span>
+          <div
+            className="flex flex-wrap items-center gap-3 font-mono mb-4"
+            style={{ fontSize: 12, color: 'var(--gf-fg-3)' }}
+            dir="ltr"
+          >
+            <span className="blog-chip">{categoryLabel}</span>
             <span className="inline-flex items-center gap-1">
               <Clock className="w-3 h-3" strokeWidth={1.75} />
               {article.readTimeMinutes} min read
@@ -168,7 +180,14 @@ export default async function ArticlePage({ params }: RouteParams) {
         </article>
 
         {/* Author card */}
-        <aside className="max-w-3xl mx-auto mt-16 rounded-2xl bg-surface border border-border p-6 flex flex-col sm:flex-row items-start sm:items-center gap-5">
+        <aside
+          className="blog-card-lift max-w-3xl mx-auto mt-16 p-6 flex flex-col sm:flex-row items-start sm:items-center gap-5"
+          style={{
+            background: 'var(--gf-surface)',
+            border: '1px solid var(--gf-border)',
+            borderRadius: 16,
+          }}
+        >
           <div className="w-20 h-20 rounded-full overflow-hidden bg-surface-raised shrink-0">
             <Image
               src="/images/dr-rawan-othman.jpg"
@@ -239,15 +258,20 @@ function RelatedCard({ article, isAr }: { article: BlogArticle; isAr: boolean })
     <li>
       <Link
         href={`/blog/${article.slug}` as `/blog/${string}`}
-        className="group block rounded-xl bg-surface border border-border overflow-hidden transition-all duration-normal ease-out hover:-translate-y-1 hover:border-primary/40"
+        className="blog-card-lift group block overflow-hidden"
+        style={{
+          background: 'var(--gf-surface)',
+          border: '1px solid var(--gf-border)',
+          borderRadius: 16,
+        }}
       >
-        <div className="relative w-full aspect-video overflow-hidden">
+        <div className="blog-img-zoom relative w-full aspect-video">
           <ArticleImage
             src={article.imageUrl}
             alt={isAr ? article.imageAltAr : article.imageAlt}
             width={400}
             height={225}
-            className="w-full h-full object-cover transition-transform duration-slow ease-out group-hover:scale-105"
+            className="w-full h-full object-cover"
           />
         </div>
         <div className="p-4">

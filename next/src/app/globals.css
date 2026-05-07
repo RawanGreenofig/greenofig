@@ -716,6 +716,50 @@
   color: transparent;
 }
 
+/* ── Blog scope ──────────────────────────────────────────────────
+ * Utilities scoped to [data-blog-theme] so they don't leak onto
+ * the dashboard or the marketing home. The blog itself reads from
+ * the marketing :root tokens (--gf-bg, --gf-surface, etc.) so the
+ * blog stays in the green-on-dark palette regardless of dashboard
+ * theme. */
+[data-blog-theme] .blog-card-lift {
+  transition:
+    transform 200ms ease,
+    box-shadow 200ms ease,
+    border-color 200ms ease;
+}
+[data-blog-theme] .blog-card-lift:hover {
+  transform: translateY(-4px);
+  border-color: var(--gf-border);
+  box-shadow:
+    0 8px 28px rgb(0 0 0 / 0.20),
+    0 0 0 1px rgb(132 204 22 / 0.20);
+}
+
+[data-blog-theme] .blog-img-zoom { overflow: hidden; }
+[data-blog-theme] .blog-img-zoom img,
+[data-blog-theme] .blog-img-zoom > * > img {
+  transition: transform 400ms ease;
+}
+[data-blog-theme] .blog-card-lift:hover .blog-img-zoom img {
+  transform: scale(1.04);
+}
+
+[data-blog-theme] .blog-chip {
+  display: inline-flex;
+  align-items: center;
+  height: 24px;
+  padding: 0 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  background: rgb(163 230 53 / 0.10);
+  color: var(--gf-lime-400);
+  border: 1px solid rgb(163 230 53 / 0.20);
+}
+
 /* Inputs / selects / textareas inside the dashboard. Catches
  * anything from a nutrition-log form to admin search bars. */
 [data-theme='dashboard'] input:not([type='checkbox']):not([type='radio']):not([type='range']):not([type='color']):not([type='file']),
