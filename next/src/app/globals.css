@@ -269,6 +269,37 @@
   letter-spacing: -0.02em;
 }
 
+/* ── Global icon-to-text spacing ─────────────────────────────────
+ * Catches any flex row that holds an inline SVG (Lucide / heroicons)
+ * directly followed by sibling text without an explicit gap. Scoped
+ * to the dashboard subtree so the marketing site is unaffected.
+ *
+ * Components that already declare a gap-* utility win because their
+ * specificity beats this default. The `!important` is reserved for
+ * surfaces where a stale className was leaving icons glued to labels
+ * (nav items, menu items, tabs, quick actions, badges). */
+[data-theme='dashboard'] .flex.items-center > svg:first-child:not([class*='ms-']):not([class*='me-']),
+[data-theme='dashboard'] .inline-flex.items-center > svg:first-child:not([class*='ms-']):not([class*='me-']) {
+  flex-shrink: 0;
+  margin-inline-end: 8px;
+}
+
+/* Authoritative gap on chrome that historically had inconsistent values. */
+[data-theme='dashboard'] nav a,
+[data-theme='dashboard'] nav button,
+[data-theme='dashboard'] [role='menuitem'],
+[data-theme='dashboard'] [role='tab'] {
+  gap: 10px;
+}
+
+/* SVGs inside any badge / pill / chip wrapper get a smaller gap. */
+[data-theme='dashboard'] [class*='badge'] > svg,
+[data-theme='dashboard'] [class*='pill'] > svg,
+[data-theme='dashboard'] [class*='chip'] > svg {
+  margin-inline-end: 6px;
+  flex-shrink: 0;
+}
+
 /* ── Per-tier accent colors ─────────────────────────────────────
  * Set on the dashboard shell via `data-tier="free|basic|premium|vip"`.
  * Components reference --tier-color / --tier-glow / --tier-badge-*.
