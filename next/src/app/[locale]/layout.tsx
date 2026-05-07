@@ -75,16 +75,19 @@ export const metadata: Metadata = {
   // CDN / browser doesn't fall back to a stale cached default. The
   // multi-size set in /public/logo/ (16, 32, apple, android 192/512)
   // covers iOS home-screen and Android PWA install icons.
+  // Order matters — first entry wins in most browsers. Lead with the
+  // explicit PNG paths so a stale cached favicon.ico can't keep
+  // serving the old image. The .ico fallbacks stay for legacy bots.
   icons: {
     icon: [
-      { url: '/favicon.ico', sizes: 'any' },
       { url: '/logo/favicon-32x32.png', sizes: '32x32', type: 'image/png' },
       { url: '/logo/favicon-16x16.png', sizes: '16x16', type: 'image/png' },
       { url: '/logo/android-chrome-192x192.png', sizes: '192x192', type: 'image/png' },
       { url: '/logo/android-chrome-512x512.png', sizes: '512x512', type: 'image/png' },
+      { url: '/favicon.ico', sizes: 'any' },
     ],
     shortcut: '/favicon.ico',
-    apple: '/apple-touch-icon.png',
+    apple: '/logo/apple-touch-icon.png',
   },
   // Google Search Console domain verification — emits the
   // <meta name="google-site-verification" content="..."> tag in <head>.
