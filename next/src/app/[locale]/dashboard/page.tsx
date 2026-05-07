@@ -750,7 +750,9 @@ function ProgressCard({ t }: { t: ReturnType<typeof useTranslations> }) {
   return (
     <article className="dash-card-lift rounded-2xl p-5" style={{ background: 'var(--gf-surface-raised)', border: '1px solid var(--gf-border)' }}>
       <div className="flex items-center gap-2.5 mb-3">
-        <TrendingUp className="w-4 h-4 text-lime-400" strokeWidth={1.75} />
+        <span className="icon-tile">
+          <TrendingUp size={16} strokeWidth={1.75} />
+        </span>
         <span className="text-xs uppercase tracking-eyebrow text-fg-3 font-medium">
           {t('myProgress')}
         </span>
