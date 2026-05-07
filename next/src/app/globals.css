@@ -727,6 +727,17 @@
   border: 1px solid var(--gf-border);
   box-shadow: 0 10px 40px rgb(0 0 0 / 0.18);
 }
+[data-theme='dashboard'] .glass-effect {
+  background: color-mix(in srgb, var(--gf-card) 60%, transparent) !important;
+  backdrop-filter: blur(16px) !important;
+  -webkit-backdrop-filter: blur(16px) !important;
+  border: 1px solid var(--gf-border) !important;
+  box-shadow: 0 10px 40px rgb(0 0 0 / 0.18) !important;
+}
+[data-dash-theme='light'] [data-theme='dashboard'] .glass-effect {
+  background: color-mix(in srgb, white 80%, transparent) !important;
+  box-shadow: 0 10px 40px rgb(0 0 0 / 0.06) !important;
+}
 
 /* Subtle dot grid — used as a backdrop on hero / section bands
  * to add depth without competing with content. */

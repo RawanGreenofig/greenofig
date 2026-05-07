@@ -1,7 +1,7 @@
 'use client'
 
 import { notFound, useParams } from 'next/navigation'
-import { ArrowLeft, Check, ShoppingBag, Sparkles, Plus } from '@/icons'
+import { ArrowLeft, CheckCircle2, ShoppingBag, Sparkles, Plus } from '@/icons'
 import toast from 'react-hot-toast'
 import { Link } from '@/i18n/navigation'
 import { PRODUCTS, type Product } from '@/lib/products'
@@ -163,24 +163,12 @@ export default function ProductDetailPage() {
           {product.benefits.length > 0 && (
             <ul className="mt-6 space-y-2.5">
               {product.benefits.map((b) => (
-                <li key={b} className="flex items-start gap-2.5">
-                  <span
-                    aria-hidden
-                    className="shrink-0 inline-flex items-center justify-center mt-0.5"
-                    style={{
-                      width: 20,
-                      height: 20,
-                      borderRadius: '50%',
-                      background: 'rgba(74,222,128,0.15)',
-                      color: '#4ade80',
-                    }}
-                  >
-                    <Check className="w-3 h-3" strokeWidth={2.5} />
-                  </span>
-                  <span
-                    className="text-sm leading-relaxed"
-                    style={{ color: 'var(--gf-fg-1)' }}
-                  >
+                <li key={b} className="flex items-center gap-2">
+                  <CheckCircle2
+                    className="w-4 h-4 text-primary flex-shrink-0"
+                    strokeWidth={2}
+                  />
+                  <span className="text-sm" style={{ color: 'var(--gf-fg-1)' }}>
                     {b}
                   </span>
                 </li>

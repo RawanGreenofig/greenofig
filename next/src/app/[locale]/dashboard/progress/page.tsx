@@ -295,37 +295,25 @@ function StatCard({
 }) {
   return (
     <article
-      className={`rounded-xl border p-4 md:p-5 ${
-        accent
-          ? 'border-primary/40 bg-primary/10'
-          : 'border-border bg-surface'
+      className={`glass-effect rounded-2xl p-6 flex flex-col gap-3 ${
+        accent ? 'border-primary/40' : ''
       }`}
     >
-      <div className="flex items-center gap-2.5 mb-3">
-        <span
-          className="flex items-center justify-center"
-          style={{
-            width: 32,
-            height: 32,
-            borderRadius: 8,
-            background: `${tint}1f`,
-            color: tint,
-            flexShrink: 0,
-          }}
-        >
-          <Icon size={16} strokeWidth={1.75} />
-        </span>
-        <span className="text-[11px] md:text-xs uppercase tracking-eyebrow text-fg-3 font-medium">
+      <div className="flex items-center gap-2 mb-1">
+        <Icon
+          className="w-5 h-5"
+          strokeWidth={1.75}
+          style={{ color: tint }}
+        />
+        <span className="text-xs uppercase tracking-widest text-fg-3 font-semibold">
           {label}
         </span>
       </div>
-      <p className="font-mono text-2xl md:text-3xl font-bold text-fg-1" dir="ltr">
+      <div className="text-4xl font-bold text-fg-1" dir="ltr">
         {value}
-        <span className="ms-1 text-sm font-normal text-fg-3">{unit}</span>
-      </p>
-      {sub && (
-        <p className="mt-1.5 text-xs text-fg-2">{sub}</p>
-      )}
+        <span className="text-lg text-fg-3 ml-1 font-normal">{unit}</span>
+      </div>
+      {sub && <p className="text-xs text-fg-2">{sub}</p>}
     </article>
   )
 }
@@ -499,27 +487,37 @@ function AchievementsGrid({
       <h2 className="text-base font-semibold text-fg-1 mb-3">
         {t('achievements')}
       </h2>
-      <ul className="grid grid-cols-2 md:grid-cols-4 gap-3">
+      <ul className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
         {items.map((item) => (
           <li
             key={item.id}
-            className={`rounded-xl border p-4 text-center transition-opacity ${
-              item.earned
-                ? 'border-border bg-surface'
-                : 'border-border bg-surface/40 opacity-55'
+            className={`glass-effect rounded-xl p-4 flex items-center gap-4 transition-opacity ${
+              item.earned ? '' : 'opacity-55'
             }`}
           >
-            <span
-              className="inline-flex w-12 h-12 rounded-full items-center justify-center mb-3"
+            <div
+              className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0"
               style={{
-                background: item.earned ? `${item.tint}1f` : 'var(--gf-bg-deeper)',
-                color: item.earned ? item.tint : 'var(--gf-fg-3)',
+                background: item.earned
+                  ? 'rgba(251,191,36,0.12)'
+                  : 'var(--gf-bg-deeper)',
+                border: item.earned
+                  ? '1px solid rgba(251,191,36,0.2)'
+                  : '1px solid var(--gf-border)',
               }}
             >
-              <Trophy className="w-5 h-5" strokeWidth={1.75} />
-            </span>
-            <p className="text-sm font-semibold text-fg-1">{item.title}</p>
-            <p className="mt-1 text-xs text-fg-3 leading-snug">{item.body}</p>
+              <Trophy
+                className="w-6 h-6"
+                strokeWidth={1.75}
+                style={{
+                  color: item.earned ? '#fbbf24' : 'var(--gf-fg-3)',
+                }}
+              />
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="font-semibold text-sm text-fg-1">{item.title}</p>
+              <p className="text-xs text-fg-3 leading-snug">{item.body}</p>
+            </div>
           </li>
         ))}
       </ul>

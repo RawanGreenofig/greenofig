@@ -692,11 +692,20 @@ function GoalsPane({
                 key={p}
                 type="button"
                 onClick={() => togglePref(p)}
-                className={`rounded-pill h-8 px-3.5 text-xs font-medium transition-colors ${
+                className={
                   on
-                    ? 'bg-primary/20 text-lime-400 border border-primary/40'
-                    : 'bg-surface-raised border border-border text-fg-2 hover:border-primary/40'
-                }`}
+                    ? 'px-4 py-2 rounded-full text-sm font-medium cursor-pointer transition-all border'
+                    : 'px-4 py-2 rounded-full text-sm font-medium cursor-pointer transition-all glass-effect border-border text-fg-3 hover:border-primary/30'
+                }
+                style={
+                  on
+                    ? {
+                        background: 'rgba(132,204,22,0.12)',
+                        borderColor: 'rgba(132,204,22,0.4)',
+                        color: '#a3e635',
+                      }
+                    : undefined
+                }
               >
                 {t(`goals.preferenceOptions.${p}` as 'goals.preferenceOptions.vegan')}
               </button>

@@ -575,13 +575,7 @@ function Thread() {
       className="flex flex-col h-[calc(100vh-3.5rem)] md:h-[calc(100vh-4rem)] max-w-screen-lg mx-auto"
     >
       {/* Header */}
-      <header
-        className="shrink-0 px-4 md:px-8 py-4 flex items-center gap-3"
-        style={{
-          background: 'var(--gf-surface)',
-          borderBottom: '1px solid var(--gf-border)',
-        }}
-      >
+      <header className="glass-effect border-b border-border px-6 py-4 flex items-center gap-3 flex-shrink-0">
         <DrAvatar drName={NUTRITIONIST.name} />
         <div className="min-w-0 flex-1">
           <p className="text-sm font-semibold truncate" style={{ color: 'var(--gf-fg-1)' }}>
@@ -616,23 +610,14 @@ function Thread() {
       {/* Composer */}
       <form
         onSubmit={send}
-        className="shrink-0 px-3 md:px-6 py-3 flex items-end gap-2"
-        style={{
-          background: 'var(--gf-surface)',
-          borderTop: '1px solid var(--gf-border)',
-        }}
+        className="glass-effect border-t border-border px-4 py-3 flex items-center gap-3 flex-shrink-0"
       >
         <button
           type="button"
           aria-label={t('fileAttach')}
-          className="shrink-0 w-10 h-10 rounded-full inline-flex items-center justify-center transition-colors"
-          style={{
-            background: 'var(--gf-surface-raised)',
-            border: '1px solid var(--gf-border)',
-            color: 'var(--gf-fg-2)',
-          }}
+          className="text-fg-3 hover:text-primary transition-colors p-1"
         >
-          <Paperclip className="w-4 h-4" strokeWidth={1.75} />
+          <Paperclip className="w-5 h-5" strokeWidth={1.75} />
         </button>
         <textarea
           value={draft}
@@ -646,31 +631,21 @@ function Thread() {
           rows={1}
           placeholder={t('compose')}
           maxLength={2000}
-          className="flex-1 min-h-[40px] max-h-32 resize-none rounded-2xl px-4 py-2.5 text-sm focus:outline-none leading-snug"
-          style={{
-            background: 'var(--gf-bg)',
-            border: '1px solid var(--gf-border)',
-            color: 'var(--gf-fg-1)',
-          }}
-          onFocus={(e) => (e.currentTarget.style.borderColor = 'var(--gf-primary)')}
-          onBlur={(e) => (e.currentTarget.style.borderColor = 'var(--gf-border)')}
+          className="flex-1 bg-transparent border-none outline-none text-sm placeholder:text-fg-3 resize-none min-h-[24px] max-h-32 leading-snug"
+          style={{ color: 'var(--gf-fg-1)' }}
         />
         <button
           type="submit"
           aria-label={t('send')}
           disabled={!draft.trim() || sending}
-          className="shrink-0 inline-flex items-center justify-center transition-transform disabled:opacity-40 hover:-translate-y-px disabled:hover:translate-y-0"
+          className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 transition-transform disabled:opacity-40 hover:-translate-y-px disabled:hover:translate-y-0"
           style={{
-            width: 40,
-            height: 40,
-            borderRadius: 10,
             background: 'linear-gradient(to bottom, #a3e635, #65a30d)',
-            color: '#0a0f0a',
             border: 'none',
             cursor: 'pointer',
           }}
         >
-          <Send className="w-4 h-4 rtl:-scale-x-100" strokeWidth={2.25} />
+          <Send className="w-4 h-4 text-black rtl:-scale-x-100" strokeWidth={2.25} />
         </button>
       </form>
     </motion.div>

@@ -286,8 +286,15 @@ function QuotaPill({
 }) {
   if (!isFree) {
     return (
-      <span className="hidden sm:inline-flex items-center gap-1.5 rounded-pill bg-primary/15 text-lime-400 px-3 h-8 text-xs font-semibold">
-        <Sparkles className="w-3.5 h-3.5" strokeWidth={2} />
+      <span
+        className="hidden sm:inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold"
+        style={{
+          background: 'rgba(132,204,22,0.12)',
+          border: '1px solid rgba(132,204,22,0.3)',
+          color: '#a3e635',
+        }}
+      >
+        <Sparkles className="w-4 h-4" strokeWidth={2} />
         {unlimitedLabel}
       </span>
     )
@@ -361,27 +368,35 @@ function DropZone({
           onChange={(e) => onFile(e.target.files?.[0])}
         />
 
-        <span
-          className="w-16 h-16 rounded-full flex items-center justify-center mb-5"
-          style={{ background: 'rgb(61 122 74 / 0.18)', color: 'var(--gf-lime-400)' }}
-        >
-          <Camera className="w-7 h-7" strokeWidth={1.5} />
-        </span>
-
-        <p className="text-base text-fg-1">
-          {t('dropHere')}{' '}
-          <button
-            type="button"
-            onClick={(e) => {
-              e.preventDefault()
-              onPickFile()
+        <div className="flex flex-col items-center gap-4 py-2">
+          <div
+            className="w-20 h-20 rounded-2xl flex items-center justify-center"
+            style={{
+              background:
+                'linear-gradient(135deg, rgba(132,204,22,0.2), rgba(132,204,22,0.08))',
+              border: '1px solid rgba(132,204,22,0.3)',
+              boxShadow: '0 8px 32px rgba(132,204,22,0.15)',
             }}
-            className="text-lime-400 underline underline-offset-2 hover:text-lime-300"
           >
-            {t('chooseFile')}
-          </button>
-        </p>
-        <p className="mt-1 text-xs text-fg-3">{t('supportedFormats')}</p>
+            <Camera className="w-9 h-9 text-primary" strokeWidth={1.5} />
+          </div>
+          <div className="text-center">
+            <p className="text-base font-semibold mb-1 text-fg-1">
+              {t('dropHere')}{' '}
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault()
+                  onPickFile()
+                }}
+                className="text-primary underline underline-offset-2 cursor-pointer"
+              >
+                {t('chooseFile')}
+              </button>
+            </p>
+            <p className="text-sm text-fg-3">{t('supportedFormats')}</p>
+          </div>
+        </div>
 
         <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
           <button

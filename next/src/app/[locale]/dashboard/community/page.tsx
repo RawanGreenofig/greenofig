@@ -681,11 +681,11 @@ function ActionButton({
       }
       onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
     >
-      <Icon className="w-4 h-4" strokeWidth={1.75} />
-      <span>{label}</span>
-      {typeof count === 'number' && (
-        <span style={{ fontSize: 12, color: 'var(--gf-fg-3)' }}>{count}</span>
-      )}
+      <span className="flex items-center gap-1.5">
+        <Icon className="w-4 h-4" strokeWidth={1.75} />
+        {typeof count === 'number' && <span>{count}</span>}
+      </span>
+      <span className="sr-only">{label}</span>
     </button>
   )
 }

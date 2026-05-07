@@ -555,30 +555,11 @@ function QuickAction({
   return (
     <Link
       href={href}
-      className="dash-card-lift group flex items-center gap-3 shrink-0 min-w-[160px] sm:min-w-0"
-      style={{
-        background: 'var(--gf-card)',
-        border: '1px solid var(--gf-border)',
-        borderRadius: 14,
-        padding: '14px 16px',
-      }}
+      className="glass-effect rounded-2xl h-20 flex items-center gap-4 px-5 cursor-pointer relative overflow-hidden group transition-all hover:-translate-y-1 hover:border-primary/30 shrink-0 min-w-[160px] sm:min-w-0"
     >
-      <span
-        className="flex items-center justify-center shrink-0"
-        style={{
-          width: 32,
-          height: 32,
-          borderRadius: 8,
-          background: 'var(--gf-active-bg)',
-          color: 'var(--gf-primary-text)',
-        }}
-      >
-        <Icon size={16} strokeWidth={1.75} />
-      </span>
-      <span
-        className="text-[14px] whitespace-nowrap"
-        style={{ color: 'var(--gf-fg-1)' }}
-      >
+      <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-primary/10 opacity-0 group-hover:opacity-100 transition-opacity" />
+      <Icon className="w-6 h-6 text-primary relative" strokeWidth={1.75} />
+      <span className="text-sm font-medium whitespace-nowrap relative">
         {label}
       </span>
     </Link>
