@@ -330,31 +330,29 @@ function KpiCard({
   const pct = target > 0 ? Math.min(100, Math.round((current / target) * 100)) : 0
   return (
     <article
-      className="transition-colors"
+      className="dash-card-lift"
       style={{
         background: 'var(--gf-card)',
         border: '1px solid var(--gf-border)',
         borderRadius: 16,
         padding: 20,
       }}
-      onMouseEnter={(e) => (e.currentTarget.style.borderColor = 'var(--gf-border-hover)')}
-      onMouseLeave={(e) =>
-        (e.currentTarget.style.borderColor = 'var(--gf-border)')
-      }
     >
       <div
         style={{
-          width: 36,
-          height: 36,
-          borderRadius: 10,
-          background: 'var(--gf-active-bg)',
+          width: 44,
+          height: 44,
+          borderRadius: 12,
+          background:
+            'linear-gradient(135deg, rgb(163 230 53 / 0.22), rgb(132 204 22 / 0.10))',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          marginBottom: 12,
+          marginBottom: 14,
+          boxShadow: '0 4px 12px rgb(132 204 22 / 0.12)',
         }}
       >
-        <Icon size={18} strokeWidth={1.75} color="var(--gf-primary-text)" />
+        <Icon size={20} strokeWidth={1.75} color="var(--gf-primary-text)" />
       </div>
       <p
         className="text-[11px] uppercase font-medium"
@@ -401,31 +399,29 @@ function StreakCard({
 }) {
   return (
     <article
-      className="transition-colors"
+      className="dash-card-lift"
       style={{
         background: 'var(--gf-card)',
         border: '1px solid var(--gf-border)',
         borderRadius: 16,
         padding: 20,
       }}
-      onMouseEnter={(e) => (e.currentTarget.style.borderColor = 'var(--gf-border-hover)')}
-      onMouseLeave={(e) =>
-        (e.currentTarget.style.borderColor = 'var(--gf-border)')
-      }
     >
       <div
         style={{
-          width: 36,
-          height: 36,
-          borderRadius: 10,
-          background: 'var(--gf-active-bg)',
+          width: 44,
+          height: 44,
+          borderRadius: 12,
+          background:
+            'linear-gradient(135deg, rgb(251 191 36 / 0.22), rgb(245 158 11 / 0.10))',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          marginBottom: 12,
+          marginBottom: 14,
+          boxShadow: '0 4px 12px rgb(251 191 36 / 0.12)',
         }}
       >
-        <Sparkles size={18} strokeWidth={1.75} color="var(--gf-primary-text)" />
+        <Sparkles size={20} strokeWidth={1.75} color="#fbbf24" />
       </div>
       <p
         className="text-[11px] uppercase font-medium"
@@ -468,31 +464,29 @@ function BookingCard({
 }) {
   return (
     <article
-      className="transition-colors"
+      className="dash-card-lift"
       style={{
         background: 'var(--gf-card)',
         border: '1px solid var(--gf-border)',
         borderRadius: 16,
         padding: 20,
       }}
-      onMouseEnter={(e) => (e.currentTarget.style.borderColor = 'var(--gf-border-hover)')}
-      onMouseLeave={(e) =>
-        (e.currentTarget.style.borderColor = 'var(--gf-border)')
-      }
     >
       <div
         style={{
-          width: 36,
-          height: 36,
-          borderRadius: 10,
-          background: 'var(--gf-active-bg)',
+          width: 44,
+          height: 44,
+          borderRadius: 12,
+          background:
+            'linear-gradient(135deg, rgb(96 165 250 / 0.22), rgb(59 130 246 / 0.10))',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          marginBottom: 12,
+          marginBottom: 14,
+          boxShadow: '0 4px 12px rgb(96 165 250 / 0.12)',
         }}
       >
-        <Calendar size={18} strokeWidth={1.75} color="var(--gf-primary-text)" />
+        <Calendar size={20} strokeWidth={1.75} color="#60a5fa" />
       </div>
       <p
         className="text-[11px] uppercase font-medium"

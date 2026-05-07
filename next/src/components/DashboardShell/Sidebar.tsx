@@ -14,7 +14,6 @@ import type { DashboardNavItem } from './nav'
 // from globals.css; light-mode override is applied by ThemeProvider.
 const SIDEBAR_BG = 'var(--gf-surface)'
 const SIDEBAR_BORDER = 'var(--gf-border)'
-const ACTIVE_BG = 'var(--gf-active-bg)'
 const HOVER_BG = 'var(--gf-hover-bg)'
 const ACTIVE_TEXT = 'var(--gf-primary-text)'
 const INACTIVE_TEXT = 'var(--gf-fg-2)'
@@ -159,9 +158,10 @@ export function Sidebar({
                   <Link
                     href={href}
                     onClick={onItemClick}
-                    className="group mx-2 flex items-center gap-3 px-3 py-[11px] text-[14px] transition-colors"
+                    className={`group mx-2 flex items-center gap-3 px-3 py-[11px] text-[14px] transition-all ${
+                      active ? 'dash-sidebar-active' : ''
+                    }`}
                     style={{
-                      background: active ? ACTIVE_BG : 'transparent',
                       color: active ? ACTIVE_TEXT : INACTIVE_TEXT,
                       fontWeight: active ? 600 : 500,
                       borderRadius: 10,
@@ -170,12 +170,14 @@ export function Sidebar({
                       if (!active) {
                         e.currentTarget.style.background = HOVER_BG
                         e.currentTarget.style.color = HOVER_TEXT
+                        e.currentTarget.style.transform = 'translateX(2px)'
                       }
                     }}
                     onMouseLeave={(e) => {
                       if (!active) {
                         e.currentTarget.style.background = 'transparent'
                         e.currentTarget.style.color = INACTIVE_TEXT
+                        e.currentTarget.style.transform = 'translateX(0)'
                       }
                     }}
                     aria-current={active ? 'page' : undefined}

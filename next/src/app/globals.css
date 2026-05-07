@@ -195,53 +195,53 @@
  * so active sidebar items don't look saturated.
  * ──────────────────────────────────────────────────────────────── */
 [data-theme='dashboard'] {
-  /* Charcoal-green tinted dark palette. The previous indigo-blue
-   * base (#131629 etc) clashed with the lime accent; this set warms
-   * the chrome so the lime sits naturally instead of fighting blue.
-   * The marketing site is unaffected — these vars only apply inside
-   * the [data-theme="dashboard"] subtree. */
-  --gf-bg:             #080e08;
-  --gf-bg-deeper:      #040804;
-  --gf-surface:        #0f1810;
-  --gf-surface-raised: #162016;
-  --gf-card:           #162016;
-  --gf-card-hover:     #1c2a1c;
-  --gf-overlay:        #243224;
-  --gf-border:         rgba(255,255,255,0.08);
-  --gf-border-hover:   rgba(255,255,255,0.14);
-  --gf-border-focus:   rgba(163,230,53,0.5);
-  --gf-fg-1:           #eef5ee;
-  --gf-fg-2:           #7a9a7a;
-  --gf-fg-3:           #4a6a4a;
-  --gf-fg-4:           #2a3e2a;
-  --gf-input-bg:       #1c2a1c;
-  --gf-primary:        #84cc16;
-  --gf-primary-hover:  #a3e635;
-  --gf-primary-dark:   #65a30d;
-  --gf-primary-bg:     rgba(132,204,22,0.12);
-  --gf-primary-dim:    rgba(132,204,22,0.12);
-  --gf-primary-text:   #a3e635;
-  --gf-lime-400:       #a3e635;
-  --gf-danger:         #f87171;
-  --gf-danger-dim:     rgba(248,113,113,0.1);
+  /* Reference-app palette: blue-grey neutrals (hue 220) with a
+   * lime-green primary (hue 100). All tokens HSL-faithful to the
+   * reference index.css and converted to hex. The marketing site is
+   * unaffected — these vars only apply inside the
+   * [data-theme="dashboard"] subtree. */
+  --gf-bg:             #16191f;   /* hsl(220 15% 10%) — page bg     */
+  --gf-bg-deeper:      #0f1217;   /* deeper layer below bg          */
+  --gf-surface:        #1b1f26;   /* sidebar / topbar               */
+  --gf-surface-raised: #21252e;   /* hsl(220 15% 15%) — card        */
+  --gf-card:           #21252e;
+  --gf-card-hover:     #2e333a;   /* hsl(220 10% 20%) — accent      */
+  --gf-overlay:        #2e333a;   /* dropdowns, modals              */
+  --gf-border:         #393e47;   /* hsl(220 10% 25%)               */
+  --gf-border-hover:   #4a4f59;
+  --gf-border-focus:   #80d93d;
+  --gf-fg-1:           #f8f9fa;   /* hsl(220 10% 98%) — text        */
+  --gf-fg-2:           #abafba;   /* hsl(220 10% 70%) — secondary   */
+  --gf-fg-3:           #6f7480;   /* hsl(220 10% 50%) — muted       */
+  --gf-fg-4:           #3a3e47;   /* hsl(220 10% 25%) — disabled    */
+  --gf-input-bg:       #292d34;   /* hsl(220 10% 18%) — muted bg    */
+  --gf-primary:        #80d93d;   /* hsl(100 70% 55%) — lime        */
+  --gf-primary-hover:  #93e15a;
+  --gf-primary-dark:   #5fb028;
+  --gf-primary-bg:     rgba(128,217,61,0.12);
+  --gf-primary-dim:    rgba(128,217,61,0.12);
+  --gf-primary-text:   #80d93d;
+  --gf-lime-400:       #80d93d;
+  --gf-danger:         #d04444;   /* hsl(0 62% 50%)                 */
+  --gf-danger-dim:     rgba(208,68,68,0.1);
   --gf-success:        #4ade80;
   --gf-warning:        #fbbf24;
   --gf-hover-bg:       rgba(255,255,255,0.04);
-  --gf-active-bg:      rgba(132,204,22,0.1);
-  --gf-active-border:  rgba(132,204,22,0.3);
+  --gf-active-bg:      rgba(128,217,61,0.12);
+  --gf-active-border:  rgba(128,217,61,0.35);
 
   /* Per-card accent palette — kept as-is for KPI cards / sidebar
    * tints / tier indicators. Tier colors (free/basic/premium/vip)
    * also unchanged. */
-  --dash-accent-green:  #a3e635;
+  --dash-accent-green:  #80d93d;
   --dash-accent-blue:   #60a5fa;
   --dash-accent-purple: #a78bfa;
   --dash-accent-orange: #fb923c;
   --dash-accent-teal:   #2dd4bf;
   --dash-accent-pink:   #f472b6;
 
-  background: #080e08;
-  color: #eef5ee;
+  background: #16191f;
+  color: #f8f9fa;
 }
 
 /* Re-route Tailwind utilities to the new dashboard palette. Each
@@ -383,39 +383,41 @@
  *   --gf-input-bg        form fields / search bars
  *   --gf-primary         accent (lime in dark, forest in light) */
 [data-dash-theme='light'] [data-theme='dashboard'] {
-  --gf-bg:             #f5f5f5;
-  --gf-bg-deeper:      #e5e5e5;
+  /* Reference-app light palette: cool off-white bg, white cards,
+   * deeper lime primary so it stays readable on white. */
+  --gf-bg:             #f0f3f7;   /* hsl(220 20% 96%)               */
+  --gf-bg-deeper:      #dfe3eb;
   --gf-surface:        #ffffff;
   --gf-surface-raised: #ffffff;
   --gf-card:           #ffffff;
-  --gf-card-hover:     #fafafa;
+  --gf-card-hover:     #f6f8fb;
   --gf-overlay:        #ffffff;
-  --gf-border:         #e8e8e8;
-  --gf-border-hover:   #d4d4d4;
-  --gf-border-focus:   #4d7c0f;
-  --gf-fg-1:           #1a1a1a;
-  --gf-fg-2:           #444444;
-  --gf-fg-3:           #888888;
-  --gf-fg-4:           #b0b0b0;
-  --gf-input-bg:       #f8f8f8;
-  --gf-input-border:   #e8e8e8;
-  --gf-primary:        #4d7c0f;
-  --gf-primary-hover:  #65a30d;
-  --gf-primary-dark:   #365314;
-  --gf-primary-bg:     #f0fce8;
-  --gf-primary-dim:    #f0fce8;
-  --gf-primary-text:   #4d7c0f;
-  --gf-lime-400:       #4d7c0f;
+  --gf-border:         #dadee5;   /* hsl(220 15% 88%)               */
+  --gf-border-hover:   #c1c6d0;
+  --gf-border-focus:   #5fb028;
+  --gf-fg-1:           #161a21;   /* hsl(220 15% 10%)               */
+  --gf-fg-2:           #4f535c;   /* hsl(220 10% 35%)               */
+  --gf-fg-3:           #686d78;   /* hsl(220 10% 45%)               */
+  --gf-fg-4:           #b9bdc6;   /* hsl(220 10% 75%)               */
+  --gf-input-bg:       #ffffff;
+  --gf-input-border:   #dadee5;
+  --gf-primary:        #5fb028;   /* deeper lime that still reads   */
+  --gf-primary-hover:  #4d9b1d;
+  --gf-primary-dark:   #3d7a17;
+  --gf-primary-bg:     rgba(95,176,40,0.1);
+  --gf-primary-dim:    rgba(95,176,40,0.1);
+  --gf-primary-text:   #4d9b1d;
+  --gf-lime-400:       #4d9b1d;
   --gf-danger:         #dc2626;
   --gf-danger-dim:     rgba(220,38,38,0.08);
   --gf-success:        #16a34a;
   --gf-warning:        #d97706;
-  --gf-hover-bg:       rgba(0,0,0,0.04);
-  --gf-active-bg:      #f0fce8;
-  --gf-active-border:  rgba(77,124,15,0.3);
+  --gf-hover-bg:       rgba(22,26,33,0.04);
+  --gf-active-bg:      rgba(95,176,40,0.1);
+  --gf-active-border:  rgba(95,176,40,0.35);
 
-  background: #f5f5f5;
-  color: #1a1a1a;
+  background: #f0f3f7;
+  color: #161a21;
 }
 
 /* (Hover / input tokens already defined inside the main
@@ -590,6 +592,59 @@
     transition-duration: 200ms !important;
     scroll-behavior: auto !important;
   }
+}
+
+/* ── Reference dashboard visual styles ──────────────────────────
+ * Imported style language from the legacy greenofigwebsite project.
+ * Glass cards, gradient active sidebar items, hover lift on KPI cards.
+ * Scoped to [data-theme='dashboard'] so the marketing site is untouched. */
+[data-theme='dashboard'] .dash-glass {
+  background: rgb(22 32 22 / 0.6);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--gf-border);
+  box-shadow: 0 10px 40px rgb(0 0 0 / 0.18);
+}
+
+[data-dash-theme='light'] [data-theme='dashboard'] .dash-glass {
+  background: rgb(255 255 255 / 0.7);
+  border-color: var(--gf-border);
+  box-shadow: 0 10px 40px rgb(0 0 0 / 0.06);
+}
+
+[data-theme='dashboard'] .dash-card-lift {
+  transition:
+    transform 200ms var(--ease-out, cubic-bezier(0.22, 1, 0.36, 1)),
+    box-shadow 200ms var(--ease-out, cubic-bezier(0.22, 1, 0.36, 1)),
+    border-color 200ms var(--ease-out, cubic-bezier(0.22, 1, 0.36, 1));
+}
+[data-theme='dashboard'] .dash-card-lift:hover {
+  transform: translateY(-3px);
+  border-color: var(--gf-border-hover);
+  box-shadow: 0 8px 28px rgb(0 0 0 / 0.18), 0 0 0 1px rgb(132 204 22 / 0.18);
+}
+[data-dash-theme='light'] [data-theme='dashboard'] .dash-card-lift:hover {
+  box-shadow: 0 8px 24px rgb(0 0 0 / 0.10), 0 0 0 1px rgb(77 124 15 / 0.20);
+}
+
+/* Sidebar active item: full-row gradient like the reference's
+ * `bg-gradient-to-r from-primary to-green-400`. */
+[data-theme='dashboard'] .dash-sidebar-active {
+  background: linear-gradient(
+    to right,
+    rgb(132 204 22 / 0.18),
+    rgb(163 230 53 / 0.10)
+  ) !important;
+  color: var(--gf-primary-text) !important;
+  box-shadow: inset 2px 0 0 0 var(--gf-primary);
+}
+[data-dash-theme='light'] [data-theme='dashboard'] .dash-sidebar-active {
+  background: linear-gradient(
+    to right,
+    rgb(77 124 15 / 0.10),
+    rgb(132 204 22 / 0.06)
+  ) !important;
+  box-shadow: inset 2px 0 0 0 var(--gf-primary);
 }
 
 /* iOS / mobile scroll. Two purposes:
