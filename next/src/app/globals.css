@@ -745,6 +745,37 @@
   transform: scale(1.04);
 }
 
+/* ── Icon tiles ──────────────────────────────────────────────────
+ * Small rounded square behind an icon, used as a section-header
+ * marker on every dashboard card. Lime by default, with blue and
+ * amber variants for the per-card accent tiles in the progress
+ * weight cards (starting / current / goal) and similar surfaces. */
+[data-theme='dashboard'] .icon-tile {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: rgba(132,204,22,0.12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+[data-theme='dashboard'] .icon-tile svg {
+  color: var(--gf-primary-text);
+}
+[data-theme='dashboard'] .icon-tile.icon-tile-blue {
+  background: rgba(96,165,250,0.12);
+}
+[data-theme='dashboard'] .icon-tile.icon-tile-blue svg {
+  color: #60a5fa;
+}
+[data-theme='dashboard'] .icon-tile.icon-tile-amber {
+  background: rgba(251,191,36,0.12);
+}
+[data-theme='dashboard'] .icon-tile.icon-tile-amber svg {
+  color: #fbbf24;
+}
+
 [data-blog-theme] .blog-chip {
   display: inline-flex;
   align-items: center;

@@ -151,7 +151,7 @@ export default function ProgressPage() {
           label={t('starting')}
           value={startWeight}
           unit="kg"
-          tint="#5c7262"
+          tint="#60a5fa"
         />
         <StatCard
           Icon={
@@ -175,7 +175,7 @@ export default function ProgressPage() {
           label={t('goal')}
           value={goalWeight}
           unit="kg"
-          tint="#e8912a"
+          tint="#fbbf24"
         />
       </section>
 
@@ -296,10 +296,17 @@ function StatCard({
     >
       <div className="flex items-center gap-2.5 mb-3">
         <span
-          className="w-9 h-9 rounded-lg flex items-center justify-center"
-          style={{ background: `${tint}1a`, color: tint }}
+          className="flex items-center justify-center"
+          style={{
+            width: 32,
+            height: 32,
+            borderRadius: 8,
+            background: `${tint}1f`,
+            color: tint,
+            flexShrink: 0,
+          }}
         >
-          <Icon className="w-4 h-4" strokeWidth={1.75} />
+          <Icon size={16} strokeWidth={1.75} />
         </span>
         <span className="text-[11px] md:text-xs uppercase tracking-eyebrow text-fg-3 font-medium">
           {label}

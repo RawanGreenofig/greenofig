@@ -464,10 +464,17 @@ function MealSection({
       <header className="flex items-center justify-between gap-3 px-5 py-4 border-b border-border">
         <div className="flex items-center gap-3">
           <span
-            className="w-10 h-10 rounded-lg flex items-center justify-center"
-            style={{ background: `${tint}1a`, color: tint }}
+            className="flex items-center justify-center"
+            style={{
+              width: 32,
+              height: 32,
+              borderRadius: 8,
+              background: `${tint}1f`,
+              color: tint,
+              flexShrink: 0,
+            }}
           >
-            <Icon className="w-4 h-4" strokeWidth={1.75} />
+            <Icon size={16} strokeWidth={1.75} />
           </span>
           <div>
             <h3 className="text-sm font-semibold text-fg-1">
@@ -545,10 +552,17 @@ function WaterCard({
       <div className="flex items-center justify-between gap-3 mb-4">
         <div className="flex items-center gap-3">
           <span
-            className="w-9 h-9 rounded-lg flex items-center justify-center"
-            style={{ background: 'rgb(6 182 212 / 0.15)', color: '#06b6d4' }}
+            className="flex items-center justify-center"
+            style={{
+              width: 32,
+              height: 32,
+              borderRadius: 8,
+              background: 'rgb(6 182 212 / 0.15)',
+              color: '#06b6d4',
+              flexShrink: 0,
+            }}
           >
-            <Droplets className="w-4 h-4" strokeWidth={1.75} />
+            <Droplets size={16} strokeWidth={1.75} />
           </span>
           <div>
             <h3 className="text-sm font-semibold text-fg-1">{t('water')}</h3>
@@ -623,10 +637,17 @@ function SupplementsCard({
       <div className="flex items-center justify-between gap-3 mb-4">
         <div className="flex items-center gap-3">
           <span
-            className="w-9 h-9 rounded-lg flex items-center justify-center"
-            style={{ background: 'rgb(168 85 247 / 0.15)', color: '#a855f7' }}
+            className="flex items-center justify-center"
+            style={{
+              width: 32,
+              height: 32,
+              borderRadius: 8,
+              background: 'rgb(168 85 247 / 0.15)',
+              color: '#a855f7',
+              flexShrink: 0,
+            }}
           >
-            <Pill className="w-4 h-4" strokeWidth={1.75} />
+            <Pill size={16} strokeWidth={1.75} />
           </span>
           <h3 className="text-sm font-semibold text-fg-1">{t('supplements')}</h3>
         </div>
