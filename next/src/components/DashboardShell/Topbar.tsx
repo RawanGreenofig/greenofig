@@ -202,7 +202,7 @@ export function Topbar({ onOpenMenu }: { onOpenMenu: () => void }) {
               )}
             </div>
             <DropItem
-              href="/dashboard/settings"
+              href="/dashboard/settings?tab=profile"
               Icon={User}
               label={t('profile')}
               onClick={() => setOpen(false)}

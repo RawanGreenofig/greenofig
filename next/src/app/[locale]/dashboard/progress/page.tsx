@@ -313,7 +313,7 @@ function StatCard({
       </div>
       <div className="text-4xl font-bold text-fg-1" dir="ltr">
         {value}
-        <span className="text-lg text-fg-3 ml-1 font-normal">{unit}</span>
+        <span className="text-lg text-fg-3 ms-1 font-normal">{unit}</span>
       </div>
       {sub && <p className="text-xs text-fg-2">{sub}</p>}
     </article>
