@@ -103,6 +103,36 @@ function isTabKey(v: string | null): v is TabKey {
   return !!v && (VALID_TABS as readonly string[]).includes(v)
 }
 
+/**
+ * Open the Stripe billing portal. Wraps every step that can throw
+ * (fetch, response.json, redirect) so a bad response can never
+ * surface as an unhandled "Application error" on the client.
+ */
+async function openBillingPortal(): Promise<void> {
+  let res: Response
+  try {
+    res = await fetch('/api/stripe/portal', { method: 'POST' })
+  } catch {
+    toast.error('Network error — please try again')
+    return
+  }
+  let data: { url?: string; error?: string } = {}
+  try {
+    data = (await res.json()) as { url?: string; error?: string }
+  } catch {
+    /* non-JSON body — fall through with empty `data` */
+  }
+  if (res.ok && data.url) {
+    try {
+      window.location.href = data.url
+    } catch {
+      toast.error('Could not open billing portal')
+    }
+    return
+  }
+  toast.error(data.error ?? `Could not open billing portal (${res.status})`)
+}
+
 const containerVariants = {
   hidden: { opacity: 0, y: 12 },
   visible: { opacity: 1, y: 0, transition: { duration: 0.3 } },
@@ -1153,25 +1183,8 @@ function SubscriptionPane({
             <>
               <button
                 type="button"
-                onClick={async () => {
-                  try {
-                    const res = await fetch('/api/stripe/portal', {
-                      method: 'POST',
-                    })
-                    const data = (await res.json()) as {
-                      url?: string
-                      error?: string
-                    }
-                    if (res.ok && data.url) {
-                      window.location.href = data.url
-                    } else {
-                      toast.error(
-                        data.error ?? 'Could not open billing portal',
-                      )
-                    }
-                  } catch {
-                    toast.error('Network error — please try again')
-                  }
+                onClick={() => {
+                  void openBillingPortal()
                 }}
                 className="btn-secondary"
               >
@@ -1220,25 +1233,8 @@ function SubscriptionPane({
               </button>
               <button
                 type="button"
-                onClick={async () => {
-                  try {
-                    const res = await fetch('/api/stripe/portal', {
-                      method: 'POST',
-                    })
-                    const data = (await res.json()) as {
-                      url?: string
-                      error?: string
-                    }
-                    if (res.ok && data.url) {
-                      window.location.href = data.url
-                    } else {
-                      toast.error(
-                        data.error ?? 'Could not open billing portal',
-                      )
-                    }
-                  } catch {
-                    toast.error('Network error — please try again')
-                  }
+                onClick={() => {
+                  void openBillingPortal()
                 }}
                 className="btn-secondary"
               >
@@ -1496,22 +1492,9 @@ function SubscriptionPane({
           confirmLabel={t('sub.yesCancel')}
           confirmTone="warn"
           onCancel={() => setConfirmCancel(false)}
-          onConfirm={async () => {
+          onConfirm={() => {
             setConfirmCancel(false)
-            try {
-              const res = await fetch('/api/stripe/portal', { method: 'POST' })
-              const data = (await res.json()) as {
-                url?: string
-                error?: string
-              }
-              if (res.ok && data.url) {
-                window.location.href = data.url
-              } else {
-                toast.error(data.error ?? 'Could not open billing portal')
-              }
-            } catch {
-              toast.error('Network error — please try again')
-            }
+            void openBillingPortal()
           }}
         />
       )}

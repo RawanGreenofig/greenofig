@@ -801,39 +801,48 @@ html[dir='rtl'] .lucide-arrow-right {
   box-shadow: 0 10px 40px rgb(0 0 0 / 0.06) !important;
 }
 
-/* ── Bilingual EN ⇄ ع toggle pill ─────────────────────────────────
- * Used by <LanguageSwitcher>. Active side is filled with the
- * primary lime. Inactive side is transparent with a 1px primary
- * border + primary text. Hover on inactive = primary/8 tint. */
-.lang-toggle-pill {
-  height: 36px;
-  padding: 0 14px;
-  border-radius: 9999px;
-  font-weight: 600;
-  font-size: 13px;
-  letter-spacing: 0.02em;
-  cursor: pointer;
-  transition: all 0.25s ease;
-  user-select: none;
+/* ── Bilingual EN ⇄ ع toggle (rawan-nutrition-landing spec) ─────
+ * Wrapper pill with backdrop-blur + 1px white/10 border + lime
+ * outer ring shadow. Each <button> sits transparent with white/70
+ * text; the active one fills with the primary lime + dark-on-lime
+ * text. */
+.lang-switcher {
   display: inline-flex;
   align-items: center;
-  justify-content: center;
-  white-space: nowrap;
+  background: rgba(20, 22, 28, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 9999px;
+  padding: 0.3rem;
+  box-shadow:
+    0 4px 12px rgba(0, 0, 0, 0.25),
+    0 0 0 1px rgba(163, 230, 53, 0.15);
+  flex-shrink: 0;
+}
+.lang-btn {
   background: transparent;
-  border: 1px solid var(--gf-primary, #84cc16);
-  color: var(--gf-primary, #84cc16);
+  border: none;
+  color: rgba(255, 255, 255, 0.7);
+  padding: 0.4rem 0.85rem;
+  border-radius: 9999px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  line-height: 1;
+  user-select: none;
 }
-.lang-toggle-pill:hover[data-active='false'] {
-  background: rgba(132, 204, 22, 0.08);
+.lang-btn:hover {
+  color: #fff;
 }
-.lang-toggle-pill[data-active='true'] {
-  background: var(--gf-primary, #84cc16);
-  color: #0d1a12;
-  border-color: var(--gf-primary, #84cc16);
+.lang-btn.active {
+  background: var(--gf-primary, #a3e635);
+  color: hsl(220, 15%, 8%);
   cursor: default;
 }
-.lang-toggle-pill:focus-visible {
-  outline: 2px solid var(--gf-primary, #84cc16);
+.lang-btn:focus-visible {
+  outline: 2px solid var(--gf-primary, #a3e635);
   outline-offset: 2px;
 }
 

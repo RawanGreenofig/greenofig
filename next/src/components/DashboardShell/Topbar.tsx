@@ -63,11 +63,7 @@ export function Topbar({ onOpenMenu }: { onOpenMenu: () => void }) {
 
       {/* Search */}
       <div
-        className="hidden sm:flex flex-1 max-w-md items-center gap-2 rounded-xl px-3 h-10"
-        style={{
-          background: FIELD_BG,
-          border: `1px solid ${FIELD_BORDER}`,
-        }}
+        className="glass-effect hidden sm:flex flex-1 max-w-md items-center gap-2 rounded-full px-4 h-10"
       >
         <Search
           className="w-4 h-4"
@@ -78,8 +74,14 @@ export function Topbar({ onOpenMenu }: { onOpenMenu: () => void }) {
           type="search"
           placeholder={t('searchPlaceholder')}
           aria-label={t('search')}
-          className="flex-1 bg-transparent text-sm focus:outline-none"
-          style={{ color: 'var(--gf-fg-1)' }}
+          className="flex-1 text-sm placeholder:text-fg-3"
+          style={{
+            background: 'transparent',
+            border: 'none',
+            outline: 'none',
+            boxShadow: 'none',
+            color: 'var(--gf-fg-1)',
+          }}
         />
       </div>
 

@@ -47,9 +47,8 @@ export function LanguageSwitcher({ className }: { className?: string }) {
   return (
     <div
       role="group"
-      aria-label={t('switchTo', { language: '' }).trim() || 'Language'}
-      className={cn('inline-flex items-center', className)}
-      style={{ gap: 6, flexShrink: 0 }}
+      aria-label={t('switchTo', { language: '' }).trim() || 'Language switch'}
+      className={cn('lang-switcher', className)}
     >
       {routing.locales.map((code) => {
         const isActive = code === locale
@@ -62,8 +61,8 @@ export function LanguageSwitcher({ className }: { className?: string }) {
             aria-label={t('switchTo', {
               language: code === 'en' ? t('english') : t('arabic'),
             })}
-            className="lang-toggle-pill"
-            data-active={isActive}
+            className={cn('lang-btn', isActive && 'active')}
+            data-lang={code}
           >
             {LABELS[code]}
           </button>
