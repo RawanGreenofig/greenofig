@@ -86,12 +86,52 @@ const TABS: { key: TabKey; Icon: LucideIcon }[] = [
   { key: 'account',        Icon: Shield },
 ]
 
+const VALID_TABS: TabKey[] = [
+  'profile',
+  'goals',
+  'notifications',
+  'subscription',
+  'account',
+]
+
+function isTabKey(v: string | null): v is TabKey {
+  return !!v && (VALID_TABS as readonly string[]).includes(v)
+}
+
 export default function SettingsPage() {
+  // useSearchParams must live inside a Suspense boundary or Next 14
+  // refuses to prerender the page. Wrapping the whole thing keeps
+  // the implementation co-located while satisfying the contract.
+  return (
+    <Suspense fallback={null}>
+      <SettingsPageInner />
+    </Suspense>
+  )
+}
+
+function SettingsPageInner() {
   const t = useTranslations('settings')
   const tNav = useTranslations('nav')
   const { profile, tier } = useUser()
   const { user, signOut } = useAuth()
-  const [tab, setTab] = useState<TabKey>('profile')
+  // Honor `?tab=subscription` (or any other valid tab key) on first
+  // render so deep links from upgrade flows / Stripe redirects land
+  // on the right pane. Falls back to profile if the param is missing
+  // or unknown.
+  const initialSearchParams = useSearchParams()
+  const initialTabParam = initialSearchParams?.get('tab') ?? null
+  const [tab, setTab] = useState<TabKey>(
+    isTabKey(initialTabParam) ? initialTabParam : 'profile',
+  )
+
+  // Keep the active tab in sync if the URL changes after mount —
+  // e.g. the cancel link routes back here with ?tab=subscription.
+  useEffect(() => {
+    if (isTabKey(initialTabParam) && initialTabParam !== tab) {
+      setTab(initialTabParam)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialTabParam])
   const [dirty, setDirty] = useState(false)
   const [saveState, setSaveState] = useState<'idle' | 'saving' | 'saved'>('idle')
 
