@@ -66,7 +66,7 @@ export function LanguageSwitcher({ className }: { className?: string }) {
               padding: '4px 12px',
               borderRadius: 999,
               color: '#ffffff',
-              border: '1px solid rgba(255,255,255,0.12)',
+              border: '1px solid rgba(255,255,255,0.15)',
               background: isActive
                 ? 'rgba(255,255,255,0.18)'
                 : 'rgba(255,255,255,0.08)',

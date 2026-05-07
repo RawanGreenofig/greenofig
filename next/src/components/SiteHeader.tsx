@@ -24,9 +24,27 @@ export function SiteHeader() {
   const pathname = usePathname()
 
   const [scrolled, setScrolled] = useState(false)
+  // Mobile drawer uses a two-state machine so the closing animation
+  // can run before the panel unmounts:
+  //   drawerVisible — panel is in the DOM (mounted)
+  //   drawerOpen    — panel is animating into view / open
+  const [drawerVisible, setDrawerVisible] = useState(false)
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
+
+  const openDrawer = () => {
+    setDrawerVisible(true)
+    // Next frame so the initial styles flush before we toggle to open,
+    // which guarantees the transition runs (you can't transition from
+    // a brand-new element's first computed style).
+    requestAnimationFrame(() => setDrawerOpen(true))
+  }
+  const closeDrawer = () => {
+    setDrawerOpen(false)
+    // Wait for the 350ms transition to finish before unmounting.
+    setTimeout(() => setDrawerVisible(false), 350)
+  }
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 16)
@@ -37,18 +55,19 @@ export function SiteHeader() {
 
   useEffect(() => {
     setDrawerOpen(false)
+    setDrawerVisible(false)
     setMenuOpen(false)
   }, [pathname])
 
-  // Lock body scroll while the mobile drawer is open. Always restore on
+  // Lock body scroll while the mobile drawer is mounted. Always restore on
   // unmount so a nav-away never leaves the page in a frozen state.
   useEffect(() => {
     const prev = document.body.style.overflow
-    if (drawerOpen) document.body.style.overflow = 'hidden'
+    if (drawerVisible) document.body.style.overflow = 'hidden'
     return () => {
       document.body.style.overflow = prev
     }
-  }, [drawerOpen])
+  }, [drawerVisible])
 
   useEffect(() => {
     const onClick = (e: MouseEvent) => {
@@ -129,7 +148,7 @@ export function SiteHeader() {
                     background: scrolled ? '#1a1a1a' : 'rgba(255,255,255,0.08)',
                     border: scrolled
                       ? '1px solid #2a2a2a'
-                      : '1px solid rgba(255,255,255,0.12)',
+                      : '1px solid rgba(255,255,255,0.15)',
                     color: '#ffffff',
                   }}
                   onMouseEnter={(e) => {
@@ -283,7 +302,12 @@ export function SiteHeader() {
                 <Link
                   href="/sign-up"
                   className="btn-primary hidden sm:inline-flex"
-                  style={{ height: 40, padding: '0 20px', fontSize: 14 }}
+                  style={{
+                    height: 40,
+                    padding: '0 20px',
+                    fontSize: 14,
+                    fontWeight: 700,
+                  }}
                 >
                   {t('getStarted')}
                 </Link>
@@ -293,7 +317,7 @@ export function SiteHeader() {
             {/* Hamburger */}
             <button
               type="button"
-              onClick={() => setDrawerOpen(true)}
+              onClick={openDrawer}
               aria-label={t('openMenu')}
               className="md:hidden inline-flex items-center justify-center w-10 h-10 rounded-xl transition-colors"
               style={{ background: '#111', border: '1px solid #222', color: '#fff' }}
@@ -304,79 +328,72 @@ export function SiteHeader() {
         </div>
       </header>
 
-      {/* Mobile drawer — glassmorphism panel that slides + fades down
-       * from the top of the viewport. Always mounted so the closing
-       * animation can run; pointer-events-none keeps it inert while
-       * hidden so it doesn't trap clicks. */}
-      <div
-        className="md:hidden fixed inset-0"
-        style={{ zIndex: 100, pointerEvents: drawerOpen ? 'auto' : 'none' }}
-        role="dialog"
-        aria-modal
-        aria-hidden={!drawerOpen}
-      >
-        {/* Backdrop */}
-        <button
-          type="button"
-          aria-label={t('closeMenu')}
-          tabIndex={drawerOpen ? 0 : -1}
-          onClick={() => setDrawerOpen(false)}
-          className="absolute inset-0"
-          style={{
-            background: 'rgba(0, 0, 0, 0.4)',
-            backdropFilter: 'blur(4px)',
-            WebkitBackdropFilter: 'blur(4px)',
-            opacity: drawerOpen ? 1 : 0,
-            transition: 'opacity 300ms ease',
-          }}
-        />
-
-        {/* Glass panel — slides + fades from top */}
-        <div
-          className="absolute inset-x-0 top-0 flex flex-col"
-          style={{
-            background: 'rgba(10, 20, 10, 0.75)',
-            backdropFilter: 'blur(24px)',
-            WebkitBackdropFilter: 'blur(24px)',
-            border: '1px solid rgba(255, 255, 255, 0.08)',
-            borderRadius: '0 0 24px 24px',
-            padding: '80px 24px 32px',
-            boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
-            transition:
-              'transform 350ms cubic-bezier(0.16, 1, 0.3, 1), opacity 350ms cubic-bezier(0.16, 1, 0.3, 1)',
-            transform: drawerOpen ? 'translateY(0)' : 'translateY(-20px)',
-            opacity: drawerOpen ? 1 : 0,
-          }}
-        >
-          {/* Close button — top-right, regardless of writing direction */}
+      {/* Mobile drawer — side panel that slides from the end edge with
+       * a backdrop fade. Mounted only while drawerVisible so the
+       * close animation has time to run before unmount. */}
+      {drawerVisible && (
+        <>
           <button
             type="button"
-            onClick={() => setDrawerOpen(false)}
             aria-label={t('closeMenu')}
-            className="inline-flex items-center justify-center"
+            onClick={closeDrawer}
+            className="md:hidden fixed inset-0 transition-opacity duration-300"
             style={{
-              position: 'absolute',
-              top: 20,
-              insetInlineEnd: 20,
-              width: 36,
-              height: 36,
-              borderRadius: '50%',
-              background: 'rgba(255,255,255,0.1)',
-              color: '#fff',
-              border: 'none',
-              cursor: 'pointer',
+              zIndex: 40,
+              background: 'rgba(0, 0, 0, 0.5)',
+              backdropFilter: 'blur(4px)',
+              WebkitBackdropFilter: 'blur(4px)',
+              opacity: drawerOpen ? 1 : 0,
+            }}
+          />
+
+          <div
+            role="dialog"
+            aria-modal
+            className="md:hidden fixed inset-y-0 end-0 flex flex-col"
+            style={{
+              zIndex: 50,
+              width: 280,
+              maxWidth: '85vw',
+              background: 'rgba(8, 20, 10, 0.85)',
+              backdropFilter: 'blur(24px)',
+              WebkitBackdropFilter: 'blur(24px)',
+              borderInlineStart: '1px solid rgba(255, 255, 255, 0.08)',
+              boxShadow: '-8px 0 32px rgba(0,0,0,0.4)',
+              transition:
+                'transform 350ms cubic-bezier(0.16, 1, 0.3, 1)',
+              transform: drawerOpen ? 'translateX(0)' : 'translateX(100%)',
+              padding: '64px 24px 32px',
             }}
           >
-            <X className="w-[18px] h-[18px]" strokeWidth={1.75} />
-          </button>
+            <button
+              type="button"
+              onClick={closeDrawer}
+              aria-label={t('closeMenu')}
+              className="inline-flex items-center justify-center"
+              style={{
+                position: 'absolute',
+                top: 16,
+                insetInlineEnd: 16,
+                width: 36,
+                height: 36,
+                borderRadius: '50%',
+                background: 'rgba(255,255,255,0.1)',
+                color: '#fff',
+                border: 'none',
+                cursor: 'pointer',
+              }}
+            >
+              <X className="w-[18px] h-[18px]" strokeWidth={1.75} />
+            </button>
 
-          <nav className="flex flex-col">
-            {navLinks.map((l) => (
-              <a
-                key={l.href}
-                href={l.href}
-                onClick={() => setDrawerOpen(false)}
-                className="block transition-colors duration-200"
+            <nav className="flex flex-col">
+              {navLinks.map((l) => (
+                <a
+                  key={l.href}
+                  href={l.href}
+                  onClick={closeDrawer}
+                  className="block transition-colors duration-200"
                 style={{
                   padding: '16px 0',
                   fontSize: 18,
@@ -434,9 +451,10 @@ export function SiteHeader() {
                 {t('dashboard')}
               </Link>
             )}
+            </div>
           </div>
-        </div>
-      </div>
+        </>
+      )}
     </>
   )
 }
