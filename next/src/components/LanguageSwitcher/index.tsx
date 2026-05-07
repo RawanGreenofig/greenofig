@@ -48,7 +48,15 @@ export function LanguageSwitcher({ className }: { className?: string }) {
     <div
       role="group"
       aria-label={t('switchTo', { language: '' }).trim() || 'Language'}
-      className={cn('inline-flex items-center gap-1', className)}
+      className={cn('inline-flex items-center', className)}
+      style={{
+        background: 'rgba(255,255,255,0.08)',
+        border: '1px solid rgba(255,255,255,0.15)',
+        borderRadius: 999,
+        padding: 3,
+        gap: 0,
+        flexShrink: 0,
+      }}
     >
       {routing.locales.map((code) => {
         const isActive = code === locale
@@ -61,23 +69,28 @@ export function LanguageSwitcher({ className }: { className?: string }) {
             aria-label={t('switchTo', {
               language: code === 'en' ? t('english') : t('arabic'),
             })}
-            className="text-xs font-semibold transition-colors duration-fast ease-out"
+            className="font-semibold transition-colors duration-fast ease-out"
             style={{
-              padding: '4px 12px',
+              padding: '4px 14px',
               borderRadius: 999,
-              color: '#ffffff',
-              border: '1px solid rgba(255,255,255,0.15)',
+              border: 'none',
+              cursor: isActive ? 'default' : 'pointer',
+              fontSize: 13,
               background: isActive
                 ? 'rgba(255,255,255,0.18)'
-                : 'rgba(255,255,255,0.08)',
+                : 'transparent',
+              color: isActive ? '#ffffff' : 'rgba(255,255,255,0.5)',
+              userSelect: 'none',
+              position: 'relative',
+              zIndex: 1,
             }}
             onMouseEnter={(e) => {
               if (!isActive)
-                e.currentTarget.style.background = 'rgba(255,255,255,0.15)'
+                e.currentTarget.style.color = 'rgba(255,255,255,0.8)'
             }}
             onMouseLeave={(e) => {
               if (!isActive)
-                e.currentTarget.style.background = 'rgba(255,255,255,0.08)'
+                e.currentTarget.style.color = 'rgba(255,255,255,0.5)'
             }}
           >
             {LABELS[code]}
