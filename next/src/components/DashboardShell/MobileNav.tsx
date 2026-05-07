@@ -63,8 +63,8 @@ export function MobileNav({
             height: 56,
             marginTop: -20,
             background:
-              'linear-gradient(to bottom, #a3e635, #65a30d)',
-            color: '#0a0f0a',
+              'linear-gradient(to bottom, var(--gf-primary-text, #a3e635), var(--gf-primary-dark, #65a30d))',
+            color: 'var(--gf-bg, #080e08)',
             border: '3px solid var(--gf-bg)',
             boxShadow: '0 4px 16px rgba(163, 230, 53, 0.4)',
           }}
