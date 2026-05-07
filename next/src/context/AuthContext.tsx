@@ -6,7 +6,6 @@ import {
   useContext,
   useEffect,
   useMemo,
-  useRef,
   useState,
   type ReactNode,
 } from 'react'
@@ -37,32 +36,92 @@ const TIER_RANK: Record<UserTier, number> = {
   vip: 3,
 }
 
+/* ── localStorage cache ────────────────────────────────────────
+ * Tier is persisted across reloads so the first render of any
+ * page already knows the user's level. Without this, the dashboard
+ * renders `free` chrome on every cold load while the profile fetch
+ * is in flight, then flips to `premium` once the fetch resolves —
+ * visible as a flicker. TTL is 1h. Cleared on sign-out. */
+const TIER_KEY = 'gf_tier'
+const TIER_TS_KEY = 'gf_tier_ts'
+const TIER_TTL_MS = 60 * 60 * 1000
+
+function readCachedTier(): UserTier | null {
+  if (typeof window === 'undefined') return null
+  try {
+    const tier = window.localStorage.getItem(TIER_KEY)
+    const ts = window.localStorage.getItem(TIER_TS_KEY)
+    if (!tier || !ts) return null
+    const age = Date.now() - Number(ts)
+    if (Number.isNaN(age) || age >= TIER_TTL_MS) return null
+    if (tier !== 'free' && tier !== 'basic' && tier !== 'premium' && tier !== 'vip') {
+      return null
+    }
+    return tier as UserTier
+  } catch {
+    return null
+  }
+}
+
+function writeCachedTier(tier: UserTier): void {
+  if (typeof window === 'undefined') return
+  try {
+    window.localStorage.setItem(TIER_KEY, tier)
+    window.localStorage.setItem(TIER_TS_KEY, String(Date.now()))
+  } catch {
+    /* private mode / quota — fine */
+  }
+}
+
+function clearCachedTier(): void {
+  if (typeof window === 'undefined') return
+  try {
+    window.localStorage.removeItem(TIER_KEY)
+    window.localStorage.removeItem(TIER_TS_KEY)
+  } catch {
+    /* fine */
+  }
+}
+
 /**
- * AuthProvider tier-flicker guard
- * --------------------------------
- * The dashboard reads `tier` to decide whether to show premium UI. The
- * Stripe webhook updates the row a few hundred ms after the user lands
- * back on the app, so the FIRST profile fetch can come back as `free`
- * before the webhook has written `premium`. Without protection, the
- * dashboard renders `free` chrome, then `premium` chrome a moment later
- * — visible as a flash of the upgrade card.
+ * AuthProvider — tier-flicker hardened
  *
- * The fix is a `tierRef` + a "never downgrade mid-session" rule: any
- * fetch whose tier ranks LOWER than the cached tier is treated as a
- * stale read and ignored. Real downgrades (cancellation) take effect
- * on next page load. We also drop the visibilitychange / focus /
- * route-change refetch listeners — those were the multipliers that
- * turned a single stale read into a flicker every time the user
- * tabbed in or navigated.
+ * Three layers of protection against the dashboard flashing `free` to
+ * a paying user:
+ *
+ *   1. localStorage cache. The very first render reads the last-known
+ *      tier from localStorage, so a paying user never sees `free`
+ *      chrome between page load and profile fetch.
+ *   2. Never-downgrade rule. Any incoming tier ranked LOWER than the
+ *      currently-applied tier is treated as a stale read and ignored.
+ *      Real downgrades (cancellation) take effect on next page load.
+ *   3. Single refetch trigger. Only mount + Supabase auth events
+ *      (SIGNED_IN / TOKEN_REFRESHED / SIGNED_OUT) fire a refetch.
+ *      No focus / visibilitychange / pathname listeners — those were
+ *      the multipliers turning one stale read into a visible flicker.
  */
 export function AuthProvider({ children }: { children: ReactNode }) {
   const supabase = getBrowserSupabase()
   const [session, setSession] = useState<Session | null>(null)
   const [profile, setProfile] = useState<Profile | null>(null)
+  // Tier lives separately from profile so we can seed it from
+  // localStorage before any network round-trip. Reading from cache
+  // inside the initializer keeps the first render synchronous.
+  const [tier, setTier] = useState<UserTier | null>(() => readCachedTier())
   const [isLoading, setIsLoading] = useState<boolean>(!!supabase)
 
-  // Cached tier — survives across renders, lets us reject stale reads.
-  const tierRef = useRef<UserTier | null>(null)
+  const applyTier = useCallback((incoming: UserTier) => {
+    setTier((current) => {
+      const currentRank = current ? TIER_RANK[current] : -1
+      const incomingRank = TIER_RANK[incoming]
+      // Never downgrade mid-session.
+      if (incomingRank < currentRank) return current
+      // Persist whenever we accept a write so the next page load
+      // already has it.
+      writeCachedTier(incoming)
+      return incoming
+    })
+  }, [])
 
   const fetchAndApplyProfile = useCallback(
     async (userId: string) => {
@@ -74,21 +133,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         .maybeSingle()
       const next = (data as Profile | null) ?? null
       if (!next) return
-
-      const incoming = (next.tier ?? 'free') as UserTier
-      const current = (tierRef.current ?? 'free') as UserTier
-
-      // Never downgrade mid-session. A stale read landing as 'free'
-      // when we've already cached 'premium' would otherwise wipe the
-      // user's premium UI for one render cycle.
-      if (TIER_RANK[incoming] < TIER_RANK[current]) {
-        return
-      }
-
-      tierRef.current = incoming
       setProfile(next)
+      applyTier((next.tier ?? 'free') as UserTier)
     },
-    [supabase],
+    [supabase, applyTier],
   )
 
   const refresh = useCallback(async () => {
@@ -102,7 +150,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       await fetchAndApplyProfile(data.session.user.id)
     } else {
       setProfile(null)
-      tierRef.current = null
+      setTier(null)
+      clearCachedTier()
     }
     setIsLoading(false)
   }, [supabase, fetchAndApplyProfile])
@@ -115,14 +164,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     void refresh()
 
-    // ONLY refetch on auth state transitions. No focus / visibility /
-    // pathname listeners — those were the source of the flicker.
+    // ONLY refetch on auth state transitions — never on focus or
+    // visibilitychange or route change.
     const { data: sub } = supabase.auth.onAuthStateChange(
       async (event, nextSession) => {
         setSession(nextSession)
         if (event === 'SIGNED_OUT' || !nextSession?.user) {
           setProfile(null)
-          tierRef.current = null
+          setTier(null)
+          clearCachedTier()
           return
         }
         if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
@@ -141,7 +191,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await supabase.auth.signOut()
     setSession(null)
     setProfile(null)
-    tierRef.current = null
+    setTier(null)
+    clearCachedTier()
   }, [supabase])
 
   const value = useMemo<AuthContextValue>(
@@ -150,12 +201,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       session,
       profile,
       role: profile?.role ?? null,
-      tier: profile?.tier ?? null,
+      // Prefer the dedicated tier state (which is seeded from cache
+      // and rank-guarded). Fall back to whatever the profile carries
+      // for the brief window between fetch and the applyTier write.
+      tier: tier ?? profile?.tier ?? null,
       isLoading,
       signOut,
       refresh,
     }),
-    [session, profile, isLoading, signOut, refresh],
+    [session, profile, tier, isLoading, signOut, refresh],
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
