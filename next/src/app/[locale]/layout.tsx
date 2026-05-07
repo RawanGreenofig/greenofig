@@ -86,6 +86,11 @@ export const metadata: Metadata = {
     shortcut: '/favicon.ico',
     apple: '/apple-touch-icon.png',
   },
+  // Google Search Console domain verification — emits the
+  // <meta name="google-site-verification" content="..."> tag in <head>.
+  verification: {
+    google: 'WdvkxsKC5KThyVfnh5WhkcliKeuCELyTTxO3eDOR_JU',
+  },
 }
 
 export const viewport: Viewport = {
