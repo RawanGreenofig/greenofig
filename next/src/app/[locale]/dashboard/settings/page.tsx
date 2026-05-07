@@ -828,17 +828,31 @@ function NotifPane({
                     )}
                   </p>
                 </div>
-                <div className="flex items-center gap-3 shrink-0">
-                  <ChannelToggle
-                    label={t('notif.channelEmail')}
-                    on={ch.email}
-                    onChange={(v) => setChannel(topic, 'email', v)}
-                  />
-                  <ChannelToggle
-                    label={t('notif.channelPush')}
-                    on={ch.push}
-                    onChange={(v) => setChannel(topic, 'push', v)}
-                  />
+                <div className="flex items-center gap-5 shrink-0">
+                  <div className="flex flex-col items-center gap-1">
+                    <span
+                      className="text-[10px] uppercase text-fg-3 font-medium"
+                      style={{ letterSpacing: '0.08em' }}
+                    >
+                      {t('notif.channelEmail')}
+                    </span>
+                    <Switch
+                      on={ch.email}
+                      onChange={(v) => setChannel(topic, 'email', v)}
+                    />
+                  </div>
+                  <div className="flex flex-col items-center gap-1">
+                    <span
+                      className="text-[10px] uppercase text-fg-3 font-medium"
+                      style={{ letterSpacing: '0.08em' }}
+                    >
+                      {t('notif.channelPush')}
+                    </span>
+                    <Switch
+                      on={ch.push}
+                      onChange={(v) => setChannel(topic, 'push', v)}
+                    />
+                  </div>
                 </div>
               </li>
             )
@@ -1847,31 +1861,6 @@ function ChipInput({
         className="flex-1 min-w-[120px] bg-transparent border-none px-2 text-sm text-fg-1 placeholder-fg-3 focus:outline-none h-7"
       />
     </div>
-  )
-}
-
-function ChannelToggle({
-  label,
-  on,
-  onChange,
-}: {
-  label: string
-  on: boolean
-  onChange: (v: boolean) => void
-}) {
-  return (
-    <button
-      type="button"
-      onClick={() => onChange(!on)}
-      className={`inline-flex items-center gap-1.5 rounded-pill h-8 px-3 text-[11px] font-semibold transition-colors ${
-        on
-          ? 'bg-primary/20 text-lime-400 border border-primary/40'
-          : 'bg-bg-deeper border border-border text-fg-3 hover:text-fg-1'
-      }`}
-    >
-      {on && <Check className="w-3 h-3" strokeWidth={2.5} />}
-      {label}
-    </button>
   )
 }
 

@@ -311,6 +311,17 @@
   gap: 8px;
 }
 
+/* No drop-shadow / box-shadow on dashboard icon wrappers. Buttons
+ * with intentional lime glow are <button>, not <span>, so the
+ * span-scoped rule below leaves the lime CTA shadow untouched. */
+[data-theme='dashboard'] svg {
+  filter: none !important;
+}
+[data-theme='dashboard'] span:has(> svg) {
+  filter: none !important;
+  box-shadow: none !important;
+}
+
 /* ── Per-tier accent colors ─────────────────────────────────────
  * Set on the dashboard shell via `data-tier="free|basic|premium|vip"`.
  * Components reference --tier-color / --tier-glow / --tier-badge-*.
