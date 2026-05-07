@@ -306,12 +306,11 @@ function OrderRow({
         className="w-full text-start flex flex-wrap items-center gap-4 px-5 py-4 hover:bg-surface-raised transition-colors"
         aria-expanded={expanded}
       >
-        <span
-          className="shrink-0 inline-flex w-11 h-11 rounded-lg items-center justify-center"
-          style={{ background: meta.bg, color: meta.tint }}
-        >
-          <meta.Icon className="w-4 h-4" strokeWidth={1.75} />
-        </span>
+        <meta.Icon
+          className="w-6 h-6 flex-shrink-0"
+          strokeWidth={1.75}
+          style={{ color: meta.tint }}
+        />
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-baseline gap-x-3 gap-y-0.5">
             <p className="text-sm font-semibold text-fg-1 font-mono" dir="ltr">

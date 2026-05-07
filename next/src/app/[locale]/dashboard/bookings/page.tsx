@@ -739,15 +739,10 @@ function BookingList({
             key={b.id}
             className="rounded-xl border border-border bg-surface p-5 flex flex-wrap items-center gap-4"
           >
-            <span
-              className="shrink-0 w-12 h-12 rounded-lg inline-flex items-center justify-center"
-              style={{
-                background: 'rgb(61 122 74 / 0.18)',
-                color: 'var(--gf-lime-400)',
-              }}
-            >
-              <session.Icon className="w-5 h-5" strokeWidth={1.75} />
-            </span>
+            <session.Icon
+              className="w-6 h-6 text-primary flex-shrink-0"
+              strokeWidth={1.75}
+            />
             <div className="flex-1 min-w-0">
               <p className="text-sm font-semibold text-fg-1">{t(b.type)}</p>
               <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-fg-2 font-mono" dir="ltr">

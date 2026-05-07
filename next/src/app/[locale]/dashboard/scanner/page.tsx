@@ -441,12 +441,7 @@ function NoFoodCard({
         </div>
       )}
       <div className="p-10 flex flex-col items-center text-center gap-3">
-        <span
-          className="w-16 h-16 rounded-full flex items-center justify-center"
-          style={{ background: '#1a1a1a', color: '#333' }}
-        >
-          <Camera className="w-8 h-8" strokeWidth={1.5} />
-        </span>
+        <Camera className="w-8 h-8 text-purple-500" strokeWidth={1.5} />
         <p className="text-sm" style={{ color: '#888' }}>
           {reason ?? 'Point your camera at food'}
         </p>
@@ -692,12 +687,10 @@ function Stat({
 function LimitCard({ t }: { t: ReturnType<typeof useTranslations> }) {
   return (
     <div className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-6 md:p-8 text-center">
-      <span
-        className="inline-flex w-12 h-12 rounded-full items-center justify-center mb-4"
-        style={{ background: 'rgb(232 145 42 / 0.15)', color: '#e8912a' }}
-      >
-        <AlertCircle className="w-5 h-5" strokeWidth={1.75} />
-      </span>
+      <AlertCircle
+        className="w-8 h-8 text-yellow-500 mx-auto mb-4"
+        strokeWidth={1.75}
+      />
       <h2 className="text-lg font-semibold text-fg-1">{t('limitReached')}</h2>
       <p className="mt-2 text-sm text-fg-2 max-w-md mx-auto">
         {t('limitReachedBody')}

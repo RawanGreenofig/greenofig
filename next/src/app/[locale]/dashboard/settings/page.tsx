@@ -1668,11 +1668,8 @@ function AccountPane({
 
       <Section title={t('account.sectionDanger')} tone="danger">
         <div className="rounded-xl border border-rose-500/30 bg-rose-500/5 p-5 flex flex-wrap items-start gap-4">
-          <span
-            className="shrink-0 w-10 h-10 rounded-lg inline-flex items-center justify-center"
-            style={{ background: 'rgb(244 63 94 / 0.12)', color: '#f43f5e' }}
-          >
-            <AlertTriangle className="w-4 h-4" strokeWidth={1.75} />
+          <span className="shrink-0 inline-flex">
+            <AlertTriangle className="w-6 h-6 text-rose-500" strokeWidth={1.75} />
           </span>
           <div className="flex-1 min-w-0">
             <p className="text-sm font-medium text-fg-1">

@@ -84,12 +84,10 @@ function UpgradeGate({ t }: { t: ReturnType<typeof useTranslations> }) {
   return (
     <motion.div variants={containerVariants} initial="hidden" animate="visible" className="px-4 md:px-8 py-12 max-w-screen-md mx-auto">
       <div className="rounded-2xl border border-primary/30 bg-gradient-to-b from-primary/10 to-transparent p-8 md:p-12 text-center">
-        <span
-          className="inline-flex w-14 h-14 rounded-full items-center justify-center mb-5"
-          style={{ background: 'rgb(61 122 74 / 0.18)', color: 'var(--gf-lime-400)' }}
-        >
-          <ChefHat className="w-6 h-6" strokeWidth={1.75} />
-        </span>
+        <ChefHat
+          className="w-8 h-8 text-primary mx-auto mb-5"
+          strokeWidth={1.75}
+        />
         <h1
           className="font-display font-bold text-fg-1 tracking-tight"
           style={{ fontSize: 'clamp(28px, 4vw, 36px)', lineHeight: 1.15 }}

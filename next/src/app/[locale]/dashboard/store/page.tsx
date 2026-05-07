@@ -671,12 +671,10 @@ function OfflineCard({ t }: { t: ReturnType<typeof useTranslations> }) {
   return (
     <div className="px-4 md:px-8 py-12 max-w-screen-md mx-auto">
       <div className="rounded-2xl border border-amber-500/30 bg-amber-500/5 p-8 md:p-12 text-center">
-        <span
-          className="inline-flex w-14 h-14 rounded-full items-center justify-center mb-5"
-          style={{ background: 'rgb(232 145 42 / 0.18)', color: '#e8912a' }}
-        >
-          <Lock className="w-6 h-6" strokeWidth={1.75} />
-        </span>
+        <Lock
+          className="w-8 h-8 text-yellow-500 mx-auto mb-5"
+          strokeWidth={1.75}
+        />
         <h1
           className="font-display font-bold text-fg-1 tracking-tight"
           style={{ fontSize: 'clamp(28px, 4vw, 36px)', lineHeight: 1.15 }}
