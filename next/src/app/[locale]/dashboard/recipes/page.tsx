@@ -1,5 +1,7 @@
 'use client'
 
+
+import { motion } from 'framer-motion'
 import { useMemo, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import {
@@ -61,6 +63,11 @@ const RECIPES: Recipe[] = [
 const CATEGORIES: Category[] = ['all', 'breakfast', 'lunch', 'dinner', 'snack', 'drink']
 const DIETARY_TAGS: DietaryTag[] = ['vegan','vegetarian','glutenFree','dairyFree','keto','halal','highProtein','quick']
 
+const containerVariants = {
+  hidden: { opacity: 0, y: 12 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.3 } },
+}
+
 export default function RecipesPage() {
   const t = useTranslations('recipes')
   const { tier } = useUser()
@@ -75,7 +82,7 @@ export default function RecipesPage() {
 
 function UpgradeGate({ t }: { t: ReturnType<typeof useTranslations> }) {
   return (
-    <div className="px-4 md:px-8 py-12 max-w-screen-md mx-auto">
+    <motion.div variants={containerVariants} initial="hidden" animate="visible" className="px-4 md:px-8 py-12 max-w-screen-md mx-auto">
       <div className="rounded-2xl border border-primary/30 bg-gradient-to-b from-primary/10 to-transparent p-8 md:p-12 text-center">
         <span
           className="inline-flex w-14 h-14 rounded-full items-center justify-center mb-5"
@@ -96,7 +103,7 @@ function UpgradeGate({ t }: { t: ReturnType<typeof useTranslations> }) {
           <UpgradeButton tier="basic" label={t('gateCta')} />
         </div>
       </div>
-    </div>
+    </motion.div>
   )
 }
 
@@ -177,7 +184,7 @@ function Library({ t }: { t: ReturnType<typeof useTranslations> }) {
           className="font-display font-bold text-fg-1 tracking-tight"
           style={{ fontSize: 'clamp(28px, 4vw, 40px)', lineHeight: 1.1 }}
         >
-          {t('title')}
+          <span className="gradient-text">{t('title')}</span>
         </h1>
         <p className="mt-2 text-sm md:text-base text-fg-2">{t('subtitle')}</p>
       </header>

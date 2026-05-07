@@ -1,5 +1,7 @@
 'use client'
 
+
+import { motion } from 'framer-motion'
 import { useEffect, useMemo, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { useUser } from '@/lib/hooks/useUser'
@@ -82,6 +84,11 @@ function fmtDate(iso: string, locale = 'en-US') {
   })
 }
 
+const containerVariants = {
+  hidden: { opacity: 0, y: 12 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.3 } },
+}
+
 export default function BookingsPage() {
   const t = useTranslations('bookings')
   const { profile } = useUser()
@@ -134,13 +141,13 @@ export default function BookingsPage() {
   }, [userId])
 
   return (
-    <div className="px-4 md:px-8 py-6 md:py-8 max-w-screen-xl mx-auto space-y-6">
+    <motion.div variants={containerVariants} initial="hidden" animate="visible" className="px-4 md:px-8 py-6 md:py-8 max-w-screen-xl mx-auto space-y-6">
       <header>
         <h1
           className="font-display font-bold text-fg-1 tracking-tight"
           style={{ fontSize: 'clamp(28px, 4vw, 40px)', lineHeight: 1.1 }}
         >
-          {t('title')}
+          <span className="gradient-text">{t('title')}</span>
         </h1>
         <p className="mt-2 text-sm md:text-base text-fg-2">{t('subtitle')}</p>
       </header>
@@ -234,7 +241,7 @@ export default function BookingsPage() {
           rows={bookings.filter((b) => b.status === 'past')}
         />
       )}
-    </div>
+    </motion.div>
   )
 }
 

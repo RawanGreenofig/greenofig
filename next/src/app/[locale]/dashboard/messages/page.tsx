@@ -1,5 +1,7 @@
 'use client'
 
+
+import { motion } from 'framer-motion'
 import { Suspense, useEffect, useRef, useState } from 'react'
 import { useLocale, useTranslations } from 'next-intl'
 import {
@@ -34,6 +36,11 @@ import { NUTRITIONIST } from '@/lib/tokens'
  * to this page with `?success=1`, where we surface a toast and clean the
  * query string up.
  */
+const containerVariants = {
+  hidden: { opacity: 0, y: 12 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.3 } },
+}
+
 export default function MessagesPage() {
   return (
     <Suspense fallback={null}>
@@ -561,7 +568,12 @@ function Thread() {
   }
 
   return (
-    <div className="flex flex-col h-[calc(100vh-3.5rem)] md:h-[calc(100vh-4rem)] max-w-screen-lg mx-auto">
+    <motion.div
+      variants={containerVariants}
+      initial="hidden"
+      animate="visible"
+      className="flex flex-col h-[calc(100vh-3.5rem)] md:h-[calc(100vh-4rem)] max-w-screen-lg mx-auto"
+    >
       {/* Header */}
       <header
         className="shrink-0 px-4 md:px-8 py-4 flex items-center gap-3"
@@ -661,7 +673,7 @@ function Thread() {
           <Send className="w-4 h-4 rtl:-scale-x-100" strokeWidth={2.25} />
         </button>
       </form>
-    </div>
+    </motion.div>
   )
 }
 

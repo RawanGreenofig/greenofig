@@ -1,5 +1,7 @@
 'use client'
 
+
+import { motion } from 'framer-motion'
 import { useMemo, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import {
@@ -69,6 +71,11 @@ function buildSeed(start: number, days: number): WeightPoint[] {
 
 const SEED = buildSeed(78.4, 90)
 
+const containerVariants = {
+  hidden: { opacity: 0, y: 12 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.3 } },
+}
+
 export default function ProgressPage() {
   const t = useTranslations('progress')
   const { profile } = useUser()
@@ -122,7 +129,7 @@ export default function ProgressPage() {
   const maxY = Math.ceil(Math.max(...series.map((p) => p.weight)) + 1)
 
   return (
-    <div className="px-4 md:px-8 py-6 md:py-8 max-w-screen-xl mx-auto space-y-6">
+    <motion.div variants={containerVariants} initial="hidden" animate="visible" className="px-4 md:px-8 py-6 md:py-8 max-w-screen-xl mx-auto space-y-6">
       {/* Header */}
       <header className="flex flex-wrap items-end justify-between gap-4">
         <div>
@@ -130,7 +137,7 @@ export default function ProgressPage() {
             className="font-display font-bold text-fg-1 tracking-tight"
             style={{ fontSize: 'clamp(28px, 4vw, 40px)', lineHeight: 1.1 }}
           >
-            {t('title')}
+            <span className="gradient-text">{t('title')}</span>
           </h1>
           <p className="mt-2 text-sm md:text-base text-fg-2">{t('subtitle')}</p>
         </div>
@@ -263,7 +270,7 @@ export default function ProgressPage() {
           onClose={() => setLogOpen(false)}
         />
       )}
-    </div>
+    </motion.div>
   )
 }
 

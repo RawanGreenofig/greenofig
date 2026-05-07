@@ -1,5 +1,7 @@
 'use client'
 
+
+import { motion } from 'framer-motion'
 import { useCallback, useRef, useState } from 'react'
 import Image from 'next/image'
 import { useTranslations } from 'next-intl'
@@ -52,6 +54,11 @@ function pickGreetingMeal(): MealType {
   if (h < 15) return 'lunch'
   if (h < 21) return 'dinner'
   return 'snack'
+}
+
+const containerVariants = {
+  hidden: { opacity: 0, y: 12 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.3 } },
 }
 
 export default function ScannerPage() {
@@ -184,7 +191,7 @@ export default function ScannerPage() {
     ) ?? { calories: 0, protein: 0, carbs: 0, fat: 0 }
 
   return (
-    <div className="px-4 md:px-8 py-6 md:py-8 max-w-screen-lg mx-auto space-y-6">
+    <motion.div variants={containerVariants} initial="hidden" animate="visible" className="px-4 md:px-8 py-6 md:py-8 max-w-screen-lg mx-auto space-y-6">
       <ScannerUsageBanner />
       {/* Header */}
       <header className="flex items-start justify-between gap-4">
@@ -193,7 +200,7 @@ export default function ScannerPage() {
             className="font-display font-bold text-fg-1 tracking-tight"
             style={{ fontSize: 'clamp(28px, 4vw, 40px)', lineHeight: 1.1 }}
           >
-            {t('title')}
+            <span className="gradient-text">{t('title')}</span>
           </h1>
           <p className="mt-2 text-sm md:text-base text-fg-2">{t('subtitle')}</p>
         </div>
@@ -260,7 +267,7 @@ export default function ScannerPage() {
           <p className="text-sm text-fg-2">{t('noRecentScans')}</p>
         </div>
       </section>
-    </div>
+    </motion.div>
   )
 }
 

@@ -1,5 +1,7 @@
 'use client'
 
+
+import { motion } from 'framer-motion'
 import { useEffect, useState } from 'react'
 import { useLocale } from 'next-intl'
 import { useRouter } from 'next/navigation'
@@ -34,6 +36,11 @@ interface Person {
   name: string
   initials: string
   isNutritionist: boolean
+}
+
+const containerVariants = {
+  hidden: { opacity: 0, y: 12 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.3 } },
 }
 
 export default function CommunityPage() {
@@ -93,7 +100,10 @@ export default function CommunityPage() {
     : people
 
   return (
-    <div
+    <motion.div
+      variants={containerVariants}
+      initial="hidden"
+      animate="visible"
       className="grid gap-5 p-5 overflow-hidden"
       style={{
         height: 'calc(100vh - 64px)',
@@ -590,7 +600,7 @@ export default function CommunityPage() {
           )}
         </aside>
       </div>
-    </div>
+    </motion.div>
   )
 }
 

@@ -1,5 +1,7 @@
 'use client'
 
+
+import { motion } from 'framer-motion'
 import { Suspense, useEffect, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { useTranslations } from 'next-intl'
@@ -97,6 +99,11 @@ const VALID_TABS: TabKey[] = [
 
 function isTabKey(v: string | null): v is TabKey {
   return !!v && (VALID_TABS as readonly string[]).includes(v)
+}
+
+const containerVariants = {
+  hidden: { opacity: 0, y: 12 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.3 } },
 }
 
 export default function SettingsPage() {
@@ -256,7 +263,7 @@ function SettingsPageInner() {
   const tierStyle = tierColor[tier ?? 'free'] ?? tierColor.free
 
   return (
-    <div className="px-4 md:px-8 py-6 md:py-8 max-w-screen-xl mx-auto space-y-6">
+    <motion.div variants={containerVariants} initial="hidden" animate="visible" className="px-4 md:px-8 py-6 md:py-8 max-w-screen-xl mx-auto space-y-6">
       {/* Back to dashboard */}
       <Link
         href="/dashboard"
@@ -344,7 +351,7 @@ function SettingsPageInner() {
           className="font-display font-bold text-fg-1 tracking-tight"
           style={{ fontSize: 'clamp(28px, 4vw, 40px)', lineHeight: 1.1 }}
         >
-          {t('title')}
+          <span className="gradient-text">{t('title')}</span>
         </h1>
         <p className="mt-2 text-sm md:text-base text-fg-2">{t('subtitle')}</p>
       </header>
@@ -443,7 +450,7 @@ function SettingsPageInner() {
           }}
         />
       )}
-    </div>
+    </motion.div>
   )
 }
 
