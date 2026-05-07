@@ -215,7 +215,7 @@ export default function AnalyticsPage() {
               <XAxis dataKey="date" stroke="#5c7262" tickLine={false} axisLine={false} tick={{ fontSize: 11 }} minTickGap={24} />
               <YAxis stroke="#5c7262" tickLine={false} axisLine={false} tick={{ fontSize: 11 }} width={28} />
               <Tooltip
-                contentStyle={{ background: '#0f1f15', border: '1px solid rgb(255 255 255 / 0.08)', borderRadius: 8, fontSize: 12, color: '#f0ede6' }}
+                contentStyle={{ background: 'var(--gf-card-hover)', border: '1px solid rgb(255 255 255 / 0.08)', borderRadius: 8, fontSize: 12, color: 'var(--gf-fg-1)' }}
                 labelStyle={{ color: '#9baf9f' }}
               />
               <Area type="monotone" dataKey="clients" stroke="#a3e635" strokeWidth={2} fill="url(#anaGrowth)" dot={false} />
@@ -233,7 +233,7 @@ export default function AnalyticsPage() {
               <XAxis dataKey="date" stroke="#5c7262" tickLine={false} axisLine={false} tick={{ fontSize: 11 }} minTickGap={24} />
               <YAxis stroke="#5c7262" tickLine={false} axisLine={false} tick={{ fontSize: 11 }} width={28} />
               <Tooltip
-                contentStyle={{ background: '#0f1f15', border: '1px solid rgb(255 255 255 / 0.08)', borderRadius: 8, fontSize: 12, color: '#f0ede6' }}
+                contentStyle={{ background: 'var(--gf-card-hover)', border: '1px solid rgb(255 255 255 / 0.08)', borderRadius: 8, fontSize: 12, color: 'var(--gf-fg-1)' }}
                 labelStyle={{ color: '#9baf9f' }}
               />
               <Bar dataKey="sessions" fill="#06b6d4" radius={[4, 4, 0, 0]} />

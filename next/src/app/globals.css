@@ -200,40 +200,40 @@
    * reference index.css and converted to hex. The marketing site is
    * unaffected — these vars only apply inside the
    * [data-theme="dashboard"] subtree. */
-  --gf-bg:             #16191f;   /* hsl(220 15% 10%) — page bg     */
-  --gf-bg-deeper:      #0f1217;   /* deeper layer below bg          */
-  --gf-surface:        #1b1f26;   /* sidebar / topbar               */
-  --gf-surface-raised: #21252e;   /* hsl(220 15% 15%) — card        */
-  --gf-card:           #21252e;
-  --gf-card-hover:     #2e333a;   /* hsl(220 10% 20%) — accent      */
-  --gf-overlay:        #2e333a;   /* dropdowns, modals              */
-  --gf-border:         #393e47;   /* hsl(220 10% 25%)               */
-  --gf-border-hover:   #4a4f59;
-  --gf-border-focus:   #80d93d;
-  --gf-fg-1:           #f8f9fa;   /* hsl(220 10% 98%) — text        */
-  --gf-fg-2:           #abafba;   /* hsl(220 10% 70%) — secondary   */
-  --gf-fg-3:           #6f7480;   /* hsl(220 10% 50%) — muted       */
-  --gf-fg-4:           #3a3e47;   /* hsl(220 10% 25%) — disabled    */
-  --gf-input-bg:       #292d34;   /* hsl(220 10% 18%) — muted bg    */
-  --gf-primary:        #80d93d;   /* hsl(100 70% 55%) — lime        */
-  --gf-primary-hover:  #93e15a;
-  --gf-primary-dark:   #5fb028;
-  --gf-primary-bg:     rgba(128,217,61,0.12);
-  --gf-primary-dim:    rgba(128,217,61,0.12);
-  --gf-primary-text:   #80d93d;
-  --gf-lime-400:       #80d93d;
-  --gf-danger:         #d04444;   /* hsl(0 62% 50%)                 */
-  --gf-danger-dim:     rgba(208,68,68,0.1);
+  --gf-bg:             #16191f;   /* main content area              */
+  --gf-bg-deeper:      #0f1217;
+  --gf-surface:        #111811;   /* sidebar + topbar               */
+  --gf-surface-raised: #1e2128;   /* card                           */
+  --gf-card:           #1e2128;
+  --gf-card-hover:     #252830;   /* card hover + inner card + input */
+  --gf-overlay:        #252830;   /* dropdowns, modals              */
+  --gf-border:         rgba(255,255,255,0.08);
+  --gf-border-hover:   rgba(255,255,255,0.14);
+  --gf-border-focus:   #84cc16;
+  --gf-fg-1:           #f0f3f7;
+  --gf-fg-2:           rgba(255,255,255,0.55);
+  --gf-fg-3:           rgba(255,255,255,0.45);
+  --gf-fg-4:           rgba(255,255,255,0.35);
+  --gf-input-bg:       #252830;
+  --gf-primary:        #84cc16;
+  --gf-primary-hover:  #a3e635;
+  --gf-primary-dark:   #65a30d;
+  --gf-primary-bg:     rgba(132,204,22,0.12);
+  --gf-primary-dim:    rgba(132,204,22,0.12);
+  --gf-primary-text:   #a3e635;
+  --gf-lime-400:       #a3e635;
+  --gf-danger:         #f87171;
+  --gf-danger-dim:     rgba(248,113,113,0.1);
   --gf-success:        #4ade80;
   --gf-warning:        #fbbf24;
-  --gf-hover-bg:       rgba(255,255,255,0.04);
-  --gf-active-bg:      rgba(128,217,61,0.12);
-  --gf-active-border:  rgba(128,217,61,0.35);
+  --gf-hover-bg:       rgba(255,255,255,0.05);
+  --gf-active-bg:      rgba(132,204,22,0.12);
+  --gf-active-border:  rgba(132,204,22,0.35);
 
-  /* Per-card accent palette — kept as-is for KPI cards / sidebar
-   * tints / tier indicators. Tier colors (free/basic/premium/vip)
-   * also unchanged. */
-  --dash-accent-green:  #80d93d;
+  /* Per-card accent palette — kept for tier indicators (free/basic/
+   * premium/vip). KPI cards no longer use these; the dashboard
+   * standardised to the lime accent across every card. */
+  --dash-accent-green:  #84cc16;
   --dash-accent-blue:   #60a5fa;
   --dash-accent-purple: #a78bfa;
   --dash-accent-orange: #fb923c;
@@ -241,7 +241,7 @@
   --dash-accent-pink:   #f472b6;
 
   background: #16191f;
-  color: #f8f9fa;
+  color: #f0f3f7;
 }
 
 /* Re-route Tailwind utilities to the new dashboard palette. Each
@@ -645,6 +645,68 @@
     rgb(132 204 22 / 0.06)
   ) !important;
   box-shadow: inset 2px 0 0 0 var(--gf-primary);
+}
+
+/* ── Dashboard global enforcement ───────────────────────────────
+ * Single source of truth that overrides any inline / per-page
+ * styling that drifted from the design system. Scoped to the
+ * dashboard subtree so the marketing site is unaffected.
+ *
+ * The rules use !important deliberately — they exist precisely to
+ * override drift in pages that hardcoded their own card/input
+ * colors. Fewer files to touch, one place to retune. */
+
+/* Reusable card class. Page authors can opt in by adding
+ * `dash-card` to a wrapper div for the canonical card chrome. */
+.dash-card {
+  background: var(--gf-card) !important;
+  border: 1px solid var(--gf-border) !important;
+  border-radius: 16px !important;
+}
+
+/* Inputs / selects / textareas inside the dashboard. Catches
+ * anything from a nutrition-log form to admin search bars. */
+[data-theme='dashboard'] input:not([type='checkbox']):not([type='radio']):not([type='range']):not([type='color']):not([type='file']),
+[data-theme='dashboard'] select,
+[data-theme='dashboard'] textarea {
+  background: var(--gf-input-bg) !important;
+  border: 1px solid var(--gf-border) !important;
+  color: var(--gf-fg-1) !important;
+  border-radius: 8px !important;
+}
+[data-theme='dashboard'] input::placeholder,
+[data-theme='dashboard'] textarea::placeholder {
+  color: var(--gf-fg-4) !important;
+}
+[data-theme='dashboard'] input:focus,
+[data-theme='dashboard'] select:focus,
+[data-theme='dashboard'] textarea:focus {
+  outline: none !important;
+  border-color: var(--gf-border-focus) !important;
+  box-shadow: 0 0 0 3px var(--gf-primary-dim) !important;
+}
+
+/* Light-mode palette flip — rule above resolves to the light
+ * vars automatically because the var cascade swaps when
+ * [data-dash-theme='light'] is present. No second block needed. */
+
+/* Strip every leading colored strip (borderInlineStartWidth >= 2)
+ * that some old card variants applied. Keeps a 1px hairline so
+ * border-radius doesn't fight an unset edge. */
+[data-theme='dashboard'] [style*='borderInlineStartWidth: 3'],
+[data-theme='dashboard'] [style*='borderInlineStartWidth:3'],
+[data-theme='dashboard'] [style*='borderLeftWidth: 3'],
+[data-theme='dashboard'] [style*='borderLeftWidth:3'] {
+  border-inline-start-width: 1px !important;
+  border-left-width: 1px !important;
+}
+
+/* Store product-card hue tints (data-product-hue) read OK on the
+ * old green palette but read as muddy pastels over #1e2128. Mute
+ * them globally so the card surface dominates instead. */
+[data-theme='dashboard'] [data-product-hue] {
+  background: var(--gf-input-bg) !important;
+  opacity: 1 !important;
 }
 
 /* iOS / mobile scroll. Two purposes:

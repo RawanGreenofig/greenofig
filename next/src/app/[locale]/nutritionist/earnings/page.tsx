@@ -223,7 +223,7 @@ export default function EarningsPage() {
               <XAxis dataKey="month" stroke="#5c7262" tickLine={false} axisLine={false} tick={{ fontSize: 11 }} />
               <YAxis stroke="#5c7262" tickLine={false} axisLine={false} tick={{ fontSize: 11 }} width={36} />
               <Tooltip
-                contentStyle={{ background: '#0f1f15', border: '1px solid rgb(255 255 255 / 0.08)', borderRadius: 8, fontSize: 12, color: '#f0ede6' }}
+                contentStyle={{ background: 'var(--gf-card-hover)', border: '1px solid rgb(255 255 255 / 0.08)', borderRadius: 8, fontSize: 12, color: 'var(--gf-fg-1)' }}
                 labelStyle={{ color: '#9baf9f' }}
                 formatter={(value) => [`${value} JOD`, '']}
               />

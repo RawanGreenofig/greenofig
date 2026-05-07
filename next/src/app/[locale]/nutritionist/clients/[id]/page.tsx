@@ -247,7 +247,7 @@ export default function ClientDetailPage() {
               className="shrink-0 w-16 h-16 rounded-full inline-flex items-center justify-center font-display text-xl font-bold"
               style={{
                 background: 'linear-gradient(135deg,#5c7262,#2c3e35)',
-                color: '#f0ede6',
+                color: 'var(--gf-fg-1)',
               }}
             >
               {profile.initials}
@@ -430,7 +430,7 @@ function OverviewPane({
                 <XAxis dataKey="date" stroke="#5c7262" tickLine={false} axisLine={false} tick={{ fontSize: 11 }} minTickGap={24} />
                 <YAxis stroke="#5c7262" tickLine={false} axisLine={false} tick={{ fontSize: 11 }} width={36} domain={['auto', 'auto']} />
                 <Tooltip
-                  contentStyle={{ background: '#0f1f15', border: '1px solid rgb(255 255 255 / 0.08)', borderRadius: 8, fontSize: 12, color: '#f0ede6' }}
+                  contentStyle={{ background: 'var(--gf-card-hover)', border: '1px solid rgb(255 255 255 / 0.08)', borderRadius: 8, fontSize: 12, color: 'var(--gf-fg-1)' }}
                   labelStyle={{ color: '#9baf9f' }}
                   formatter={(value) => [`${value} kg`, '']}
                 />
@@ -744,7 +744,7 @@ function ProgressPane({
               <XAxis dataKey="date" stroke="#5c7262" tickLine={false} axisLine={false} tick={{ fontSize: 11 }} minTickGap={32} />
               <YAxis stroke="#5c7262" tickLine={false} axisLine={false} tick={{ fontSize: 11 }} width={36} domain={['auto', 'auto']} />
               <Tooltip
-                contentStyle={{ background: '#0f1f15', border: '1px solid rgb(255 255 255 / 0.08)', borderRadius: 8, fontSize: 12, color: '#f0ede6' }}
+                contentStyle={{ background: 'var(--gf-card-hover)', border: '1px solid rgb(255 255 255 / 0.08)', borderRadius: 8, fontSize: 12, color: 'var(--gf-fg-1)' }}
                 labelStyle={{ color: '#9baf9f' }}
                 formatter={(value) => [`${value} kg`, '']}
               />

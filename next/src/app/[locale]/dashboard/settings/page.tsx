@@ -321,9 +321,9 @@ function SettingsPageInner() {
           onClick={() => void signOut()}
           className="inline-flex items-center gap-2 rounded-lg px-4 h-10 text-sm font-medium transition-colors"
           style={{
-            background: '#222',
-            border: '1px solid #2a2a2a',
-            color: '#888',
+            background: 'var(--gf-card-hover)',
+            border: '1px solid var(--gf-border)',
+            color: 'var(--gf-fg-3)',
           }}
           onMouseEnter={(e) => {
             e.currentTarget.style.color = '#f87171'

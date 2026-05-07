@@ -226,7 +226,7 @@ export default function AdminAnalyticsPage() {
               <XAxis dataKey="week" stroke="#5c7262" tickLine={false} axisLine={false} tick={{ fontSize: 11 }} minTickGap={28} />
               <YAxis stroke="#5c7262" tickLine={false} axisLine={false} tick={{ fontSize: 11 }} width={28} />
               <Tooltip
-                contentStyle={{ background: '#0f1f15', border: '1px solid rgb(255 255 255 / 0.08)', borderRadius: 8, fontSize: 12, color: '#f0ede6' }}
+                contentStyle={{ background: 'var(--gf-card-hover)', border: '1px solid rgb(255 255 255 / 0.08)', borderRadius: 8, fontSize: 12, color: 'var(--gf-fg-1)' }}
                 labelStyle={{ color: '#9baf9f' }}
               />
               <Area type="monotone" dataKey="users" stroke="#a3e635" strokeWidth={2} fill="url(#adminAna)" dot={false} />
@@ -241,7 +241,7 @@ export default function AdminAnalyticsPage() {
               <XAxis dataKey="month" stroke="#5c7262" tickLine={false} axisLine={false} tick={{ fontSize: 11 }} />
               <YAxis stroke="#5c7262" tickLine={false} axisLine={false} tick={{ fontSize: 11 }} width={36} />
               <Tooltip
-                contentStyle={{ background: '#0f1f15', border: '1px solid rgb(255 255 255 / 0.08)', borderRadius: 8, fontSize: 12, color: '#f0ede6' }}
+                contentStyle={{ background: 'var(--gf-card-hover)', border: '1px solid rgb(255 255 255 / 0.08)', borderRadius: 8, fontSize: 12, color: 'var(--gf-fg-1)' }}
                 labelStyle={{ color: '#9baf9f' }}
               />
               <Bar dataKey="subs"     stackId="rev" fill="#a3e635" />

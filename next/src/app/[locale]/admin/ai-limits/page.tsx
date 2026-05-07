@@ -194,8 +194,8 @@ export default function AILimitsPage() {
       {/* Global cap */}
       <div
         style={{
-          background: '#132218',
-          border: '0.5px solid #243d2a',
+          background: 'var(--gf-card)',
+          border: '1px solid var(--gf-border)',
           borderRadius: '12px',
           padding: '24px',
           marginBottom: '24px',
@@ -259,7 +259,7 @@ export default function AILimitsPage() {
           <div
             style={{
               height: '6px',
-              background: '#243d2a',
+              background: 'var(--gf-card-hover)',
               borderRadius: '3px',
             }}
           >
@@ -340,7 +340,7 @@ export default function AILimitsPage() {
         <div
           key={feature.key}
           style={{
-            background: '#132218',
+            background: 'var(--gf-card)',
             border: '0.5px solid #243d2a',
             borderRadius: '12px',
             padding: '24px',

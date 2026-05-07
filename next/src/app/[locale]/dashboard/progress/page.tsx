@@ -219,11 +219,11 @@ export default function ProgressPage() {
               />
               <Tooltip
                 contentStyle={{
-                  background: '#0f1f15',
+                  background: 'var(--gf-card-hover)',
                   border: '1px solid rgb(255 255 255 / 0.08)',
                   borderRadius: 8,
                   fontSize: 12,
-                  color: '#f0ede6',
+                  color: 'var(--gf-fg-1)',
                 }}
                 labelStyle={{ color: '#9baf9f' }}
                 formatter={(value) => [`${value} kg`, '']}

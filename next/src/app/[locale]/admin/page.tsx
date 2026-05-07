@@ -282,7 +282,7 @@ export default function AdminOverviewPage() {
                 <XAxis dataKey="week" stroke="#5c7262" tickLine={false} axisLine={false} tick={{ fontSize: 11 }} minTickGap={28} />
                 <YAxis stroke="#5c7262" tickLine={false} axisLine={false} tick={{ fontSize: 11 }} width={28} />
                 <Tooltip
-                  contentStyle={{ background: '#0f1f15', border: '1px solid rgb(255 255 255 / 0.08)', borderRadius: 8, fontSize: 12, color: '#f0ede6' }}
+                  contentStyle={{ background: 'var(--gf-card-hover)', border: '1px solid rgb(255 255 255 / 0.08)', borderRadius: 8, fontSize: 12, color: 'var(--gf-fg-1)' }}
                   labelStyle={{ color: '#9baf9f' }}
                 />
                 <Area type="monotone" dataKey="users" stroke="#a3e635" strokeWidth={2} fill="url(#adminGrowth)" dot={false} />
@@ -373,7 +373,7 @@ export default function AdminOverviewPage() {
                     className="shrink-0 w-9 h-9 rounded-full inline-flex items-center justify-center font-display text-xs font-bold"
                     style={{
                       background: 'linear-gradient(135deg,#5c7262,#2c3e35)',
-                      color: '#f0ede6',
+                      color: 'var(--gf-fg-1)',
                     }}
                   >
                     {s.initials}
