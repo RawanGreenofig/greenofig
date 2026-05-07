@@ -484,8 +484,6 @@ function AchievementsGrid({
     earned: boolean
     Icon: typeof Trophy
     color: string
-    bg: string
-    borderColor: string
   }[] = [
     {
       id: 'first_log',
@@ -494,8 +492,6 @@ function AchievementsGrid({
       earned: true,
       Icon: Trophy,
       color: '#fbbf24',
-      bg: 'rgba(251,191,36,0.12)',
-      borderColor: 'rgba(251,191,36,0.2)',
     },
     {
       id: 'week_streak',
@@ -504,8 +500,6 @@ function AchievementsGrid({
       earned: false,
       Icon: Flame,
       color: '#fb923c',
-      bg: 'rgba(251,146,60,0.12)',
-      borderColor: 'rgba(251,146,60,0.2)',
     },
     {
       id: 'first_kg',
@@ -514,8 +508,6 @@ function AchievementsGrid({
       earned: false,
       Icon: Scale,
       color: '#60a5fa',
-      bg: 'rgba(96,165,250,0.12)',
-      borderColor: 'rgba(96,165,250,0.2)',
     },
     {
       id: 'consistent',
@@ -524,8 +516,6 @@ function AchievementsGrid({
       earned: false,
       Icon: Star,
       color: '#fbbf24',
-      bg: 'rgba(251,191,36,0.12)',
-      borderColor: 'rgba(251,191,36,0.2)',
     },
   ]
 
@@ -542,24 +532,11 @@ function AchievementsGrid({
               item.earned ? '' : 'opacity-55'
             }`}
           >
-            <div
-              className="flex items-center justify-center flex-shrink-0"
-              style={{
-                width: 44,
-                height: 44,
-                borderRadius: 10,
-                background: item.earned ? item.bg : 'var(--gf-bg-deeper)',
-                border: item.earned
-                  ? `1px solid ${item.borderColor}`
-                  : '1px solid var(--gf-border)',
-              }}
-            >
-              <item.Icon
-                className="w-5 h-5"
-                strokeWidth={1.75}
-                style={{ color: item.earned ? item.color : 'var(--gf-fg-3)' }}
-              />
-            </div>
+            <item.Icon
+              className="w-6 h-6 flex-shrink-0"
+              strokeWidth={1.75}
+              style={{ color: item.earned ? item.color : 'var(--gf-fg-3)' }}
+            />
             <div className="min-w-0 flex-1">
               <p className="font-semibold text-sm text-fg-1">{item.title}</p>
               <p className="text-xs text-fg-3 leading-snug">{item.body}</p>
