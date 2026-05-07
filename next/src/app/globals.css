@@ -383,27 +383,27 @@
  *   --gf-input-bg        form fields / search bars
  *   --gf-primary         accent (lime in dark, forest in light) */
 [data-dash-theme='light'] [data-theme='dashboard'] {
-  --gf-bg:             #f0f4f0;
-  --gf-bg-deeper:      #dbe5db;
+  --gf-bg:             #f5f5f5;
+  --gf-bg-deeper:      #e5e5e5;
   --gf-surface:        #ffffff;
   --gf-surface-raised: #ffffff;
   --gf-card:           #ffffff;
-  --gf-card-hover:     #f4faf4;
+  --gf-card-hover:     #fafafa;
   --gf-overlay:        #ffffff;
-  --gf-border:         #d4e4d4;
-  --gf-border-hover:   #b0ccb0;
-  --gf-border-focus:   #65a30d;
-  --gf-fg-1:           #1a2e1a;
-  --gf-fg-2:           #3d5c3d;
-  --gf-fg-3:           #6b8c6b;
-  --gf-fg-4:           #9ab09a;
-  --gf-input-bg:       #f8fbf8;
-  --gf-input-border:   #d4e4d4;
+  --gf-border:         #e8e8e8;
+  --gf-border-hover:   #d4d4d4;
+  --gf-border-focus:   #4d7c0f;
+  --gf-fg-1:           #1a1a1a;
+  --gf-fg-2:           #444444;
+  --gf-fg-3:           #888888;
+  --gf-fg-4:           #b0b0b0;
+  --gf-input-bg:       #f8f8f8;
+  --gf-input-border:   #e8e8e8;
   --gf-primary:        #4d7c0f;
   --gf-primary-hover:  #65a30d;
   --gf-primary-dark:   #365314;
-  --gf-primary-bg:     rgba(77,124,15,0.08);
-  --gf-primary-dim:    rgba(77,124,15,0.08);
+  --gf-primary-bg:     #f0fce8;
+  --gf-primary-dim:    #f0fce8;
   --gf-primary-text:   #4d7c0f;
   --gf-lime-400:       #4d7c0f;
   --gf-danger:         #dc2626;
@@ -411,11 +411,11 @@
   --gf-success:        #16a34a;
   --gf-warning:        #d97706;
   --gf-hover-bg:       rgba(0,0,0,0.04);
-  --gf-active-bg:      rgba(77,124,15,0.08);
+  --gf-active-bg:      #f0fce8;
   --gf-active-border:  rgba(77,124,15,0.3);
 
-  background: #f0f4f0;
-  color: #1a2e1a;
+  background: #f5f5f5;
+  color: #1a1a1a;
 }
 
 /* (Hover / input tokens already defined inside the main
@@ -456,6 +456,20 @@
 [data-dash-theme='light'] [data-theme='dashboard'] .text-lime-400    { color: var(--gf-primary-text); }
 [data-dash-theme='light'] [data-theme='dashboard'] .text-lime-500    { color: var(--gf-primary-text); }
 [data-dash-theme='light'] [data-theme='dashboard'] .text-primary     { color: var(--gf-primary-text); }
+
+/* Light-mode cards lean on a soft box-shadow over a hairline border
+ * for elevation; dark mode keeps borders only since shadows are
+ * invisible on near-black surfaces. The selector targets every
+ * <article> in the dashboard subtree — KPI cards, list cards,
+ * macro cards, chart cards. Inline styles on specific cards still
+ * win when needed. */
+[data-dash-theme='light'] [data-theme='dashboard'] article {
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+  transition: box-shadow 200ms ease, transform 200ms ease, border-color 200ms ease;
+}
+[data-dash-theme='light'] [data-theme='dashboard'] article:hover {
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
 
 /* ── Master button styles ────────────────────────────────────────
  * Single source of truth for primary CTAs across marketing site,

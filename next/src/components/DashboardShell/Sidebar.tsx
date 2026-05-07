@@ -14,11 +14,11 @@ import type { DashboardNavItem } from './nav'
 // from globals.css; light-mode override is applied by ThemeProvider.
 const SIDEBAR_BG = 'var(--gf-surface)'
 const SIDEBAR_BORDER = 'var(--gf-border)'
-const ACTIVE_BG = 'var(--gf-surface-raised)'
-const HOVER_BG = 'var(--gf-surface-raised)'
-const ACCENT = '#60a5fa'
+const ACTIVE_BG = 'var(--gf-active-bg)'
+const HOVER_BG = 'var(--gf-hover-bg)'
+const ACTIVE_TEXT = 'var(--gf-primary-text)'
 const INACTIVE_TEXT = 'var(--gf-fg-2)'
-const ACTIVE_TEXT = 'var(--gf-fg-1)'
+const HOVER_TEXT = 'var(--gf-fg-1)'
 const GROUP_LABEL = 'var(--gf-fg-3)'
 
 type SectionKey = 'main' | 'nutrition' | 'connect' | 'manage'
@@ -159,15 +159,17 @@ export function Sidebar({
                   <Link
                     href={href}
                     onClick={onItemClick}
-                    className="group mx-2 flex items-center gap-3 rounded-xl px-3 py-[11px] text-[14px] font-medium transition-colors relative"
+                    className="group mx-2 flex items-center gap-3 px-3 py-[11px] text-[14px] transition-colors"
                     style={{
                       background: active ? ACTIVE_BG : 'transparent',
                       color: active ? ACTIVE_TEXT : INACTIVE_TEXT,
+                      fontWeight: active ? 600 : 500,
+                      borderRadius: 10,
                     }}
                     onMouseEnter={(e) => {
                       if (!active) {
                         e.currentTarget.style.background = HOVER_BG
-                        e.currentTarget.style.color = ACTIVE_TEXT
+                        e.currentTarget.style.color = HOVER_TEXT
                       }
                     }}
                     onMouseLeave={(e) => {
@@ -178,34 +180,19 @@ export function Sidebar({
                     }}
                     aria-current={active ? 'page' : undefined}
                   >
-                    {/* Active marker: a 2px x 20px pill on the leading edge. */}
-                    {active && (
-                      <span
-                        aria-hidden
-                        className="absolute top-1/2"
-                        style={{
-                          insetInlineStart: 0,
-                          transform: 'translateY(-50%)',
-                          width: 2,
-                          height: 20,
-                          borderRadius: '0 999px 999px 0',
-                          background: ACCENT,
-                        }}
-                      />
-                    )}
                     <span
                       className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
                       style={{
-                        background: `${tint}1a`,
+                        background: active ? 'rgba(132,204,22,0.15)' : `${tint}1a`,
                       }}
                     >
                       <Icon
                         className="w-4 h-4"
                         strokeWidth={active ? 2 : 1.75}
-                        style={{ color: tint }}
+                        style={{ color: active ? 'var(--gf-primary-text)' : tint }}
                       />
                     </span>
-                    <span className="flex-1 truncate text-[14px] font-medium leading-none">
+                    <span className="flex-1 truncate text-[14px] leading-none">
                       {t(labelKey)}
                     </span>
                   </Link>
@@ -261,7 +248,7 @@ export function Sidebar({
             <div className="flex items-center gap-1.5 min-w-0">
               <p
                 className="text-sm font-semibold truncate"
-                style={{ color: ACTIVE_TEXT }}
+                style={{ color: HOVER_TEXT }}
               >
                 {displayName}
               </p>
@@ -304,7 +291,7 @@ export function Sidebar({
           className="flex items-center gap-2 rounded-lg p-2 text-[13px] font-medium transition-colors"
           style={{ color: GROUP_LABEL, minHeight: 36 }}
           onMouseEnter={(e) => {
-            e.currentTarget.style.color = ACTIVE_TEXT
+            e.currentTarget.style.color = HOVER_TEXT
             e.currentTarget.style.background = HOVER_BG
           }}
           onMouseLeave={(e) => {
@@ -342,7 +329,7 @@ export function Sidebar({
           className="w-full flex items-center gap-2 rounded-lg p-2 text-[13px] font-medium transition-colors"
           style={{ color: GROUP_LABEL, minHeight: 36 }}
           onMouseEnter={(e) => {
-            e.currentTarget.style.color = ACTIVE_TEXT
+            e.currentTarget.style.color = HOVER_TEXT
             e.currentTarget.style.background = HOVER_BG
           }}
           onMouseLeave={(e) => {

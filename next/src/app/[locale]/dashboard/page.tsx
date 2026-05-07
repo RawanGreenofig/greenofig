@@ -312,14 +312,16 @@ export default function DashboardTodayPage() {
 
 function KpiCard({
   Icon,
-  accent,
   label,
   current,
   target,
   unit,
 }: {
   Icon: LucideIcon
-  accent: string
+  /** Kept for backwards compat with existing callers; the per-card
+   *  accent is no longer rendered as a left border. All KPI cards
+   *  share the lime accent for icons + progress bar. */
+  accent?: string
   label: string
   current: number
   target: number
@@ -328,39 +330,52 @@ function KpiCard({
   const pct = target > 0 ? Math.min(100, Math.round((current / target) * 100)) : 0
   return (
     <article
-      className="rounded-2xl p-4 md:p-5 transition-colors"
+      className="transition-colors"
       style={{
-        background: 'var(--gf-surface-raised)',
+        background: 'var(--gf-card)',
         border: '1px solid var(--gf-border)',
-        borderInlineStartWidth: 3,
-        borderInlineStartColor: accent,
+        borderRadius: 16,
+        padding: 20,
       }}
       onMouseEnter={(e) => (e.currentTarget.style.borderColor = 'var(--gf-border-hover)')}
       onMouseLeave={(e) =>
         (e.currentTarget.style.borderColor = 'var(--gf-border)')
       }
     >
-      <div className="flex items-center gap-2.5 mb-3">
-        <span
-          className="w-9 h-9 rounded-lg flex items-center justify-center"
-          style={{ background: `${accent}1a`, color: accent }}
-        >
-          <Icon className="w-4 h-4" strokeWidth={1.75} />
-        </span>
-        <span
-          className="text-[12px] uppercase font-semibold"
-          style={{ letterSpacing: '0.15em', color: '#4a5080' }}
-        >
-          {label}
-        </span>
+      <div
+        style={{
+          width: 36,
+          height: 36,
+          borderRadius: 10,
+          background: 'var(--gf-active-bg)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          marginBottom: 12,
+        }}
+      >
+        <Icon size={18} strokeWidth={1.75} color="var(--gf-primary-text)" />
       </div>
       <p
-        className="font-mono text-3xl font-bold"
-        style={{ color: accent }}
+        className="text-[11px] uppercase font-medium"
+        style={{
+          color: 'var(--gf-fg-3)',
+          letterSpacing: '0.08em',
+          marginBottom: 6,
+        }}
+      >
+        {label}
+      </p>
+      <p
+        className="font-mono"
+        style={{ color: 'var(--gf-fg-1)', fontSize: 28, fontWeight: 700 }}
         dir="ltr"
       >
         {current.toLocaleString()}
-        <span className="ms-1.5 text-sm font-normal" style={{ color: '#8b92b8' }}>
+        <span
+          className="ms-1.5 font-normal"
+          style={{ color: 'var(--gf-fg-3)', fontSize: 14 }}
+        >
           / {target.toLocaleString()} {unit}
         </span>
       </p>
@@ -370,7 +385,7 @@ function KpiCard({
       >
         <div
           className="h-full rounded-pill"
-          style={{ width: `${pct}%`, background: accent }}
+          style={{ width: `${pct}%`, background: 'var(--gf-primary)' }}
         />
       </div>
     </article>
@@ -384,38 +399,47 @@ function StreakCard({
   streak: number
   t: ReturnType<typeof useTranslations>
 }) {
-  const accent = '#4ade80'
   return (
     <article
-      className="rounded-2xl p-4 md:p-5 transition-colors"
+      className="transition-colors"
       style={{
-        background: 'var(--gf-surface-raised)',
+        background: 'var(--gf-card)',
         border: '1px solid var(--gf-border)',
-        borderInlineStartWidth: 3,
-        borderInlineStartColor: accent,
+        borderRadius: 16,
+        padding: 20,
       }}
       onMouseEnter={(e) => (e.currentTarget.style.borderColor = 'var(--gf-border-hover)')}
       onMouseLeave={(e) =>
         (e.currentTarget.style.borderColor = 'var(--gf-border)')
       }
     >
-      <div className="flex items-center gap-2.5 mb-3">
-        <span
-          className="w-9 h-9 rounded-lg flex items-center justify-center"
-          style={{ background: `${accent}1a`, color: accent }}
-        >
-          <Sparkles className="w-4 h-4" strokeWidth={1.75} />
-        </span>
-        <span
-          className="text-[12px] uppercase font-semibold"
-          style={{ letterSpacing: '0.15em', color: '#4a5080' }}
-        >
-          {t('kpiStreak')}
-        </span>
+      <div
+        style={{
+          width: 36,
+          height: 36,
+          borderRadius: 10,
+          background: 'var(--gf-active-bg)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          marginBottom: 12,
+        }}
+      >
+        <Sparkles size={18} strokeWidth={1.75} color="var(--gf-primary-text)" />
       </div>
       <p
-        className="font-mono text-3xl font-bold"
-        style={{ color: accent }}
+        className="text-[11px] uppercase font-medium"
+        style={{
+          color: 'var(--gf-fg-3)',
+          letterSpacing: '0.08em',
+          marginBottom: 6,
+        }}
+      >
+        {t('kpiStreak')}
+      </p>
+      <p
+        className="font-mono"
+        style={{ color: 'var(--gf-fg-1)', fontSize: 28, fontWeight: 700 }}
         dir="ltr"
       >
         {t('streakDays', { count: streak })}
@@ -425,7 +449,9 @@ function StreakCard({
           <span
             key={i}
             className="h-1.5 flex-1 rounded-pill"
-            style={{ background: i < streak ? accent : 'var(--gf-bg)' }}
+            style={{
+              background: i < streak ? 'var(--gf-primary)' : 'var(--gf-bg)',
+            }}
           />
         ))}
       </div>
@@ -440,53 +466,65 @@ function BookingCard({
   t: ReturnType<typeof useTranslations>
   booking: { whenLabel: string; type: string } | null
 }) {
-  const accent = '#4ade80'
   return (
     <article
-      className="rounded-2xl p-4 md:p-5 transition-colors"
+      className="transition-colors"
       style={{
-        background: 'var(--gf-surface-raised)',
+        background: 'var(--gf-card)',
         border: '1px solid var(--gf-border)',
-        borderInlineStartWidth: 3,
-        borderInlineStartColor: accent,
+        borderRadius: 16,
+        padding: 20,
       }}
       onMouseEnter={(e) => (e.currentTarget.style.borderColor = 'var(--gf-border-hover)')}
       onMouseLeave={(e) =>
         (e.currentTarget.style.borderColor = 'var(--gf-border)')
       }
     >
-      <div className="flex items-center gap-2.5 mb-3">
-        <span
-          className="w-9 h-9 rounded-lg flex items-center justify-center"
-          style={{ background: `${accent}1a`, color: accent }}
-        >
-          <Calendar className="w-4 h-4" strokeWidth={1.75} />
-        </span>
-        <span
-          className="text-[12px] uppercase font-semibold"
-          style={{ letterSpacing: '0.15em', color: '#4a5080' }}
-        >
-          {t('kpiNextBooking')}
-        </span>
+      <div
+        style={{
+          width: 36,
+          height: 36,
+          borderRadius: 10,
+          background: 'var(--gf-active-bg)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          marginBottom: 12,
+        }}
+      >
+        <Calendar size={18} strokeWidth={1.75} color="var(--gf-primary-text)" />
       </div>
+      <p
+        className="text-[11px] uppercase font-medium"
+        style={{
+          color: 'var(--gf-fg-3)',
+          letterSpacing: '0.08em',
+          marginBottom: 6,
+        }}
+      >
+        {t('kpiNextBooking')}
+      </p>
       {booking ? (
         <>
-          <p className="text-base font-semibold" style={{ color: '#fff' }}>
+          <p
+            className="text-base font-semibold"
+            style={{ color: 'var(--gf-fg-1)' }}
+          >
             {booking.type}
           </p>
-          <p className="text-sm mt-0.5" style={{ color: '#8b92b8' }}>
+          <p className="text-sm mt-0.5" style={{ color: 'var(--gf-fg-3)' }}>
             {booking.whenLabel}
           </p>
         </>
       ) : (
         <>
-          <p className="text-sm" style={{ color: '#8b92b8' }}>
+          <p className="text-sm" style={{ color: 'var(--gf-fg-3)' }}>
             {t('noUpcomingBooking')}
           </p>
           <Link
             href="/dashboard/bookings"
             className="mt-3 inline-flex items-center gap-1 text-xs hover:gap-2 transition-all"
-            style={{ color: accent }}
+            style={{ color: 'var(--gf-primary-text)' }}
           >
             {t('bookOne')} <ArrowRight className="w-3 h-3 rtl:rotate-180" />
           </Link>
@@ -511,32 +549,38 @@ function QuickAction({
   return (
     <Link
       href={href}
-      className="group flex items-center gap-3 rounded-xl px-4 transition-colors shrink-0 min-w-[160px] sm:min-w-0"
+      className="group flex items-center gap-3 transition-all shrink-0 min-w-[160px] sm:min-w-0"
       style={{
-        background: 'var(--gf-surface-raised)',
+        background: 'var(--gf-card)',
         border: '1px solid var(--gf-border)',
-        height: 56,
+        borderRadius: 14,
+        padding: '14px 16px',
       }}
       onMouseEnter={(e) => {
-        e.currentTarget.style.background = 'var(--gf-surface)'
+        e.currentTarget.style.background = 'var(--gf-card-hover)'
         e.currentTarget.style.borderColor = 'var(--gf-border-hover)'
+        e.currentTarget.style.transform = 'translateY(-1px)'
       }}
       onMouseLeave={(e) => {
-        e.currentTarget.style.background = 'var(--gf-surface-raised)'
+        e.currentTarget.style.background = 'var(--gf-card)'
         e.currentTarget.style.borderColor = 'var(--gf-border)'
+        e.currentTarget.style.transform = 'translateY(0)'
       }}
     >
       <span
-        className="rounded-xl p-2.5 flex items-center justify-center shrink-0"
+        className="flex items-center justify-center shrink-0"
         style={{
-          background: 'rgba(163, 230, 53, 0.10)',
-          color: '#a3e635',
+          width: 32,
+          height: 32,
+          borderRadius: 8,
+          background: 'var(--gf-active-bg)',
+          color: 'var(--gf-primary-text)',
         }}
       >
-        <Icon className="w-4 h-4" strokeWidth={1.75} />
+        <Icon size={16} strokeWidth={1.75} />
       </span>
       <span
-        className="text-[14px] font-medium whitespace-nowrap"
+        className="text-[14px] whitespace-nowrap"
         style={{ color: 'var(--gf-fg-1)' }}
       >
         {label}

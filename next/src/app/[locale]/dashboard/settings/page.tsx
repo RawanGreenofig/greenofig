@@ -843,8 +843,8 @@ function NotifPane({
                     >
                       {t('notif.channelEmail')}
                     </span>
-                    <Switch
-                      on={ch.email}
+                    <Toggle
+                      enabled={ch.email}
                       onChange={(v) => setChannel(topic, 'email', v)}
                     />
                   </div>
@@ -858,8 +858,8 @@ function NotifPane({
                     >
                       {t('notif.channelPush')}
                     </span>
-                    <Switch
-                      on={ch.push}
+                    <Toggle
+                      enabled={ch.push}
                       onChange={(v) => setChannel(topic, 'push', v)}
                     />
                   </div>
@@ -1869,6 +1869,63 @@ function ChipInput({
         }}
         placeholder={values.length === 0 ? placeholder : ''}
         className="flex-1 min-w-[120px] bg-transparent border-none px-2 text-sm text-fg-1 placeholder-fg-3 focus:outline-none h-7"
+      />
+    </div>
+  )
+}
+
+/**
+ * Toggle — div-based switch for the notification preference rows.
+ *
+ * Uses inline styles + a div root rather than the Tailwind <button>-based
+ * <Switch> because flex-shrink interactions in tightly-packed parent rows
+ * were collapsing button-based switches to a 1px width on some viewports.
+ * The div has minWidth:44 to make collapsing impossible.
+ */
+function Toggle({
+  enabled,
+  onChange,
+}: {
+  enabled: boolean
+  onChange: (v: boolean) => void
+}) {
+  return (
+    <div
+      role="switch"
+      aria-checked={enabled}
+      tabIndex={0}
+      onClick={() => onChange(!enabled)}
+      onKeyDown={(e) => {
+        if (e.key === ' ' || e.key === 'Enter') {
+          e.preventDefault()
+          onChange(!enabled)
+        }
+      }}
+      style={{
+        width: 44,
+        minWidth: 44,
+        height: 24,
+        borderRadius: 12,
+        backgroundColor: enabled ? '#84cc16' : 'rgba(255,255,255,0.12)',
+        position: 'relative',
+        cursor: 'pointer',
+        transition: 'background 200ms',
+        flexShrink: 0,
+        display: 'inline-block',
+      }}
+    >
+      <div
+        style={{
+          width: 18,
+          height: 18,
+          borderRadius: 9,
+          backgroundColor: 'white',
+          position: 'absolute',
+          top: 3,
+          left: enabled ? 23 : 3,
+          transition: 'left 200ms',
+          boxShadow: '0 1px 3px rgba(0,0,0,0.3)',
+        }}
       />
     </div>
   )
