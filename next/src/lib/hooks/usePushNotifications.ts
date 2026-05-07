@@ -1,7 +1,6 @@
 'use client'
 
 import { useCallback, useEffect, useState } from 'react'
-import { getBrowserSupabase } from '@/lib/supabase/client'
 
 type Permission = 'default' | 'granted' | 'denied' | 'unsupported'
 
@@ -90,26 +89,23 @@ export function usePushNotifications(
         return
       }
 
-      const supabase = getBrowserSupabase()
-      if (!supabase) return
-      // The push_subscriptions table is added by migration 006 — until
-      // the generated supabase/types include it, the upsert payload is
-      // typed as `never`. Cast through to satisfy the compiler; the
-      // shape matches the migration columns 1:1.
-      await supabase
-        .from('push_subscriptions')
-        .upsert(
-          {
-            user_id: userId,
-            endpoint: subJson.endpoint,
+      const res = await fetch('/api/push/subscribe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          endpoint: subJson.endpoint,
+          keys: {
             p256dh: subJson.keys.p256dh,
             auth: subJson.keys.auth,
-            user_agent:
-              typeof navigator !== 'undefined' ? navigator.userAgent : null,
-            updated_at: new Date().toISOString(),
-          } as never,
-          { onConflict: 'endpoint' },
-        )
+          },
+        }),
+      })
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}))
+        console.error('[push] save subscription failed:', err)
+        return
+      }
+      console.log('[push] subscription saved')
     } catch (e) {
       console.error('[push] enable failed:', e)
     } finally {
