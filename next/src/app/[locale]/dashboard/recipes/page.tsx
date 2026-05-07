@@ -12,7 +12,7 @@ import {
   ChefHat,
   ArrowRight,
   Filter,
-} from 'lucide-react'
+} from '@/icons'
 import UpgradeButton from '@/components/UpgradeButton'
 import { useUser } from '@/lib/hooks/useUser'
 import { useSupabaseQuery } from '@/lib/hooks/useSupabaseQuery'

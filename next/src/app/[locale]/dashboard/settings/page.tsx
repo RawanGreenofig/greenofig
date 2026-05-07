@@ -23,7 +23,7 @@ import {
   ArrowRight,
   Eye,
   type LucideIcon,
-} from 'lucide-react'
+} from '@/icons'
 import { useUser } from '@/lib/hooks/useUser'
 import { useAuth } from '@/context/AuthContext'
 import { usePushNotifications } from '@/lib/hooks/usePushNotifications'

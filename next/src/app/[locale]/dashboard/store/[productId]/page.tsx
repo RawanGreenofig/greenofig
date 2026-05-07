@@ -1,7 +1,7 @@
 'use client'
 
 import { notFound, useParams } from 'next/navigation'
-import { ArrowLeft, Check, ShoppingBag, Sparkles, Plus } from 'lucide-react'
+import { ArrowLeft, Check, ShoppingBag, Sparkles, Plus } from '@/icons'
 import toast from 'react-hot-toast'
 import { Link } from '@/i18n/navigation'
 import { PRODUCTS, type Product } from '@/lib/products'

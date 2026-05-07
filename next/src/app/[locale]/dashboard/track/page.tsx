@@ -19,7 +19,7 @@ import {
   Search,
   X,
   type LucideIcon,
-} from 'lucide-react'
+} from '@/icons'
 
 type MealType = 'breakfast' | 'lunch' | 'dinner' | 'snack'
 

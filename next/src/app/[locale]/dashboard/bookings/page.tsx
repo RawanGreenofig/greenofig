@@ -16,7 +16,7 @@ import {
   ChevronLeft,
   ChevronRight,
   type LucideIcon,
-} from 'lucide-react'
+} from '@/icons'
 import { NUTRITIONIST } from '@/lib/tokens'
 import { IconTile } from '@/components/ui/IconTile'
 

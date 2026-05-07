@@ -15,7 +15,7 @@ import {
   Paperclip,
   CheckCheck,
   Check,
-} from 'lucide-react'
+} from '@/icons'
 import toast from 'react-hot-toast'
 import { useUser } from '@/lib/hooks/useUser'
 import { getBrowserSupabase } from '@/lib/supabase/client'

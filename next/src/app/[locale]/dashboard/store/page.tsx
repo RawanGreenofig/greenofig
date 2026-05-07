@@ -13,7 +13,7 @@ import {
   Lock,
   Check,
   ArrowRight,
-} from 'lucide-react'
+} from '@/icons'
 import { useUser } from '@/lib/hooks/useUser'
 import { useFeature } from '@/lib/hooks/useFeature'
 import { useSupabaseQuery } from '@/lib/hooks/useSupabaseQuery'

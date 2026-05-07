@@ -10,7 +10,7 @@ import {
   Lock,
   BadgeCheck,
   Pin,
-} from 'lucide-react'
+} from '@/icons'
 import { useUser } from '@/lib/hooks/useUser'
 import { getBrowserSupabase } from '@/lib/supabase/client'
 import { resolveDisplayName } from '@/lib/displayName'

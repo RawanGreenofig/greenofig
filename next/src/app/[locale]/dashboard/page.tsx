@@ -14,7 +14,7 @@ import {
   Scale,
   Pill,
   type LucideIcon,
-} from 'lucide-react'
+} from '@/icons'
 import { Link } from '@/i18n/navigation'
 import { useUser } from '@/lib/hooks/useUser'
 import { NUTRITIONIST } from '@/lib/tokens'

@@ -14,7 +14,7 @@ import {
   ArrowRight,
   ShoppingBag,
   type LucideIcon,
-} from 'lucide-react'
+} from '@/icons'
 import { Link } from '@/i18n/navigation'
 import { IconTile } from '@/components/ui/IconTile'
 import UpgradeButton from '@/components/UpgradeButton'

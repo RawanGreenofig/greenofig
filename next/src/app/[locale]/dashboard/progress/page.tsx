@@ -12,7 +12,7 @@ import {
   Camera,
   Trophy,
   X,
-} from 'lucide-react'
+} from '@/icons'
 import {
   AreaChart,
   Area,

@@ -14,7 +14,7 @@ import {
   Zap,
   Check,
   ImageIcon,
-} from 'lucide-react'
+} from '@/icons'
 import { useUser } from '@/lib/hooks/useUser'
 import { ScannerUsageBanner } from '@/components/dashboard/ScannerUsageBanner'
 
