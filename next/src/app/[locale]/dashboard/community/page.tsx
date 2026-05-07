@@ -1,7 +1,6 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import Image from 'next/image'
 import { useLocale } from 'next-intl'
 import { useRouter } from 'next/navigation'
 import {
@@ -212,21 +211,63 @@ export default function CommunityPage() {
             }}
           >
             <header className="flex items-center gap-3">
-              <Image
-                src="/images/dr-rawan-othman.jpg"
-                alt="Dr. Rawan Othman"
-                width={40}
-                height={40}
+              {/* Plain <img> + DR fallback. next/image was sometimes
+               * rendering blank for this avatar in production; the
+               * underlying file (/images/dr-rawan-othman.jpg) is a
+               * 2.4MB jpg that the optimizer occasionally fails to
+               * serve. The fallback below picks up if onError fires. */}
+              <div
                 style={{
+                  position: 'relative',
                   width: 40,
                   height: 40,
-                  borderRadius: '50%',
-                  objectFit: 'cover',
-                  objectPosition: 'center top',
                   flexShrink: 0,
-                  border: '2px solid #4ade80',
                 }}
-              />
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src="/images/dr-rawan-othman.jpg"
+                  alt="Dr. Rawan Othman"
+                  width={40}
+                  height={40}
+                  style={{
+                    width: 40,
+                    height: 40,
+                    borderRadius: '50%',
+                    objectFit: 'cover',
+                    objectPosition: 'center top',
+                    border: '2px solid #4ade80',
+                    display: 'block',
+                  }}
+                  onError={(e) => {
+                    e.currentTarget.style.display = 'none'
+                    const fallback = e.currentTarget
+                      .nextElementSibling as HTMLElement | null
+                    if (fallback) fallback.style.display = 'flex'
+                  }}
+                />
+                <span
+                  aria-hidden
+                  style={{
+                    display: 'none',
+                    position: 'absolute',
+                    inset: 0,
+                    width: 40,
+                    height: 40,
+                    borderRadius: '50%',
+                    background: 'linear-gradient(135deg, #4ade80, #60a5fa)',
+                    color: '#fff',
+                    fontSize: 13,
+                    fontWeight: 700,
+                    lineHeight: 1,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    border: '2px solid #4ade80',
+                  }}
+                >
+                  DR
+                </span>
+              </div>
               <div className="min-w-0">
                 <p
                   className="truncate"
@@ -427,16 +468,41 @@ export default function CommunityPage() {
                 height: 112,
               }}
             >
-              <Image
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
                 src="/images/dr-rawan-othman.jpg"
                 alt="Dr. Rawan Othman"
-                fill
-                sizes="280px"
                 style={{
+                  position: 'absolute',
+                  inset: 0,
+                  width: '100%',
+                  height: '100%',
                   objectFit: 'cover',
                   objectPosition: 'center top',
+                  display: 'block',
+                }}
+                onError={(e) => {
+                  e.currentTarget.style.display = 'none'
+                  const fallback = e.currentTarget
+                    .nextElementSibling as HTMLElement | null
+                  if (fallback) fallback.style.display = 'flex'
                 }}
               />
+              <span
+                aria-hidden
+                style={{
+                  display: 'none',
+                  position: 'absolute',
+                  inset: 0,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  background:
+                    'linear-gradient(135deg, #1a2e1f 0%, #0d1a12 100%)',
+                  fontSize: 48,
+                }}
+              >
+                🥗
+              </span>
             </div>
             <div style={{ padding: 16 }}>
               <p
