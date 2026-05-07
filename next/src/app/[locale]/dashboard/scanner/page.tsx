@@ -578,10 +578,8 @@ function ResultPanel({
         {/* Alternatives */}
         {result.alternatives.length > 0 && (
           <article className="rounded-xl border border-border bg-surface p-5">
-            <div className="flex items-center gap-2.5 mb-3">
-              <span className="icon-tile">
-                <Lightbulb size={16} strokeWidth={1.75} />
-              </span>
+            <div className="flex items-center gap-2 mb-3">
+              <Lightbulb className="w-5 h-5 text-lime-400" strokeWidth={1.75} />
               <h3 className="text-sm font-semibold text-fg-1">
                 {t('alternatives')}
               </h3>

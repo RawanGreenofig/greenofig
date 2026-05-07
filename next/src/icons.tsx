@@ -1,133 +1,87 @@
 'use client'
 
 /**
- * Icon module alias — wraps every commonly used Lucide icon in a
- * 32×32 lime-tinted tile by default. Anywhere a dashboard page
- * already imports from 'lucide-react', flip the import to '@/icons'
- * and every icon picks up the tile automatically.
+ * Icon module alias — re-exports every commonly used Lucide icon
+ * with a default colour preset (lime / blue / amber / etc.) so
+ * dashboard pages don't have to repeat colour Tailwind classes.
  *
- * Escape hatch:
- *   <Flame noTile size={14} />     ← render the bare svg, no tile.
+ * Default render is FLAT: a coloured svg, no tile wrapper. Use
+ * the existing <IconTile icon={X}> component (or .icon-tile
+ * className) when a tile is wanted.
  *
- * Custom dimensions:
- *   <Flame tileSize={40} size={20} />
+ * Sizing: pass `size` (number, in px) or rely on the className
+ * (e.g. `className="h-4 w-4"`) — both work. strokeWidth defaults
+ * to 1.75 to match the rest of the design system.
  *
- * Pre-tinted icons (per the design spec):
- *   - Lime (default):  Flame, Utensils, Apple, TrendingUp, Activity,
- *                      ShoppingBag, MessageCircle, Bell, BookOpen,
- *                      ChefHat, Camera, Users, BarChart2, Settings,
- *                      Shield
- *   - Blue (water/calendar/scale): Droplets, CalendarDays, Scale, Clock
- *   - Amber (streak/sun/target/star/zap/truck): Sparkles, Sun, Target,
- *                                                Star, Zap, Truck
- *   - Violet (Pill, Moon)
- *   - Orange (Coffee)
- *   - Red (Heart)
- *   - Green (CheckCircle)
- *
- * Anything not enumerated here is re-exported from lucide-react
+ * Anything not enumerated here re-exports from lucide-react
  * unchanged via `export * from 'lucide-react'`.
  */
 
 import * as Lucide from 'lucide-react'
 
-type TiledProps = Lucide.LucideProps & {
-  tileSize?: number
-  noTile?: boolean
-}
-
-function tile(
-  Icon: Lucide.LucideIcon,
-  bg = 'rgba(132,204,22,0.12)',
-  color = '#a3e635',
-) {
-  function TiledIcon({
-    size = 16,
-    tileSize = 32,
-    noTile = false,
+function colored(Icon: Lucide.LucideIcon, color: string) {
+  function ColoredIcon({
+    size,
+    color: overrideColor,
+    strokeWidth = 1.75,
     ...props
-  }: TiledProps) {
-    if (noTile) {
-      return (
-        <Icon
-          size={size}
-          color={color}
-          strokeWidth={1.75}
-          {...props}
-        />
-      )
-    }
+  }: Lucide.LucideProps) {
     return (
-      <span
-        style={{
-          width: tileSize,
-          height: tileSize,
-          minWidth: tileSize,
-          borderRadius: Math.round(tileSize * 0.25),
-          background: bg,
-          display: 'inline-flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          flexShrink: 0,
-        }}
-      >
-        <Icon size={size} color={color} strokeWidth={1.75} {...props} />
-      </span>
+      <Icon
+        size={size}
+        color={overrideColor ?? color}
+        strokeWidth={strokeWidth}
+        {...props}
+      />
     )
   }
-  // Cast to LucideIcon so consumers passing the icon as
-  // `Icon: LucideIcon` props (KpiCard, StatCard, etc.) typecheck.
-  // The runtime shape is a regular function component which React
-  // accepts the same way it accepts a ForwardRefExoticComponent.
-  return TiledIcon as unknown as Lucide.LucideIcon
+  return ColoredIcon as unknown as Lucide.LucideIcon
 }
 
-// ── Lime tiles (default) ─────────────────────────────────────────
-export const Flame = tile(Lucide.Flame)
-export const Utensils = tile(Lucide.Utensils)
-export const Apple = tile(Lucide.Apple)
-export const TrendingUp = tile(Lucide.TrendingUp)
-export const Activity = tile(Lucide.Activity)
-export const ShoppingBag = tile(Lucide.ShoppingBag)
-export const MessageCircle = tile(Lucide.MessageCircle)
-export const Bell = tile(Lucide.Bell)
-export const BookOpen = tile(Lucide.BookOpen)
-export const ChefHat = tile(Lucide.ChefHat)
-export const Camera = tile(Lucide.Camera)
-export const Users = tile(Lucide.Users)
-export const BarChart2 = tile(Lucide.BarChart2)
-export const Settings = tile(Lucide.Settings)
-export const Shield = tile(Lucide.Shield)
+// ── Lime tint (default accent) ───────────────────────────────────
+export const Flame = colored(Lucide.Flame, '#a3e635')
+export const Utensils = colored(Lucide.Utensils, '#a3e635')
+export const Apple = colored(Lucide.Apple, '#a3e635')
+export const TrendingUp = colored(Lucide.TrendingUp, '#a3e635')
+export const Activity = colored(Lucide.Activity, '#a3e635')
+export const ShoppingBag = colored(Lucide.ShoppingBag, '#a3e635')
+export const MessageCircle = colored(Lucide.MessageCircle, '#a3e635')
+export const Bell = colored(Lucide.Bell, '#a3e635')
+export const BookOpen = colored(Lucide.BookOpen, '#a3e635')
+export const ChefHat = colored(Lucide.ChefHat, '#a3e635')
+export const Camera = colored(Lucide.Camera, '#a3e635')
+export const Users = colored(Lucide.Users, '#a3e635')
+export const BarChart2 = colored(Lucide.BarChart2, '#a3e635')
+export const Settings = colored(Lucide.Settings, '#a3e635')
+export const Shield = colored(Lucide.Shield, '#a3e635')
 
-// ── Blue tiles (water / calendar / scale / clock) ────────────────
-export const Droplets = tile(Lucide.Droplets, 'rgba(96,165,250,0.12)', '#60a5fa')
-export const CalendarDays = tile(Lucide.CalendarDays, 'rgba(96,165,250,0.12)', '#60a5fa')
-export const Scale = tile(Lucide.Scale, 'rgba(96,165,250,0.12)', '#60a5fa')
-export const Clock = tile(Lucide.Clock, 'rgba(96,165,250,0.12)', '#60a5fa')
+// ── Blue tint (water / calendar / scale / clock) ─────────────────
+export const Droplets = colored(Lucide.Droplets, '#60a5fa')
+export const CalendarDays = colored(Lucide.CalendarDays, '#60a5fa')
+export const Scale = colored(Lucide.Scale, '#60a5fa')
+export const Clock = colored(Lucide.Clock, '#60a5fa')
 
-// ── Amber tiles (streak / sun / target / star / zap / truck) ─────
-export const Sparkles = tile(Lucide.Sparkles, 'rgba(251,191,36,0.12)', '#fbbf24')
-export const Sun = tile(Lucide.Sun, 'rgba(251,191,36,0.12)', '#fbbf24')
-export const Target = tile(Lucide.Target, 'rgba(251,191,36,0.12)', '#fbbf24')
-export const Star = tile(Lucide.Star, 'rgba(251,191,36,0.12)', '#fbbf24')
-export const Zap = tile(Lucide.Zap, 'rgba(251,191,36,0.12)', '#fbbf24')
-export const Truck = tile(Lucide.Truck, 'rgba(251,191,36,0.12)', '#fbbf24')
+// ── Amber tint (streak / sun / target / star / zap / truck) ──────
+export const Sparkles = colored(Lucide.Sparkles, '#fbbf24')
+export const Sun = colored(Lucide.Sun, '#fbbf24')
+export const Target = colored(Lucide.Target, '#fbbf24')
+export const Star = colored(Lucide.Star, '#fbbf24')
+export const Zap = colored(Lucide.Zap, '#fbbf24')
+export const Truck = colored(Lucide.Truck, '#fbbf24')
 
 // ── Violet (Pill / Moon) ─────────────────────────────────────────
-export const Pill = tile(Lucide.Pill, 'rgba(167,139,250,0.12)', '#a78bfa')
-export const Moon = tile(Lucide.Moon, 'rgba(96,165,250,0.12)', '#818cf8')
+export const Pill = colored(Lucide.Pill, '#a78bfa')
+export const Moon = colored(Lucide.Moon, '#818cf8')
 
 // ── Orange (Coffee) ──────────────────────────────────────────────
-export const Coffee = tile(Lucide.Coffee, 'rgba(251,191,36,0.12)', '#fb923c')
+export const Coffee = colored(Lucide.Coffee, '#fb923c')
 
 // ── Red (Heart) ──────────────────────────────────────────────────
-export const Heart = tile(Lucide.Heart, 'rgba(248,113,113,0.12)', '#f87171')
+export const Heart = colored(Lucide.Heart, '#f87171')
 
 // ── Green (CheckCircle) ──────────────────────────────────────────
-export const CheckCircle = tile(Lucide.CheckCircle, 'rgba(74,222,128,0.12)', '#4ade80')
+export const CheckCircle = colored(Lucide.CheckCircle, '#4ade80')
 
 // Everything else (ChevronLeft, X, Plus, ArrowRight, Check,
-// CheckCheck, Search, Trash2, etc.) re-exports unchanged. This
-// keeps existing chip / button / inline icons rendering exactly
-// as they did, so the alias swap is non-breaking for those.
+// CheckCheck, Search, Trash2, etc.) re-exports unchanged.
 export * from 'lucide-react'

@@ -1,5 +1,6 @@
 'use client'
 
+import { motion } from 'framer-motion'
 import { useTranslations } from 'next-intl'
 import {
   Flame,
@@ -22,6 +23,11 @@ import { useSupabaseQuery } from '@/lib/hooks/useSupabaseQuery'
 import { usePushNotifications } from '@/lib/hooks/usePushNotifications'
 import { resolveFirstName } from '@/lib/displayName'
 import { useState } from 'react'
+
+const containerVariants = {
+  hidden: { opacity: 0, y: 12 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.3 } },
+}
 
 interface TodayQueryResult {
   todayLogs: { calories: number | null; protein_g: number | null; carbs_g: number | null; fat_g: number | null }[]
@@ -147,7 +153,12 @@ export default function DashboardTodayPage() {
   const displayFirstName = firstName
 
   return (
-    <div className="px-4 md:px-8 py-6 md:py-8 max-w-screen-xl mx-auto space-y-8">
+    <motion.div
+      variants={containerVariants}
+      initial="hidden"
+      animate="visible"
+      className="px-4 md:px-8 py-6 md:py-8 max-w-screen-xl mx-auto space-y-8"
+    >
       {/* Push opt-in banner — first visit only, dismiss-once */}
       {showPushBanner && (
         <div
@@ -220,7 +231,8 @@ export default function DashboardTodayPage() {
               fontFamily: 'var(--font-sans), system-ui, sans-serif',
             }}
           >
-            {t(greetingKey)}, {displayFirstName}
+            {t(greetingKey)},{' '}
+            <span className="gradient-text">{displayFirstName}</span>
           </h1>
           <span
             className="inline-flex items-center"
@@ -304,7 +316,7 @@ export default function DashboardTodayPage() {
         <ProgressCard t={t} />
         <NotificationsCard t={t} />
       </section>
-    </div>
+    </motion.div>
   )
 }
 
@@ -749,10 +761,8 @@ function LatestPostCard({
 function ProgressCard({ t }: { t: ReturnType<typeof useTranslations> }) {
   return (
     <article className="dash-card-lift rounded-2xl p-5" style={{ background: 'var(--gf-surface-raised)', border: '1px solid var(--gf-border)' }}>
-      <div className="flex items-center gap-2.5 mb-3">
-        <span className="icon-tile">
-          <TrendingUp size={16} strokeWidth={1.75} />
-        </span>
+      <div className="flex items-center gap-2 mb-3">
+        <TrendingUp className="w-5 h-5" strokeWidth={1.75} />
         <span className="text-xs uppercase tracking-eyebrow text-fg-3 font-medium">
           {t('myProgress')}
         </span>

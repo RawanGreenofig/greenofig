@@ -707,13 +707,50 @@
 }
 
 /* Lime gradient text — used on the wordmark in the sidebar logo
- * row. Falls back to currentColor if background-clip:text is not
- * supported. */
+ * row and on the accent word in dashboard page H1 titles. Falls
+ * back to currentColor if background-clip:text is not supported. */
 .gradient-text {
   background: linear-gradient(90deg, #84cc16, #a3e635);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
+}
+
+/* Frosted-glass panel — used by floating chrome (push banner,
+ * dropdowns) and dashboard cards that want elevation without a
+ * heavy border. Reads against both dark and light dashboard
+ * surfaces because var(--gf-card) flips per theme. */
+.glass-effect {
+  background: color-mix(in srgb, var(--gf-card) 60%, transparent);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--gf-border);
+  box-shadow: 0 10px 40px rgb(0 0 0 / 0.18);
+}
+
+/* Subtle dot grid — used as a backdrop on hero / section bands
+ * to add depth without competing with content. */
+.bg-grid-pattern {
+  background-image:
+    linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+  background-size: 32px 32px;
+}
+
+/* Card scale-and-shadow on hover — alternative to .dash-card-lift
+ * for cards that don't want a translateY change. The 1px lime ring
+ * in the second box-shadow layer mirrors the lift variant so the
+ * two read as the same family. */
+.card-scale {
+  transition:
+    transform 200ms ease,
+    box-shadow 200ms ease;
+}
+.card-scale:hover {
+  transform: translateY(-4px);
+  box-shadow:
+    0 8px 28px rgb(0 0 0 / 0.25),
+    0 0 0 1px rgb(132 204 22 / 0.2);
 }
 
 /* ── Blog scope ──────────────────────────────────────────────────

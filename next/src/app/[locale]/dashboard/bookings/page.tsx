@@ -18,7 +18,6 @@ import {
   type LucideIcon,
 } from '@/icons'
 import { NUTRITIONIST } from '@/lib/tokens'
-import { IconTile } from '@/components/ui/IconTile'
 
 type SessionId = 'introCall' | 'followUp' | 'deepDive'
 type Step = 'type' | 'when' | 'confirm'
@@ -454,20 +453,10 @@ function SessionPicker({
                   ★
                 </span>
               )}
-              <span style={{ display: 'inline-flex', marginBottom: 16 }}>
-                <IconTile
-                  icon={Icon}
-                  size={20}
-                  tileSize={44}
-                  radius={10}
-                  bg={
-                    selected
-                      ? 'rgb(61 122 74 / 0.25)'
-                      : 'rgb(61 122 74 / 0.15)'
-                  }
-                  color="var(--gf-lime-400)"
-                />
-              </span>
+              <Icon
+                className="w-6 h-6 mb-4 text-lime-400"
+                strokeWidth={1.75}
+              />
               <h3 className="text-base font-semibold text-fg-1">
                 {t(s.id)}
               </h3>

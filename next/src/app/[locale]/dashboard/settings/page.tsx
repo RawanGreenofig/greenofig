@@ -1536,10 +1536,8 @@ function AccountPane({
       <Section title={t('account.sectionSecurity')}>
         <div className="dash-card-lift rounded-xl border border-border bg-surface p-5 space-y-5">
           <div>
-            <p className="text-sm font-medium text-fg-1 mb-3 inline-flex items-center gap-2.5">
-              <span className="icon-tile">
-                <KeyRound size={16} strokeWidth={1.75} />
-              </span>
+            <p className="text-sm font-medium text-fg-1 mb-3 inline-flex items-center gap-2">
+              <KeyRound className="w-5 h-5 text-fg-3" strokeWidth={1.75} />
               {t('account.changePassword')}
             </p>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
