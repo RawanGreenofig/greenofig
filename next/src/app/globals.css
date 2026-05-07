@@ -300,6 +300,17 @@
   flex-shrink: 0;
 }
 
+/* Final safety net: any flex / inline-flex container that holds at
+ * least one SVG and has NO explicit gap-* utility gets a default 8px
+ * gap. Using `:has()` (Chrome 105+, Safari 15.4+, Firefox 121+) so the
+ * rule never doubles up with parents that already declared their own
+ * gap. Falls back gracefully on older browsers — the previous
+ * margin-inline-end rule on first-child SVGs still applies. */
+[data-theme='dashboard'] .flex.items-center:has(> svg):not([class*='gap-']),
+[data-theme='dashboard'] .inline-flex.items-center:has(> svg):not([class*='gap-']) {
+  gap: 8px;
+}
+
 /* ── Per-tier accent colors ─────────────────────────────────────
  * Set on the dashboard shell via `data-tier="free|basic|premium|vip"`.
  * Components reference --tier-color / --tier-glow / --tier-badge-*.
