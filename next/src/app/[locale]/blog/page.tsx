@@ -51,11 +51,14 @@ export default function BlogIndexPage() {
         style={{
           position: 'relative',
           overflow: 'hidden',
-          height: 320,
+          minHeight: 480,
+          paddingTop: 80,
+          paddingBottom: 40,
+          paddingLeft: 16,
+          paddingRight: 16,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          padding: '64px 16px',
         }}
       >
         <div
@@ -92,6 +95,7 @@ export default function BlogIndexPage() {
             border: '1px solid rgba(255,255,255,0.1)',
             borderRadius: 24,
             padding: '32px 48px',
+            paddingTop: 32,
             maxWidth: 720,
             width: '100%',
             margin: '0 auto',
@@ -124,15 +128,28 @@ export default function BlogIndexPage() {
               ? 'مقالات قائمة على الأدلة لمساعدتك على الأكل بشكل أفضل وفهم جسمك.'
               : 'Evidence-based articles to help you eat better, feel your best, and understand your body.'}
           </p>
-
-          {/* Search + category pills (client component — owns the
-              hover/focus event handlers that can't live in a Server
-              Component). */}
-          <BlogSearchAndFilters isAr={isAr} />
         </header>
       </section>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24">
+      {/* Search + category pills overflow the bottom edge of the hero
+          by 20px so the band feels connected. Client component because
+          it owns hover/focus handlers a Server Component can't pass. */}
+      <div
+        style={{
+          maxWidth: 700,
+          margin: '-20px auto 0',
+          padding: '0 24px 40px',
+          position: 'relative',
+          zIndex: 10,
+        }}
+      >
+        <BlogSearchAndFilters isAr={isAr} />
+      </div>
+
+      <div
+        className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8"
+        style={{ marginTop: 0, paddingTop: 24, paddingBottom: 96 }}
+      >
         {/* Article grid: 1 col mobile, 2 col tablet, 3 col desktop */}
         <ul className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
           {articles.map((article) => (
