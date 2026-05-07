@@ -8,6 +8,7 @@ import { LanguageSwitcher } from '@/components/LanguageSwitcher'
 import { useAuth } from '@/context/AuthContext'
 import { cn } from '@/lib/cn'
 import { resolveDisplayName } from '@/lib/displayName'
+import { getBrowserSupabase } from '@/lib/supabase/client'
 
 // Use CSS vars so the topbar follows the dashboard theme toggle.
 const TOPBAR_BG = 'var(--gf-surface)'
@@ -256,44 +257,35 @@ export function Topbar({ onOpenMenu }: { onOpenMenu: () => void }) {
 }
 
 /* ── Notification bell + dropdown ──────────────────────────────────
- * Self-contained component so the open/close state lives next to the
- * markup. Uses three hardcoded notifications by default — wire up to a
- * Supabase notifications table later when the schema lands. */
-interface Notif {
-  icon: string
+ * Reads the user's notifications row from Supabase and subscribes to
+ * realtime INSERT events on `public.notifications` so a new row from
+ * /api/notifications/send shows up in the bell + fires a toast,
+ * without polling. */
+interface NotifRow {
+  id: string
+  type: string | null
   title: string
-  body: string
-  time: string
-  unread?: boolean
+  body: string | null
+  data: Record<string, unknown> | null
+  is_read: boolean
+  created_at: string
 }
 
-const SEED_NOTIFS: Notif[] = [
-  {
-    icon: '🍎',
-    title: 'New meal plan added',
-    body: 'Dr. Rawan added your weekly plan',
-    time: '1h',
-    unread: true,
-  },
-  {
-    icon: '💧',
-    title: 'Hydration reminder',
-    body: "You're 750ml short of today's goal",
-    time: '2h',
-    unread: true,
-  },
-  {
-    icon: '⭐',
-    title: 'Keep up your streak!',
-    body: "You've logged meals 3 days in a row",
-    time: '1d',
-  },
-]
+const TYPE_ICON: Record<string, string> = {
+  message: '💬',
+  meal_plan: '🥗',
+  appointment: '📅',
+  community: '👥',
+  billing: '💳',
+  system: '🔔',
+}
 
 function NotificationBell({ label }: { label: string }) {
   const [open, setOpen] = useState(false)
-  const [notifs, setNotifs] = useState<Notif[]>(SEED_NOTIFS)
+  const [notifs, setNotifs] = useState<NotifRow[]>([])
   const wrapRef = useRef<HTMLDivElement>(null)
+  const { user } = useAuth()
+  const userId = user?.id ?? null
 
   useEffect(() => {
     const onClick = (e: MouseEvent) => {
@@ -303,9 +295,76 @@ function NotificationBell({ label }: { label: string }) {
     return () => document.removeEventListener('mousedown', onClick)
   }, [open])
 
-  const unreadCount = notifs.filter((n) => n.unread).length
-  const markAllRead = () =>
-    setNotifs((curr) => curr.map((n) => ({ ...n, unread: false })))
+  // Initial load + realtime subscription on the user's notifications.
+  useEffect(() => {
+    if (!userId) return
+    const supabase = getBrowserSupabase()
+    if (!supabase) return
+
+    let cancelled = false
+    void (async () => {
+      const { data } = await supabase
+        .from('notifications')
+        .select('id, type, title, body, data, is_read, created_at')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false })
+        .limit(20)
+      if (cancelled) return
+      setNotifs(((data as NotifRow[] | null) ?? []))
+    })()
+
+    const channel = supabase
+      .channel(`notif-${userId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'notifications',
+          filter: `user_id=eq.${userId}`,
+        },
+        (payload) => {
+          const row = payload.new as NotifRow
+          setNotifs((prev) => [row, ...prev].slice(0, 20))
+          // Optional toast nudge for inserts that arrive while the
+          // tab is open. The system push (/sw.js) handles inserts
+          // when the tab is closed.
+          import('react-hot-toast').then(({ default: toast }) => {
+            toast.success(row.title, {
+              duration: 4000,
+            })
+          })
+        },
+      )
+      .subscribe()
+
+    return () => {
+      cancelled = true
+      void supabase.removeChannel(channel)
+    }
+  }, [userId])
+
+  const unreadCount = notifs.filter((n) => !n.is_read).length
+
+  const markAllRead = async () => {
+    if (!userId) return
+    setNotifs((curr) => curr.map((n) => ({ ...n, is_read: true })))
+    const supabase = getBrowserSupabase()
+    if (!supabase) return
+    void supabase
+      .from('notifications')
+      .update({ is_read: true } as never)
+      .eq('user_id', userId)
+      .eq('is_read', false)
+  }
+
+  const formatAgo = (iso: string) => {
+    const min = (Date.now() - new Date(iso).getTime()) / 60_000
+    if (min < 1) return 'now'
+    if (min < 60) return `${Math.round(min)}m`
+    if (min < 60 * 24) return `${Math.round(min / 60)}h`
+    return `${Math.round(min / (60 * 24))}d`
+  }
 
   return (
     <div className="relative" ref={wrapRef}>
@@ -395,65 +454,83 @@ function NotificationBell({ label }: { label: string }) {
                 No notifications yet
               </li>
             ) : (
-              notifs.map((n, i) => (
-                <li
-                  key={i}
-                  className="flex gap-3 px-4 py-3"
-                  style={{
-                    borderBottom:
-                      i === notifs.length - 1
-                        ? 'none'
-                        : '1px solid var(--gf-border)',
-                  }}
-                >
-                  <span
+              notifs.map((n, i) => {
+                const icon =
+                  (n.type && TYPE_ICON[n.type]) || TYPE_ICON.system
+                const url =
+                  (n.data &&
+                    typeof n.data['url'] === 'string' &&
+                    (n.data['url'] as string)) ||
+                  '/dashboard'
+                return (
+                  <li
+                    key={n.id}
+                    onClick={() => {
+                      setOpen(false)
+                      window.location.href = url
+                    }}
+                    className="flex gap-3 px-4 py-3 cursor-pointer transition-colors"
                     style={{
-                      fontSize: 20,
-                      width: 28,
-                      flexShrink: 0,
-                      textAlign: 'center',
+                      borderBottom:
+                        i === notifs.length - 1
+                          ? 'none'
+                          : '1px solid var(--gf-border)',
+                      background: n.is_read
+                        ? 'transparent'
+                        : 'var(--gf-card-hover)',
                     }}
                   >
-                    {n.icon}
-                  </span>
-                  <div className="flex-1 min-w-0">
-                    <p
-                      className="truncate"
-                      style={{
-                        fontSize: 13,
-                        fontWeight: 600,
-                        color: 'var(--gf-fg-1)',
-                      }}
-                    >
-                      {n.title}
-                    </p>
-                    <p
-                      style={{
-                        fontSize: 12,
-                        color: 'var(--gf-fg-2)',
-                        marginTop: 2,
-                        lineHeight: 1.5,
-                      }}
-                    >
-                      {n.body}
-                    </p>
-                  </div>
-                  <div className="flex flex-col items-end gap-1.5 shrink-0">
                     <span
-                      style={{ fontSize: 11, color: 'var(--gf-fg-3)' }}
+                      style={{
+                        fontSize: 20,
+                        width: 28,
+                        flexShrink: 0,
+                        textAlign: 'center',
+                      }}
                     >
-                      {n.time}
+                      {icon}
                     </span>
-                    {n.unread && (
+                    <div className="flex-1 min-w-0">
+                      <p
+                        className="truncate"
+                        style={{
+                          fontSize: 13,
+                          fontWeight: 600,
+                          color: 'var(--gf-fg-1)',
+                        }}
+                      >
+                        {n.title}
+                      </p>
+                      {n.body && (
+                        <p
+                          style={{
+                            fontSize: 12,
+                            color: 'var(--gf-fg-2)',
+                            marginTop: 2,
+                            lineHeight: 1.5,
+                          }}
+                        >
+                          {n.body}
+                        </p>
+                      )}
+                    </div>
+                    <div className="flex flex-col items-end gap-1.5 shrink-0">
                       <span
-                        aria-label="Unread"
-                        className="w-2 h-2 rounded-full"
-                        style={{ background: '#60a5fa' }}
-                      />
-                    )}
-                  </div>
-                </li>
-              ))
+                        style={{ fontSize: 11, color: 'var(--gf-fg-3)' }}
+                      >
+                        {formatAgo(n.created_at)}
+                      </span>
+                      {!n.is_read && (
+                        <span
+                          aria-label="Unread"
+                          className="w-2 h-2 rounded-full"
+                          style={{ background: '#60a5fa' }}
+                        />
+                      )}
+                    </div>
+                  </li>
+                )
+              })
             )}
           </ul>
         </div>

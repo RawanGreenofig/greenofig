@@ -26,6 +26,7 @@ import {
 } from 'lucide-react'
 import { useUser } from '@/lib/hooks/useUser'
 import { useAuth } from '@/context/AuthContext'
+import { usePushNotifications } from '@/lib/hooks/usePushNotifications'
 import { getBrowserSupabase } from '@/lib/supabase/client'
 import { Link } from '@/i18n/navigation'
 import { resolveDisplayName } from '@/lib/displayName'
@@ -412,6 +413,7 @@ function SettingsPageInner() {
                 setNotif(p)
                 markDirty()
               }}
+              userId={user?.id ?? null}
             />
           )}
 
@@ -721,11 +723,15 @@ function NotifPane({
   t,
   prefs,
   onChange,
+  userId,
 }: {
   t: ReturnType<typeof useTranslations>
   prefs: NotifPrefs
   onChange: (p: NotifPrefs) => void
+  userId: string | null
 }) {
+  const { permission, enableNotifications, loading } =
+    usePushNotifications(userId)
   const setChannel = (topic: NotifTopic, channel: keyof Channels, on: boolean) => {
     onChange({
       ...prefs,
@@ -737,6 +743,72 @@ function NotifPane({
   }
   return (
     <div className="space-y-6">
+      {/* Push notifications opt-in card */}
+      <div
+        style={{
+          background: 'var(--gf-surface-raised)',
+          border: '1px solid var(--gf-border)',
+          borderRadius: 16,
+          padding: 20,
+        }}
+      >
+        <h3
+          style={{
+            fontSize: 16,
+            fontWeight: 600,
+            color: 'var(--gf-fg-1)',
+            marginBottom: 8,
+          }}
+        >
+          Push Notifications
+        </h3>
+        <p
+          style={{
+            fontSize: 14,
+            color: 'var(--gf-fg-2)',
+            marginBottom: 16,
+            lineHeight: 1.6,
+          }}
+        >
+          Get notified on your phone when Dr. Rawan sends you a message,
+          assigns a meal plan, or posts in the community — even when the app
+          is closed.
+        </p>
+        {permission === 'granted' ? (
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 8,
+              color: '#a3e635',
+              fontSize: 14,
+              fontWeight: 500,
+            }}
+          >
+            ✓ Push notifications are enabled
+          </div>
+        ) : permission === 'denied' ? (
+          <p style={{ color: '#f87171', fontSize: 13 }}>
+            Notifications blocked. Enable them in your browser/phone settings
+            then refresh.
+          </p>
+        ) : permission === 'unsupported' ? (
+          <p style={{ color: 'var(--gf-fg-3)', fontSize: 13 }}>
+            This device doesn&apos;t support web push notifications.
+          </p>
+        ) : (
+          <button
+            type="button"
+            onClick={() => void enableNotifications()}
+            disabled={loading}
+            className="btn-primary"
+            style={{ height: 44, padding: '0 24px', fontSize: 14 }}
+          >
+            {loading ? 'Setting up…' : '🔔 Enable Push Notifications'}
+          </button>
+        )}
+      </div>
+
       <Section title={t('notif.sectionEmail')}>
         <ul className="rounded-xl border border-border bg-surface divide-y divide-border">
           {NOTIF_TOPICS.map((topic) => {

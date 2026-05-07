@@ -19,7 +19,9 @@ import { Link } from '@/i18n/navigation'
 import { useUser } from '@/lib/hooks/useUser'
 import { NUTRITIONIST } from '@/lib/tokens'
 import { useSupabaseQuery } from '@/lib/hooks/useSupabaseQuery'
+import { usePushNotifications } from '@/lib/hooks/usePushNotifications'
 import { resolveFirstName } from '@/lib/displayName'
+import { useState } from 'react'
 
 interface TodayQueryResult {
   todayLogs: { calories: number | null; protein_g: number | null; carbs_g: number | null; fat_g: number | null }[]
@@ -33,6 +35,18 @@ export default function DashboardTodayPage() {
   const { user, profile, tier } = useUser()
   const firstName = resolveFirstName(profile, user, t('guest'))
   const userTier = (tier ?? 'free') as 'free' | 'basic' | 'premium' | 'vip'
+
+  // First-visit push opt-in banner. Dismiss persists in localStorage so
+  // we don't nag users who said "later" — they can still enable from
+  // Settings → Notifications.
+  const { permission, enableNotifications, loading: pushLoading } =
+    usePushNotifications(user?.id ?? null)
+  const [bannerDismissed, setBannerDismissed] = useState<boolean>(() => {
+    if (typeof window === 'undefined') return false
+    return window.localStorage.getItem('gf_push_banner_dismissed') === '1'
+  })
+  const showPushBanner =
+    !!user && permission === 'default' && !bannerDismissed
   const greetingKey = pickGreeting()
   const today = new Date().toLocaleDateString(undefined, {
     weekday: 'long',
@@ -134,6 +148,61 @@ export default function DashboardTodayPage() {
 
   return (
     <div className="px-4 md:px-8 py-6 md:py-8 max-w-screen-xl mx-auto space-y-8">
+      {/* Push opt-in banner — first visit only, dismiss-once */}
+      {showPushBanner && (
+        <div
+          className="flex items-center gap-3 flex-wrap"
+          style={{
+            background: 'var(--gf-surface-raised)',
+            border: '1px solid var(--gf-border)',
+            borderRadius: 12,
+            padding: '12px 16px',
+            justifyContent: 'space-between',
+          }}
+        >
+          <span style={{ fontSize: 13, color: 'var(--gf-fg-1)' }}>
+            🔔 Get notified when Dr. Rawan posts or messages you
+          </span>
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={() => void enableNotifications()}
+              disabled={pushLoading}
+              className="btn-primary"
+              style={{ height: 32, padding: '0 14px', fontSize: 12 }}
+            >
+              {pushLoading ? 'Enabling…' : 'Enable'}
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setBannerDismissed(true)
+                try {
+                  window.localStorage.setItem(
+                    'gf_push_banner_dismissed',
+                    '1',
+                  )
+                } catch {
+                  /* fine */
+                }
+              }}
+              style={{
+                height: 32,
+                padding: '0 14px',
+                fontSize: 12,
+                background: 'transparent',
+                border: '1px solid var(--gf-border)',
+                borderRadius: 999,
+                color: 'var(--gf-fg-3)',
+                cursor: 'pointer',
+              }}
+            >
+              Later
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <header>
         <p
