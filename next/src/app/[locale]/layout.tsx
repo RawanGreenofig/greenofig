@@ -4,6 +4,7 @@ import localFont from 'next/font/local'
 import { notFound } from 'next/navigation'
 import { NextIntlClientProvider, hasLocale } from 'next-intl'
 import { getMessages, setRequestLocale } from 'next-intl/server'
+import { Analytics } from '@vercel/analytics/next'
 
 import '../globals.css'
 
@@ -151,6 +152,7 @@ export default async function LocaleLayout({ children, params }: LayoutProps) {
             </LenisProvider>
           </AuthProvider>
         </NextIntlClientProvider>
+        <Analytics />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
