@@ -117,20 +117,26 @@ export const POST = withAuth(async (req: NextRequest, ctx: AuthedContext) => {
     systemInstruction: SYSTEM_PROMPT,
   })
 
-  const chat = model.startChat({
-    history: history.map((m) => ({
+  // Use generateContentStream directly with the full conversation
+  // history + the new user message. The chat.sendMessageStream() path
+  // on the @google/generative-ai SDK has been flaky since the SDK
+  // was archived in Dec 2025; bypassing startChat() and sending the
+  // contents array straight to the model is the supported pattern.
+  const contents = [
+    ...history.map((m) => ({
       role: m.role === 'assistant' ? 'model' : 'user',
       parts: [{ text: m.body }],
     })),
-  })
+    { role: 'user', parts: [{ text: message }] },
+  ]
 
   let stream: AsyncGenerator<{ text: () => string }> | null = null
   try {
-    const result = await chat.sendMessageStream(message)
+    const result = await model.generateContentStream({ contents })
     stream = result.stream as AsyncGenerator<{ text: () => string }>
   } catch (error) {
     console.error(
-      '[ai-chat] sendMessageStream failed for model',
+      '[ai-chat] generateContentStream failed for model',
       GEMINI_TEXT_MODEL,
       'error:',
       error instanceof Error ? error.message : error,
