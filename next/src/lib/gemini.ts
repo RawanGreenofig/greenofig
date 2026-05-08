@@ -7,13 +7,11 @@ import { GoogleGenerativeAI } from '@google/generative-ai'
  *
  * Env vars:
  *   GOOGLE_GEMINI_API_KEY  — required; aistudio.google.com → Get API Key
- *   GEMINI_API_KEY         — legacy fallback (older envs)
  *   GEMINI_MODEL           — overrides default text model
  *   GEMINI_RESEARCH_MODEL  — overrides default research model
  */
 
-const apiKey = (): string | undefined =>
-  process.env.GOOGLE_GEMINI_API_KEY ?? process.env.GEMINI_API_KEY
+const apiKey = (): string | undefined => process.env.GOOGLE_GEMINI_API_KEY
 
 let cached: GoogleGenerativeAI | null | undefined
 
