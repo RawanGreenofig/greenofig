@@ -129,7 +129,12 @@ export const POST = withAuth(async (req: NextRequest, ctx: AuthedContext) => {
     const result = await chat.sendMessageStream(message)
     stream = result.stream as AsyncGenerator<{ text: () => string }>
   } catch (error) {
-    console.error('[ai-chat] sendMessageStream failed:', error)
+    console.error(
+      '[ai-chat] sendMessageStream failed for model',
+      GEMINI_TEXT_MODEL,
+      'error:',
+      error instanceof Error ? error.message : error,
+    )
     return internalError()
   }
 

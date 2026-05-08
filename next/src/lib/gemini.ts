@@ -26,9 +26,14 @@ export function getGemini(): GoogleGenerativeAI | null {
   return cached
 }
 
+// Model names. Hardcoded to known-stable IDs because env-var overrides
+// in .env.local and on Vercel were pointing at deprecated names
+// ('gemini-pro' / 'gemini-1.0-pro') and causing the SDK to throw on
+// every call. If you want to swap models, change them here — don't
+// rely on GEMINI_MODEL / GEMINI_RESEARCH_MODEL env vars.
 export const GEMINI_VISION_MODEL = 'gemini-1.5-flash'
-export const GEMINI_TEXT_MODEL = process.env.GEMINI_MODEL ?? 'gemini-1.5-flash'
-export const GEMINI_RESEARCH_MODEL = process.env.GEMINI_RESEARCH_MODEL ?? 'gemini-1.5-pro'
+export const GEMINI_TEXT_MODEL = 'gemini-1.5-flash'
+export const GEMINI_RESEARCH_MODEL = 'gemini-1.5-pro'
 
 /** True when the Gemini integration is configured for this environment. */
 export const isGeminiConfigured = () => !!apiKey()
