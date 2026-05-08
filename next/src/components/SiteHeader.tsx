@@ -382,7 +382,10 @@ export function SiteHeader() {
               transition:
                 'transform 350ms cubic-bezier(0.16, 1, 0.3, 1)',
               transform: drawerOpen ? 'translateX(0)' : 'translateX(100%)',
-              padding: '64px 24px 32px',
+              paddingTop: 'calc(64px + env(safe-area-inset-top))',
+              paddingInlineEnd: '24px',
+              paddingInlineStart: '24px',
+              paddingBottom: 'calc(32px + env(safe-area-inset-bottom))',
             }}
           >
             <button
@@ -392,7 +395,7 @@ export function SiteHeader() {
               className="inline-flex items-center justify-center"
               style={{
                 position: 'absolute',
-                top: 16,
+                top: 'calc(16px + env(safe-area-inset-top))',
                 insetInlineEnd: 16,
                 width: 36,
                 height: 36,

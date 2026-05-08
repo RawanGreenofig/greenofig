@@ -94,7 +94,7 @@ export default async function ArticlePage({ params }: RouteParams) {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
       <SiteHeader />
-      <div className="h-16" />
+      <div style={{ height: 'calc(64px + env(safe-area-inset-top))' }} />
 
       <div className="max-w-5xl mx-auto px-4 md:px-8 pt-10 pb-20">
         <Link

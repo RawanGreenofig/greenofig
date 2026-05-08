@@ -42,7 +42,7 @@ export default function BlogIndexPage() {
       style={{ background: 'var(--gf-bg)' }}
     >
       <SiteHeader />
-      <div className="h-16" />
+      <div style={{ height: 'calc(64px + env(safe-area-inset-top))' }} />
 
       {/* Hero: full-bleed photo background + dark green glass overlay,
           with the actual headline content sitting on a frosted glass

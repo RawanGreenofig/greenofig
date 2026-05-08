@@ -417,7 +417,7 @@ export default function PricingPage() {
     <main className="min-h-screen" style={{ background: '#080808' }}>
       <SiteHeader />
       {/* Spacer for the fixed navbar (h-16 = 64px) */}
-      <div className="h-16" />
+      <div style={{ height: 'calc(64px + env(safe-area-inset-top))' }} />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24">
         {/* Header */}
         <header className="text-center mb-12">

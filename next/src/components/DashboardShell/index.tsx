@@ -99,8 +99,17 @@ export function DashboardShell({
             className="md:hidden fixed inset-0 z-40 backdrop-blur-sm"
             style={{ background: 'rgb(0 0 0 / 0.7)' }}
           />
-          <aside className="md:hidden fixed inset-y-0 start-0 z-50 w-72 max-w-[80vw] shadow-2xl">
-            <div className="absolute end-3 top-3 z-10">
+          <aside
+            className="md:hidden fixed inset-y-0 start-0 z-50 w-72 max-w-[80vw] shadow-2xl"
+            style={{
+              paddingTop: 'env(safe-area-inset-top)',
+              paddingBottom: 'env(safe-area-inset-bottom)',
+            }}
+          >
+            <div
+              className="absolute end-3 z-10"
+              style={{ top: 'calc(12px + env(safe-area-inset-top))' }}
+            >
               <button
                 type="button"
                 onClick={() => setDrawerOpen(false)}
