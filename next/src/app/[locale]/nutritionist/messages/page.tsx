@@ -358,7 +358,7 @@ export default function NutritionistMessagesPage() {
   }
 
   return (
-    <div className="flex h-[calc(100vh-3.5rem)] md:h-[calc(100vh-4rem)] max-w-screen-2xl mx-auto">
+    <div className="flex h-full max-w-screen-2xl mx-auto">
       {/* Thread list */}
       <aside className="hidden md:flex flex-col w-80 shrink-0 border-e border-border bg-surface/50">
         <header className="px-4 py-4 border-b border-border space-y-3">

@@ -602,7 +602,7 @@ function Thread() {
       variants={containerVariants}
       initial="hidden"
       animate="visible"
-      className="flex flex-col h-[calc(100vh-3.5rem)] md:h-[calc(100vh-4rem)] max-w-screen-lg mx-auto"
+      className="flex flex-col h-full max-w-screen-lg mx-auto"
     >
       {/* Header */}
       <header className="glass-effect border-b border-border px-6 py-4 flex items-center gap-3 flex-shrink-0">

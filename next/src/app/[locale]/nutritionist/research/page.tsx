@@ -183,7 +183,7 @@ export default function ResearchPage() {
   }
 
   return (
-    <div className="flex flex-col lg:flex-row gap-0 lg:gap-0 h-[calc(100vh-3.5rem)] md:h-[calc(100vh-4rem)] max-w-screen-2xl mx-auto">
+    <div className="flex flex-col lg:flex-row gap-0 lg:gap-0 h-full max-w-screen-2xl mx-auto">
       {/* Library */}
       <aside className="w-full lg:w-72 lg:shrink-0 lg:border-e border-b lg:border-b-0 border-border bg-surface/40 flex flex-col">
         <header className="px-4 py-4 border-b border-border space-y-3">

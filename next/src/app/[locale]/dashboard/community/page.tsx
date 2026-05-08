@@ -106,7 +106,7 @@ export default function CommunityPage() {
       animate="visible"
       className="grid gap-5 p-5 overflow-hidden"
       style={{
-        height: 'calc(100vh - 64px)',
+        height: '100%',
         gridTemplateColumns: 'minmax(0, 1fr)',
         background: 'var(--gf-bg)',
       }}

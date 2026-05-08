@@ -1179,6 +1179,16 @@ textarea:focus-visible {
   body {
     padding-bottom: env(safe-area-inset-bottom);
   }
+
+  /* Full-viewport modal overlays (every modal uses
+   * `fixed inset-0 z-50` per the LogWeightModal / RecipeModal /
+   * api-keys / store etc. pattern). Reserve safe-area at top + bottom
+   * so the inner sheet can use justify-end / items-center without
+   * being clipped by the notch or home-indicator on iOS. */
+  .fixed.inset-0.z-50 {
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+  }
 }
 
 @media (max-width: 768px) {
