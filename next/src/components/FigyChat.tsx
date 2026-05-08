@@ -51,6 +51,11 @@ export function FigyChat() {
     baseX: number
     baseY: number
   } | null>(null)
+  // Track whether the pointer actually moved during a press, so a tap
+  // without movement on the launcher opens the panel instead of being
+  // swallowed as a drag. Declared before any early return to satisfy
+  // rules-of-hooks.
+  const movedRef = useRef(false)
 
   // Hydrate position + conversationId from localStorage on mount.
   useEffect(() => {
@@ -190,15 +195,75 @@ export function FigyChat() {
     }
   }
 
+  const onLauncherDown = (e: React.PointerEvent<HTMLButtonElement>) => {
+    e.currentTarget.setPointerCapture(e.pointerId)
+    movedRef.current = false
+    dragRef.current = {
+      startX: e.clientX,
+      startY: e.clientY,
+      baseX: pos?.x ?? 0,
+      baseY: pos?.y ?? 0,
+    }
+  }
+  const onLauncherMove = (e: React.PointerEvent<HTMLButtonElement>) => {
+    const d = dragRef.current
+    if (!d) return
+    const dx = e.clientX - d.startX
+    const dy = e.clientY - d.startY
+    if (!movedRef.current && Math.hypot(dx, dy) > 4) movedRef.current = true
+    if (movedRef.current) setPos({ x: d.baseX + dx, y: d.baseY + dy })
+  }
+  const onLauncherUp = (e: React.PointerEvent<HTMLButtonElement>) => {
+    const wasDragging = movedRef.current
+    if (dragRef.current) {
+      try {
+        e.currentTarget.releasePointerCapture(e.pointerId)
+      } catch {
+        /* fine */
+      }
+      dragRef.current = null
+    }
+    if (wasDragging && pos) {
+      try {
+        window.localStorage.setItem(POS_KEY, JSON.stringify(pos))
+      } catch {
+        /* fine */
+      }
+    } else {
+      // Real tap → open the panel
+      setOpen(true)
+    }
+  }
+
   return (
     <>
-      {/* Floating launcher pill — fixed bottom-right (mirrors in RTL). */}
+      {/* Click-outside backdrop — closes the panel when tapped. */}
+      {open && (
+        <div
+          onClick={() => setOpen(false)}
+          className="fixed inset-0 z-40"
+          style={{ background: 'transparent' }}
+          aria-hidden
+        />
+      )}
+
+      {/* Floating launcher pill — fixed bottom-right (mirrors in RTL).
+       * Acts as a drag handle when the pointer moves > 4px before
+       * release, otherwise treated as a tap that opens the panel. */}
       {!open && (
         <button
           type="button"
-          onClick={() => setOpen(true)}
           aria-label="Open Figy AI assistant"
           className="figy-launcher"
+          style={
+            pos
+              ? { transform: `translate(${pos.x}px, ${pos.y}px)`, touchAction: 'none' }
+              : { touchAction: 'none' }
+          }
+          onPointerDown={onLauncherDown}
+          onPointerMove={onLauncherMove}
+          onPointerUp={onLauncherUp}
+          onPointerCancel={onLauncherUp}
         >
           <Image
             src="/logo/logo.png"

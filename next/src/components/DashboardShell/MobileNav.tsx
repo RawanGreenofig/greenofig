@@ -1,18 +1,14 @@
 'use client'
 
+import { useRef } from 'react'
 import { useTranslations } from 'next-intl'
 import { Plus } from 'lucide-react'
-import { Link, usePathname } from '@/i18n/navigation'
+import { Link, useRouter, usePathname } from '@/i18n/navigation'
 import { cn } from '@/lib/cn'
 import type { DashboardNavItem } from './nav'
 
-// All chrome reads from CSS vars so the bar tracks the dashboard
-// theme automatically. FAB stays a literal lime gradient — that's
-// the brand action color, not a theme token.
-const NAV_BG = 'var(--gf-surface)'
-const NAV_BORDER = 'var(--gf-border)'
-const ACTIVE = '#a3e635'
-const INACTIVE = 'var(--gf-fg-3)'
+const ACTIVE = 'hsl(var(--primary))'
+const INACTIVE = 'hsl(var(--muted-foreground))'
 
 export function MobileNav({
   tabs,
@@ -23,7 +19,9 @@ export function MobileNav({
 }) {
   const t = useTranslations()
   const pathname = usePathname()
+  const router = useRouter()
   const FabIcon = fab.Icon
+  const cameraInputRef = useRef<HTMLInputElement>(null)
 
   const isActive = (href: string) =>
     href === pathname ||
@@ -32,13 +30,43 @@ export function MobileNav({
       href !== '/admin' &&
       pathname.startsWith(`${href}/`))
 
+  // FAB behaviour: if the FAB destination is the food scanner, open
+  // the device camera directly instead of just navigating. After the
+  // user picks/captures a photo, stash it in sessionStorage as a data
+  // URL and route to /dashboard/scanner — the scanner page reads
+  // sessionStorage on mount and auto-processes the image.
+  const isScannerFab = fab.href === '/dashboard/scanner'
+  const onFabClick = (e: React.MouseEvent) => {
+    if (!isScannerFab) return
+    e.preventDefault()
+    cameraInputRef.current?.click()
+  }
+  const onCameraPick = async (file: File | null | undefined) => {
+    if (!file) return
+    try {
+      const reader = new FileReader()
+      reader.onload = () => {
+        const dataUrl = String(reader.result ?? '')
+        try {
+          window.sessionStorage.setItem('gf_scanner_pending', dataUrl)
+        } catch {
+          /* fine — fall through to plain navigation */
+        }
+        router.push('/dashboard/scanner')
+      }
+      reader.readAsDataURL(file)
+    } catch {
+      router.push('/dashboard/scanner')
+    }
+  }
+
   return (
     <nav
       aria-label="Primary"
-      className="md:hidden fixed inset-x-0 bottom-0 z-30 backdrop-blur-md"
+      className="md:hidden fixed inset-x-0 bottom-0 z-30 glass-effect"
       style={{
-        background: `${NAV_BG}f0`,
-        borderTop: `1px solid ${NAV_BORDER}`,
+        borderRadius: 0,
+        borderTop: '1px solid hsl(var(--border))',
         paddingBottom: 'env(safe-area-inset-bottom)',
       }}
     >
@@ -52,24 +80,36 @@ export function MobileNav({
           />
         ))}
 
-        {/* Center FAB — lime gradient, ringed in the page bg so it
-         * lifts above the bar. Slightly raised with a soft glow. */}
+        {/* Center FAB — lime gradient. Camera FAB triggers a hidden
+         * file input with capture='environment' so the device camera
+         * opens directly. Other FABs navigate normally. */}
+        {isScannerFab && (
+          <input
+            ref={cameraInputRef}
+            type="file"
+            accept="image/*"
+            capture="environment"
+            className="sr-only"
+            onChange={(e) => void onCameraPick(e.target.files?.[0])}
+          />
+        )}
         <Link
           href={fab.href}
           aria-label={t(fab.labelKey)}
+          onClick={onFabClick}
           className="relative inline-flex items-center justify-center rounded-full transition-transform active:scale-95"
           style={{
             width: 56,
             height: 56,
             marginTop: -20,
             background:
-              'linear-gradient(to bottom, var(--gf-primary-text, #a3e635), var(--gf-primary-dark, #65a30d))',
-            color: 'var(--gf-bg, #080e08)',
-            border: '3px solid var(--gf-bg)',
-            boxShadow: '0 4px 16px rgba(163, 230, 53, 0.4)',
+              'linear-gradient(135deg, hsl(var(--primary)), hsl(100, 70%, 45%))',
+            color: 'hsl(var(--primary-foreground))',
+            border: '3px solid hsl(var(--background))',
+            boxShadow: '0 8px 24px hsl(var(--primary) / 0.45)',
           }}
         >
-          <FabIcon className="w-6 h-6" strokeWidth={2.5} />
+          <FabIcon className="w-6 h-6" strokeWidth={2.25} />
           <span className="sr-only">{t(fab.labelKey)}</span>
           <Plus aria-hidden className="hidden" />
         </Link>
@@ -101,10 +141,11 @@ function TabButton({
     <Link
       href={href}
       className={cn(
-        'flex flex-col items-center justify-center flex-1 min-w-0 px-1 transition-colors',
+        'flex flex-col items-center justify-center flex-1 min-w-0 px-1 py-1 transition-colors rounded-xl',
       )}
       style={{
         color: active ? ACTIVE : INACTIVE,
+        background: active ? 'hsl(var(--primary) / 0.12)' : 'transparent',
         minHeight: 56,
         gap: 4,
       }}
