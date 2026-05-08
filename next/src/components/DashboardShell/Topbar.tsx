@@ -157,19 +157,12 @@ export function Topbar({ onOpenMenu }: { onOpenMenu: () => void }) {
         >
           <span
             style={{
-              width: 32,
-              height: 32,
-              borderRadius: '50%',
-              background: '#1a2e1f',
-              color: '#4ade80',
-              fontSize: 11,
+              fontSize: 13,
               fontWeight: 700,
-              lineHeight: 1,
-              textAlign: 'center',
+              color: 'hsl(var(--primary))',
               flexShrink: 0,
-              overflow: 'hidden',
               userSelect: 'none',
-              display: 'flex',
+              display: 'inline-flex',
               alignItems: 'center',
               justifyContent: 'center',
             }}

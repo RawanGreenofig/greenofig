@@ -190,15 +190,33 @@ function Library({ t }: { t: ReturnType<typeof useTranslations> }) {
       {/* Search */}
       <div className="relative">
         <Search
-          className="absolute start-4 top-1/2 -translate-y-1/2 w-4 h-4 text-fg-3"
+          className="absolute start-3 top-1/2 -translate-y-1/2 w-5 h-5 pointer-events-none"
+          style={{ color: 'hsl(var(--muted-foreground))' }}
           strokeWidth={1.75}
+          aria-hidden
         />
         <input
           type="text"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder={t('searchPlaceholder')}
-          className="w-full h-12 rounded-pill bg-surface border border-border ps-11 pe-4 text-sm text-fg-1 placeholder-fg-3 focus:outline-none focus:border-primary"
+          className="h-12 w-full rounded-2xl ps-10 pe-4 text-base transition-all duration-200"
+          style={{
+            background: 'hsl(var(--background) / 0.5)',
+            backdropFilter: 'blur(4px)',
+            WebkitBackdropFilter: 'blur(4px)',
+            border: '1px solid hsl(var(--input))',
+            color: 'hsl(var(--foreground))',
+            outline: 'none',
+          }}
+          onFocus={(e) => {
+            e.currentTarget.style.borderColor = 'hsl(var(--primary))'
+            e.currentTarget.style.boxShadow = '0 0 0 2px hsl(var(--ring))'
+          }}
+          onBlur={(e) => {
+            e.currentTarget.style.borderColor = 'hsl(var(--input))'
+            e.currentTarget.style.boxShadow = 'none'
+          }}
         />
       </div>
 

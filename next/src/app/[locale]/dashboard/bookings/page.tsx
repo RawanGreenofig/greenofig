@@ -475,13 +475,24 @@ function SessionPicker({
                   {t('min', { count: s.durationMin })}
                 </span>
                 {s.free ? (
-                  <span className="rounded-pill bg-primary/15 text-lime-400 px-2.5 h-6 inline-flex items-center font-semibold uppercase tracking-eyebrow text-[10px]">
+                  <span
+                    className="px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wide"
+                    style={{
+                      background: 'hsl(var(--primary))',
+                      color: 'hsl(var(--primary-foreground))',
+                    }}
+                  >
                     {t('free')}
                   </span>
                 ) : (
-                  <span className="text-fg-1 font-semibold">
+                  <span
+                    className="text-base font-semibold"
+                    style={{ color: 'hsl(var(--foreground))' }}
+                  >
                     {s.priceLabel}{' '}
-                    <span className="text-fg-3 font-normal">JOD</span>
+                    <span style={{ color: 'hsl(var(--muted-foreground))' }}>
+                      JOD
+                    </span>
                   </span>
                 )}
               </div>

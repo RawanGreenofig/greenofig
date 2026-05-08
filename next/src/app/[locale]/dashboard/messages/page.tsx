@@ -2,6 +2,7 @@
 
 
 import { motion } from 'framer-motion'
+import Image from 'next/image'
 import { Suspense, useEffect, useRef, useState } from 'react'
 import { useLocale, useTranslations } from 'next-intl'
 import {
@@ -545,11 +546,43 @@ function Thread() {
 
     void (async () => {
       const supabase = getBrowserSupabase()
-      if (supabase && conversationId) {
+      if (!supabase) {
+        setSending(false)
+        return
+      }
+
+      // If no conversation exists yet, create one with Dr. Rawan as
+      // the nutritionist. Look up Rawan by the email used in
+      // setup-accounts so the conversation has a real recipient.
+      let convId = conversationId
+      if (!convId) {
+        const nutriRes = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('role', 'nutritionist')
+          .order('created_at', { ascending: true })
+          .limit(1)
+          .maybeSingle()
+        const nutriId = (nutriRes.data as { id?: string } | null)?.id
+        if (nutriId) {
+          const { data: newConv } = await supabase
+            .from('conversations')
+            .insert({
+              client_id: userId,
+              nutritionist_id: nutriId,
+            } as never)
+            .select('id')
+            .maybeSingle()
+          convId = (newConv as { id?: string } | null)?.id ?? null
+          if (convId) setConversationId(convId)
+        }
+      }
+
+      if (convId) {
         const { data } = await supabase
           .from('messages')
           .insert({
-            conversation_id: conversationId,
+            conversation_id: convId,
             sender_id: userId,
             body: text,
             read: false,
@@ -561,7 +594,11 @@ function Thread() {
           setMessages((curr) =>
             curr.map((m) => (m.id === localId ? { ...m, id: realId } : m)),
           )
+        } else {
+          toast.error('Could not deliver message — please retry')
         }
+      } else {
+        toast.error('No nutritionist available — please retry shortly')
       }
       setSending(false)
     })()
@@ -696,20 +733,20 @@ function Bubble({ msg }: { msg: Msg }) {
 }
 
 function DrAvatar({ drName, small }: { drName: string; small?: boolean }) {
-  const initials = drName
-    .split(' ')
-    .map((n) => n[0])
-    .slice(0, 2)
-    .join('')
-    .toUpperCase()
+  void drName
+  const size = small ? 28 : 40
   return (
     <span
-      className={`shrink-0 inline-flex items-center justify-center font-bold ${
-        small ? 'w-7 text-[11px]' : 'w-10 text-sm'
-      }`}
-      style={{ color: 'var(--gf-primary-text)' }}
+      className="shrink-0 inline-flex rounded-full overflow-hidden"
+      style={{ width: size, height: size }}
     >
-      {initials}
+      <Image
+        src="/images/dr-rawan-othman.jpg"
+        alt={drName}
+        width={size}
+        height={size}
+        className="w-full h-full object-cover object-top"
+      />
     </span>
   )
 }
