@@ -20,7 +20,7 @@
 
 import Image from 'next/image'
 import { useEffect, useRef, useState } from 'react'
-import { Send, X, Sparkles } from 'lucide-react'
+import { Send, X, Sparkles, GripHorizontal } from 'lucide-react'
 import { useUser } from '@/lib/hooks/useUser'
 import { tierAtLeast } from '@/lib/tier'
 
@@ -32,6 +32,8 @@ interface FigyMessage {
 
 const STORAGE_KEY = 'figy.conversationId'
 
+const POS_KEY = 'figy.position'
+
 export function FigyChat() {
   const { user, profile, tier } = useUser()
   const [open, setOpen] = useState(false)
@@ -40,16 +42,61 @@ export function FigyChat() {
   const [sending, setSending] = useState(false)
   const [conversationId, setConversationId] = useState<string | null>(null)
   const scrollRef = useRef<HTMLDivElement>(null)
+  // Position offset from the default bottom-end corner (px). null = use
+  // the CSS default (bottom-right / bottom-left in RTL).
+  const [pos, setPos] = useState<{ x: number; y: number } | null>(null)
+  const dragRef = useRef<{
+    startX: number
+    startY: number
+    baseX: number
+    baseY: number
+  } | null>(null)
 
-  // Hydrate conversationId from localStorage on mount.
+  // Hydrate position + conversationId from localStorage on mount.
   useEffect(() => {
     try {
       const saved = window.localStorage.getItem(STORAGE_KEY)
       if (saved) setConversationId(saved)
+      const savedPos = window.localStorage.getItem(POS_KEY)
+      if (savedPos) {
+        const p = JSON.parse(savedPos) as { x: number; y: number }
+        if (typeof p.x === 'number' && typeof p.y === 'number') setPos(p)
+      }
     } catch {
       /* fine */
     }
   }, [])
+
+  const onDragStart = (e: React.PointerEvent<HTMLDivElement>) => {
+    e.preventDefault()
+    e.currentTarget.setPointerCapture(e.pointerId)
+    dragRef.current = {
+      startX: e.clientX,
+      startY: e.clientY,
+      baseX: pos?.x ?? 0,
+      baseY: pos?.y ?? 0,
+    }
+  }
+  const onDragMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    const d = dragRef.current
+    if (!d) return
+    const dx = e.clientX - d.startX
+    const dy = e.clientY - d.startY
+    const next = { x: d.baseX + dx, y: d.baseY + dy }
+    setPos(next)
+  }
+  const onDragEnd = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!dragRef.current) return
+    e.currentTarget.releasePointerCapture(e.pointerId)
+    dragRef.current = null
+    if (pos) {
+      try {
+        window.localStorage.setItem(POS_KEY, JSON.stringify(pos))
+      } catch {
+        /* fine */
+      }
+    }
+  }
 
   // Auto-scroll on new messages.
   useEffect(() => {
@@ -166,10 +213,32 @@ export function FigyChat() {
 
       {/* Chat panel */}
       {open && (
-        <div className="figy-panel glass-effect" role="dialog" aria-label="Figy">
-          {/* Header */}
-          <header className="figy-header">
+        <div
+          className="figy-panel glass-effect"
+          role="dialog"
+          aria-label="Figy"
+          style={
+            pos
+              ? {
+                  transform: `translate(${pos.x}px, ${pos.y}px)`,
+                }
+              : undefined
+          }
+        >
+          {/* Header — drag handle */}
+          <header
+            className="figy-header"
+            onPointerDown={onDragStart}
+            onPointerMove={onDragMove}
+            onPointerUp={onDragEnd}
+            onPointerCancel={onDragEnd}
+            style={{ touchAction: 'none', cursor: dragRef.current ? 'grabbing' : 'grab' }}
+          >
             <div className="flex items-center gap-2.5">
+              <GripHorizontal
+                className="w-4 h-4 text-fg-3 shrink-0"
+                aria-hidden
+              />
               <Image
                 src="/logo/logo.png"
                 alt=""
@@ -196,7 +265,11 @@ export function FigyChat() {
             </div>
             <button
               type="button"
-              onClick={() => setOpen(false)}
+              onClick={(e) => {
+                e.stopPropagation()
+                setOpen(false)
+              }}
+              onPointerDown={(e) => e.stopPropagation()}
               aria-label="Close"
               className="p-1.5 rounded-full text-fg-3 hover:text-fg-1 transition-colors"
             >

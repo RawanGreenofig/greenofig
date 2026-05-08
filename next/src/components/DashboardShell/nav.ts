@@ -1,9 +1,11 @@
 import {
+  Home,
   Sun,
   Camera,
   BookOpen,
   Target,
   Lightbulb,
+  Utensils,
   ChefHat,
   Heart,
   MessageSquare,
@@ -42,11 +44,11 @@ export interface DashboardNavItem {
 
 /** User-role sidebar. Order matters — first 5 power the mobile bottom bar. */
 export const USER_NAV: DashboardNavItem[] = [
-  { href: '/dashboard',           labelKey: 'dashboard.tabs.today',     Icon: Sun },
+  { href: '/dashboard',           labelKey: 'dashboard.tabs.today',     Icon: Home },
   { href: '/dashboard/scanner',   labelKey: 'dashboard.tabs.scanner',   Icon: Camera,    tiers: ['free', 'basic', 'premium', 'vip'] },
   { href: '/dashboard/track',     labelKey: 'dashboard.tabs.track',     Icon: BookOpen,  tiers: ['basic', 'premium', 'vip'] },
   { href: '/dashboard/progress',  labelKey: 'dashboard.tabs.progress',  Icon: Target,    tiers: ['basic', 'premium', 'vip'] },
-  { href: '/dashboard/meal-plan', labelKey: 'dashboard.tabs.mealPlan',  Icon: Lightbulb, tiers: ['premium', 'vip'] },
+  { href: '/dashboard/meal-plan', labelKey: 'dashboard.tabs.mealPlan',  Icon: Utensils, tiers: ['premium', 'vip'] },
   { href: '/dashboard/recipes',   labelKey: 'dashboard.tabs.recipes',   Icon: ChefHat,   tiers: ['basic', 'premium', 'vip'] },
   { href: '/dashboard/community', labelKey: 'dashboard.tabs.community', Icon: Heart },
   { href: '/dashboard/messages',  labelKey: 'dashboard.tabs.messages',  Icon: MessageSquare, tiers: ['vip'] },
