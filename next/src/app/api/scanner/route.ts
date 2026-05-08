@@ -7,8 +7,7 @@ import {
   serviceUnavailable,
 } from '@/lib/api/response'
 import {
-  GEMINI_VISION_MODEL,
-  getGemini,
+  analyzeImage,
   isGeminiConfigured,
   safeJson,
 } from '@/lib/gemini'
@@ -149,26 +148,14 @@ export const POST = withAuth(async (req: NextRequest, ctx: AuthedContext) => {
   // Premium gates the priority model; everyone else gets flash
   void tierAtLeast(ctx.profile.tier, 'premium')
 
-  const client = getGemini()
-  if (!client) return serviceUnavailable('Gemini')
-
-  const model = client.getGenerativeModel({
-    model: GEMINI_VISION_MODEL,
-    systemInstruction: SYSTEM_PROMPT,
-  })
-
   let analysis: ScannerResponse | null
   try {
-    const result = await model.generateContent([
-      {
-        inlineData: {
-          mimeType: imageBase64.startsWith('data:image/png') ? 'image/png' : 'image/jpeg',
-          data: imageBase64.replace(/^data:image\/[^;]+;base64,/, ''),
-        },
-      },
+    const text = await analyzeImage(
+      imageBase64.replace(/^data:image\/[^;]+;base64,/, ''),
+      imageBase64.startsWith('data:image/png') ? 'image/png' : 'image/jpeg',
       'Identify and quantify the foods on this plate.',
-    ])
-    const text = result.response.text()
+      SYSTEM_PROMPT,
+    )
     analysis = safeJson<ScannerResponse>(text)
     if (!analysis) {
       console.error(
@@ -177,7 +164,7 @@ export const POST = withAuth(async (req: NextRequest, ctx: AuthedContext) => {
       )
     }
   } catch (error) {
-    console.error('[scanner] generateContent failed:', error)
+    console.error('[scanner] analyzeImage failed:', error)
     return internalError()
   }
 

@@ -1,36 +1,35 @@
-import { GoogleGenerativeAI } from '@google/generative-ai'
+import { GoogleGenAI } from '@google/genai'
 
 /**
- * Singleton Gemini client. Returns null when GEMINI_API_KEY is
- * missing so route handlers can return 503 instead of crashing during
+ * Singleton Gemini client backed by the new @google/genai SDK
+ * (the @google/generative-ai package was deprecated when 2.0
+ * models landed). Returns null when GEMINI_API_KEY is missing
+ * so route handlers can return 503 instead of crashing during
  * build or in unconfigured environments.
  *
  * Env vars:
- *   GEMINI_API_KEY  — required; aistudio.google.com → Get API Key
- *   GEMINI_MODEL           — overrides default text model
- *   GEMINI_RESEARCH_MODEL  — overrides default research model
+ *   GEMINI_API_KEY — required; aistudio.google.com → Get API Key
  */
 
 const apiKey = (): string | undefined => process.env.GEMINI_API_KEY
 
-let cached: GoogleGenerativeAI | null | undefined
+let cached: GoogleGenAI | null | undefined
 
-export function getGemini(): GoogleGenerativeAI | null {
+export function getGemini(): GoogleGenAI | null {
   if (cached !== undefined) return cached
   const key = apiKey()
   if (!key) {
     cached = null
     return null
   }
-  cached = new GoogleGenerativeAI(key)
+  cached = new GoogleGenAI({ apiKey: key })
   return cached
 }
 
-// Model names. Hardcoded to known-stable IDs because env-var overrides
-// in .env.local and on Vercel were pointing at deprecated names
-// ('gemini-pro' / 'gemini-1.0-pro') and causing the SDK to throw on
-// every call. If you want to swap models, change them here — don't
-// rely on GEMINI_MODEL / GEMINI_RESEARCH_MODEL env vars.
+// Model names. Hardcoded to gemini-2.0-flash because the older
+// @google/generative-ai SDK was archived and 1.5 models were
+// flaky on the new client. 2.0-flash supports text + vision +
+// long-context streaming in a single endpoint.
 export const GEMINI_VISION_MODEL = 'gemini-2.0-flash'
 export const GEMINI_TEXT_MODEL = 'gemini-2.0-flash'
 export const GEMINI_RESEARCH_MODEL = 'gemini-2.0-flash'
@@ -58,62 +57,114 @@ export function safeJson<T>(s: string): T | null {
 
 /* ── High-level helpers ────────────────────────────────────────────── */
 
-interface GeminiHistoryTurn {
+export interface ChatMessage {
+  role: 'user' | 'assistant' | 'model'
+  content: string
+}
+
+interface ChatContent {
   role: 'user' | 'model'
   parts: { text: string }[]
 }
 
+function toContents(messages: ChatMessage[]): ChatContent[] {
+  return messages.map((m) => ({
+    role: m.role === 'assistant' ? 'model' : (m.role as 'user' | 'model'),
+    parts: [{ text: m.content }],
+  }))
+}
+
 /**
- * One-shot chat against Gemini. Throws if the client isn't configured —
- * route handlers should call `isGeminiConfigured()` first and return 503.
+ * Stream a chat reply. Throws if the client isn't configured — route
+ * handlers should call `isGeminiConfigured()` first and return 503.
  *
- * `history` accepts the official `{ role, parts: [{ text }] }` shape OR
- * the looser `{ role, parts: string[] }` shape used in some skill specs;
- * we normalize both before sending.
+ * `messages` is the FULL transcript (history + the new user message
+ * as the last item). The route handler is responsible for appending
+ * the new user message before calling.
+ */
+export async function streamChat(
+  messages: ChatMessage[],
+  systemInstruction?: string,
+) {
+  const ai = getGemini()
+  if (!ai) throw new Error('GEMINI_API_KEY not set')
+  return ai.models.generateContentStream({
+    model: GEMINI_TEXT_MODEL,
+    contents: toContents(messages),
+    config: systemInstruction ? { systemInstruction } : undefined,
+  })
+}
+
+/**
+ * Non-streaming chat — used by helpers that need the whole response
+ * before returning (e.g. nutritionist research desk).
+ */
+export async function chat(
+  messages: ChatMessage[],
+  systemInstruction?: string,
+): Promise<string> {
+  const ai = getGemini()
+  if (!ai) throw new Error('GEMINI_API_KEY not set')
+  const result = await ai.models.generateContent({
+    model: GEMINI_TEXT_MODEL,
+    contents: toContents(messages),
+    config: systemInstruction ? { systemInstruction } : undefined,
+  })
+  return result.text ?? ''
+}
+
+/**
+ * Single-image vision call. `imageBase64` should be the raw base64
+ * data (without the `data:image/...;base64,` prefix). `mimeType` is
+ * one of `image/jpeg`, `image/png`, `image/webp`, `image/heic`,
+ * `image/heif`.
+ */
+export async function analyzeImage(
+  imageBase64: string,
+  mimeType: string,
+  prompt: string,
+  systemInstruction?: string,
+): Promise<string> {
+  const ai = getGemini()
+  if (!ai) throw new Error('GEMINI_API_KEY not set')
+  const result = await ai.models.generateContent({
+    model: GEMINI_VISION_MODEL,
+    contents: [
+      {
+        role: 'user',
+        parts: [
+          { inlineData: { data: imageBase64, mimeType } },
+          { text: prompt },
+        ],
+      },
+    ],
+    config: systemInstruction ? { systemInstruction } : undefined,
+  })
+  return result.text ?? ''
+}
+
+/**
+ * Backwards-compat wrapper for callers that want a one-shot response
+ * with a system prompt + user message + optional history. Internally
+ * uses the new chat() helper.
  */
 export async function geminiChat(
   systemPrompt: string,
   userMessage: string,
-  history: (GeminiHistoryTurn | { role: 'user' | 'model'; parts: string[] })[] = [],
+  history: { role: 'user' | 'model' | 'assistant'; parts?: unknown }[] = [],
 ): Promise<string> {
-  const client = getGemini()
-  if (!client) throw new Error('GEMINI_API_KEY not set')
-
-  const model = client.getGenerativeModel({
-    model: GEMINI_TEXT_MODEL,
-    systemInstruction: systemPrompt,
-  })
-
-  const normalized: GeminiHistoryTurn[] = history.map((h) => {
-    if (Array.isArray(h.parts) && typeof h.parts[0] === 'string') {
-      return { role: h.role, parts: (h.parts as string[]).map((text) => ({ text })) }
-    }
-    return h as GeminiHistoryTurn
-  })
-
-  const chat = model.startChat({ history: normalized })
-  const result = await chat.sendMessage(userMessage)
-  return result.response.text()
-}
-
-/**
- * Single-image vision call. `imageBase64` should be the raw base64 data
- * (without the `data:image/...;base64,` prefix). `mimeType` is one of
- * `image/jpeg`, `image/png`, `image/webp`, `image/heic`, `image/heif`.
- */
-export async function geminiVision(
-  imageBase64: string,
-  mimeType: string,
-  prompt: string,
-): Promise<string> {
-  const client = getGemini()
-  if (!client) throw new Error('GEMINI_API_KEY not set')
-
-  const model = client.getGenerativeModel({ model: GEMINI_VISION_MODEL })
-
-  const result = await model.generateContent([
-    { inlineData: { data: imageBase64, mimeType } },
-    prompt,
-  ])
-  return result.response.text()
+  const messages: ChatMessage[] = [
+    ...history.map((h) => {
+      // Accept both the official { parts: [{text}] } shape and the
+      // looser { parts: string[] } shape some callers used.
+      const text = Array.isArray(h.parts)
+        ? (h.parts as Array<{ text?: string } | string>)
+            .map((p) => (typeof p === 'string' ? p : p.text ?? ''))
+            .join('')
+        : ''
+      return { role: h.role, content: text }
+    }),
+    { role: 'user', content: userMessage },
+  ]
+  return chat(messages, systemPrompt)
 }

@@ -8,8 +8,7 @@ import {
 } from '@/lib/api/response'
 import { getServerSupabase } from '@/lib/supabase/server'
 import {
-  GEMINI_RESEARCH_MODEL,
-  getGemini,
+  chat as geminiChat,
   isGeminiConfigured,
   safeJson,
 } from '@/lib/gemini'
@@ -106,19 +105,15 @@ export const POST = withNutritionistOrAdmin(
       ? `Question:\n${question}\n\nAvailable documents (cite [n] inline):\n${contextBlock}`
       : `Question:\n${question}\n\nNo documents in the library — answer from general clinical literature and return an empty "sources" array.`
 
-    const client = getGemini()
-    if (!client) return serviceUnavailable('Gemini')
-
-    const model = client.getGenerativeModel({
-      model: GEMINI_RESEARCH_MODEL,
-      systemInstruction: SYSTEM_PROMPT,
-    })
-
     let parsed: { answer: string; sources: { docId: string; passage: string }[] } | null
     try {
-      const result = await model.generateContent(userPrompt)
-      parsed = safeJson(result.response.text())
-    } catch {
+      const text = await geminiChat(
+        [{ role: 'user', content: userPrompt }],
+        SYSTEM_PROMPT,
+      )
+      parsed = safeJson(text)
+    } catch (error) {
+      console.error('[research] geminiChat failed:', error)
       return internalError()
     }
 

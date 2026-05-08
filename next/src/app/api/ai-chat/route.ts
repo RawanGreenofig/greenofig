@@ -10,8 +10,9 @@ import {
 import { getServerSupabase } from '@/lib/supabase/server'
 import {
   GEMINI_TEXT_MODEL,
-  getGemini,
   isGeminiConfigured,
+  streamChat,
+  type ChatMessage,
 } from '@/lib/gemini'
 import { tierAtLeast } from '@/lib/tier'
 import { checkAndIncrementUsage } from '@/lib/ai-usage'
@@ -108,35 +109,24 @@ export const POST = withAuth(async (req: NextRequest, ctx: AuthedContext) => {
     history = row.messages ?? []
   }
 
-  // Build the chat history for Gemini
-  const client = getGemini()
-  if (!client) return serviceUnavailable('Gemini')
-
-  const model = client.getGenerativeModel({
-    model: GEMINI_TEXT_MODEL,
-    systemInstruction: SYSTEM_PROMPT,
-  })
-
-  // Use generateContentStream directly with the full conversation
-  // history + the new user message. The chat.sendMessageStream() path
-  // on the @google/generative-ai SDK has been flaky since the SDK
-  // was archived in Dec 2025; bypassing startChat() and sending the
-  // contents array straight to the model is the supported pattern.
-  const contents = [
+  // Build the chat transcript for Gemini (history + new user message)
+  const transcript: ChatMessage[] = [
     ...history.map((m) => ({
-      role: m.role === 'assistant' ? 'model' : 'user',
-      parts: [{ text: m.body }],
+      role: m.role,
+      content: m.body,
     })),
-    { role: 'user', parts: [{ text: message }] },
+    { role: 'user', content: message },
   ]
 
-  let stream: AsyncGenerator<{ text: () => string }> | null = null
+  let stream: AsyncIterable<{ text?: string }>
   try {
-    const result = await model.generateContentStream({ contents })
-    stream = result.stream as AsyncGenerator<{ text: () => string }>
+    stream = (await streamChat(
+      transcript,
+      SYSTEM_PROMPT,
+    )) as AsyncIterable<{ text?: string }>
   } catch (error) {
     console.error(
-      '[ai-chat] generateContentStream failed for model',
+      '[ai-chat] streamChat failed for model',
       GEMINI_TEXT_MODEL,
       'error:',
       error instanceof Error ? error.message : error,
@@ -151,8 +141,9 @@ export const POST = withAuth(async (req: NextRequest, ctx: AuthedContext) => {
   const responseStream = new ReadableStream<Uint8Array>({
     async start(controller) {
       try {
-        for await (const chunk of stream as AsyncGenerator<{ text: () => string }>) {
-          const piece = chunk.text()
+        for await (const chunk of stream) {
+          const piece = chunk.text ?? ''
+          if (!piece) continue
           assistantBody += piece
           controller.enqueue(encoder.encode(piece))
         }
