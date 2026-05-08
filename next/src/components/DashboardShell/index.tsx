@@ -9,6 +9,7 @@ import { useAuth } from '@/context/AuthContext'
 import { Sidebar } from './Sidebar'
 import { Topbar } from './Topbar'
 import { MobileNav } from './MobileNav'
+import { FigyChat } from '@/components/FigyChat'
 import {
   USER_NAV,
   USER_MOBILE_TABS,
@@ -135,6 +136,7 @@ export function DashboardShell({
       </div>
 
       <MobileNav tabs={mobileTabs} fab={mobileFab} />
+      <FigyChat />
     </div>
     </ThemeProvider>
   )
