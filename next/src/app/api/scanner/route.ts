@@ -106,7 +106,10 @@ Guidelines:
 - Do NOT guess or assume an item is food. If unsure, set detected=false.`
 
 export const POST = withAuth(async (req: NextRequest, ctx: AuthedContext) => {
-  if (!isGeminiConfigured()) return serviceUnavailable('Gemini')
+  if (!isGeminiConfigured()) {
+    console.error('[scanner] GEMINI_API_KEY not configured')
+    return serviceUnavailable('Gemini')
+  }
 
   let body: { imageBase64?: string; mealType?: string }
   try {
@@ -167,7 +170,14 @@ export const POST = withAuth(async (req: NextRequest, ctx: AuthedContext) => {
     ])
     const text = result.response.text()
     analysis = safeJson<ScannerResponse>(text)
-  } catch {
+    if (!analysis) {
+      console.error(
+        '[scanner] safeJson returned null. Raw model output:',
+        text.slice(0, 500),
+      )
+    }
+  } catch (error) {
+    console.error('[scanner] generateContent failed:', error)
     return internalError()
   }
 

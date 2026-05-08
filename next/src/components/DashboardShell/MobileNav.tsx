@@ -1,9 +1,7 @@
 'use client'
 
-import { useRef } from 'react'
 import { useTranslations } from 'next-intl'
-import { Plus } from 'lucide-react'
-import { Link, useRouter, usePathname } from '@/i18n/navigation'
+import { Link, usePathname } from '@/i18n/navigation'
 import { cn } from '@/lib/cn'
 import type { DashboardNavItem } from './nav'
 
@@ -19,9 +17,7 @@ export function MobileNav({
 }) {
   const t = useTranslations()
   const pathname = usePathname()
-  const router = useRouter()
   const FabIcon = fab.Icon
-  const cameraInputRef = useRef<HTMLInputElement>(null)
 
   const isActive = (href: string) =>
     href === pathname ||
@@ -29,36 +25,6 @@ export function MobileNav({
       href !== '/nutritionist' &&
       href !== '/admin' &&
       pathname.startsWith(`${href}/`))
-
-  // FAB behaviour: if the FAB destination is the food scanner, open
-  // the device camera directly instead of just navigating. After the
-  // user picks/captures a photo, stash it in sessionStorage as a data
-  // URL and route to /dashboard/scanner — the scanner page reads
-  // sessionStorage on mount and auto-processes the image.
-  const isScannerFab = fab.href === '/dashboard/scanner'
-  const onFabClick = (e: React.MouseEvent) => {
-    if (!isScannerFab) return
-    e.preventDefault()
-    cameraInputRef.current?.click()
-  }
-  const onCameraPick = async (file: File | null | undefined) => {
-    if (!file) return
-    try {
-      const reader = new FileReader()
-      reader.onload = () => {
-        const dataUrl = String(reader.result ?? '')
-        try {
-          window.sessionStorage.setItem('gf_scanner_pending', dataUrl)
-        } catch {
-          /* fine — fall through to plain navigation */
-        }
-        router.push('/dashboard/scanner')
-      }
-      reader.readAsDataURL(file)
-    } catch {
-      router.push('/dashboard/scanner')
-    }
-  }
 
   return (
     <nav
@@ -70,7 +36,7 @@ export function MobileNav({
         paddingBottom: 'env(safe-area-inset-bottom)',
       }}
     >
-      <div className="flex items-end justify-around px-3 pt-1 pb-2 max-w-screen-md mx-auto">
+      <div className="flex items-center justify-around px-3 pt-2 pb-2 max-w-screen-md mx-auto">
         {tabs.slice(0, 2).map((item) => (
           <TabButton
             key={item.href}
@@ -80,38 +46,25 @@ export function MobileNav({
           />
         ))}
 
-        {/* Center FAB — lime gradient. Camera FAB triggers a hidden
-         * file input with capture='environment' so the device camera
-         * opens directly. Other FABs navigate normally. */}
-        {isScannerFab && (
-          <input
-            ref={cameraInputRef}
-            type="file"
-            accept="image/*"
-            capture="environment"
-            className="sr-only"
-            onChange={(e) => void onCameraPick(e.target.files?.[0])}
-          />
-        )}
+        {/* Center FAB — lime gradient. Plain navigation to the
+         * scanner page (or whatever the role's FAB target is). */}
         <Link
           href={fab.href}
           aria-label={t(fab.labelKey)}
-          onClick={onFabClick}
-          className="relative inline-flex items-center justify-center rounded-full transition-transform active:scale-95"
+          className="inline-flex items-center justify-center rounded-full transition-transform active:scale-95"
           style={{
             width: 56,
             height: 56,
-            marginTop: -20,
+            marginTop: -22,
             background:
               'linear-gradient(135deg, hsl(var(--primary)), hsl(100, 70%, 45%))',
             color: 'hsl(var(--primary-foreground))',
-            border: '3px solid hsl(var(--background))',
             boxShadow: '0 8px 24px hsl(var(--primary) / 0.45)',
+            flexShrink: 0,
           }}
         >
-          <FabIcon className="w-6 h-6" strokeWidth={2.25} />
+          <FabIcon size={24} strokeWidth={2.25} />
           <span className="sr-only">{t(fab.labelKey)}</span>
-          <Plus aria-hidden className="hidden" />
         </Link>
 
         {tabs.slice(2).map((item) => (

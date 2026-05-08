@@ -45,10 +45,14 @@ Hard rules:
 - If asked for a meal plan, decline and route them to "Plan" tab where Dr. Rawan builds custom plans.`
 
 export const POST = withAuth(async (req: NextRequest, ctx: AuthedContext) => {
-  if (!isGeminiConfigured()) return serviceUnavailable('Gemini')
+  if (!isGeminiConfigured()) {
+    console.error('[ai-chat] GEMINI_API_KEY not configured')
+    return serviceUnavailable('Gemini')
+  }
 
   // Tier gate — premium and vip only
   if (!tierAtLeast(ctx.profile.tier, 'premium')) {
+    console.error('[ai-chat] Tier gate denied for', ctx.userId, 'tier:', ctx.profile.tier)
     return forbidden('AI chat requires Premium or higher.')
   }
 
@@ -124,7 +128,8 @@ export const POST = withAuth(async (req: NextRequest, ctx: AuthedContext) => {
   try {
     const result = await chat.sendMessageStream(message)
     stream = result.stream as AsyncGenerator<{ text: () => string }>
-  } catch {
+  } catch (error) {
+    console.error('[ai-chat] sendMessageStream failed:', error)
     return internalError()
   }
 
@@ -140,8 +145,8 @@ export const POST = withAuth(async (req: NextRequest, ctx: AuthedContext) => {
           assistantBody += piece
           controller.enqueue(encoder.encode(piece))
         }
-      } catch {
-        // ignore — we'll still persist what we got so far
+      } catch (streamError) {
+        console.error('[ai-chat] stream consume failed:', streamError)
       }
 
       // Persist on completion
@@ -153,12 +158,14 @@ export const POST = withAuth(async (req: NextRequest, ctx: AuthedContext) => {
 
       try {
         if (conversationId) {
-          await supabase
+          const { error } = await supabase
             .from('ai_conversations')
             .update({ messages: nextHistory } as never)
             .eq('id', conversationId)
+          if (error)
+            console.error('[ai-chat] update ai_conversations failed:', error)
         } else {
-          const { data: inserted } = await supabase
+          const { data: inserted, error } = await supabase
             .from('ai_conversations')
             .insert({
               user_id: ctx.userId,
@@ -167,10 +174,12 @@ export const POST = withAuth(async (req: NextRequest, ctx: AuthedContext) => {
             } as never)
             .select('id')
             .maybeSingle()
+          if (error)
+            console.error('[ai-chat] insert ai_conversations failed:', error)
           conversationId = (inserted as { id?: string } | null)?.id
         }
-      } catch {
-        /* persist failure shouldn't fail the stream */
+      } catch (persistError) {
+        console.error('[ai-chat] persist threw:', persistError)
       }
 
       controller.close()

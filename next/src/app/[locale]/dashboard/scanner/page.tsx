@@ -2,7 +2,7 @@
 
 
 import { motion } from 'framer-motion'
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useRef, useState } from 'react'
 import Image from 'next/image'
 import { useTranslations } from 'next-intl'
 import {
@@ -161,28 +161,6 @@ export default function ScannerPage() {
     [limitHit, startAnalyze],
   )
 
-  // Pick up an image stashed by the mobile bottom-nav camera FAB.
-  // The FAB opens the device camera via a hidden file input, then
-  // writes the data URL to sessionStorage and routes here. We
-  // convert it back into a File and feed it through handleFile.
-  useEffect(() => {
-    if (typeof window === 'undefined') return
-    const pending = window.sessionStorage.getItem('gf_scanner_pending')
-    if (!pending) return
-    window.sessionStorage.removeItem('gf_scanner_pending')
-    void (async () => {
-      try {
-        const res = await fetch(pending)
-        const blob = await res.blob()
-        const file = new File([blob], 'capture.jpg', {
-          type: blob.type || 'image/jpeg',
-        })
-        handleFile(file)
-      } catch {
-        /* corrupted data URL — silently drop */
-      }
-    })()
-  }, [handleFile])
 
   const onDrop = useCallback(
     (e: React.DragEvent<HTMLLabelElement>) => {
