@@ -53,6 +53,7 @@ export function GhostBar() {
         borderBottom: visible
           ? '1px solid rgb(240 237 230 / 0.05)'
           : '1px solid transparent',
+        paddingTop: 'env(safe-area-inset-top)',
       }}
     >
       <div className="max-w-screen-xl mx-auto px-6 py-3 flex items-center justify-between">

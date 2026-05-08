@@ -1134,25 +1134,50 @@ textarea:focus-visible {
  *     `overflow: hidden` from a closed modal etc. We force the
  *     dashboard main to scroll regardless and pin it to 100dvh so
  *     the keyboard / address-bar don't shrink the viewport mid-scroll. */
-/* ── Native-app feel on mobile ───────────────────────────────────
- * Prevents iOS double-tap-to-zoom, eliminates the 300ms tap delay,
- * stops body rubber-banding when scrolling past the top/bottom of
- * the dashboard, and ensures inputs don't trigger the iOS zoom
- * (font-size: 16px is the threshold). */
+/* ── Native-app feel on mobile (whole site) ──────────────────────
+ * Applies to every page — marketing, dashboard, auth, blog. The
+ * viewport meta in [locale]/layout.tsx already sets viewport-fit=
+ * cover + maximum-scale=1 + user-scalable=no, so the page extends
+ * into the iPhone notch/Dynamic Island and pinch-zoom is off. The
+ * rules here add the rest of the native-app polish. */
 @media (max-width: 768px) {
   html,
   body {
+    /* No iOS rubber-band when scrolling past the top/bottom. */
     overscroll-behavior-y: none;
+    /* Drop the 300ms tap delay. */
     touch-action: manipulation;
+    /* No grey flash when tapping links/buttons. */
     -webkit-tap-highlight-color: transparent;
+    /* Defeat the long-press context menu on images / link previews. */
+    -webkit-touch-callout: none;
   }
   /* iOS auto-zooms on focus when input font-size is < 16px. Bumping
-   * the floor here for everywhere except the dashboard scope (which
-   * has its own typography tokens already at 16px+). */
+   * the floor everywhere outside the dashboard typography tokens. */
   input:not([type='checkbox']):not([type='radio']),
   select,
   textarea {
     font-size: max(16px, 1rem);
+  }
+  /* Prevent text selection on chrome (buttons, nav, headings) but
+   * keep it on actual readable content (paragraphs, articles, the
+   * markdown body). The opt-in selectors below cover the chrome
+   * surfaces; everything else stays selectable. */
+  button,
+  [role='button'],
+  nav,
+  header,
+  footer,
+  .lang-switcher,
+  .figy-launcher,
+  .figy-header {
+    -webkit-user-select: none;
+    user-select: none;
+  }
+  /* Bottom-edge breathing room — every page's main content reserves
+   * space for the home-indicator bar / virtual keyboard zone. */
+  body {
+    padding-bottom: env(safe-area-inset-bottom);
   }
 }
 
