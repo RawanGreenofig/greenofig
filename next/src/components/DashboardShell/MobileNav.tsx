@@ -51,7 +51,7 @@ export function MobileNav({
         <Link
           href={fab.href}
           aria-label={t(fab.labelKey)}
-          className="inline-flex items-center justify-center rounded-full transition-transform active:scale-95"
+          className="rounded-full transition-transform active:scale-95"
           style={{
             width: 56,
             height: 56,
@@ -61,9 +61,12 @@ export function MobileNav({
             color: 'hsl(var(--primary-foreground))',
             boxShadow: '0 8px 24px hsl(var(--primary) / 0.45)',
             flexShrink: 0,
+            display: 'grid',
+            placeItems: 'center',
+            lineHeight: 0,
           }}
         >
-          <FabIcon size={24} strokeWidth={2.25} />
+          <FabIcon size={24} strokeWidth={2.25} style={{ display: 'block' }} />
           <span className="sr-only">{t(fab.labelKey)}</span>
         </Link>
 

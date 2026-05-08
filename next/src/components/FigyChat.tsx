@@ -34,6 +34,44 @@ const STORAGE_KEY = 'figy.conversationId'
 
 const POS_KEY = 'figy.position'
 
+/** Default corner offset (matches the bottom-{end} CSS rules). */
+const CORNER_INSET = 24
+
+/** Approximate footprint of each draggable element so we can keep
+ *  it fully visible inside the viewport when the user drags. */
+const SIZES = {
+  launcher: { w: 150, h: 48 },
+  panel: { w: 380, h: 560 },
+} as const
+
+/**
+ * Clamp the user-supplied translate offset (in px) so the
+ * launcher / panel never escapes the viewport edges. The element
+ * sits at bottom-end by default, so positive `x` moves it inward
+ * (toward start) and positive `y` moves it up. Translation values
+ * therefore live in negative space — we clamp accordingly.
+ */
+function clampToViewport(
+  next: { x: number; y: number },
+  kind: 'launcher' | 'panel',
+): { x: number; y: number } {
+  if (typeof window === 'undefined') return next
+  const vw = window.innerWidth
+  const vh = window.innerHeight
+  const size = SIZES[kind]
+  // The element's start edge (left in LTR) sits at vw - inset - width
+  // when transform=0. Negative dx pushes it further left; positive dx
+  // pushes it off-screen to the right. Inverse for dy.
+  const minX = -(vw - CORNER_INSET * 2 - size.w)
+  const maxX = 0
+  const minY = -(vh - CORNER_INSET * 2 - size.h)
+  const maxY = 0
+  return {
+    x: Math.max(minX, Math.min(maxX, next.x)),
+    y: Math.max(minY, Math.min(maxY, next.y)),
+  }
+}
+
 export function FigyChat() {
   const { user, profile, tier } = useUser()
   const [open, setOpen] = useState(false)
@@ -87,8 +125,7 @@ export function FigyChat() {
     if (!d) return
     const dx = e.clientX - d.startX
     const dy = e.clientY - d.startY
-    const next = { x: d.baseX + dx, y: d.baseY + dy }
-    setPos(next)
+    setPos(clampToViewport({ x: d.baseX + dx, y: d.baseY + dy }, 'panel'))
   }
   const onDragEnd = (e: React.PointerEvent<HTMLDivElement>) => {
     if (!dragRef.current) return
@@ -211,7 +248,8 @@ export function FigyChat() {
     const dx = e.clientX - d.startX
     const dy = e.clientY - d.startY
     if (!movedRef.current && Math.hypot(dx, dy) > 4) movedRef.current = true
-    if (movedRef.current) setPos({ x: d.baseX + dx, y: d.baseY + dy })
+    if (movedRef.current)
+      setPos(clampToViewport({ x: d.baseX + dx, y: d.baseY + dy }, 'launcher'))
   }
   const onLauncherUp = (e: React.PointerEvent<HTMLButtonElement>) => {
     const wasDragging = movedRef.current

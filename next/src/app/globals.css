@@ -1134,6 +1134,28 @@ textarea:focus-visible {
  *     `overflow: hidden` from a closed modal etc. We force the
  *     dashboard main to scroll regardless and pin it to 100dvh so
  *     the keyboard / address-bar don't shrink the viewport mid-scroll. */
+/* ── Native-app feel on mobile ───────────────────────────────────
+ * Prevents iOS double-tap-to-zoom, eliminates the 300ms tap delay,
+ * stops body rubber-banding when scrolling past the top/bottom of
+ * the dashboard, and ensures inputs don't trigger the iOS zoom
+ * (font-size: 16px is the threshold). */
+@media (max-width: 768px) {
+  html,
+  body {
+    overscroll-behavior-y: none;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+  /* iOS auto-zooms on focus when input font-size is < 16px. Bumping
+   * the floor here for everywhere except the dashboard scope (which
+   * has its own typography tokens already at 16px+). */
+  input:not([type='checkbox']):not([type='radio']),
+  select,
+  textarea {
+    font-size: max(16px, 1rem);
+  }
+}
+
 @media (max-width: 768px) {
   [data-theme='dashboard'] main,
   .dashboard-main {

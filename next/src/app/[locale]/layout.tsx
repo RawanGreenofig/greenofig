@@ -100,6 +100,9 @@ export const viewport: Viewport = {
   themeColor: '#0d1a12',
   width: 'device-width',
   initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  viewportFit: 'cover',
 }
 
 export function generateStaticParams() {

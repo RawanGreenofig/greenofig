@@ -43,10 +43,12 @@ export function Topbar({ onOpenMenu }: { onOpenMenu: () => void }) {
 
   return (
     <header
-      className="flex items-center gap-3 h-14 px-4 md:px-6 shrink-0"
+      className="flex items-center gap-3 px-4 md:px-6 shrink-0"
       style={{
         background: TOPBAR_BG,
         borderBottom: `1px solid ${TOPBAR_BORDER}`,
+        paddingTop: 'env(safe-area-inset-top)',
+        height: 'calc(56px + env(safe-area-inset-top))',
       }}
     >
       <button
