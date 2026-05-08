@@ -287,15 +287,7 @@ function FlagRow({
     }`}>
       {/* Feature */}
       <div className="flex items-center gap-3 min-w-0 mb-3 md:mb-0">
-        <span
-          className="shrink-0 w-9 h-9 rounded-lg inline-flex items-center justify-center"
-          style={{
-            background: flag.globalOn ? 'rgb(61 122 74 / 0.18)' : 'var(--gf-bg-deeper)',
-            color: flag.globalOn ? 'var(--gf-lime-400)' : 'var(--gf-fg-3)',
-          }}
-        >
-          <Power className="w-4 h-4" strokeWidth={1.75} />
-        </span>
+        <Power className="w-6 h-6 flex-shrink-0" strokeWidth={1.75} style={{ color: flag.globalOn ? 'var(--gf-lime-400)' : 'var(--gf-fg-3)' }} />
         <div className="min-w-0">
           <p className="text-sm font-mono text-fg-1 truncate" dir="ltr">
             {flag.feature}

@@ -433,12 +433,7 @@ function Turn({
   return (
     <li>
       <div className="flex items-start gap-3">
-        <span
-          className="shrink-0 w-9 h-9 rounded-full inline-flex items-center justify-center"
-          style={{ background: 'rgb(61 122 74 / 0.18)', color: 'var(--gf-lime-400)' }}
-        >
-          <Microscope className="w-4 h-4" strokeWidth={1.75} />
-        </span>
+        <Microscope className="w-6 h-6 flex-shrink-0" strokeWidth={1.75} style={{ color: 'var(--gf-lime-400)' }} />
         <div className="flex-1 min-w-0 rounded-2xl border border-border bg-surface px-5 py-4">
           <p className="text-sm text-fg-1 whitespace-pre-wrap leading-relaxed">
             {turn.body}

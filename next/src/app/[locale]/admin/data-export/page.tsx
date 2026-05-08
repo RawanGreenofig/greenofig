@@ -257,12 +257,7 @@ export default function AdminDataExportPage() {
           <ul className="rounded-xl border border-border bg-surface divide-y divide-border overflow-hidden">
             {scheduled.map((s) => (
               <li key={s.id} className="flex flex-wrap items-center gap-3 px-5 py-3">
-                <span
-                  className="shrink-0 w-9 h-9 rounded-lg inline-flex items-center justify-center"
-                  style={{ background: `${BULK_TINT[s.kind]}1a`, color: BULK_TINT[s.kind] }}
-                >
-                  <Clock className="w-4 h-4" strokeWidth={1.75} />
-                </span>
+                <Clock className="w-6 h-6 flex-shrink-0" strokeWidth={1.75} style={{ color: BULK_TINT[s.kind] }} />
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-semibold text-fg-1">
                     {tD(`bulkExports.${s.kind}` as 'bulkExports.users')}{' '}

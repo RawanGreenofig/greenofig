@@ -325,12 +325,7 @@ function KeyRow({
   const tint = PROVIDER_TINT[apiKey.provider]
   return (
     <li className="flex flex-wrap items-center gap-3 px-5 py-3 hover:bg-surface-raised transition-colors">
-      <span
-        className="shrink-0 w-9 h-9 rounded-lg inline-flex items-center justify-center"
-        style={{ background: `${tint}1a`, color: tint }}
-      >
-        <Key className="w-4 h-4" strokeWidth={1.75} />
-      </span>
+      <Key className="w-6 h-6 flex-shrink-0" strokeWidth={1.75} style={{ color: tint }} />
       <div className="flex-1 min-w-[200px]">
         <div className="flex items-baseline gap-2 flex-wrap">
           <p className="text-sm font-semibold text-fg-1">{apiKey.name}</p>

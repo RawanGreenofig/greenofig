@@ -273,12 +273,7 @@ export default function AdminNotificationsPage() {
                 {tN('previewLabel')}
               </p>
               <div className="rounded-lg bg-bg-deeper/40 border border-border p-4 flex items-start gap-3">
-                <span
-                  className="shrink-0 w-9 h-9 rounded-lg inline-flex items-center justify-center"
-                  style={{ background: 'rgb(61 122 74 / 0.18)', color: 'var(--gf-lime-400)' }}
-                >
-                  <Bell className="w-4 h-4" strokeWidth={1.75} />
-                </span>
+                <Bell className="w-6 h-6 flex-shrink-0" strokeWidth={1.75} style={{ color: 'var(--gf-lime-400)' }} />
                 <div className="min-w-0">
                   <p className="text-sm font-semibold text-fg-1">
                     {title || '— title —'}

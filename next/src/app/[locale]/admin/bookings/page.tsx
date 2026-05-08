@@ -255,12 +255,7 @@ function Row({ tB, booking }: { tB: ReturnType<typeof useTranslations>; booking:
     <li className="md:grid md:grid-cols-[1.2fr_1.5fr_1.2fr_1.3fr_0.8fr_0.8fr_auto] gap-3 items-center px-5 py-3 hover:bg-surface-raised transition-colors">
       {/* Session type */}
       <div className="flex items-center gap-2 mb-2 md:mb-0">
-        <span
-          className="shrink-0 w-9 h-9 rounded-lg inline-flex items-center justify-center"
-          style={{ background: `${tint}1a`, color: tint }}
-        >
-          <TypeIcon className="w-4 h-4" strokeWidth={1.75} />
-        </span>
+        <TypeIcon className="w-6 h-6 flex-shrink-0" strokeWidth={1.75} style={{ color: tint }} />
         <p className="text-sm font-semibold text-fg-1">
           {tB(`types.${booking.type}` as 'types.introCall')}
         </p>
@@ -385,12 +380,7 @@ function Stat({
   return (
     <article className="rounded-xl border border-border bg-surface p-5">
       <div className="flex items-center gap-2.5 mb-3">
-        <span
-          className="w-9 h-9 rounded-lg flex items-center justify-center"
-          style={{ background: `${tint}1a`, color: tint }}
-        >
-          <Icon className="w-4 h-4" strokeWidth={1.75} />
-        </span>
+        <Icon className="w-6 h-6 flex-shrink-0" strokeWidth={1.75} style={{ color: tint }} />
         <span className="text-xs uppercase tracking-eyebrow text-fg-3 font-medium">
           {label}
         </span>

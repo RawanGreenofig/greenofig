@@ -298,12 +298,7 @@ function Stat({
   return (
     <article className="rounded-xl border border-border bg-surface p-5">
       <div className="flex items-center gap-2.5 mb-3">
-        <span
-          className="w-9 h-9 rounded-lg flex items-center justify-center"
-          style={{ background: `${tint}1a`, color: tint }}
-        >
-          <Icon className="w-4 h-4" strokeWidth={1.75} />
-        </span>
+        <Icon className="w-6 h-6 flex-shrink-0" strokeWidth={1.75} style={{ color: tint }} />
         <span className="text-xs uppercase tracking-eyebrow text-fg-3 font-medium">
           {label}
         </span>
