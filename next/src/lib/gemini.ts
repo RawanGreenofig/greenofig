@@ -1,17 +1,17 @@
 import { GoogleGenerativeAI } from '@google/generative-ai'
 
 /**
- * Singleton Gemini client. Returns null when GOOGLE_GEMINI_API_KEY is
+ * Singleton Gemini client. Returns null when GEMINI_API_KEY is
  * missing so route handlers can return 503 instead of crashing during
  * build or in unconfigured environments.
  *
  * Env vars:
- *   GOOGLE_GEMINI_API_KEY  — required; aistudio.google.com → Get API Key
+ *   GEMINI_API_KEY  — required; aistudio.google.com → Get API Key
  *   GEMINI_MODEL           — overrides default text model
  *   GEMINI_RESEARCH_MODEL  — overrides default research model
  */
 
-const apiKey = (): string | undefined => process.env.GOOGLE_GEMINI_API_KEY
+const apiKey = (): string | undefined => process.env.GEMINI_API_KEY
 
 let cached: GoogleGenerativeAI | null | undefined
 
@@ -72,7 +72,7 @@ export async function geminiChat(
   history: (GeminiHistoryTurn | { role: 'user' | 'model'; parts: string[] })[] = [],
 ): Promise<string> {
   const client = getGemini()
-  if (!client) throw new Error('GOOGLE_GEMINI_API_KEY not set')
+  if (!client) throw new Error('GEMINI_API_KEY not set')
 
   const model = client.getGenerativeModel({
     model: GEMINI_TEXT_MODEL,
@@ -102,7 +102,7 @@ export async function geminiVision(
   prompt: string,
 ): Promise<string> {
   const client = getGemini()
-  if (!client) throw new Error('GOOGLE_GEMINI_API_KEY not set')
+  if (!client) throw new Error('GEMINI_API_KEY not set')
 
   const model = client.getGenerativeModel({ model: GEMINI_VISION_MODEL })
 
