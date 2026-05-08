@@ -31,9 +31,9 @@ export function getGemini(): GoogleGenerativeAI | null {
 // ('gemini-pro' / 'gemini-1.0-pro') and causing the SDK to throw on
 // every call. If you want to swap models, change them here — don't
 // rely on GEMINI_MODEL / GEMINI_RESEARCH_MODEL env vars.
-export const GEMINI_VISION_MODEL = 'gemini-1.5-flash'
-export const GEMINI_TEXT_MODEL = 'gemini-1.5-flash'
-export const GEMINI_RESEARCH_MODEL = 'gemini-1.5-pro'
+export const GEMINI_VISION_MODEL = 'gemini-2.0-flash'
+export const GEMINI_TEXT_MODEL = 'gemini-2.0-flash'
+export const GEMINI_RESEARCH_MODEL = 'gemini-2.0-flash'
 
 /** True when the Gemini integration is configured for this environment. */
 export const isGeminiConfigured = () => !!apiKey()
