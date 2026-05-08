@@ -551,30 +551,25 @@ function Thread() {
         return
       }
 
-      // If no conversation exists yet, create one with Dr. Rawan as
-      // the nutritionist. Look up Rawan by the email used in
-      // setup-accounts so the conversation has a real recipient.
+      // First message ever: server route looks up Dr. Rawan and
+      // creates the conversation row using the service-role key
+      // (RLS otherwise blocks the cross-user lookup).
       let convId = conversationId
       if (!convId) {
-        const nutriRes = await supabase
-          .from('profiles')
-          .select('id')
-          .eq('role', 'nutritionist')
-          .order('created_at', { ascending: true })
-          .limit(1)
-          .maybeSingle()
-        const nutriId = (nutriRes.data as { id?: string } | null)?.id
-        if (nutriId) {
-          const { data: newConv } = await supabase
-            .from('conversations')
-            .insert({
-              client_id: userId,
-              nutritionist_id: nutriId,
-            } as never)
-            .select('id')
-            .maybeSingle()
-          convId = (newConv as { id?: string } | null)?.id ?? null
-          if (convId) setConversationId(convId)
+        try {
+          const res = await fetch('/api/messages/start', { method: 'POST' })
+          const data = (await res.json().catch(() => ({}))) as {
+            conversationId?: string
+            error?: string
+          }
+          if (res.ok && data.conversationId) {
+            convId = data.conversationId
+            setConversationId(convId)
+          } else {
+            toast.error(data.error ?? 'Could not start conversation')
+          }
+        } catch {
+          toast.error('Network error — please retry')
         }
       }
 
@@ -597,8 +592,6 @@ function Thread() {
         } else {
           toast.error('Could not deliver message — please retry')
         }
-      } else {
-        toast.error('No nutritionist available — please retry shortly')
       }
       setSending(false)
     })()

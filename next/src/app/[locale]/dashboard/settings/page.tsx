@@ -3,7 +3,7 @@
 
 import { motion } from 'framer-motion'
 import toast from 'react-hot-toast'
-import { Suspense, useEffect, useState } from 'react'
+import { Suspense, useEffect, useRef, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import {
@@ -495,6 +495,51 @@ function ProfilePane({
 }) {
   const set = <K extends keyof ProfileForm>(k: K, v: ProfileForm[K]) =>
     onChange({ ...form, [k]: v })
+  const fileRef = useRef<HTMLInputElement>(null)
+  const [uploading, setUploading] = useState(false)
+  const { user } = useAuth()
+
+  const onPickFile = async (file: File | null) => {
+    if (!file || !user) return
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please choose an image file')
+      return
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Image must be under 5 MB')
+      return
+    }
+    const supabase = getBrowserSupabase()
+    if (!supabase) {
+      toast.error('Storage unavailable')
+      return
+    }
+    setUploading(true)
+    try {
+      const ext = file.name.split('.').pop()?.toLowerCase() ?? 'jpg'
+      const path = `${user.id}/avatar.${ext}`
+      const { error: upErr } = await supabase.storage
+        .from('avatars')
+        .upload(path, file, { upsert: true, cacheControl: '3600' })
+      if (upErr) {
+        toast.error(upErr.message || 'Upload failed')
+        return
+      }
+      const { data: pub } = supabase.storage.from('avatars').getPublicUrl(path)
+      const url = pub.publicUrl
+      const { error: updErr } = await supabase
+        .from('profiles')
+        .update({ avatar_url: url } as never)
+        .eq('id', user.id)
+      if (updErr) {
+        toast.error('Saved file but could not update profile')
+        return
+      }
+      toast.success('Photo uploaded — refresh to see it')
+    } finally {
+      setUploading(false)
+    }
+  }
 
   return (
     <div className="space-y-6">
@@ -523,15 +568,35 @@ function ProfilePane({
             {form.fullName ? initialsOf(form.fullName) : <Camera className="w-6 h-6" strokeWidth={1.5} />}
           </span>
           <div className="flex flex-wrap items-center gap-2">
+            <input
+              ref={fileRef}
+              type="file"
+              accept="image/*"
+              className="sr-only"
+              onChange={(e) => void onPickFile(e.target.files?.[0] ?? null)}
+            />
             <button
               type="button"
-              className="inline-flex items-center gap-1.5 rounded-pill bg-primary/15 text-lime-400 h-9 px-4 text-xs font-semibold hover:bg-primary/25"
+              disabled={uploading}
+              onClick={() => fileRef.current?.click()}
+              className="inline-flex items-center gap-1.5 rounded-pill bg-primary/15 text-lime-400 h-9 px-4 text-xs font-semibold hover:bg-primary/25 disabled:opacity-50"
             >
               <Plus className="w-3.5 h-3.5" strokeWidth={2} />
-              {t('profile.uploadPhoto')}
+              {uploading ? 'Uploading…' : t('profile.uploadPhoto')}
             </button>
             <button
               type="button"
+              onClick={async () => {
+                if (!user) return
+                const supabase = getBrowserSupabase()
+                if (!supabase) return
+                const { error: e } = await supabase
+                  .from('profiles')
+                  .update({ avatar_url: null } as never)
+                  .eq('id', user.id)
+                if (e) toast.error('Could not remove photo')
+                else toast.success('Photo removed — refresh to see it')
+              }}
               className="inline-flex items-center gap-1.5 rounded-pill bg-surface-raised border border-border h-9 px-4 text-xs font-medium text-fg-2 hover:text-fg-1"
             >
               {t('profile.removePhoto')}
