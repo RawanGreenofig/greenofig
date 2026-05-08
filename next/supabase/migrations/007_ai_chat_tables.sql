@@ -6,15 +6,11 @@
 -- Paste in Supabase SQL editor or apply via the Supabase CLI.
 -- ============================================================================
 
--- 1) RLS helper used by the policies below.
-create or replace function public.get_my_role()
-returns text
-language sql
-security definer
-stable
-as $$
-  select role from public.profiles where id = auth.uid()
-$$;
+-- 1) RLS helper. The function already exists from migration 001 and
+--    returns `user_role` (the enum). DON'T recreate — Postgres rejects
+--    a return-type change without DROP CASCADE, which would also nuke
+--    every policy that already uses it across the rest of the schema.
+--    The policies below cast the enum to text so 'admin' compares cleanly.
 
 
 -- 2) ai_conversations
@@ -36,7 +32,7 @@ alter table public.ai_conversations enable row level security;
 drop policy if exists "aic_select_own_or_admin" on public.ai_conversations;
 create policy "aic_select_own_or_admin"
   on public.ai_conversations for select
-  using (auth.uid() = user_id or public.get_my_role() = 'admin');
+  using (auth.uid() = user_id or public.get_my_role()::text = 'admin');
 
 drop policy if exists "aic_user_write" on public.ai_conversations;
 create policy "aic_user_write"
@@ -66,7 +62,7 @@ alter table public.ai_usage enable row level security;
 drop policy if exists "ai_usage_select_own_or_admin" on public.ai_usage;
 create policy "ai_usage_select_own_or_admin"
   on public.ai_usage for select
-  using (user_id = auth.uid() or public.get_my_role() = 'admin');
+  using (user_id = auth.uid() or public.get_my_role()::text = 'admin');
 
 drop policy if exists "ai_usage_insert_own" on public.ai_usage;
 create policy "ai_usage_insert_own"
@@ -97,8 +93,8 @@ create policy "ps_read_all_authed"
 drop policy if exists "ps_write_admin" on public.platform_settings;
 create policy "ps_write_admin"
   on public.platform_settings for all
-  using (public.get_my_role() = 'admin')
-  with check (public.get_my_role() = 'admin');
+  using (public.get_my_role()::text = 'admin')
+  with check (public.get_my_role()::text = 'admin');
 
 insert into public.platform_settings (key, value, description) values
   ('ai_limits_chat',
