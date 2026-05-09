@@ -105,7 +105,7 @@ export async function GET(req: NextRequest) {
     const { data: messages, error } = await supabase
       .from('messages')
       .select(
-        'id, body, read, created_at, conversation_id, sender:profiles!sender_id(full_name, tier)',
+        'id, content, read_at, created_at, conversation_id, sender:profiles!sender_id(full_name, tier)',
       )
       .order('created_at', { ascending: false })
       .limit(20)

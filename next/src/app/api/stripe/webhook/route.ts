@@ -371,11 +371,11 @@ async function handleInvoiceFailed(invoice: Stripe.Invoice, service: ServiceClie
   // Drop them a notification — Today page will surface it
   await service.from('notifications').insert({
     user_id: userId,
+    type: 'billing',
     title: 'Payment failed',
     body: 'We couldn\'t charge your card. Update payment in Settings → Subscription.',
-    category: 'billing',
-    href: '/dashboard/settings',
-    read: false,
+    data: { href: '/dashboard/settings' },
+    is_read: false,
   } as never)
 }
 

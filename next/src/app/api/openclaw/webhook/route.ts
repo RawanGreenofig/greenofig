@@ -403,11 +403,11 @@ async function broadcast(
     const slice = ids.slice(i, i + 200)
     const rows = slice.map((id) => ({
       user_id: id,
+      type: args.category,
       title: args.title,
       body: args.bodyAr ? `${args.body} | ${args.bodyAr}` : args.body,
-      category: args.category,
-      href: null,
-      read: false,
+      data: null,
+      is_read: false,
     }))
     const { error } = await service.from('notifications').insert(rows as never)
     if (!error) sent += slice.length

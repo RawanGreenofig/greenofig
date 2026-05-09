@@ -25,7 +25,7 @@ export const POST = withAuth(async (_req, ctx: AuthedContext) => {
   const { data: existing } = await supabase
     .from('conversations')
     .select('id')
-    .eq('client_id', ctx.userId)
+    .eq('user_id', ctx.userId)
     .order('last_message_at', { ascending: false })
     .limit(1)
     .maybeSingle()
@@ -51,7 +51,7 @@ export const POST = withAuth(async (_req, ctx: AuthedContext) => {
   const { data: created, error } = await supabase
     .from('conversations')
     .insert({
-      client_id: ctx.userId,
+      user_id: ctx.userId,
       nutritionist_id: nutriId,
     } as never)
     .select('id')

@@ -68,31 +68,28 @@ export default function AdminOrdersPage() {
   const [openId, setOpenId] = useState<string | null>(null)
 
   const live = useSupabaseQuery<AdminOrder[]>(async (supabase) => {
+    type LineItem = { qty?: number }
     type OrderRow = {
       id: string
       user_id: string
-      total_jod: number
+      total_cents: number | null
       status: Status
       created_at: string
+      items: LineItem[] | null
     }
     const { data: orders } = await supabase
       .from('orders')
-      .select('id, user_id, total_jod, status, created_at')
+      .select('id, user_id, total_cents, status, created_at, items')
       .order('created_at', { ascending: false })
       .limit(80)
     const rows = (orders as OrderRow[] | null) ?? []
     if (rows.length === 0) return []
 
-    // Hydrate item counts (single grouped query)
-    const orderIds = rows.map((r) => r.id)
-    const { data: itemRows } = await supabase
-      .from('order_items')
-      .select('order_id, qty')
-      .in('order_id', orderIds)
-    type ItemRow = { order_id: string; qty: number }
+    // Item counts come straight from the orders.items jsonb array.
     const itemCount = new Map<string, number>()
-    for (const i of (itemRows as ItemRow[] | null) ?? []) {
-      itemCount.set(i.order_id, (itemCount.get(i.order_id) ?? 0) + i.qty)
+    for (const r of rows) {
+      const total = (r.items ?? []).reduce((acc, it) => acc + (it.qty ?? 0), 0)
+      itemCount.set(r.id, total)
     }
 
     // Hydrate customer names
@@ -114,7 +111,7 @@ export default function AdminOrdersPage() {
         customerInitials: name.split(/\s+/).map((n) => n[0]).slice(0, 2).join('').toUpperCase(),
         customerEmail: '',
         itemCount: itemCount.get(r.id) ?? 0,
-        total: r.total_jod,
+        total: (r.total_cents ?? 0) / 100,
         status: r.status,
         placedISO: r.created_at,
       }

@@ -482,7 +482,7 @@ function Thread() {
       const { data: convRow } = await supabase
         .from('conversations')
         .select('id')
-        .eq('client_id', userId)
+        .eq('user_id', userId)
         .order('last_message_at', { ascending: false })
         .limit(1)
         .maybeSingle()
@@ -493,7 +493,7 @@ function Thread() {
 
       const { data } = await supabase
         .from('messages')
-        .select('id, sender_id, body, read, created_at')
+        .select('id, sender_id, content, read_at, created_at')
         .eq('conversation_id', id)
         .order('created_at', { ascending: true })
         .limit(200)
@@ -502,28 +502,29 @@ function Thread() {
       type Row = {
         id: string
         sender_id: string
-        body: string
-        read: boolean
+        content: string
+        read_at: string | null
         created_at: string
       }
       const now = Date.now()
       const next = ((data as Row[] | null) ?? []).map((r) => ({
         id: r.id,
         fromMe: r.sender_id === userId,
-        body: r.body,
+        body: r.content,
         ago: Math.max(
           0,
           Math.floor((now - new Date(r.created_at).getTime()) / 60_000),
         ),
-        read: r.read,
+        read: !!r.read_at,
       }))
       if (next.length > 0) setMessages(next)
 
       void supabase
         .from('messages')
-        .update({ read: true } as never)
+        .update({ read_at: new Date().toISOString() } as never)
         .eq('conversation_id', id)
         .neq('sender_id', userId)
+        .is('read_at', null)
     })()
 
     return () => {
@@ -579,8 +580,7 @@ function Thread() {
           .insert({
             conversation_id: convId,
             sender_id: userId,
-            body: text,
-            read: false,
+            content: text,
           } as never)
           .select('id')
           .maybeSingle()

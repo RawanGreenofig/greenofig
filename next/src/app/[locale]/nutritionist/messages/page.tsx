@@ -158,21 +158,20 @@ export default function NutritionistMessagesPage() {
     void (async () => {
       type ConvRow = {
         id: string
-        client_id: string
+        user_id: string
         last_message_at: string
-        unread_count: number
-        flagged: boolean
+        nutritionist_unread: number
       }
       const { data: convs } = await supabase
         .from('conversations')
-        .select('id, client_id, last_message_at, unread_count, flagged')
+        .select('id, user_id, last_message_at, nutritionist_unread')
         .eq('nutritionist_id', userId)
         .order('last_message_at', { ascending: false })
         .limit(40)
       const convRows = (convs as ConvRow[] | null) ?? []
       if (convRows.length === 0 || cancelled) return
 
-      const clientIds = convRows.map((c) => c.client_id)
+      const clientIds = convRows.map((c) => c.user_id)
       const { data: clients } = await supabase
         .from('profiles')
         .select('id, full_name, tier')
@@ -185,14 +184,14 @@ export default function NutritionistMessagesPage() {
       type MsgRow = {
         conversation_id: string
         sender_id: string
-        body: string
-        read: boolean
+        content: string
+        read_at: string | null
         created_at: string
         id: string
       }
       const { data: msgs } = await supabase
         .from('messages')
-        .select('id, conversation_id, sender_id, body, read, created_at')
+        .select('id, conversation_id, sender_id, content, read_at, created_at')
         .in('conversation_id', convRows.map((c) => c.id))
         .order('created_at', { ascending: true })
       const msgRows = (msgs as MsgRow[] | null) ?? []
@@ -205,26 +204,26 @@ export default function NutritionistMessagesPage() {
 
       const now = Date.now()
       const next: ThreadRow[] = convRows.map((c) => {
-        const client = clientOf.get(c.client_id)
+        const client = clientOf.get(c.user_id)
         const name = client?.full_name?.trim() || 'Client'
         const list = byConv.get(c.id) ?? []
         const lastMs = c.last_message_at ? new Date(c.last_message_at).getTime() : now
-        const lastBody = list[list.length - 1]?.body ?? ''
+        const lastBody = list[list.length - 1]?.content ?? ''
         return {
           id: c.id,
           clientName: name,
           clientInitials: initialsOf(name),
           tier: client?.tier ?? 'basic',
-          unread: c.unread_count,
-          flagged: c.flagged,
+          unread: c.nutritionist_unread,
+          flagged: false,
           preview: lastBody.slice(0, 100),
           lastAgoMin: Math.max(0, Math.floor((now - lastMs) / 60_000)),
           messages: list.map((m) => ({
             id: m.id,
             fromMe: m.sender_id === userId,
-            body: m.body,
+            body: m.content,
             ago: Math.max(0, Math.floor((now - new Date(m.created_at).getTime()) / 60_000)),
-            read: m.read,
+            read: !!m.read_at,
           })),
         }
       })
@@ -279,12 +278,13 @@ export default function NutritionistMessagesPage() {
     if (supabase && userId && /^[0-9a-f-]{32,}$/i.test(active.id)) {
       void supabase
         .from('messages')
-        .update({ read: true } as never)
+        .update({ read_at: new Date().toISOString() } as never)
         .eq('conversation_id', active.id)
         .neq('sender_id', userId)
+        .is('read_at', null)
       void supabase
         .from('conversations')
-        .update({ unread_count: 0 } as never)
+        .update({ nutritionist_unread: 0 } as never)
         .eq('id', active.id)
     }
   }, [active, userId])
@@ -321,8 +321,7 @@ export default function NutritionistMessagesPage() {
           .insert({
             conversation_id: active.id,
             sender_id: userId,
-            body,
-            read: false,
+            content: body,
           } as never)
           .select('id')
           .maybeSingle()
