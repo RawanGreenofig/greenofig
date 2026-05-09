@@ -116,9 +116,9 @@ async function openBillingPortal(): Promise<void> {
     toast.error('Network error — please try again')
     return
   }
-  // The /api/stripe/portal route returns either { url } on success or
-  // { error: { code, message } } on failure (jsonError shape). Coerce
-  // any error variant — string OR object — to a plain string for toast.
+  // The portal route returns { url } on success or { error: { code,
+  // message } } on failure (jsonError shape). Coerce any error variant
+  // to a plain string for toast.
   let data: {
     url?: string
     error?: string | { code?: string; message?: string }
@@ -164,6 +164,15 @@ function SettingsPageInner() {
   const tNav = useTranslations('nav')
   const { profile, tier } = useUser()
   const { user, signOut } = useAuth()
+  // Auth-derived strings (tier label, profile name, initials) flip
+  // between SSR (no session → "free" / "Guest") and CSR (real
+  // session → "vip" / "Demo VIP"). Gate the visible labels behind a
+  // mount flag so the first client render matches the server, then
+  // the real values fade in on the next paint.
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => {
+    setMounted(true)
+  }, [])
   // Honor `?tab=subscription` (or any other valid tab key) on first
   // render so deep links from upgrade flows / Stripe redirects land
   // on the right pane. Falls back to profile if the param is missing
@@ -296,13 +305,11 @@ function SettingsPageInner() {
       .slice(0, 2)
       .join('')
       .toUpperCase() || '?'
-  const tierColor: Record<string, { bg: string; text: string }> = {
-    free:    { bg: '#1f1f1f', text: '#888' },
-    basic:   { bg: 'rgb(6 182 212 / 0.15)',  text: '#06b6d4' },
-    premium: { bg: 'rgb(74 222 128 / 0.15)', text: '#4ade80' },
-    vip:     { bg: 'rgb(168 85 247 / 0.15)', text: '#a855f7' },
-  }
-  const tierStyle = tierColor[tier ?? 'free'] ?? tierColor.free
+  // Tier pill colours come from the [data-tier="..."] CSS vars set on
+  // the dashboard root in globals.css. Using vars here means the
+  // badge ALWAYS matches the live tier — no JS lookup that can race
+  // with React's render cycle and end up gray when the text says
+  // "vip" (which happened with the prior inline-style approach).
 
   return (
     <motion.div variants={containerVariants} initial="hidden" animate="visible" className="px-4 md:px-8 py-6 md:py-8 max-w-screen-xl mx-auto space-y-6">
@@ -330,23 +337,30 @@ function SettingsPageInner() {
             display: 'inline-flex',
             alignItems: 'center',
             justifyContent: 'center',
+            minWidth: 24,
           }}
+          suppressHydrationWarning
         >
-          {initials.slice(0, 2).toUpperCase()}
+          {mounted ? initials.slice(0, 2).toUpperCase() : ''}
         </span>
         <div className="flex-1 min-w-0">
           <div className="flex flex-wrap items-center gap-2">
             <p
               className="text-xl font-bold"
-              style={{ color: 'var(--gf-fg-1)' }}
+              style={{ color: 'var(--gf-fg-1)', minHeight: 28 }}
+              suppressHydrationWarning
             >
-              {displayName}
+              {mounted ? displayName : ''}
             </p>
             <span
-              className="inline-flex items-center rounded-pill px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-eyebrow"
-              style={{ background: tierStyle.bg, color: tierStyle.text }}
+              className="tier-pill tier-pill-md"
+              style={{
+                opacity: mounted ? 1 : 0,
+                minWidth: 40,
+              }}
+              suppressHydrationWarning
             >
-              {tier ?? 'free'}
+              {mounted ? tier ?? 'free' : ''}
             </span>
           </div>
           {user?.email && (
@@ -1150,12 +1164,12 @@ function SubscriptionPane({
     setUpgrading(true)
     try {
       // If the user already has a paid subscription, switching tiers
-      // (e.g. premium → vip) belongs in the billing portal so Stripe
-      // handles proration and prevents creating a duplicate sub.
-      // Free → paid is the only case that goes through Checkout.
+      // (premium → vip, basic → premium, etc.) belongs in the billing
+      // portal so Stripe handles proration and never creates a duplicate
+      // subscription. Free → paid is the only flow that goes through
+      // Checkout.
       const isUpgradeOnExistingSub =
         safeTier === 'basic' || safeTier === 'premium' || safeTier === 'vip'
-
       if (isUpgradeOnExistingSub) {
         await openBillingPortal()
         return
@@ -1966,8 +1980,14 @@ function ChipInput({
     setDraft('')
   }
   const remove = (v: string) => onChange(values.filter((x) => x !== v))
+  // Match the canonical dashboard input style — same geometry,
+  // background and border as a regular <input> elsewhere in the
+  // dashboard (var(--gf-input-bg) on var(--gf-border), 10px radius,
+  // h-10). Chips inline on the same baseline as the live input;
+  // overflow wraps and the container grows. Focus ring lives on
+  // the .chip-input-field class via :focus-within.
   return (
-    <div className="rounded-md bg-bg-deeper border border-border p-2 flex flex-wrap items-center gap-1.5 focus-within:border-primary">
+    <div className="chip-input-field">
       {values.map((v) => (
         <span
           key={v}
@@ -1984,6 +2004,10 @@ function ChipInput({
           </button>
         </span>
       ))}
+      {/* The bare-text input look (no second border, no inner bg, no
+       * focus ring) is enforced by the `.chip-input-field input` rule
+       * in globals.css using `!important` — needed to defeat the
+       * dashboard-scope input block which is itself `!important`. */}
       <input
         type="text"
         value={draft}
@@ -1997,7 +2021,7 @@ function ChipInput({
           }
         }}
         placeholder={values.length === 0 ? placeholder : ''}
-        className="flex-1 min-w-[120px] bg-transparent border-none px-2 text-sm text-fg-1 placeholder-fg-3 focus:outline-none h-7"
+        className="flex-1 min-w-[120px] text-sm text-fg-1 placeholder-fg-3 h-8"
       />
     </div>
   )

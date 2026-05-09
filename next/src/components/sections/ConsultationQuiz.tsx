@@ -332,24 +332,25 @@ export function ConsultationQuiz() {
           </p>
         </header>
 
-        {/* Card */}
+        {/* Card — styled to match the dashboard surface tokens
+         * (#1b1f26 surface on #393e47 border) so the form reads as
+         * the same product as the signed-in app rather than a
+         * one-off marketing form. */}
         <div
-          className="rounded-2xl"
+          className="rounded-2xl font-sans"
           style={{
-            background: 'rgba(8, 20, 10, 0.55)',
-            border: '1px solid rgba(255,255,255,0.08)',
-            boxShadow: '0 10px 40px rgba(0,0,0,0.4)',
-            backdropFilter: 'blur(12px)',
-            WebkitBackdropFilter: 'blur(12px)',
+            background: '#1b1f26',
+            border: '1px solid #393e47',
+            boxShadow:
+              '0 24px 60px rgba(0,0,0,0.55), 0 0 0 1px rgba(163,230,53,0.04)',
+            overflow: 'hidden',
           }}
         >
           {/* Progress bar */}
           <div
             style={{
               height: 4,
-              borderTopLeftRadius: 16,
-              borderTopRightRadius: 16,
-              background: 'rgba(255,255,255,0.06)',
+              background: '#21252e',
               overflow: 'hidden',
             }}
           >
@@ -358,13 +359,14 @@ export function ConsultationQuiz() {
                 height: '100%',
                 width: `${progress}%`,
                 background:
-                  'linear-gradient(90deg, #a3e635, #65a30d)',
+                  'linear-gradient(90deg, #a3e635, #80d93d)',
+                boxShadow: '0 0 12px rgba(163,230,53,0.4)',
                 transition: 'width 280ms cubic-bezier(0.16,1,0.3,1)',
               }}
             />
           </div>
 
-          <div className="p-6 md:p-8" dir={isAr ? 'rtl' : 'ltr'}>
+          <div className="p-6 md:p-9" dir={isAr ? 'rtl' : 'ltr'}>
             {step === 'intro' && (
               <Intro
                 isAr={isAr}
@@ -419,16 +421,38 @@ function Intro({
   drName: string
 }) {
   return (
-    <div className="text-center py-4">
-      <Sparkles
-        className="w-9 h-9 mx-auto mb-4"
-        strokeWidth={1.5}
-        style={{ color: '#a3e635' }}
-      />
-      <h3 className="font-display text-2xl md:text-3xl font-bold text-fg-1 mb-2">
+    <div className="text-center py-6">
+      <div
+        className="mx-auto mb-5 flex items-center justify-center"
+        style={{
+          width: 56,
+          height: 56,
+          borderRadius: 16,
+          background: 'rgba(132,217,61,0.10)',
+          border: '1px solid rgba(132,217,61,0.25)',
+          boxShadow: '0 0 24px rgba(163,230,53,0.18)',
+        }}
+      >
+        <Sparkles
+          className="w-7 h-7"
+          strokeWidth={1.6}
+          style={{ color: '#a3e635' }}
+        />
+      </div>
+      <h3
+        className="text-2xl md:text-[28px] mb-2 leading-tight"
+        style={{
+          color: '#f8f9fa',
+          fontWeight: 700,
+          letterSpacing: '-0.015em',
+        }}
+      >
         {isAr ? 'ابدأ تقييمك الصحي المجاني' : 'Start your free health assessment'}
       </h3>
-      <p className="text-sm text-fg-2 leading-relaxed max-w-md mx-auto">
+      <p
+        className="text-sm leading-relaxed max-w-md mx-auto"
+        style={{ color: '#abafba', fontWeight: 400 }}
+      >
         {isAr
           ? `15 سؤالاً سريعاً (دقيقتان). يقرؤها ${drName} شخصياً وسيتواصل معك خلال يوم أو يومين. مجاناً تماماً وبدون التزام.`
           : `15 quick questions (about 2 minutes). ${drName} reviews them personally and reaches out within 1–2 business days. Free, no commitment.`}
@@ -436,7 +460,7 @@ function Intro({
       <button
         type="button"
         onClick={onStart}
-        className="btn-primary mt-6 inline-flex"
+        className="btn-primary mt-7 inline-flex"
         style={{ height: 48, padding: '0 28px', fontSize: 15 }}
       >
         {isAr ? 'ابدأ التقييم' : 'Start the assessment'}
@@ -468,14 +492,30 @@ function QuizStep({
 }) {
   return (
     <div>
-      <p className="text-xs uppercase tracking-eyebrow text-fg-3 mb-3">
+      {/* Step counter — uppercase eyebrow lined up with the dashboard
+       * page-header style ("Question 1 of 15"). */}
+      <p
+        className="text-[11px] uppercase mb-3"
+        style={{
+          letterSpacing: '0.18em',
+          fontWeight: 700,
+          color: '#80d93d',
+        }}
+      >
         {isAr ? `سؤال ${idx + 1} من ${total}` : `Question ${idx + 1} of ${total}`}
       </p>
-      <h3 className="text-xl md:text-2xl font-semibold text-fg-1 mb-6 leading-snug">
+      <h3
+        className="text-[22px] md:text-[26px] mb-7 leading-tight"
+        style={{
+          color: '#f8f9fa',
+          fontWeight: 600,
+          letterSpacing: '-0.01em',
+        }}
+      >
         {isAr ? question.ar : question.en}
       </h3>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         {question.options?.map((opt) => {
           const selected = value === opt.value
           return (
@@ -483,16 +523,29 @@ function QuizStep({
               key={opt.value}
               type="button"
               onClick={() => onAnswer(opt.value)}
-              className="text-start px-4 py-3.5 rounded-xl text-sm transition-all"
+              className="text-start rounded-xl text-sm transition-all"
               style={{
-                background: selected
-                  ? 'rgba(163,230,53,0.12)'
-                  : 'rgba(255,255,255,0.04)',
-                border: `1px solid ${
-                  selected ? 'rgba(163,230,53,0.5)' : 'rgba(255,255,255,0.10)'
-                }`,
-                color: selected ? '#a3e635' : '#e5e7eb',
+                padding: '14px 16px',
+                background: selected ? 'rgba(132,217,61,0.10)' : '#21252e',
+                border: `1px solid ${selected ? '#80d93d' : '#393e47'}`,
+                color: selected ? '#a3e635' : '#e8eaef',
                 fontWeight: selected ? 600 : 500,
+                letterSpacing: '-0.005em',
+                boxShadow: selected
+                  ? '0 0 0 3px rgba(132,217,61,0.12)'
+                  : 'none',
+              }}
+              onMouseEnter={(e) => {
+                if (!selected) {
+                  e.currentTarget.style.background = '#2e333a'
+                  e.currentTarget.style.borderColor = '#4a4f59'
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (!selected) {
+                  e.currentTarget.style.background = '#21252e'
+                  e.currentTarget.style.borderColor = '#393e47'
+                }
               }}
             >
               {isAr ? opt.ar : opt.en}
@@ -501,15 +554,25 @@ function QuizStep({
         })}
       </div>
 
-      <div className="mt-6 flex items-center justify-between gap-3">
+      <div className="mt-7 flex items-center justify-between gap-3">
         <button
           type="button"
           onClick={onBack}
-          className="text-xs inline-flex items-center gap-1.5 px-3 py-2 rounded-full transition-colors"
+          className="text-xs inline-flex items-center gap-1.5 rounded-full transition-colors"
           style={{
-            background: 'rgba(255,255,255,0.04)',
-            color: 'rgba(255,255,255,0.7)',
-            border: '1px solid rgba(255,255,255,0.10)',
+            padding: '8px 14px',
+            background: '#21252e',
+            color: '#abafba',
+            border: '1px solid #393e47',
+            fontWeight: 500,
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = '#2e333a'
+            e.currentTarget.style.color = '#f8f9fa'
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = '#21252e'
+            e.currentTarget.style.color = '#abafba'
           }}
         >
           <ArrowLeft
@@ -518,7 +581,10 @@ function QuizStep({
           />
           {isAr ? 'رجوع' : 'Back'}
         </button>
-        <span className="text-[11px] text-fg-3">
+        <span
+          className="text-[11px]"
+          style={{ color: '#6f7480', fontWeight: 500 }}
+        >
           {isAr ? 'انقر إجابتك للمتابعة' : 'Tap an answer to continue'}
         </span>
       </div>
@@ -549,15 +615,32 @@ function ContactStep({
 }) {
   return (
     <form onSubmit={onSubmit}>
-      <p className="text-xs uppercase tracking-eyebrow font-semibold text-lime-400 mb-2">
+      <p
+        className="text-[11px] uppercase mb-2"
+        style={{
+          letterSpacing: '0.18em',
+          fontWeight: 700,
+          color: '#80d93d',
+        }}
+      >
         {isAr ? 'الخطوة الأخيرة' : 'Last step'}
       </p>
-      <h3 className="text-xl md:text-2xl font-semibold text-fg-1 mb-1 leading-snug">
+      <h3
+        className="text-[22px] md:text-[26px] mb-1 leading-tight"
+        style={{
+          color: '#f8f9fa',
+          fontWeight: 600,
+          letterSpacing: '-0.01em',
+        }}
+      >
         {isAr
           ? 'أين نرسل كتابك الإلكتروني المجاني؟'
           : 'Where should we send your free ebook?'}
       </h3>
-      <p className="text-sm text-fg-2 mb-5 leading-relaxed">
+      <p
+        className="text-sm mb-6 leading-relaxed"
+        style={{ color: '#abafba', fontWeight: 400 }}
+      >
         {isAr
           ? 'سترى تأكيداً خلال ثوانٍ، ويصلك الكتاب الإلكتروني والتعليمات على بريدك.'
           : "You'll get a confirmation in seconds and the ebook in your inbox."}
@@ -609,27 +692,41 @@ function ContactStep({
       </div>
 
       {errorMsg && (
-        <p className="text-sm mt-3" style={{ color: '#f87171' }}>
+        <p
+          className="text-sm mt-3"
+          style={{
+            color: '#fca5a5',
+            background: 'rgba(248,113,113,0.08)',
+            border: '1px solid rgba(248,113,113,0.25)',
+            padding: '10px 12px',
+            borderRadius: 8,
+          }}
+        >
           {errorMsg}
         </p>
       )}
 
-      <p className="text-[11px] text-fg-3 mt-4 leading-relaxed">
+      <p
+        className="text-[11px] mt-5 leading-relaxed"
+        style={{ color: '#6f7480' }}
+      >
         {isAr
           ? 'بإرسال هذا النموذج توافق على تواصلنا معك حول استشارتك المجانية. لن نشارك بياناتك مع أي طرف ثالث.'
           : "By submitting you agree we'll contact you about your free consultation. We never share your info with third parties."}
       </p>
 
-      <div className="mt-5 flex items-center justify-between gap-3">
+      <div className="mt-6 flex items-center justify-between gap-3">
         <button
           type="button"
           onClick={onBack}
           disabled={submitting}
-          className="text-xs inline-flex items-center gap-1.5 px-3 py-2 rounded-full transition-colors disabled:opacity-40"
+          className="text-xs inline-flex items-center gap-1.5 rounded-full transition-colors disabled:opacity-40"
           style={{
-            background: 'rgba(255,255,255,0.04)',
-            color: 'rgba(255,255,255,0.7)',
-            border: '1px solid rgba(255,255,255,0.10)',
+            padding: '8px 14px',
+            background: '#21252e',
+            color: '#abafba',
+            border: '1px solid #393e47',
+            fontWeight: 500,
           }}
         >
           <ArrowLeft
@@ -663,16 +760,38 @@ function Done({
   drName: string
 }) {
   return (
-    <div className="text-center py-2">
-      <CheckCircle2
-        className="w-10 h-10 mx-auto mb-4"
-        strokeWidth={1.5}
-        style={{ color: '#a3e635' }}
-      />
-      <h3 className="font-display text-2xl md:text-3xl font-bold text-fg-1 mb-2">
+    <div className="text-center py-4">
+      <div
+        className="mx-auto mb-5 flex items-center justify-center"
+        style={{
+          width: 56,
+          height: 56,
+          borderRadius: 16,
+          background: 'rgba(132,217,61,0.12)',
+          border: '1px solid rgba(132,217,61,0.3)',
+          boxShadow: '0 0 28px rgba(163,230,53,0.22)',
+        }}
+      >
+        <CheckCircle2
+          className="w-7 h-7"
+          strokeWidth={1.6}
+          style={{ color: '#a3e635' }}
+        />
+      </div>
+      <h3
+        className="text-2xl md:text-[28px] mb-2 leading-tight"
+        style={{
+          color: '#f8f9fa',
+          fontWeight: 700,
+          letterSpacing: '-0.015em',
+        }}
+      >
         {isAr ? 'تم — تحقق من بريدك ✓' : "You're in — check your inbox ✓"}
       </h3>
-      <p className="text-sm text-fg-2 leading-relaxed max-w-md mx-auto">
+      <p
+        className="text-sm leading-relaxed max-w-md mx-auto"
+        style={{ color: '#abafba', fontWeight: 400 }}
+      >
         {isAr
           ? `أرسلنا كتابك الإلكتروني إلى بريدك للتو. سيتواصل معك ${drName} شخصياً خلال يوم أو يومين لجدولة مكالمتك التعريفية المجانية.`
           : `We just emailed your free ebook. ${drName} will personally reach out within 1–2 business days to schedule your free intro call.`}
@@ -680,7 +799,7 @@ function Done({
       <a
         href={ebookUrl}
         download
-        className="btn-primary mt-6 inline-flex"
+        className="btn-primary mt-7 inline-flex"
         style={{ height: 44, padding: '0 24px', fontSize: 14 }}
       >
         <Download className="w-4 h-4" strokeWidth={2} />
@@ -705,11 +824,23 @@ function Input({
   onChange: (v: string) => void
   maxLength?: number
 }) {
+  // Match dashboard input tokens: --gf-input-bg #292d34, border #393e47,
+  // focus border #80d93d. The field-tone matches every form inside the
+  // signed-in app so the marketing quiz reads as the same product.
   return (
     <div>
-      <label className="block text-xs text-fg-2 mb-1.5">
+      <label
+        className="block text-[11px] mb-1.5"
+        style={{
+          color: '#abafba',
+          fontWeight: 600,
+          letterSpacing: '0.02em',
+        }}
+      >
         {label}
-        {required && ' *'}
+        {required && (
+          <span style={{ color: '#80d93d', marginInlineStart: 4 }}>*</span>
+        )}
       </label>
       <input
         type={type}
@@ -717,11 +848,21 @@ function Input({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         maxLength={maxLength}
-        className="w-full h-11 rounded-lg px-3 text-sm"
+        className="w-full h-11 rounded-lg px-3.5 text-sm transition-colors outline-none"
         style={{
-          background: 'rgba(8, 20, 10, 0.45)',
-          border: '1px solid rgba(255,255,255,0.14)',
-          color: '#f3f4f6',
+          background: '#292d34',
+          border: '1px solid #393e47',
+          color: '#f8f9fa',
+          fontWeight: 500,
+        }}
+        onFocus={(e) => {
+          e.currentTarget.style.borderColor = '#80d93d'
+          e.currentTarget.style.boxShadow =
+            '0 0 0 3px rgba(132,217,61,0.15)'
+        }}
+        onBlur={(e) => {
+          e.currentTarget.style.borderColor = '#393e47'
+          e.currentTarget.style.boxShadow = 'none'
         }}
       />
     </div>

@@ -32,6 +32,16 @@ export function Topbar({ onOpenMenu }: { onOpenMenu: () => void }) {
       .toUpperCase() || '?'
 
   const [open, setOpen] = useState(false)
+  // The Topbar is a client component, but the dashboard layout is
+  // still server-rendered. On the server `useAuth()` has no session
+  // (tier === null → "free"), then the client-side hydration flips
+  // it to the real tier ("vip"). React flagged that as a hydration
+  // text mismatch. Gate the tier badge behind a mount flag so the
+  // server render is empty and the real value lands after mount.
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => {
+    setMounted(true)
+  }, [])
   const wrapRef = useRef<HTMLDivElement>(null)
   useEffect(() => {
     const onClick = (e: MouseEvent) => {
@@ -105,24 +115,18 @@ export function Topbar({ onOpenMenu }: { onOpenMenu: () => void }) {
         />
       </div>
 
-      {/* Tier pill — subtle reminder of the user's plan, only on desktop */}
+      {/* Tier pill — subtle reminder of the user's plan, only on desktop.
+       * Hidden until client mount to avoid an SSR/CSR text mismatch
+       * (server has no session → "free"; client hydrates → "vip"). */}
       <span
-        className="hidden md:inline-flex items-center"
+        className="tier-pill hidden md:inline-flex"
         style={{
-          fontSize: 10,
-          fontWeight: 700,
-          textTransform: 'uppercase',
-          letterSpacing: '0.1em',
-          color: 'var(--tier-badge-text)',
-          background: 'var(--tier-badge-bg)',
-          padding: '3px 10px',
-          borderRadius: 999,
-          border: '1px solid var(--tier-color)',
-          opacity: 0.85,
-          whiteSpace: 'nowrap',
+          opacity: mounted ? 1 : 0,
+          minWidth: 64,
         }}
+        suppressHydrationWarning
       >
-        {userTier} plan
+        {mounted ? `${userTier} plan` : ''}
       </span>
 
       <div className="sm:hidden flex-1" />
@@ -173,8 +177,9 @@ export function Topbar({ onOpenMenu }: { onOpenMenu: () => void }) {
               alignItems: 'center',
               justifyContent: 'center',
             }}
+            suppressHydrationWarning
           >
-            {initials.slice(0, 2).toUpperCase()}
+            {mounted ? initials.slice(0, 2).toUpperCase() : ''}
           </span>
           <ChevronDown
             className={cn(

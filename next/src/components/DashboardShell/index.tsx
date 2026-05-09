@@ -58,7 +58,20 @@ export function DashboardShell({
   const [drawerOpen, setDrawerOpen] = useState(false)
   const pathname = usePathname()
   const { tier } = useAuth()
-  const dataTier = (tier ?? 'free') as 'free' | 'basic' | 'premium' | 'vip'
+  // Gate the real tier behind a mount flag. SSR + first client render
+  // both emit data-tier="free" so React's reconciler is happy; the
+  // tier-driven CSS tokens swap on the next paint after mount. Using
+  // suppressHydrationWarning alone doesn't work for ATTRIBUTE drift —
+  // it only silences text-content mismatches.
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+  const dataTier = (mounted ? tier ?? 'free' : 'free') as
+    | 'free'
+    | 'basic'
+    | 'premium'
+    | 'vip'
 
   // Close drawer on route change
   useEffect(() => {
@@ -78,9 +91,17 @@ export function DashboardShell({
 
   return (
     <ThemeProvider>
+    {/*
+      data-tier flips from 'free' (no session on the server) to the real
+      tier on the client once useAuth() hydrates. React threw a "Prop
+      data-tier did not match" warning. suppressHydrationWarning marks
+      this attribute drift as intentional — the CSS tokens scoped to
+      [data-tier="..."] just re-evaluate on the next paint.
+     */}
     <div
       data-theme="dashboard"
       data-tier={dataTier}
+      suppressHydrationWarning
       className="flex h-screen overflow-hidden text-fg-1"
       style={{ background: 'var(--gf-bg)' }}
     >

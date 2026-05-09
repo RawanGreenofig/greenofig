@@ -1,5 +1,6 @@
 'use client'
 
+import { useEffect, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { LogOut, Settings, ArrowLeft, Sun, Moon } from 'lucide-react'
 import { Link, usePathname } from '@/i18n/navigation'
@@ -79,8 +80,23 @@ export function Sidebar({
   const t = useTranslations()
   const tNav = useTranslations('nav')
   const pathname = usePathname()
-  const { user, profile, signOut } = useAuth()
+  // Pull `tier` from useAuth (not `profile?.tier`) so the cached
+  // tier is used during the brief window before the profile row
+  // loads. Otherwise the sidebar would show "FREE" while the
+  // topbar/settings (which already consume the cached tier) show
+  // the real tier — the badges would disagree mid-render.
+  const { user, profile, tier: authTier, signOut } = useAuth()
   const { theme, toggle: toggleTheme } = useTheme()
+  // The sidebar's bottom user card flashed "free" then "vip" on every
+  // dashboard load because profile loads asynchronously. Gate the
+  // user-derived strings (initials, name, tier label, email) behind
+  // a mount flag so the first paint is empty and the real data
+  // fades in once. Pill colours come from CSS vars on the dashboard
+  // root (`[data-tier='X']`) so they auto-flip with no JS lookup.
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   // Root-level hrefs only match on EXACT pathname so "/dashboard" doesn't
   // also light up when the user is on "/dashboard/track" or any other
@@ -94,7 +110,15 @@ export function Sidebar({
 
   const displayName = resolveDisplayName(profile, user, 'Guest')
   const email = user?.email ?? ''
-  const tier = (profile?.tier ?? 'free') as 'free' | 'basic' | 'premium' | 'vip'
+  // authTier comes from useAuth which seeds from the localStorage
+  // cache, so it's already 'vip' on the first client paint for
+  // returning users. Falling back to profile?.tier covers the
+  // edge case of a fresh sign-up with no cached tier yet.
+  const tier = (authTier ?? profile?.tier ?? 'free') as
+    | 'free'
+    | 'basic'
+    | 'premium'
+    | 'vip'
   const initials =
     displayName
       .split(/\s+/)
@@ -234,32 +258,30 @@ export function Sidebar({
               display: 'inline-flex',
               alignItems: 'center',
               justifyContent: 'center',
+              minHeight: 18,
             }}
+            suppressHydrationWarning
           >
-            {initials.slice(0, 2).toUpperCase()}
+            {mounted ? initials.slice(0, 2).toUpperCase() : ''}
           </span>
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-1.5 min-w-0">
               <p
                 className="text-sm font-semibold truncate"
-                style={{ color: HOVER_TEXT }}
+                style={{ color: HOVER_TEXT, minHeight: 18 }}
+                suppressHydrationWarning
               >
-                {displayName}
+                {mounted ? displayName : ''}
               </p>
               <span
-                className="shrink-0 inline-flex items-center"
+                className="tier-pill shrink-0"
                 style={{
-                  background: 'var(--tier-badge-bg, #1f2937)',
-                  color: 'var(--tier-badge-text, #9ca3af)',
-                  fontSize: 10,
-                  fontWeight: 700,
-                  letterSpacing: '0.04em',
-                  textTransform: 'uppercase',
-                  padding: '2px 8px',
-                  borderRadius: 999,
+                  opacity: mounted ? 1 : 0,
+                  minWidth: 36,
                 }}
+                suppressHydrationWarning
               >
-                {tier}
+                {mounted ? tier : ''}
               </span>
             </div>
             {email && (
@@ -267,8 +289,9 @@ export function Sidebar({
                 className="text-xs truncate mt-0.5"
                 style={{ color: GROUP_LABEL }}
                 dir="ltr"
+                suppressHydrationWarning
               >
-                {email}
+                {mounted ? email : ''}
               </p>
             )}
           </div>

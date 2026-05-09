@@ -12,6 +12,8 @@ import {
   Lock,
   BadgeCheck,
   Pin,
+  Send,
+  Check,
 } from '@/icons'
 import { useUser } from '@/lib/hooks/useUser'
 import { getBrowserSupabase } from '@/lib/supabase/client'
@@ -47,7 +49,18 @@ export default function CommunityPage() {
   const router = useRouter()
   const locale = useLocale()
   const { user, profile, tier } = useUser()
-  const isFree = (tier ?? 'free') === 'free'
+  // Gate the upgrade banner behind a mount flag. Server has no session
+  // (tier === null → isFree=true) so the banner renders between the
+  // two articles. The client hydrates a VIP user (isFree=false) and
+  // skips the banner — but React's reconciler still expects a <div>
+  // at that DOM slot and finds an <article>, throwing "Expected
+  // server HTML to contain a matching <article> in <main>". Render
+  // false-by-default until mounted so the SSR tree matches.
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+  const isFree = mounted ? (tier ?? 'free') === 'free' : false
 
   const [people, setPeople] = useState<Person[]>([])
   const [search, setSearch] = useState('')
@@ -322,18 +335,11 @@ export default function CommunityPage() {
               shortlist!
             </p>
 
-            <div
-              className="flex gap-2 flex-wrap"
-              style={{
-                borderTop: '1px solid var(--gf-border)',
-                paddingTop: 12,
-                marginTop: 12,
-              }}
-            >
-              <ActionButton Icon={Heart} label="Support" count={38} />
-              <ActionButton Icon={MessageCircle} label="Comment" count={12} />
-              <ActionButton Icon={Share2} label="Share" />
-            </div>
+            <PostActions
+              postId="dr-rawan-protein-breakfast"
+              initialLikes={38}
+              initialComments={12}
+            />
           </article>
 
           {/* Upgrade banner — only when free */}
@@ -431,18 +437,11 @@ export default function CommunityPage() {
               week. Variety in pigment usually means variety in
               micronutrients, and your gut bacteria notice within 48 hours.
             </p>
-            <div
-              className="flex gap-2 flex-wrap"
-              style={{
-                borderTop: '1px solid var(--gf-border)',
-                paddingTop: 12,
-                marginTop: 12,
-              }}
-            >
-              <ActionButton Icon={Heart} label="Support" count={14} />
-              <ActionButton Icon={MessageCircle} label="Comment" count={3} />
-              <ActionButton Icon={Share2} label="Share" />
-            </div>
+            <PostActions
+              postId="tip-of-the-week-eat-the-rainbow"
+              initialLikes={14}
+              initialComments={3}
+            />
           </article>
         </main>
 
@@ -645,36 +644,220 @@ function PersonRow({ person }: { person: Person }) {
   )
 }
 
-function ActionButton({
-  Icon,
+/**
+ * Functional Like / Comment / Share row for a feed post.
+ *
+ * Why client-side only: there's no posts table yet. The home feed
+ * currently renders two seeded posts (Dr. Rawan + Tip of the week)
+ * — once a `community_posts` schema lands, swap the local state for
+ * a Supabase-backed mutation and the call sites stay the same.
+ *
+ * Behaviour:
+ * - Like: optimistic toggle, count +/- 1, heart fills red while liked.
+ * - Comment: expands an inline composer + the visitor's own comments,
+ *   count auto-increments per submission.
+ * - Share: copies the post's deep-link to clipboard (or invokes the
+ *   native Web Share sheet if available); button flashes a "Copied"
+ *   tick for 1.6s.
+ */
+function PostActions({
+  postId,
+  initialLikes,
+  initialComments,
+}: {
+  postId: string
+  initialLikes: number
+  initialComments: number
+}) {
+  const [liked, setLiked] = useState(false)
+  const [showComments, setShowComments] = useState(false)
+  const [comments, setComments] = useState<string[]>([])
+  const [draft, setDraft] = useState('')
+  const [shared, setShared] = useState(false)
+
+  // Derive displayed count from a single source of truth — `liked` —
+  // instead of keeping a parallel `likes` count and mutating both.
+  // The previous nested-setter (`setLiked(p => { setLikes(...); return !p })`)
+  // double-fired under React StrictMode and incremented the count by 2.
+  const likes = initialLikes + (liked ? 1 : 0)
+  const commentTotal = initialComments + comments.length
+
+  const toggleLike = () => setLiked((p) => !p)
+
+  const submitComment = (e: React.FormEvent) => {
+    e.preventDefault()
+    const v = draft.trim()
+    if (!v) return
+    setComments((cs) => [...cs, v])
+    setDraft('')
+  }
+
+  const share = async () => {
+    if (typeof window === 'undefined') return
+    const url = `${window.location.origin}${window.location.pathname}#${postId}`
+    const data = { title: 'Greenofig community', url }
+    try {
+      if (navigator.share) {
+        await navigator.share(data)
+      } else if (navigator.clipboard) {
+        await navigator.clipboard.writeText(url)
+        setShared(true)
+        setTimeout(() => setShared(false), 1600)
+      }
+    } catch {
+      // user cancelled the share sheet — no-op
+    }
+  }
+
+  return (
+    <div
+      style={{
+        borderTop: '1px solid var(--gf-border)',
+        paddingTop: 12,
+        marginTop: 12,
+      }}
+    >
+      <div className="flex gap-2 flex-wrap items-center">
+        <ActionPill
+          onClick={toggleLike}
+          active={liked}
+          activeColor="#f87171"
+          label={liked ? 'Unlike' : 'Support'}
+          count={likes}
+        >
+          <Heart
+            className="w-4 h-4"
+            strokeWidth={1.75}
+            fill={liked ? '#f87171' : 'transparent'}
+          />
+        </ActionPill>
+
+        <ActionPill
+          onClick={() => setShowComments((s) => !s)}
+          active={showComments}
+          activeColor="#a3e635"
+          label="Comment"
+          count={commentTotal}
+        >
+          <MessageCircle className="w-4 h-4" strokeWidth={1.75} />
+        </ActionPill>
+
+        <ActionPill
+          onClick={share}
+          active={shared}
+          activeColor="#a3e635"
+          label={shared ? 'Copied' : 'Share'}
+        >
+          {shared ? (
+            <Check className="w-4 h-4" strokeWidth={2} />
+          ) : (
+            <Share2 className="w-4 h-4" strokeWidth={1.75} />
+          )}
+          {shared && (
+            <span style={{ fontSize: 12, fontWeight: 600 }}>Copied</span>
+          )}
+        </ActionPill>
+      </div>
+
+      {showComments && (
+        <div className="mt-3 space-y-2">
+          {comments.map((c, i) => (
+            <div
+              key={i}
+              style={{
+                background: 'var(--gf-bg-deeper)',
+                border: '1px solid var(--gf-border)',
+                borderRadius: 12,
+                padding: '10px 12px',
+                fontSize: 13,
+                color: 'var(--gf-fg-1)',
+                lineHeight: 1.55,
+                whiteSpace: 'pre-wrap',
+                wordBreak: 'break-word',
+              }}
+            >
+              {c}
+            </div>
+          ))}
+
+          <form onSubmit={submitComment} className="flex items-center gap-2">
+            <input
+              type="text"
+              value={draft}
+              onChange={(e) => setDraft(e.target.value)}
+              placeholder="Write a comment…"
+              className="flex-1 h-9 rounded-pill px-3 text-sm bg-bg-deeper border border-border text-fg-1 placeholder-fg-3 focus:outline-none focus:border-primary"
+            />
+            <button
+              type="submit"
+              disabled={!draft.trim()}
+              aria-label="Send comment"
+              className="inline-flex items-center justify-center w-9 h-9 rounded-full transition-colors disabled:opacity-40"
+              style={{
+                background: draft.trim()
+                  ? 'rgba(163,230,53,0.15)'
+                  : 'var(--gf-surface-raised)',
+                border: '1px solid var(--gf-border)',
+                color: '#a3e635',
+                cursor: draft.trim() ? 'pointer' : 'not-allowed',
+              }}
+            >
+              <Send className="w-4 h-4" strokeWidth={1.75} />
+            </button>
+          </form>
+        </div>
+      )}
+    </div>
+  )
+}
+
+/**
+ * Internal — single action pill (icon + optional count). Tinted lime
+ * or red when active, neutral otherwise.
+ */
+function ActionPill({
+  onClick,
+  active,
+  activeColor,
   label,
   count,
+  children,
 }: {
-  Icon: typeof Heart
+  onClick: () => void | Promise<void>
+  active: boolean
+  activeColor: string
   label: string
   count?: number
+  children: React.ReactNode
 }) {
   return (
     <button
       type="button"
+      onClick={onClick}
       className="inline-flex items-center gap-1.5 transition-colors"
       style={{
         fontSize: 13,
-        color: 'var(--gf-fg-2)',
+        color: active ? activeColor : 'var(--gf-fg-2)',
         padding: '8px 12px',
         borderRadius: 8,
         minHeight: 36,
-        background: 'none',
+        background: active ? 'rgba(255,255,255,0.04)' : 'transparent',
         border: 'none',
         cursor: 'pointer',
+        fontWeight: active ? 600 : 500,
       }}
       onMouseEnter={(e) =>
         (e.currentTarget.style.background = 'var(--gf-surface)')
       }
-      onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
+      onMouseLeave={(e) =>
+        (e.currentTarget.style.background = active
+          ? 'rgba(255,255,255,0.04)'
+          : 'transparent')
+      }
+      aria-pressed={active}
     >
       <span className="flex items-center gap-1.5">
-        <Icon className="w-4 h-4" strokeWidth={1.75} />
+        {children}
         {typeof count === 'number' && <span>{count}</span>}
       </span>
       <span className="sr-only">{label}</span>
