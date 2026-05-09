@@ -44,17 +44,23 @@ interface BookingRecord {
   notes?: string
 }
 
+interface NutritionistOption {
+  id: string
+  full_name: string
+  avatar_url: string | null
+  headline: string | null
+}
+
 const SESSIONS: SessionType[] = [
   { id: 'introCall', Icon: Sparkles, durationMin: 20, priceLabel: '0',  free: true },
   { id: 'followUp', Icon: Video,    durationMin: 30, priceLabel: '15', recommended: true },
   { id: 'deepDive', Icon: Calendar, durationMin: 60, priceLabel: '35' },
 ]
 
-const TIME_SLOTS = [
-  '09:00', '09:30', '10:00', '10:30', '11:00',
-  '14:00', '14:30', '15:00', '15:30',
-  '16:00', '16:30', '17:00',
-]
+function durationFor(type: SessionId): number {
+  const s = SESSIONS.find((x) => x.id === type)
+  return s?.durationMin ?? 30
+}
 
 /** Demo seed — replaced by `bookings` table query in Cluster H */
 const SEED: BookingRecord[] = [
@@ -95,6 +101,26 @@ export default function BookingsPage() {
   const userId = profile?.id ?? null
   const [tab, setTab] = useState<Tab>('new')
   const [bookings, setBookings] = useState<BookingRecord[]>(SEED)
+  const [nutritionists, setNutritionists] = useState<NutritionistOption[]>([])
+  const [selectedNutId, setSelectedNutId] = useState<string | null>(null)
+  const [conflictMsg, setConflictMsg] = useState<string | null>(null)
+
+  // Load the list of nutritionists customers can book with.
+  useEffect(() => {
+    let cancelled = false
+    void (async () => {
+      try {
+        const res = await fetch('/api/nutritionists')
+        if (!res.ok) return
+        const data = (await res.json()) as { nutritionists?: NutritionistOption[] }
+        if (cancelled) return
+        const list = data.nutritionists ?? []
+        setNutritionists(list)
+        if (list.length > 0) setSelectedNutId(list[0].id)
+      } catch { /* offline */ }
+    })()
+    return () => { cancelled = true }
+  }, [])
 
   // Hydrate from bookings table
   useEffect(() => {
@@ -160,58 +186,91 @@ export default function BookingsPage() {
       </nav>
 
       {tab === 'new' && (
-        <NewBookingFlow
-          t={t}
-          drName={NUTRITIONIST.name}
-          onConfirm={async (rec) => {
-            setBookings((curr) => [rec, ...curr])
-            setTab('upcoming')
+        <>
+          {conflictMsg && (
+            <div
+              role="alert"
+              className="rounded-md border px-4 py-3 text-sm"
+              style={{
+                background: 'rgba(248,113,113,0.10)',
+                color: '#fca5a5',
+                borderColor: 'rgba(248,113,113,0.35)',
+              }}
+            >
+              {conflictMsg}
+            </div>
+          )}
+          <NewBookingFlow
+            t={t}
+            drName={
+              nutritionists.find((n) => n.id === selectedNutId)?.full_name ??
+              NUTRITIONIST.name
+            }
+            nutritionists={nutritionists}
+            selectedNutId={selectedNutId}
+            onChangeNut={setSelectedNutId}
+            onConfirm={async (rec) => {
+              setConflictMsg(null)
+              const supabase = getBrowserSupabase()
+              if (!supabase || !userId || !selectedNutId) return
 
-            const supabase = getBrowserSupabase()
-            if (!supabase || !userId) return
+              const scheduledAt = new Date(`${rec.date}T${rec.time}:00`).toISOString()
+              const durationMin = durationFor(rec.type)
+              const { data: row, error } = await supabase
+                .from('bookings')
+                .insert({
+                  client_id: userId,
+                  nutritionist_id: selectedNutId,
+                  type: rec.type,
+                  scheduled_at: scheduledAt,
+                  duration_min: durationMin,
+                  status: 'scheduled',
+                  notes: rec.notes ?? null,
+                } as never)
+                .select('id')
+                .maybeSingle()
 
-            // Persist the booking
-            const scheduledAt = new Date(`${rec.date}T${rec.time}:00`).toISOString()
-            const durationMin =
-              rec.type === 'introCall' ? 20 :
-              rec.type === 'followUp'  ? 30 : 60
-            const { data: row } = await supabase
-              .from('bookings')
-              .insert({
-                client_id: userId,
-                nutritionist_id: userId, // placeholder until nutritionist assignment is wired
-                type: rec.type,
-                scheduled_at: scheduledAt,
-                duration_min: durationMin,
-                status: 'scheduled',
-                notes: rec.notes ?? null,
-              } as never)
-              .select('id')
-              .maybeSingle()
-            const realId = (row as { id?: string } | null)?.id
-            if (realId) {
-              setBookings((curr) =>
-                curr.map((b) => (b.id === rec.id ? { ...b, id: realId } : b)),
-              )
-              // Paid sessions go through Stripe; intro is free
-              if (rec.type !== 'introCall') {
-                try {
-                  const res = await fetch('/api/stripe/checkout', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ kind: 'booking', bookingId: realId }),
-                  })
-                  if (res.ok) {
-                    const { url } = (await res.json()) as { url: string }
-                    if (url) window.location.href = url
+              // Postgres EXCLUDE-constraint violation = slot was taken between
+              // when the picker fetched availability and now.
+              if (error) {
+                const code = (error as { code?: string }).code
+                const taken = code === '23P01'
+                setConflictMsg(
+                  taken
+                    ? 'That slot was just taken. Pick another time and try again.'
+                    : 'Could not save booking. Please try again.',
+                )
+                return
+              }
+
+              setBookings((curr) => [rec, ...curr])
+              setTab('upcoming')
+
+              const realId = (row as { id?: string } | null)?.id
+              if (realId) {
+                setBookings((curr) =>
+                  curr.map((b) => (b.id === rec.id ? { ...b, id: realId } : b)),
+                )
+                // Paid sessions go through Stripe; VIP + intro skip payment.
+                if (rec.type !== 'introCall') {
+                  try {
+                    const res = await fetch('/api/stripe/checkout', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ kind: 'booking', bookingId: realId }),
+                    })
+                    if (res.ok) {
+                      const { url } = (await res.json()) as { url?: string | null }
+                      if (url) window.location.href = url
+                    }
+                  } catch {
+                    /* keep the booking; user can retry payment from the row */
                   }
-                } catch {
-                  /* leave the booking as scheduled — user can retry payment from the row */
                 }
               }
-            }
-          }}
-        />
+            }}
+          />
+        </>
       )}
 
       {tab === 'upcoming' && (
@@ -250,10 +309,16 @@ export default function BookingsPage() {
 function NewBookingFlow({
   t,
   drName,
+  nutritionists,
+  selectedNutId,
+  onChangeNut,
   onConfirm,
 }: {
   t: ReturnType<typeof useTranslations>
   drName: string
+  nutritionists: NutritionistOption[]
+  selectedNutId: string | null
+  onChangeNut: (id: string) => void
   onConfirm: (rec: BookingRecord) => void
 }) {
   const [step, setStep] = useState<Step>('type')
@@ -262,6 +327,13 @@ function NewBookingFlow({
   const [time, setTime] = useState<string | null>(null)
   const [notes, setNotes] = useState('')
   const [confirmed, setConfirmed] = useState(false)
+
+  // When the nutritionist OR the session type changes, the previously
+  // picked time may no longer be valid. Reset it so the user has to
+  // re-select against the fresh availability.
+  useEffect(() => {
+    setTime(null)
+  }, [selectedNutId, type])
 
   const next = () => {
     if (step === 'type' && type) setStep('when')
@@ -289,6 +361,20 @@ function NewBookingFlow({
 
   return (
     <div className="space-y-6">
+      {/* Nutritionist selector — visible when there's more than one */}
+      {nutritionists.length > 1 && (
+        <NutritionistPicker
+          options={nutritionists}
+          value={selectedNutId}
+          onChange={onChangeNut}
+        />
+      )}
+      {nutritionists.length === 0 && (
+        <div className="rounded-xl border border-dashed border-border bg-surface/50 p-8 text-center text-sm text-fg-3">
+          No nutritionists are available for booking yet.
+        </div>
+      )}
+
       {/* Stepper */}
       <Stepper t={t} step={step} />
 
@@ -299,6 +385,8 @@ function NewBookingFlow({
       {step === 'when' && (
         <DateTimePicker
           t={t}
+          nutritionistId={selectedNutId}
+          durationMin={type ? durationFor(type) : 30}
           date={date}
           time={time}
           onChangeDate={setDate}
@@ -357,7 +445,7 @@ function NewBookingFlow({
             type="button"
             onClick={next}
             disabled={
-              (step === 'type' && !type) ||
+              (step === 'type' && (!type || !selectedNutId)) ||
               (step === 'when' && (!date || !time))
             }
             className="inline-flex items-center gap-2 rounded-pill h-11 px-6 text-sm font-semibold bg-gradient-to-b from-lime-400 to-lime-600 text-bg shadow-lime-glow border border-lime-600/60 hover:-translate-y-px transition-transform disabled:opacity-40 disabled:hover:translate-y-0"
@@ -506,18 +594,24 @@ function SessionPicker({
 
 function DateTimePicker({
   t,
+  nutritionistId,
+  durationMin,
   date,
   time,
   onChangeDate,
   onChangeTime,
 }: {
   t: ReturnType<typeof useTranslations>
+  nutritionistId: string | null
+  durationMin: number
   date: string | null
   time: string | null
   onChangeDate: (d: string) => void
   onChangeTime: (h: string) => void
 }) {
   const [monthOffset, setMonthOffset] = useState(0)
+  const [slots, setSlots] = useState<string[]>([])
+  const [slotsLoading, setSlotsLoading] = useState(false)
   const today = useMemo(() => new Date(), [])
   const view = useMemo(() => {
     const d = new Date(today.getFullYear(), today.getMonth() + monthOffset, 1)
@@ -530,6 +624,34 @@ function DateTimePicker({
   })
 
   const days = useMemo(() => buildMonthGrid(view), [view])
+
+  // Fetch the nutritionist's open slots when date or session length changes.
+  useEffect(() => {
+    if (!nutritionistId || !date) {
+      setSlots([])
+      return
+    }
+    let cancelled = false
+    setSlotsLoading(true)
+    void (async () => {
+      try {
+        const res = await fetch(
+          `/api/bookings/availability?nutritionist_id=${nutritionistId}&date=${date}&duration_min=${durationMin}`,
+        )
+        if (!res.ok) {
+          if (!cancelled) setSlots([])
+          return
+        }
+        const data = (await res.json()) as { slots?: string[] }
+        if (!cancelled) setSlots(data.slots ?? [])
+      } catch {
+        if (!cancelled) setSlots([])
+      } finally {
+        if (!cancelled) setSlotsLoading(false)
+      }
+    })()
+    return () => { cancelled = true }
+  }, [nutritionistId, date, durationMin])
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
@@ -604,9 +726,15 @@ function DateTimePicker({
           <p className="text-sm text-fg-3 text-center mt-8">
             {t('pickDate')}
           </p>
+        ) : slotsLoading ? (
+          <p className="text-sm text-fg-3 text-center mt-8">Loading slots…</p>
+        ) : slots.length === 0 ? (
+          <p className="text-sm text-fg-3 text-center mt-8">
+            No openings on this day. Try another date.
+          </p>
         ) : (
           <div className="grid grid-cols-2 gap-2">
-            {TIME_SLOTS.map((slot) => (
+            {slots.map((slot) => (
               <button
                 key={slot}
                 type="button"
@@ -800,6 +928,57 @@ function BookingList({
         )
       })}
     </ul>
+  )
+}
+
+/* ── Nutritionist picker ────────────────────────────────────────── */
+
+function NutritionistPicker({
+  options,
+  value,
+  onChange,
+}: {
+  options: NutritionistOption[]
+  value: string | null
+  onChange: (id: string) => void
+}) {
+  return (
+    <section className="rounded-xl border border-border bg-surface p-4">
+      <p className="text-xs uppercase tracking-eyebrow text-fg-3 font-semibold mb-3">
+        Booking with
+      </p>
+      <div className="flex flex-wrap gap-2">
+        {options.map((n) => {
+          const active = n.id === value
+          return (
+            <button
+              key={n.id}
+              type="button"
+              onClick={() => onChange(n.id)}
+              className={`inline-flex items-center gap-2 rounded-pill h-9 ps-2 pe-4 text-sm transition-colors ${
+                active
+                  ? 'bg-primary/20 text-lime-400 border border-primary/50 font-semibold'
+                  : 'bg-bg-deeper/50 text-fg-2 border border-border hover:text-fg-1'
+              }`}
+            >
+              <span
+                aria-hidden
+                className="w-6 h-6 rounded-full bg-surface-raised border border-border inline-flex items-center justify-center text-[11px] font-bold text-fg-2"
+              >
+                {n.full_name
+                  .split(' ')
+                  .map((p) => p[0])
+                  .filter(Boolean)
+                  .slice(0, 2)
+                  .join('')
+                  .toUpperCase() || 'N'}
+              </span>
+              {n.full_name}
+            </button>
+          )
+        })}
+      </div>
+    </section>
   )
 }
 

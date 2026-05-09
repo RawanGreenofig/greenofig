@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { useUser } from '@/lib/hooks/useUser'
 import { getBrowserSupabase } from '@/lib/supabase/client'
@@ -42,6 +42,19 @@ interface SessionPricing {
 }
 
 const DAYS: Day[] = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun']
+
+/** Map our display day-of-week to Postgres day_of_week (0=Sun..6=Sat). */
+const DAY_TO_DOW: Record<Day, number> = {
+  sun: 0, mon: 1, tue: 2, wed: 3, thu: 4, fri: 5, sat: 6,
+}
+const DOW_TO_DAY: Record<number, Day> = {
+  0: 'sun', 1: 'mon', 2: 'tue', 3: 'wed', 4: 'thu', 5: 'fri', 6: 'sat',
+}
+
+/** Trim a postgres TIME value (`HH:MM:SS`) to the `HH:MM` shape the picker uses. */
+function trimTime(t: string): string {
+  return t.length >= 5 ? t.slice(0, 5) : t
+}
 
 const TABS: { key: TabKey; Icon: LucideIcon }[] = [
   { key: 'profile',      Icon: User },
@@ -89,6 +102,48 @@ export default function NutritionistSettingsPage() {
   const [vacation, setVacation] = useState(false)
   const [bufferMin, setBufferMin] = useState(15)
 
+  // Hydrate the schedule grid from nutritionist_schedules. Migration 008
+  // seeds a Mon-Fri 9-5 default for every nutritionist, so this should
+  // return rows the first time the page loads.
+  useEffect(() => {
+    if (!currentUserId) return
+    let cancelled = false
+    void (async () => {
+      const supabase = getBrowserSupabase()
+      if (!supabase) return
+      type Row = {
+        day_of_week: number
+        is_open: boolean
+        start_time: string
+        end_time: string
+        buffer_min: number
+      }
+      const { data } = await supabase
+        .from('nutritionist_schedules')
+        .select('day_of_week, is_open, start_time, end_time, buffer_min')
+        .eq('nutritionist_id', currentUserId)
+      if (cancelled) return
+      const rows = (data as Row[] | null) ?? []
+      if (rows.length === 0) return
+      setSchedule((prev) => {
+        const next = { ...prev }
+        for (const r of rows) {
+          const day = DOW_TO_DAY[r.day_of_week]
+          if (!day) continue
+          next[day] = {
+            open: r.is_open,
+            from: trimTime(r.start_time),
+            to: trimTime(r.end_time),
+          }
+        }
+        return next
+      })
+      const firstBuffer = rows[0]?.buffer_min
+      if (typeof firstBuffer === 'number') setBufferMin(firstBuffer)
+    })()
+    return () => { cancelled = true }
+  }, [currentUserId])
+
   const [pricing, setPricing] = useState<SessionPricing>({
     introCall: { durationMin: 20, priceJod: 0,  free: true },
     followUp:  { durationMin: 30, priceJod: 15, },
@@ -120,11 +175,20 @@ export default function NutritionistSettingsPage() {
           })
         }
         if (tab === 'availability') {
-          patch.medical_notes = JSON.stringify({
-            availability: schedule,
-            vacation,
-            bufferMin,
-          })
+          // Persist working hours into nutritionist_schedules — one row per
+          // day-of-week. The unique (nutritionist_id, day_of_week) constraint
+          // makes this an idempotent upsert.
+          const rows = DAYS.map((day) => ({
+            nutritionist_id: currentUserId,
+            day_of_week: DAY_TO_DOW[day],
+            is_open: schedule[day].open,
+            start_time: schedule[day].from,
+            end_time: schedule[day].to,
+            buffer_min: bufferMin,
+          }))
+          await supabase
+            .from('nutritionist_schedules')
+            .upsert(rows as never, { onConflict: 'nutritionist_id,day_of_week' })
         }
         if (tab === 'sessions') {
           patch.medical_notes = JSON.stringify({ pricing })
