@@ -78,7 +78,7 @@ export default function AdminContactsPage() {
     }
   }, [statusFilter])
 
-  const { data, loading, error, refetch } = useSupabaseQuery<ContactRow[]>(queryFn, [statusFilter])
+  const { data, loading, error, reload } = useSupabaseQuery<ContactRow[]>(queryFn, [statusFilter])
 
   const rows = data ?? []
   const filtered = useMemo(() => {
@@ -114,7 +114,7 @@ export default function AdminContactsPage() {
     }
     const { error } = await supabase.from('contact_messages').update(patch).eq('id', id)
     if (error) console.error('[admin/contacts] update failed:', error)
-    else refetch()
+    else reload()
   }
 
   async function deleteRow(id: string) {
@@ -123,7 +123,7 @@ export default function AdminContactsPage() {
     if (!supabase) return
     const { error } = await supabase.from('contact_messages').delete().eq('id', id)
     if (error) console.error('[admin/contacts] delete failed:', error)
-    else refetch()
+    else reload()
   }
 
   function exportMarketingCsv() {
@@ -215,7 +215,7 @@ export default function AdminContactsPage() {
       {loading && <p className="text-sm text-fg-3">Loading messages…</p>}
       {error && (
         <p className="text-sm" style={{ color: '#f87171' }}>
-          Error: {error.message}
+          Error: {error}
         </p>
       )}
       {!loading && filtered.length === 0 && (

@@ -139,7 +139,7 @@ export function LeadsPanel() {
     }
   }, [statusFilter])
 
-  const { data, loading, error, refetch } = useSupabaseQuery<LeadRow[]>(queryFn, [statusFilter])
+  const { data, loading, error, reload } = useSupabaseQuery<LeadRow[]>(queryFn, [statusFilter])
 
   const rows = data ?? []
   const filtered = useMemo(() => {
@@ -179,7 +179,7 @@ export function LeadsPanel() {
       .update(patch)
       .eq('id', id)
     if (error) console.error('[leads] update failed:', error)
-    else refetch()
+    else reload()
   }
 
   async function saveNotes(id: string) {
@@ -191,7 +191,7 @@ export function LeadsPanel() {
       .update({ notes })
       .eq('id', id)
     if (error) console.error('[leads] notes save failed:', error)
-    else refetch()
+    else reload()
   }
 
   async function deleteRow(id: string) {
@@ -203,7 +203,7 @@ export function LeadsPanel() {
       .delete()
       .eq('id', id)
     if (error) console.error('[leads] delete failed:', error)
-    else refetch()
+    else reload()
   }
 
   function exportCsv() {
@@ -303,7 +303,7 @@ export function LeadsPanel() {
       {loading && <p className="text-sm text-fg-3">Loading…</p>}
       {error && (
         <p className="text-sm" style={{ color: '#f87171' }}>
-          Error: {error.message}
+          Error: {error}
         </p>
       )}
       {!loading && filtered.length === 0 && (

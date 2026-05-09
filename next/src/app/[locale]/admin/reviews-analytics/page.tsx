@@ -56,7 +56,7 @@ export default function ReviewsAnalyticsPage() {
     [],
   )
 
-  const { data, loading, error: queryErr, refetch } = useSupabaseQuery<ReviewLite[]>(queryFn, [])
+  const { data, loading, error: queryErr, reload } = useSupabaseQuery<ReviewLite[]>(queryFn, [])
   const reviews = data ?? []
 
   const stats = useMemo(() => {
@@ -90,7 +90,7 @@ export default function ReviewsAnalyticsPage() {
       setThemes(j.themes ?? [])
       setAnalyzed(j.analyzed ?? 0)
       // Refetch reviews so auto_themes show on each card
-      refetch()
+      reload()
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Cluster failed')
     } finally {
@@ -315,7 +315,7 @@ export default function ReviewsAnalyticsPage() {
         {loading && <p className="text-sm text-fg-3">Loading reviews…</p>}
         {queryErr && (
           <p className="text-sm" style={{ color: '#f87171' }}>
-            {queryErr.message}
+            {queryErr}
           </p>
         )}
         {!loading && filtered.length === 0 && (
