@@ -202,47 +202,44 @@ async function handleCheckoutCompleted(
       }
     })()
 
-    // Hydrate product prices server-side for the canonical totals
+    // Hydrate product prices server-side for the canonical totals.
+    // Line items live INSIDE orders.items as JSONB — there's no separate
+    // order_items table.
     const productIds = items.map((i) => i.productId)
     const { data: products } = await service
       .from('products')
-      .select('id, price_jod')
+      .select('id, price_cents')
       .in('id', productIds)
-    type Row = { id: string; price_jod: number }
+    type Row = { id: string; price_cents: number }
     const rows = (products as Row[] | null) ?? []
 
-    const subtotal = items.reduce((acc, it) => {
+    const subtotalCents = items.reduce((acc, it) => {
       const p = rows.find((r) => r.id === it.productId)
-      return acc + (p?.price_jod ?? 0) * it.qty
+      return acc + (p?.price_cents ?? 0) * it.qty
     }, 0)
+    const totalCents = session.amount_total ?? subtotalCents
 
-    const { data: orderRow } = await service
+    const orderItems = items.map((it) => {
+      const p = rows.find((r) => r.id === it.productId)
+      return {
+        product_id: it.productId,
+        qty: it.qty,
+        unit_price_cents: p?.price_cents ?? 0,
+      }
+    })
+
+    await service
       .from('orders')
       .insert({
         user_id: userId,
         status: 'processing',
-        subtotal_jod: subtotal,
-        discount_jod: 0,
-        shipping_jod: 0,
-        total_jod: (session.amount_total ?? subtotal * 1000) / 1000,
+        items: orderItems,
+        subtotal_cents: subtotalCents,
+        discount_cents: 0,
+        total_cents: totalCents,
+        stripe_session_id: session.id,
+        coupon_code: meta.couponCode || null,
       } as never)
-      .select('id')
-      .maybeSingle()
-
-    const orderId = (orderRow as { id?: string } | null)?.id
-    if (orderId) {
-      await service.from('order_items').insert(
-        items.map((it) => {
-          const p = rows.find((r) => r.id === it.productId)
-          return {
-            order_id: orderId,
-            product_id: it.productId,
-            qty: it.qty,
-            unit_price_jod: p?.price_jod ?? 0,
-          }
-        }) as never,
-      )
-    }
   }
 
   if (meta.kind === 'booking' && meta.bookingId) {

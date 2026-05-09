@@ -361,12 +361,12 @@ async function getRevenueSummary(
 
   const { data } = await service
     .from('orders')
-    .select('total_jod, status')
+    .select('total_cents, status')
     .gte('created_at', since.toISOString())
 
-  const orders = (data as Pick<Order, 'total_jod' | 'status'>[] | null) ?? []
+  const orders = (data as Pick<Order, 'total_cents' | 'status'>[] | null) ?? []
   const completed = orders.filter((o) => o.status !== 'cancelled' && o.status !== 'refunded')
-  const total = completed.reduce((acc, o) => acc + (o.total_jod ?? 0), 0)
+  const total = completed.reduce((acc, o) => acc + (o.total_cents ?? 0), 0) / 100
   const byStatus = orders.reduce<Record<string, number>>((acc, o) => {
     acc[o.status] = (acc[o.status] ?? 0) + 1
     return acc

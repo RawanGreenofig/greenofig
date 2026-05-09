@@ -202,41 +202,46 @@ export interface Product {
   id: string
   name: string
   category: string
-  price_jod: number
-  compare_at_jod: number | null
-  stock: number
+  /** Price in USD minor units (cents). Divide by 100 for display. */
+  price_cents: number
+  /** Crossed-out compare price in cents, when on sale. */
+  compare_price_cents: number | null
+  stock_quantity: number
   description: string | null
-  dr_note: string | null
+  nutritionist_note: string | null
   tags: string[]
   image_url: string | null
-  hue: string | null
-  dr_pick: boolean
-  visible: boolean
+  is_nutritionist_pick: boolean
+  is_active: boolean
   created_at: string
+}
+
+/**
+ * Order line item shape — these live INSIDE `orders.items` as a JSONB
+ * array, not in a separate table. unit_price is stored in cents.
+ */
+export interface OrderLineItem {
+  product_id: string
+  qty: number
+  unit_price_cents: number
 }
 
 export interface Order {
   id: string
   user_id: string
   status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled' | 'refunded'
-  subtotal_jod: number
-  discount_jod: number
-  shipping_jod: number
-  total_jod: number
-  ship_to: string | null
-  payment_method: string | null
+  items: OrderLineItem[]
+  subtotal_cents: number
+  discount_cents: number
+  total_cents: number
+  shipping_address: { line1?: string; city?: string; country?: string } | null
+  coupon_code: string | null
+  stripe_payment_intent_id: string | null
+  stripe_session_id: string | null
   tracking_number: string | null
-  delivered_at: string | null
-  estimated_delivery_at: string | null
+  notes: string | null
   created_at: string
-}
-
-export interface OrderItem {
-  id: string
-  order_id: string
-  product_id: string
-  qty: number
-  unit_price_jod: number
+  updated_at: string
 }
 
 export interface Coupon {
@@ -347,7 +352,6 @@ export interface Database {
       client_notes:       Tab<ClientNote,      Insertable<ClientNote>>
       products:           Tab<Product,         Insertable<Product>>
       orders:             Tab<Order,           Insertable<Order>>
-      order_items:        Tab<OrderItem,       Insertable<OrderItem>>
       coupons:            Tab<Coupon,          Insertable<Coupon>>
       notifications:      Tab<Notification,    Insertable<Notification>>
       ai_conversations:   Tab<AiConversation,  Insertable<AiConversation>>

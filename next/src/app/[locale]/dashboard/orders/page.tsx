@@ -148,24 +148,32 @@ export default function OrdersPage() {
 
   const liveOrders = useSupabaseQuery<Order[]>(async (supabase) => {
     if (!userId) return []
+
+    // Line items live INSIDE orders.items as JSONB — there's no separate
+    // order_items table. Money columns are *_cents; divide by 100 for the
+    // display values the rest of the page expects.
+    type LineItem = {
+      product_id?: string
+      productId?: string
+      qty?: number
+      unit_price_cents?: number
+      unit_price?: number
+    }
     type Row = {
       id: string
       status: OrderStatus
       created_at: string
-      delivered_at: string | null
-      estimated_delivery_at: string | null
       tracking_number: string | null
-      subtotal_jod: number
-      shipping_jod: number
-      total_jod: number
-      ship_to: string | null
-      payment_method: string | null
+      subtotal_cents: number | null
+      total_cents: number | null
+      shipping_address: { line1?: string; city?: string; country?: string } | null
+      items: LineItem[] | null
     }
     const { data: orderRows } = await supabase
       .from('orders')
       .select(
-        'id, status, created_at, delivered_at, estimated_delivery_at, tracking_number,' +
-          ' subtotal_jod, shipping_jod, total_jod, ship_to, payment_method',
+        'id, status, created_at, tracking_number, subtotal_cents, total_cents,' +
+          ' shipping_address, items',
       )
       .eq('user_id', userId)
       .order('created_at', { ascending: false })
@@ -173,50 +181,57 @@ export default function OrdersPage() {
     const rows = (orderRows as Row[] | null) ?? []
     if (rows.length === 0) return []
 
-    type ItemRow = {
-      order_id: string; product_id: string; qty: number; unit_price_jod: number
-    }
-    const { data: itemRows } = await supabase
-      .from('order_items')
-      .select('order_id, product_id, qty, unit_price_jod')
-      .in('order_id', rows.map((r) => r.id))
-
-    const items = (itemRows as ItemRow[] | null) ?? []
-    const productIds = Array.from(new Set(items.map((i) => i.product_id)))
+    // Pull product names for whatever product_ids the items reference.
+    const productIds = Array.from(
+      new Set(
+        rows.flatMap((r) =>
+          (r.items ?? []).map((i) => i.product_id ?? i.productId).filter(Boolean) as string[],
+        ),
+      ),
+    )
     const { data: productRows } = productIds.length
       ? await supabase
           .from('products')
-          .select('id, name, hue')
+          .select('id, name')
           .in('id', productIds)
       : { data: [] }
-    type ProductRow = { id: string; name: string; hue: string | null }
+    type ProductRow = { id: string; name: string }
     const productOf = new Map(
       ((productRows as ProductRow[] | null) ?? []).map((p) => [p.id, p]),
     )
 
     return rows.map((r) => {
-      const lines = items.filter((i) => i.order_id === r.id)
+      const lines = (r.items ?? []).map((l) => {
+        const productId = l.product_id ?? l.productId ?? ''
+        const p = productOf.get(productId)
+        const unitPrice =
+          typeof l.unit_price_cents === 'number'
+            ? l.unit_price_cents / 100
+            : l.unit_price ?? 0
+        return {
+          name: p?.name ?? 'Product',
+          qty: l.qty ?? 1,
+          unitPrice,
+          hue: 'rgb(132 204 22 / 0.16)',
+        }
+      })
+      const addr = r.shipping_address
+      const shipTo = addr
+        ? [addr.line1, addr.city, addr.country].filter(Boolean).join(', ')
+        : ''
       return {
         id: r.id,
         status: r.status,
         placedAt: r.created_at,
-        deliveredAt: r.delivered_at ?? undefined,
-        estimatedAt: r.estimated_delivery_at ?? undefined,
+        deliveredAt: undefined,
+        estimatedAt: undefined,
         trackingNumber: r.tracking_number ?? undefined,
-        items: lines.map((l) => {
-          const p = productOf.get(l.product_id)
-          return {
-            name: p?.name ?? 'Product',
-            qty: l.qty,
-            unitPrice: l.unit_price_jod,
-            hue: p?.hue ?? 'rgb(132 204 22 / 0.16)',
-          }
-        }),
-        subtotal: r.subtotal_jod,
-        shipping: r.shipping_jod,
-        total: r.total_jod,
-        shipTo: r.ship_to ?? '',
-        paymentLast4: r.payment_method ?? '••••',
+        items: lines,
+        subtotal: (r.subtotal_cents ?? 0) / 100,
+        shipping: 0,
+        total: (r.total_cents ?? 0) / 100,
+        shipTo,
+        paymentLast4: '••••',
       }
     })
   }, [userId])

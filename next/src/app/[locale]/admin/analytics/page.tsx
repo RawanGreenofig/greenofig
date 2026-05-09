@@ -129,14 +129,25 @@ export default function AdminAnalyticsPage() {
         (p) => p.created_at && new Date(p.created_at).getTime() >= since30,
       ).length
 
-      type SubRow = { status: string | null; price_jod: number | null }
+      // MRR — sum the per-tier monthly USD price for every active or
+      // trialing subscription. The subscriptions table doesn't store the
+      // price, so we use the canonical pricing from the marketing page.
+      const TIER_MRR_USD: Record<string, number> = {
+        basic: 14.99,
+        premium: 29.99,
+        vip: 59.99,
+      }
+      type SubRow = { status: string | null; tier: string | null }
       const { data: subs } = await supabase
         .from('subscriptions')
-        .select('status, price_jod')
+        .select('status, tier')
       const activeSubs = ((subs as SubRow[] | null) ?? []).filter(
         (s) => s.status === 'active' || s.status === 'trialing',
       )
-      const mrr = activeSubs.reduce((acc, s) => acc + (s.price_jod ?? 0), 0)
+      const mrr = activeSubs.reduce(
+        (acc, s) => acc + (TIER_MRR_USD[s.tier ?? ''] ?? 0),
+        0,
+      )
 
       if (cancelled) return
       setLiveTiers(tierRows)

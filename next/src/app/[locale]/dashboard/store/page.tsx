@@ -90,14 +90,16 @@ export default function StorePage() {
   const liveProducts = useSupabaseQuery<Product[]>(async (supabase) => {
     const { data } = await supabase
       .from('products')
-      .select('id, name, category, price_jod, compare_at_jod, stock, dr_pick, hue, visible')
-      .eq('visible', true)
+      .select(
+        'id, name, category, price_cents, compare_price_cents, stock_quantity, is_nutritionist_pick, is_active',
+      )
+      .eq('is_active', true)
       .order('created_at', { ascending: false })
       .limit(80)
     type Row = {
       id: string; name: string; category: string
-      price_jod: number; compare_at_jod: number | null; stock: number
-      dr_pick: boolean | null; hue: string | null; visible: boolean
+      price_cents: number; compare_price_cents: number | null; stock_quantity: number
+      is_nutritionist_pick: boolean | null; is_active: boolean
     }
     return ((data as Row[] | null) ?? []).map((r) => {
       const cat = (
@@ -105,17 +107,17 @@ export default function StorePage() {
           ? r.category : 'supplements'
       ) as Product['category']
       const badges: Product['badges'] = []
-      if (r.dr_pick) badges.push('drPick')
-      if (r.compare_at_jod && r.compare_at_jod > r.price_jod) badges.push('saleBadge')
+      if (r.is_nutritionist_pick) badges.push('drPick')
+      if (r.compare_price_cents && r.compare_price_cents > r.price_cents) badges.push('saleBadge')
       return {
         id: r.id,
         name: r.name,
         category: cat,
-        price: r.price_jod,
-        compareAt: r.compare_at_jod ?? undefined,
-        stock: r.stock,
+        price: r.price_cents / 100,
+        compareAt: r.compare_price_cents ? r.compare_price_cents / 100 : undefined,
+        stock: r.stock_quantity,
         badges,
-        hue: r.hue ?? 'rgb(132 204 22 / 0.16)',
+        hue: 'rgb(132 204 22 / 0.16)',
       }
     })
   }, [])

@@ -63,14 +63,15 @@ export default function StoreCurationPage() {
     void (async () => {
       type Row = {
         id: string; name: string; category: string
-        price_jod: number; stock: number
-        description: string | null; dr_note: string | null
-        dr_pick: boolean | null; visible: boolean
-        hue: string | null
+        price_cents: number; stock_quantity: number
+        description: string | null; nutritionist_note: string | null
+        is_nutritionist_pick: boolean | null; is_active: boolean
       }
       const { data } = await supabase
         .from('products')
-        .select('id, name, category, price_jod, stock, description, dr_note, dr_pick, visible, hue')
+        .select(
+          'id, name, category, price_cents, stock_quantity, description, nutritionist_note, is_nutritionist_pick, is_active',
+        )
         .order('created_at', { ascending: false })
         .limit(80)
       if (cancelled) return
@@ -84,13 +85,13 @@ export default function StoreCurationPage() {
             ['supplements','superfoods','snacks','kitchen','books'].includes(r.category)
               ? r.category : 'supplements'
           ) as Product['category'],
-          price: r.price_jod,
-          stock: r.stock,
+          price: r.price_cents / 100,
+          stock: r.stock_quantity,
           description: r.description ?? '',
-          drNote: r.dr_note ?? '',
-          drPick: !!r.dr_pick,
-          visible: r.visible,
-          hue: r.hue ?? 'rgb(132 204 22 / 0.18)',
+          drNote: r.nutritionist_note ?? '',
+          drPick: !!r.is_nutritionist_pick,
+          visible: r.is_active,
+          hue: 'rgb(132 204 22 / 0.18)',
         })),
       )
     })()
@@ -119,7 +120,7 @@ export default function StoreCurationPage() {
     )
     const supabase = getBrowserSupabase()
     if (supabase && /^[0-9a-f-]{32,}$/i.test(id)) {
-      const dbCol = key === 'drPick' ? 'dr_pick' : 'visible'
+      const dbCol = key === 'drPick' ? 'is_nutritionist_pick' : 'is_active'
       void supabase
         .from('products')
         .update({ [dbCol]: nextValue } as never)
@@ -159,13 +160,12 @@ export default function StoreCurationPage() {
     const row = {
       name: p.name,
       category: p.category,
-      price_jod: p.price,
-      stock: p.stock,
+      price_cents: Math.round(p.price * 100),
+      stock_quantity: p.stock,
       description: p.description || null,
-      dr_note: p.drNote || null,
-      dr_pick: p.drPick,
-      visible: p.visible,
-      hue: p.hue,
+      nutritionist_note: p.drNote || null,
+      is_nutritionist_pick: p.drPick,
+      is_active: p.visible,
     }
     if (isExisting) {
       void supabase.from('products').update(row as never).eq('id', p.id)
