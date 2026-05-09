@@ -6,7 +6,7 @@ export default function AdminCouponsPage() {
     <div className="space-y-6">
       <header>
         <h1 className="text-2xl font-bold text-fg-1 flex items-center gap-2">
-          <Gift className="w-6 h-6" strokeWidth={1.75} style={{ color: '#a3e635' }} />
+          <Gift className="w-6 h-6" strokeWidth={1.75} />
           Coupons & Discounts
         </h1>
         <p className="text-sm text-fg-3 mt-1">
