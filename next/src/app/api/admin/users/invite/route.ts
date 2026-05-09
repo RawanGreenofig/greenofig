@@ -28,7 +28,12 @@ import { getServiceSupabase } from '@/lib/supabase/service'
  *   500 — invite API failed
  */
 export const POST = withAuth(async (req: NextRequest, ctx: AuthedContext) => {
-  if (ctx.profile.role !== 'admin') return forbidden('Admin only.')
+  // Admins can invite any role; nutritionists can only invite users
+  // (their own clients). Anyone else 403.
+  const callerRole = ctx.profile.role
+  if (callerRole !== 'admin' && callerRole !== 'nutritionist') {
+    return forbidden('Admin or nutritionist only.')
+  }
 
   const service = getServiceSupabase()
   if (!service) return serviceUnavailable('Supabase')
@@ -43,7 +48,12 @@ export const POST = withAuth(async (req: NextRequest, ctx: AuthedContext) => {
   if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     return badRequest('Valid email required.')
   }
-  const role = body.role && ['user', 'nutritionist', 'admin'].includes(body.role) ? body.role : 'user'
+  let role = body.role && ['user', 'nutritionist', 'admin'].includes(body.role) ? body.role : 'user'
+  // Nutritionists may only invite users — silently downgrade any
+  // attempt to invite a nutritionist or admin.
+  if (callerRole === 'nutritionist' && role !== 'user') {
+    role = 'user'
+  }
   const tier =
     body.tier && ['free', 'basic', 'premium', 'vip'].includes(body.tier) ? body.tier : 'free'
 
@@ -81,7 +91,7 @@ export const POST = withAuth(async (req: NextRequest, ctx: AuthedContext) => {
 
     await service.from('audit_log').insert({
       actor_id: ctx.userId,
-      actor_role: 'admin',
+      actor_role: callerRole,
       action: 'user_invited',
       resource_type: 'user',
       resource_id: data.user.id,
