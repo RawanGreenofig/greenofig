@@ -18,8 +18,10 @@ import {
   Trash2,
   Camera,
   Edit3,
+  X,
   type LucideIcon,
 } from '@/icons'
+import { UploadButton } from '@/components/UploadButton'
 
 type Status = 'draft' | 'scheduled' | 'published'
 type Category = 'tip' | 'article' | 'announcement' | 'recipe' | 'story'
@@ -39,6 +41,7 @@ interface Post {
   likes: number
   comments: number
   hue: string
+  imageUrl?: string
 }
 
 const CATEGORIES: Category[] = ['tip', 'article', 'announcement', 'recipe', 'story']
@@ -243,6 +246,7 @@ export default function ContentPage() {
       audience: final.audience,
       publish_at: final.publishAt || null,
       hue: final.hue,
+      image_url: final.imageUrl ?? null,
     }
     if (isExisting) {
       void supabase.from('posts').update(row as never).eq('id', final.id)
@@ -564,18 +568,50 @@ function PostForm({
             <p className="text-xs uppercase tracking-eyebrow text-fg-3 font-semibold mb-3">
               {t('form.heroImage')}
             </p>
-            <div className="rounded-lg border-2 border-dashed border-border bg-bg-deeper/40 aspect-[16/7] flex flex-col items-center justify-center gap-3 text-center px-4">
-              <Camera className="w-8 h-8 text-fg-3" strokeWidth={1.25} />
-              <button
-                type="button"
-                disabled
-                title="Image upload not yet wired"
-                className="inline-flex items-center gap-1.5 rounded-pill bg-primary/15 text-lime-400 h-9 px-4 text-xs font-semibold opacity-50 cursor-not-allowed"
-              >
-                <Plus className="w-3.5 h-3.5" strokeWidth={2} />
-                {t('form.uploadHero')}
-              </button>
-            </div>
+            {p.imageUrl ? (
+              <div className="rounded-lg overflow-hidden bg-bg-deeper/40 aspect-[16/7] relative group">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={p.imageUrl}
+                  alt=""
+                  className="absolute inset-0 w-full h-full object-cover"
+                />
+                <div className="absolute inset-0 flex items-center justify-center gap-2 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <UploadButton
+                    bucket="posts"
+                    pathPrefix="hero"
+                    accept="image/png,image/jpeg,image/webp"
+                    onUploaded={(url) => update('imageUrl', url)}
+                    className="inline-flex items-center gap-1.5 rounded-pill bg-bg/85 text-fg-1 border border-border h-9 px-4 text-xs font-semibold hover:border-primary/40"
+                  >
+                    Replace
+                  </UploadButton>
+                  <button
+                    type="button"
+                    onClick={() => update('imageUrl', undefined)}
+                    className="inline-flex items-center gap-1.5 rounded-pill bg-rose-500/15 text-rose-400 h-9 px-4 text-xs font-semibold hover:bg-rose-500/25"
+                  >
+                    <X className="w-3.5 h-3.5" strokeWidth={2} />
+                    Remove
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="rounded-lg border-2 border-dashed border-border bg-bg-deeper/40 aspect-[16/7] flex flex-col items-center justify-center gap-3 text-center px-4">
+                <Camera className="w-8 h-8 text-fg-3" strokeWidth={1.25} />
+                <UploadButton
+                  bucket="posts"
+                  pathPrefix="hero"
+                  accept="image/png,image/jpeg,image/webp"
+                  onUploaded={(url) => update('imageUrl', url)}
+                  className="inline-flex items-center gap-1.5 rounded-pill bg-primary/15 text-lime-400 h-9 px-4 text-xs font-semibold hover:bg-primary/25"
+                >
+                  <Plus className="w-3.5 h-3.5" strokeWidth={2} />
+                  {t('form.uploadHero')}
+                </UploadButton>
+                <p className="text-[11px] text-fg-3">PNG, JPG or WebP, up to 8MB.</p>
+              </div>
+            )}
           </article>
         </div>
 

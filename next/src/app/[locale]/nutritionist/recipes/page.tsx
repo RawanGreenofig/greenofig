@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { useUser } from '@/lib/hooks/useUser'
 import { getBrowserSupabase } from '@/lib/supabase/client'
+import { UploadButton } from '@/components/UploadButton'
 import {
   DndContext,
   closestCenter,
@@ -73,6 +74,7 @@ interface Recipe {
   drNote: string
   status: Status
   hue: string
+  imageUrl?: string
 }
 
 const CATEGORIES: Category[] = ['breakfast', 'lunch', 'dinner', 'snack', 'drink']
@@ -274,6 +276,7 @@ export default function RecipeBuilderPage() {
       dr_note: final.drNote || null,
       status,
       hue: final.hue,
+      image_url: final.imageUrl ?? null,
     }
     if (isExisting) {
       void supabase.from('recipes').update(row as never).eq('id', final.id)
@@ -702,19 +705,49 @@ function RecipeForm({
           </Section>
 
           <Section title={t('form.sectionImage')}>
-            <div className="rounded-lg border-2 border-dashed border-border bg-bg-deeper/40 aspect-[4/3] flex flex-col items-center justify-center gap-2 text-center px-4">
-              <Camera className="w-8 h-8 text-fg-3" strokeWidth={1.25} />
-              <button
-                type="button"
-                disabled
-                title="Image upload not yet wired"
-                className="inline-flex items-center gap-1.5 rounded-pill bg-primary/15 text-lime-400 h-9 px-4 text-xs font-semibold opacity-50 cursor-not-allowed"
-              >
-                <Plus className="w-3.5 h-3.5" strokeWidth={2} />
-                {t('form.uploadImage')}
-              </button>
-              <p className="text-[11px] text-fg-3">{t('form.imageHint')}</p>
-            </div>
+            {r.imageUrl ? (
+              <div className="rounded-lg overflow-hidden bg-bg-deeper/40 aspect-[4/3] relative group">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={r.imageUrl}
+                  alt=""
+                  className="absolute inset-0 w-full h-full object-cover"
+                />
+                <div className="absolute inset-0 flex items-center justify-center gap-2 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <UploadButton
+                    bucket="recipes"
+                    pathPrefix="image"
+                    accept="image/png,image/jpeg,image/webp"
+                    onUploaded={(url) => update('imageUrl', url)}
+                    className="inline-flex items-center gap-1.5 rounded-pill bg-bg/85 text-fg-1 border border-border h-9 px-4 text-xs font-semibold hover:border-primary/40"
+                  >
+                    Replace
+                  </UploadButton>
+                  <button
+                    type="button"
+                    onClick={() => update('imageUrl', undefined)}
+                    className="inline-flex items-center gap-1.5 rounded-pill bg-rose-500/15 text-rose-400 h-9 px-4 text-xs font-semibold hover:bg-rose-500/25"
+                  >
+                    Remove
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="rounded-lg border-2 border-dashed border-border bg-bg-deeper/40 aspect-[4/3] flex flex-col items-center justify-center gap-2 text-center px-4">
+                <Camera className="w-8 h-8 text-fg-3" strokeWidth={1.25} />
+                <UploadButton
+                  bucket="recipes"
+                  pathPrefix="image"
+                  accept="image/png,image/jpeg,image/webp"
+                  onUploaded={(url) => update('imageUrl', url)}
+                  className="inline-flex items-center gap-1.5 rounded-pill bg-primary/15 text-lime-400 h-9 px-4 text-xs font-semibold hover:bg-primary/25"
+                >
+                  <Plus className="w-3.5 h-3.5" strokeWidth={2} />
+                  {t('form.uploadImage')}
+                </UploadButton>
+                <p className="text-[11px] text-fg-3">{t('form.imageHint')}</p>
+              </div>
+            )}
           </Section>
 
           <Section title={t('form.sectionDrNote')}>
