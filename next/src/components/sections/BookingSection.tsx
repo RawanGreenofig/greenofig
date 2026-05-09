@@ -121,8 +121,8 @@ export function BookingSection() {
           {...STAGGER(0.4)}
           className="flex flex-wrap items-center justify-center gap-4"
         >
-          <Link
-            href="/dashboard/bookings"
+          <a
+            href="#booking"
             className="group inline-flex items-center gap-2 rounded-full px-8 py-4 text-base font-semibold text-bg transition-all duration-normal ease-out hover:scale-[1.02]"
             style={{
               background: 'linear-gradient(135deg, #84cc16, #a3e635)',
@@ -146,7 +146,7 @@ export function BookingSection() {
                   : 'group-hover:translate-x-1'
               }`}
             />
-          </Link>
+          </a>
 
           <Link
             href="/dashboard/store"

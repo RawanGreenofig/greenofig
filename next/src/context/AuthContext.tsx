@@ -188,11 +188,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signOut = useCallback(async () => {
     if (!supabase) return
-    await supabase.auth.signOut()
+    // Sign out at Supabase + scope=local also wipes the localStorage
+    // session so the next page render can't read it back. Without this,
+    // some setups left the cookie behind and the user appeared "signed
+    // back in" on the next protected page.
+    await supabase.auth.signOut({ scope: 'local' })
     setSession(null)
     setProfile(null)
     setTier(null)
     clearCachedTier()
+    // Hard-redirect to the marketing home so the middleware sees no
+    // cookie and protected components don't try to render with stale
+    // state during the React unmount.
+    if (typeof window !== 'undefined') {
+      window.location.href = '/'
+    }
   }, [supabase])
 
   const value = useMemo<AuthContextValue>(
