@@ -1,13 +1,14 @@
 'use client'
 
 /**
- * Single-toggle switch used across the dashboards. Lime when on, dim
- * surface with a border when off. The thumb is a small light circle
- * that slides between the two ends.
+ * Toggle switch shared across all dashboards. Visual matches the polished
+ * version that already shipped on /dashboard/settings — chunky 44×24 track,
+ * 18×18 thumb that slides to start-2 / end-2, lime-500 when on, frosted
+ * white when off. Fully keyboard accessible (Space + Enter toggle).
  *
- * Lifted out of nutritionist/settings/page.tsx so admin/feature-flags,
- * admin/store, nutritionist/store and any new toggles can share one
- * implementation instead of inlining a tenth variation each.
+ * Used by: nutritionist/settings, nutritionist/store, admin/store, and
+ * any new toggles. admin/feature-flags keeps a local copy for its
+ * danger-dot variant.
  */
 export function Switch({
   on,
@@ -21,23 +22,48 @@ export function Switch({
   disabled?: boolean
 }) {
   return (
-    <button
-      type="button"
+    <div
       role="switch"
       aria-checked={on}
       aria-label={ariaLabel}
-      disabled={disabled}
-      onClick={() => onChange(!on)}
-      className={`shrink-0 relative w-10 h-6 rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
-        on ? 'bg-lime-400' : 'bg-bg-deeper border border-border'
-      }`}
+      aria-disabled={disabled || undefined}
+      tabIndex={disabled ? -1 : 0}
+      onClick={() => !disabled && onChange(!on)}
+      onKeyDown={(e) => {
+        if (disabled) return
+        if (e.key === ' ' || e.key === 'Enter') {
+          e.preventDefault()
+          onChange(!on)
+        }
+      }}
+      style={{
+        width: 44,
+        minWidth: 44,
+        height: 24,
+        borderRadius: 12,
+        backgroundColor: on ? '#84cc16' : 'rgba(255,255,255,0.12)',
+        position: 'relative',
+        cursor: disabled ? 'not-allowed' : 'pointer',
+        opacity: disabled ? 0.5 : 1,
+        transition: 'background 200ms',
+        flexShrink: 0,
+        display: 'inline-block',
+      }}
     >
-      <span
+      <div
         aria-hidden
-        className={`absolute top-0.5 w-5 h-5 rounded-full bg-bg shadow transition-all ${
-          on ? 'start-[18px]' : 'start-0.5'
-        }`}
+        style={{
+          width: 18,
+          height: 18,
+          borderRadius: 9,
+          backgroundColor: '#fff',
+          position: 'absolute',
+          top: 3,
+          left: on ? 23 : 3,
+          transition: 'left 200ms',
+          boxShadow: '0 1px 3px rgba(0,0,0,0.3)',
+        }}
       />
-    </button>
+    </div>
   )
 }
