@@ -110,17 +110,18 @@ export async function POST(req: NextRequest) {
   const themesIn = Array.isArray(parsed.themes) ? parsed.themes : []
   const validIds = new Set(reviews.map((r) => r.id))
   const themes: ThemeOut[] = themesIn
-    .map((t) => {
+    .map((t): ThemeOut => {
       const ids = (Array.isArray(t.review_ids) ? t.review_ids : []).filter(
         (id): id is string => typeof id === 'string' && validIds.has(id),
       )
+      const sentiment: ThemeOut['sentiment'] =
+        t.sentiment === 'positive' || t.sentiment === 'negative'
+          ? t.sentiment
+          : 'mixed'
       return {
         name: typeof t.name === 'string' ? t.name : 'Untitled theme',
         summary: typeof t.summary === 'string' ? t.summary : '',
-        sentiment:
-          t.sentiment === 'positive' || t.sentiment === 'negative'
-            ? t.sentiment
-            : 'mixed',
+        sentiment,
         review_ids: ids,
         count: ids.length,
       }
