@@ -23,6 +23,9 @@ export interface Product {
   stock: number
   badges: ProductBadge[]
   hue: string
+  /** Public URL for the product photo. When set, the store renders this
+   *  instead of the gradient placeholder. */
+  image?: string
   description: string
   benefits: string[]
 }

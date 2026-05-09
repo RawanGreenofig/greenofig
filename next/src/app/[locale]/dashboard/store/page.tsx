@@ -41,6 +41,7 @@ interface Product {
   stock: number
   badges: Badge[]
   hue: string
+  image?: string
 }
 
 const CATEGORIES: Category[] = [
@@ -91,7 +92,7 @@ export default function StorePage() {
     const { data } = await supabase
       .from('products')
       .select(
-        'id, name, category, price_cents, compare_price_cents, stock_quantity, is_nutritionist_pick, is_active',
+        'id, name, category, price_cents, compare_price_cents, stock_quantity, is_nutritionist_pick, is_active, image_url',
       )
       .eq('is_active', true)
       .order('created_at', { ascending: false })
@@ -100,6 +101,7 @@ export default function StorePage() {
       id: string; name: string; category: string
       price_cents: number; compare_price_cents: number | null; stock_quantity: number
       is_nutritionist_pick: boolean | null; is_active: boolean
+      image_url: string | null
     }
     return ((data as Row[] | null) ?? []).map((r) => {
       const cat = (
@@ -118,6 +120,7 @@ export default function StorePage() {
         stock: r.stock_quantity,
         badges,
         hue: 'rgb(132 204 22 / 0.16)',
+        image: r.image_url ?? undefined,
       }
     })
   }, [])
@@ -341,15 +344,25 @@ function ProductCard({
        *  otherwise look chalky on a white card. */}
       <div
         data-product-hue
-        className="relative aspect-square w-full"
+        className="relative aspect-square w-full overflow-hidden"
         style={{ background: product.hue }}
       >
-        <div className="absolute inset-0 flex items-center justify-center">
-          <ShoppingBag
-            className="w-10 h-10 text-fg-1/40"
-            strokeWidth={1}
+        {product.image ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={product.image}
+            alt={product.name}
+            className="absolute inset-0 w-full h-full object-cover"
+            loading="lazy"
           />
-        </div>
+        ) : (
+          <div className="absolute inset-0 flex items-center justify-center">
+            <ShoppingBag
+              className="w-10 h-10 text-fg-1/40"
+              strokeWidth={1}
+            />
+          </div>
+        )}
         {/* Badges */}
         <div className="absolute top-3 start-3 flex flex-col gap-1.5 items-start">
           {product.badges.map((b) => (
@@ -377,12 +390,11 @@ function ProductCard({
         </h3>
         <div className="mt-3 flex items-baseline gap-2 font-mono" dir="ltr">
           <span className="text-base font-bold text-fg-1">
-            {product.price}
+            ${product.price.toFixed(2)}
           </span>
-          <span className="text-xs text-fg-3">USD</span>
           {onSale && (
             <span className="text-xs text-fg-3 line-through">
-              {product.compareAt}
+              ${product.compareAt!.toFixed(2)}
             </span>
           )}
         </div>
@@ -540,16 +552,26 @@ function CartDrawer({
                   className="flex items-start gap-3 px-5 py-4"
                 >
                   <span
-                    className="shrink-0 w-14 h-14 rounded-md"
+                    className="shrink-0 w-14 h-14 rounded-md overflow-hidden inline-block"
                     style={{ background: line.product.hue }}
                     aria-hidden
-                  />
+                  >
+                    {line.product.image && (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={line.product.image}
+                        alt=""
+                        className="w-full h-full object-cover"
+                        loading="lazy"
+                      />
+                    )}
+                  </span>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-fg-1 leading-snug">
                       {line.product.name}
                     </p>
                     <p className="mt-0.5 text-xs text-fg-3 font-mono" dir="ltr">
-                      {line.product.price} USD
+                      ${line.product.price.toFixed(2)}
                     </p>
                     <div className="mt-3 inline-flex items-center gap-0.5 rounded-pill bg-bg-deeper border border-border p-0.5">
                       <button
@@ -575,7 +597,7 @@ function CartDrawer({
                   </div>
                   <div className="shrink-0 text-end">
                     <p className="font-mono text-sm text-fg-1" dir="ltr">
-                      {line.product.price * line.qty}
+                      ${(line.product.price * line.qty).toFixed(2)}
                     </p>
                     <button
                       type="button"
@@ -630,7 +652,7 @@ function CartDrawer({
             <ul className="text-sm space-y-1.5 font-mono" dir="ltr">
               <li className="flex justify-between text-fg-2">
                 <span className="font-sans">{t('subtotal')}</span>
-                <span>{subtotal} USD</span>
+                <span>${subtotal.toFixed(2)}</span>
               </li>
               {discountAmount > 0 && (
                 <li className="flex justify-between text-lime-400">
@@ -639,7 +661,7 @@ function CartDrawer({
                     {tierPct > 0 && ` · ${tier?.toUpperCase()} ${tierPct}%`}
                     {couponApplied && ` · +${couponApplied.pct}%`}
                   </span>
-                  <span>− {discountAmount.toFixed(2)} USD</span>
+                  <span>−${discountAmount.toFixed(2)}</span>
                 </li>
               )}
               <li className="flex justify-between text-fg-2">
@@ -648,7 +670,7 @@ function CartDrawer({
               </li>
               <li className="pt-2 mt-1 border-t border-border flex justify-between text-fg-1 text-base font-bold">
                 <span className="font-sans">{t('total')}</span>
-                <span>{total.toFixed(2)} USD</span>
+                <span>${total.toFixed(2)}</span>
               </li>
             </ul>
 
