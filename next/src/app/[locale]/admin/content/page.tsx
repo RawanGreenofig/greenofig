@@ -86,26 +86,28 @@ export default function AdminContentPage() {
     if (!supabase) return
     let cancelled = false
     ;(async () => {
+      // The DB schema uses different column names than the UI. Map at
+      // the boundary: type↔category, is_published↔status, scheduled_at
+      // / published_at ↔ publish_at, reactions(jsonb) ↔ likes/comments.
+      // The UI's `pinned` doesn't exist in DB — treat all as unpinned.
       type PostRow = {
         id: string
         author_id: string
         title: string
-        category: string
-        status: Status
-        publish_at: string | null
-        views: number
-        likes: number
-        comments: number
-        pinned: boolean
+        type: string
+        is_published: boolean
+        scheduled_at: string | null
+        published_at: string | null
+        views: number | null
+        reactions: { likes?: number; comments?: number } | null
         created_at: string
       }
       const { data: rows } = await supabase
         .from('posts')
         .select(
-          'id, author_id, title, category, status, publish_at, views, likes, comments, pinned, created_at',
+          'id, author_id, title, type, is_published, scheduled_at, published_at, views, reactions, created_at',
         )
-        .order('pinned', { ascending: false })
-        .order('publish_at', { ascending: false, nullsFirst: false })
+        .order('updated_at', { ascending: false })
         .limit(80)
       const list = (rows as PostRow[] | null) ?? []
       if (cancelled || list.length === 0) return
@@ -126,10 +128,16 @@ export default function AdminContentPage() {
       const mapped: AdminPost[] = list.map((r) => {
         const prof = profileMap.get(r.author_id)
         const name = prof?.full_name ?? 'Author'
-        const cat = (ALLOWED_CATEGORIES as string[]).includes(r.category)
-          ? (r.category as Category)
+        const cat = (ALLOWED_CATEGORIES as string[]).includes(r.type)
+          ? (r.type as Category)
           : 'article'
         const role: 'nutritionist' | 'admin' = prof?.role === 'admin' ? 'admin' : 'nutritionist'
+        const status: Status = r.is_published
+          ? 'published'
+          : r.scheduled_at && new Date(r.scheduled_at).getTime() > Date.now()
+            ? 'scheduled'
+            : 'draft'
+        const reactions = r.reactions ?? {}
         return {
           id: r.id,
           title: r.title,
@@ -137,12 +145,12 @@ export default function AdminContentPage() {
           authorInitials: initials(name),
           authorRole: role,
           category: cat,
-          status: r.status,
-          publishedISO: r.publish_at ?? r.created_at ?? '',
+          status,
+          publishedISO: r.published_at ?? r.scheduled_at ?? r.created_at ?? '',
           views: r.views ?? 0,
-          likes: r.likes ?? 0,
-          comments: r.comments ?? 0,
-          pinned: !!r.pinned,
+          likes: reactions.likes ?? 0,
+          comments: reactions.comments ?? 0,
+          pinned: false,
           hue: CATEGORY_HUE[cat],
         }
       })
@@ -182,18 +190,12 @@ export default function AdminContentPage() {
   const isUuid = (id: string) => /^[0-9a-f-]{32,}$/i.test(id)
 
   const togglePin = (id: string) => {
-    let nextPinned = false
+    // posts.pinned doesn't exist in the DB schema — UI-local only.
+    // Visual pin sticks for the session; will not persist across page
+    // reloads until a `pinned` column is added.
     setPosts((curr) =>
-      curr.map((p) => {
-        if (p.id !== id) return p
-        nextPinned = !p.pinned
-        return { ...p, pinned: nextPinned }
-      }),
+      curr.map((p) => (p.id === id ? { ...p, pinned: !p.pinned } : p)),
     )
-    const supabase = getBrowserSupabase()
-    if (supabase && isUuid(id)) {
-      void supabase.from('posts').update({ pinned: nextPinned } as never).eq('id', id)
-    }
   }
 
   const remove = (id: string) => {
@@ -208,7 +210,13 @@ export default function AdminContentPage() {
     setPosts((curr) => curr.map((p) => (p.id === id ? { ...p, status: 'draft' } : p)))
     const supabase = getBrowserSupabase()
     if (supabase && isUuid(id)) {
-      void supabase.from('posts').update({ status: 'draft' } as never).eq('id', id)
+      // status is derived in the UI from is_published; flipping it
+      // false moves the post to 'draft'. published_at stays as a
+      // historical record.
+      void supabase
+        .from('posts')
+        .update({ is_published: false } as never)
+        .eq('id', id)
     }
   }
 

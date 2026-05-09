@@ -144,7 +144,9 @@ export default function ContentPage() {
   const [query, setQuery] = useState('')
   const [editing, setEditing] = useState<Post | null>(null)
 
-  // Hydrate posts authored by this nutritionist
+  // Hydrate posts authored by this nutritionist. The DB schema doesn't
+  // carry every UI field — excerpt/audience/comments/hue are local-only,
+  // and status is derived from is_published + scheduled_at.
   useEffect(() => {
     if (!profile?.id) return
     const supabase = getBrowserSupabase()
@@ -152,37 +154,53 @@ export default function ContentPage() {
     let cancelled = false
     void (async () => {
       type Row = {
-        id: string; title: string; excerpt: string | null; body: string
-        category: Category; status: Status; audience: string
-        publish_at: string | null; views: number | null
-        likes: number | null; comments: number | null; hue: string | null
+        id: string
+        title: string
+        content: string | null
+        type: Category
+        is_published: boolean
+        scheduled_at: string | null
+        published_at: string | null
+        views: number | null
+        reactions: { likes?: number; comments?: number } | null
+        image_url: string | null
       }
       const { data } = await supabase
         .from('posts')
         .select(
-          'id, title, excerpt, body, category, status, audience, publish_at, views, likes, comments, hue',
+          'id, title, content, type, is_published, scheduled_at, published_at, views, reactions, image_url',
         )
         .eq('author_id', profile.id)
-        .order('publish_at', { ascending: false })
+        .order('updated_at', { ascending: false })
         .limit(60)
       if (cancelled) return
       const rows = (data as Row[] | null) ?? []
       if (rows.length === 0) return
       setPosts(
-        rows.map((r) => ({
-          id: r.id,
-          title: r.title,
-          excerpt: r.excerpt ?? '',
-          body: r.body,
-          category: r.category,
-          status: r.status,
-          audience: (r.audience as Audience) ?? 'all',
-          publishAt: r.publish_at ?? '',
-          views: r.views ?? 0,
-          likes: r.likes ?? 0,
-          comments: r.comments ?? 0,
-          hue: r.hue ?? 'rgb(163 230 53 / 0.18)',
-        })),
+        rows.map((r) => {
+          const status: Status = r.is_published
+            ? 'published'
+            : r.scheduled_at && new Date(r.scheduled_at).getTime() > Date.now()
+              ? 'scheduled'
+              : 'draft'
+          const publishAt = r.published_at ?? r.scheduled_at ?? ''
+          const reactions = r.reactions ?? {}
+          return {
+            id: r.id,
+            title: r.title,
+            excerpt: '',
+            body: r.content ?? '',
+            category: r.type,
+            status,
+            audience: 'all' as Audience,
+            publishAt,
+            views: r.views ?? 0,
+            likes: reactions.likes ?? 0,
+            comments: reactions.comments ?? 0,
+            hue: 'rgb(163 230 53 / 0.18)',
+            imageUrl: r.image_url ?? undefined,
+          }
+        }),
       )
     })()
     return () => { cancelled = true }
@@ -236,16 +254,18 @@ export default function ContentPage() {
     const supabase = getBrowserSupabase()
     if (!supabase || !profile?.id) return
     const isExisting = /^[0-9a-f-]{32,}$/i.test(final.id)
+    // Translate UI fields → DB columns. excerpt/audience/comments/hue
+    // don't have DB equivalents and are local UI only.
+    const isScheduled = status === 'scheduled' && final.publishAt
     const row = {
       author_id: profile.id,
       title: final.title,
-      excerpt: final.excerpt || null,
-      body: final.body,
-      category: final.category,
-      status,
-      audience: final.audience,
-      publish_at: final.publishAt || null,
-      hue: final.hue,
+      content: final.body || null,
+      type: final.category,
+      is_published: status === 'published',
+      scheduled_at: isScheduled ? final.publishAt : null,
+      published_at:
+        status === 'published' ? final.publishAt || new Date().toISOString() : null,
       image_url: final.imageUrl ?? null,
     }
     if (isExisting) {

@@ -273,20 +273,23 @@ function PlanView({ t }: { t: ReturnType<typeof useTranslations> }) {
       new Set(items.map((i) => i.recipe_id).filter((x): x is string => !!x)),
     )
 
+    // DB column names differ from the UI's camelCase: title↔name,
+    // instructions↔steps, prep_time_minutes↔prep_min, cook_time_minutes
+    // ↔cook_min, description↔dr_note. Map at the boundary.
     type RecipeRow = {
       id: string
-      name: string
+      title: string
       ingredients: unknown
-      steps: unknown
-      prep_min: number
-      cook_min: number
+      instructions: unknown
+      prep_time_minutes: number
+      cook_time_minutes: number
       servings: number
-      dr_note: string | null
+      description: string | null
     }
     const { data: recipeRows } = recipeIds.length
       ? await supabase
           .from('recipes')
-          .select('id, name, ingredients, steps, prep_min, cook_min, servings, dr_note')
+          .select('id, title, ingredients, instructions, prep_time_minutes, cook_time_minutes, servings, description')
           .in('id', recipeIds)
       : { data: [] }
     const recipes = (recipeRows as RecipeRow[] | null) ?? []
@@ -299,9 +302,9 @@ function PlanView({ t }: { t: ReturnType<typeof useTranslations> }) {
       const dayItems = items.filter((it) => it.day_idx === dayIdx && it.week_idx === 0)
       const meals: PlanMeal[] = dayItems.flatMap((it) => {
         const r = it.recipe_id ? recipeOf.get(it.recipe_id) : null
-        const name = it.custom_name ?? r?.name ?? 'Untitled meal'
+        const name = it.custom_name ?? r?.title ?? 'Untitled meal'
         const ings = (r?.ingredients as unknown[] | null) ?? []
-        const steps = (r?.steps as unknown[] | null) ?? []
+        const steps = (r?.instructions as unknown[] | null) ?? []
         const ingArr: string[] = ings
           .map((x) => (typeof x === 'string' ? x : (x as { name?: string })?.name ?? ''))
           .filter(Boolean)
@@ -320,12 +323,12 @@ function PlanView({ t }: { t: ReturnType<typeof useTranslations> }) {
           key: mealKey as PlanMeal['key'],
           name,
           calories: 0, protein: 0, carbs: 0, fat: 0,
-          prepMin: r?.prep_min ?? 0,
-          cookMin: r?.cook_min ?? 0,
+          prepMin: r?.prep_time_minutes ?? 0,
+          cookMin: r?.cook_time_minutes ?? 0,
           servings: r?.servings ?? 1,
           ingredients: ingArr,
           steps: stepArr,
-          drNote: it.notes ?? r?.dr_note ?? undefined,
+          drNote: it.notes ?? r?.description ?? undefined,
         }]
       })
       return { dayIdx, isToday: dayIdx === todayDow, meals }

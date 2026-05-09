@@ -125,37 +125,46 @@ export interface MealPlanItem {
 
 export interface Recipe {
   id: string
-  author_id: string
-  name: string
-  category: string
+  created_by: string
+  title: string
+  title_ar: string | null
+  description: string | null
+  description_ar: string | null
+  image_url: string | null
+  prep_time_minutes: number
+  cook_time_minutes: number
   servings: number
-  prep_min: number
-  cook_min: number
-  tags: string[]
+  difficulty: string | null
+  calories_per_serving: number | null
+  protein_g: number | null
+  carbs_g: number | null
+  fat_g: number | null
   ingredients: unknown
-  steps: unknown
-  dr_note: string | null
-  status: 'draft' | 'published'
-  hue: string | null
+  instructions: unknown
+  tags: string[]
+  dietary_tags: string[]
+  is_published: boolean
+  views: number
   created_at: string
 }
 
 export interface Post {
   id: string
   author_id: string
+  type: string
   title: string
-  excerpt: string | null
-  body: string
-  category: string
-  status: 'draft' | 'scheduled' | 'published'
-  audience: string
-  publish_at: string | null
-  hero_image_url: string | null
+  title_ar: string | null
+  content: string | null
+  content_ar: string | null
+  image_url: string | null
+  tags: string[]
+  is_published: boolean
+  scheduled_at: string | null
+  published_at: string | null
   views: number
-  likes: number
-  comments: number
-  pinned: boolean
+  reactions: { likes?: number; comments?: number } | null
   created_at: string
+  updated_at: string
 }
 
 export interface Booking {
