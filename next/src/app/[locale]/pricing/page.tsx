@@ -125,7 +125,7 @@ const PLANS: Record<'en' | 'ar', Plan[]> = {
     {
       name: 'Basic',
       tier: 'basic',
-      price: { monthly: 14.99, annual: 9.99 },
+      price: { monthly: 34.99, annual: 29.99 },
       currency: 'USD',
       description: 'Everything you need to track your nutrition',
       cta: 'Start Basic',
@@ -151,7 +151,7 @@ const PLANS: Record<'en' | 'ar', Plan[]> = {
     {
       name: 'Premium',
       tier: 'premium',
-      price: { monthly: 29.99, annual: 19.99 },
+      price: { monthly: 49.99, annual: 39.99 },
       currency: 'USD',
       description: 'Personalized plans and direct access to Dr. Rawan',
       cta: 'Start Premium',
@@ -175,7 +175,7 @@ const PLANS: Record<'en' | 'ar', Plan[]> = {
     {
       name: 'VIP',
       tier: 'vip',
-      price: { monthly: 59.99, annual: 39.99 },
+      price: { monthly: 79.99, annual: 59.99 },
       currency: 'USD',
       description: 'The complete Greenofig experience',
       cta: 'Go VIP',
@@ -223,7 +223,7 @@ const PLANS: Record<'en' | 'ar', Plan[]> = {
     {
       name: 'أساسي',
       tier: 'basic',
-      price: { monthly: 14.99, annual: 9.99 },
+      price: { monthly: 34.99, annual: 29.99 },
       currency: 'USD',
       description: 'كل ما تحتاجه لتتبع تغذيتك',
       cta: 'ابدأ الأساسي',
@@ -249,7 +249,7 @@ const PLANS: Record<'en' | 'ar', Plan[]> = {
     {
       name: 'مميز',
       tier: 'premium',
-      price: { monthly: 29.99, annual: 19.99 },
+      price: { monthly: 49.99, annual: 39.99 },
       currency: 'USD',
       description: 'خطط مخصصة ووصول مباشر لد. روان',
       cta: 'ابدأ المميز',
@@ -273,7 +273,7 @@ const PLANS: Record<'en' | 'ar', Plan[]> = {
     {
       name: 'VIP',
       tier: 'vip',
-      price: { monthly: 59.99, annual: 39.99 },
+      price: { monthly: 79.99, annual: 59.99 },
       currency: 'USD',
       description: 'تجربة Greenofig الكاملة',
       cta: 'انضم لـ VIP',

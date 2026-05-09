@@ -132,10 +132,15 @@ export default function AdminAnalyticsPage() {
       // MRR — sum the per-tier monthly USD price for every active or
       // trialing subscription. The subscriptions table doesn't store the
       // price, so we use the canonical pricing from the marketing page.
+      // 2026-05 pricing: $34.99 / $49.99 / $79.99 per month at sticker.
+      // Existing subs may be on the old $14.99/$29.99/$59.99 prices —
+      // the MRR estimate is best-effort using the current sticker so
+      // the dashboard reflects the value of the active customer base
+      // going forward, not historical pricing.
       const TIER_MRR_USD: Record<string, number> = {
-        basic: 14.99,
-        premium: 29.99,
-        vip: 59.99,
+        basic: 34.99,
+        premium: 49.99,
+        vip: 79.99,
       }
       type SubRow = { status: string | null; tier: string | null }
       const { data: subs } = await supabase

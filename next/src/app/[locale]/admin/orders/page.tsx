@@ -271,19 +271,18 @@ function OrderRow({
   const [refunding, setRefunding] = useState(false)
   const [cancelling, setCancelling] = useState(false)
 
-  const callAction = async (
+  const postAction = async (
     path: string,
-    confirmMsg: string,
+    body: Record<string, unknown>,
     setBusy: (v: boolean) => void,
     onSuccess: () => void,
   ) => {
-    if (!confirm(confirmMsg)) return
     setBusy(true)
     try {
       const res = await fetch(path, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ orderId: order.id }),
+        body: JSON.stringify(body),
       })
       const data = (await res.json().catch(() => ({}))) as {
         ok?: boolean
@@ -305,20 +304,53 @@ function OrderRow({
     }
   }
 
-  const refund = () =>
-    callAction(
+  // Refund flow: prompt for an optional amount. Empty/blank → full
+  // refund. Numeric value → partial refund of that USD amount.
+  const refund = () => {
+    const totalDollars = order.total.toFixed(2)
+    const input = window.prompt(
+      `Refund order ${order.id}\n\nFull total: $${totalDollars}\n\nLeave empty for a FULL refund. Enter a USD amount (e.g. 12.50) for a PARTIAL refund:`,
+      '',
+    )
+    if (input === null) return // cancelled
+
+    const trimmed = input.trim()
+    let amountCents: number | undefined
+    if (trimmed.length > 0) {
+      const dollars = Number(trimmed)
+      if (!Number.isFinite(dollars) || dollars <= 0) {
+        alert('Refund amount must be a positive number.')
+        return
+      }
+      if (dollars > order.total) {
+        alert(`Refund amount $${dollars.toFixed(2)} exceeds order total $${totalDollars}.`)
+        return
+      }
+      amountCents = Math.round(dollars * 100)
+    }
+
+    const confirmMsg = amountCents
+      ? `Refund $${(amountCents / 100).toFixed(2)} of order ${order.id}?`
+      : `Refund the full $${totalDollars} of order ${order.id}? This cannot be undone.`
+    if (!confirm(confirmMsg)) return
+
+    void postAction(
       '/api/admin/orders/refund',
-      `Refund order ${order.id}? This cannot be undone.`,
+      { orderId: order.id, ...(amountCents != null && { amountCents }) },
       setRefunding,
       onRefunded,
     )
-  const cancelOrder = () =>
-    callAction(
+  }
+
+  const cancelOrder = () => {
+    if (!confirm(`Cancel order ${order.id}?`)) return
+    void postAction(
       '/api/admin/orders/cancel',
-      `Cancel order ${order.id}?`,
+      { orderId: order.id },
       setCancelling,
-      onRefunded, // same reload callback; the live query refetches and the row moves to the cancelled filter
+      onRefunded, // same reload — refetches, row moves to cancelled filter
     )
+  }
 
   const meta = STATUS_META[order.status]
   return (

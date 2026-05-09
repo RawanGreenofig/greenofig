@@ -36,10 +36,17 @@ export const isStripeConfigured = () => !!process.env.STRIPE_SECRET_KEY
  * always set these env vars; if you rotate the prices in Stripe, update
  * Vercel before relying on these defaults.
  */
+// 2026-05 pricing bump: monthly and annual rates each raised by $20 to
+// reflect the nutritionist-coaching market range. Old prices have been
+// archived in Stripe — existing subscribers stay on whatever price they
+// signed up with until they switch plans.
+//   basic:   $14.99/mo + $9.99 annual-per-mo  →  $34.99/mo + $29.99 annual-per-mo  ($359.88/yr)
+//   premium: $29.99/mo + $19.99 annual-per-mo →  $49.99/mo + $39.99 annual-per-mo  ($479.88/yr)
+//   vip:     $59.99/mo + $39.99 annual-per-mo →  $79.99/mo + $59.99 annual-per-mo  ($719.88/yr)
 const USD_DEFAULTS = {
-  basic:   { monthly: 'price_1TUwA22OHDHL9Mv9AFCo1J4e', yearly: 'price_1TUwAA2OHDHL9Mv9jN1zTSFx' },
-  premium: { monthly: 'price_1TUwAI2OHDHL9Mv9qzVSRgIb', yearly: 'price_1TUwAT2OHDHL9Mv9iirB4qek' },
-  vip:     { monthly: 'price_1TUwAa2OHDHL9Mv9FRxQEJR1', yearly: 'price_1TUwAi2OHDHL9Mv9J4Xff5yh' },
+  basic:   { monthly: 'price_1TVKfh2OHDHL9Mv9EEODgruh', yearly: 'price_1TVKfk2OHDHL9Mv9OITv4FK3' },
+  premium: { monthly: 'price_1TVKfn2OHDHL9Mv99p9FfkUM', yearly: 'price_1TVKfq2OHDHL9Mv9I3377K4g' },
+  vip:     { monthly: 'price_1TVKft2OHDHL9Mv9UcFoLzlf', yearly: 'price_1TVKfw2OHDHL9Mv9TDTW8Cip' },
 } as const
 
 export const STRIPE_PRICES: Record<

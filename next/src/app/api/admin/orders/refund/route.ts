@@ -39,9 +39,9 @@ export const POST = withAuth(async (req: NextRequest, ctx: AuthedContext) => {
   const service = getServiceSupabase()
   if (!service) return serviceUnavailable('Supabase')
 
-  let body: { orderId?: string }
+  let body: { orderId?: string; amountCents?: number }
   try {
-    body = (await req.json()) as { orderId?: string }
+    body = (await req.json()) as { orderId?: string; amountCents?: number }
   } catch {
     return badRequest('Invalid JSON body.')
   }
@@ -71,14 +71,36 @@ export const POST = withAuth(async (req: NextRequest, ctx: AuthedContext) => {
     return notFound('Order has no Stripe payment intent — refund manually.')
   }
 
+  // Optional partial-refund amount in cents. When omitted, Stripe
+  // refunds the full remaining capturable balance. Validate it can't
+  // exceed the order total or be non-positive.
+  const orderTotal = order.total_cents ?? 0
+  const requestedAmount =
+    typeof body.amountCents === 'number' && Number.isFinite(body.amountCents)
+      ? Math.round(body.amountCents)
+      : null
+  if (requestedAmount != null) {
+    if (requestedAmount <= 0) {
+      return badRequest('Refund amount must be positive.')
+    }
+    if (orderTotal > 0 && requestedAmount > orderTotal) {
+      return badRequest(
+        `Refund amount $${(requestedAmount / 100).toFixed(2)} exceeds order total $${(orderTotal / 100).toFixed(2)}.`,
+      )
+    }
+  }
+  const isPartial = requestedAmount != null && requestedAmount < orderTotal
+
   let refundId: string
   try {
     const refund = await stripe.refunds.create({
       payment_intent: order.stripe_payment_intent_id,
       reason: 'requested_by_customer',
+      ...(requestedAmount != null && { amount: requestedAmount }),
       metadata: {
         orderId: order.id,
         actorUserId: ctx.userId,
+        partial: isPartial ? 'true' : 'false',
       },
     })
     refundId = refund.id
@@ -87,34 +109,55 @@ export const POST = withAuth(async (req: NextRequest, ctx: AuthedContext) => {
     return internalError()
   }
 
-  const { error: updateErr } = await service
-    .from('orders')
-    .update({ status: 'refunded' } as never)
-    .eq('id', orderId)
-  if (updateErr) {
-    console.error('[admin/orders/refund] db update failed:', updateErr)
-    return internalError()
+  // Only flip status to 'refunded' on a full refund. Partial refunds
+  // leave the order in its existing status — the audit log records
+  // what was refunded, and the customer can see the partial via the
+  // notification + their card statement.
+  if (!isPartial) {
+    const { error: updateErr } = await service
+      .from('orders')
+      .update({ status: 'refunded' } as never)
+      .eq('id', orderId)
+    if (updateErr) {
+      console.error('[admin/orders/refund] db update failed:', updateErr)
+      return internalError()
+    }
   }
+
+  const refundedAmount = requestedAmount ?? orderTotal
+  const refundedDollars = `$${(refundedAmount / 100).toFixed(2)}`
 
   // Audit trail
   await service.from('audit_log').insert({
     actor_id: ctx.userId,
     actor_role: 'admin',
-    action: 'order_refunded',
+    action: isPartial ? 'order_refunded_partial' : 'order_refunded',
     resource_type: 'order',
     resource_id: orderId,
-    new_value: { refundId, totalCents: order.total_cents ?? 0 },
+    new_value: {
+      refundId,
+      totalCents: order.total_cents ?? 0,
+      amountCents: refundedAmount,
+      partial: isPartial,
+    },
   } as never)
 
   // Notify the customer
   await service.from('notifications').insert({
     user_id: order.user_id,
     type: 'order',
-    title: 'Order refunded',
-    body: 'Your order has been refunded. Funds will return to your card in 5-10 business days.',
-    data: { orderId, refundId },
+    title: isPartial ? `Partial refund — ${refundedDollars}` : 'Order refunded',
+    body: isPartial
+      ? `${refundedDollars} has been refunded to your card. Funds will return in 5-10 business days.`
+      : 'Your order has been refunded. Funds will return to your card in 5-10 business days.',
+    data: { orderId, refundId, amountCents: refundedAmount, partial: isPartial },
     is_read: false,
   } as never)
 
-  return json({ ok: true, refundId })
+  return json({
+    ok: true,
+    refundId,
+    amountCents: refundedAmount,
+    partial: isPartial,
+  })
 })
