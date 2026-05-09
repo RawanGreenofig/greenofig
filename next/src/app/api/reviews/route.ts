@@ -1,8 +1,9 @@
 import type { NextRequest } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
+import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 import { getServerSupabase } from '@/lib/supabase/server'
 import { getServiceSupabase } from '@/lib/supabase/service'
 import { getSupabaseEnv } from '@/lib/supabase/env'
+import type { Database } from '@/lib/supabase/types'
 
 /**
  * GET /api/reviews — list approved reviews for public display.
@@ -31,12 +32,12 @@ interface ReviewRow {
   author_initials?: string
 }
 
-function getReadClient() {
+function getReadClient(): SupabaseClient<Database> | null {
   // Public read — anon client is enough thanks to RLS policy on
   // status='approved'. Fall back to service if anon env missing.
   const env = getSupabaseEnv()
   if (env) {
-    return createClient(env.url, env.anonKey, {
+    return createClient<Database>(env.url, env.anonKey, {
       auth: { autoRefreshToken: false, persistSession: false },
     })
   }

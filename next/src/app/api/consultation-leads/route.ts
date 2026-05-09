@@ -1,7 +1,8 @@
 import type { NextRequest } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
+import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 import { getServiceSupabase } from '@/lib/supabase/service'
 import { getSupabaseEnv } from '@/lib/supabase/env'
+import type { Database } from '@/lib/supabase/types'
 import { sendThankYouEbook } from '@/lib/email/thank-you-ebook'
 
 /**
@@ -10,18 +11,21 @@ import { sendThankYouEbook } from '@/lib/email/thank-you-ebook'
  * anon client for the insert — public.consultation_leads has an anon-
  * insert RLS policy. Returns null only if Supabase isn't configured
  * at all (no URL / anon key).
+ *
+ * Both branches must use the same `SupabaseClient<Database>` shape so
+ * the union type doesn't collapse `.from()` to "not callable".
  */
-function getSupabaseForLeads() {
+function getSupabaseForLeads():
+  | { client: SupabaseClient<Database>; hasServiceRole: boolean }
+  | null {
   const service = getServiceSupabase()
-  if (service) return { client: service, hasServiceRole: true as const }
+  if (service) return { client: service, hasServiceRole: true }
   const env = getSupabaseEnv()
   if (!env) return null
-  return {
-    client: createClient(env.url, env.anonKey, {
-      auth: { autoRefreshToken: false, persistSession: false },
-    }),
-    hasServiceRole: false as const,
-  }
+  const anon = createClient<Database>(env.url, env.anonKey, {
+    auth: { autoRefreshToken: false, persistSession: false },
+  })
+  return { client: anon, hasServiceRole: false }
 }
 
 /**

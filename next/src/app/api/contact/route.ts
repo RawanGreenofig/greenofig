@@ -1,14 +1,15 @@
 import type { NextRequest } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
+import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 import { getServiceSupabase } from '@/lib/supabase/service'
 import { getSupabaseEnv } from '@/lib/supabase/env'
+import type { Database } from '@/lib/supabase/types'
 
-function getSupabaseForContact() {
+function getSupabaseForContact(): SupabaseClient<Database> | null {
   const service = getServiceSupabase()
   if (service) return service
   const env = getSupabaseEnv()
   if (!env) return null
-  return createClient(env.url, env.anonKey, {
+  return createClient<Database>(env.url, env.anonKey, {
     auth: { autoRefreshToken: false, persistSession: false },
   })
 }
