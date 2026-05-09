@@ -1,11 +1,13 @@
 'use client'
 
+import { useEffect, useState } from 'react'
 import { notFound, useParams } from 'next/navigation'
 import { ArrowLeft, CheckCircle2, ShoppingBag, Sparkles, Plus } from '@/icons'
 import toast from 'react-hot-toast'
 import { Link } from '@/i18n/navigation'
 import { PRODUCTS, type Product } from '@/lib/products'
 import { useUser } from '@/lib/hooks/useUser'
+import { getBrowserSupabase } from '@/lib/supabase/client'
 
 const TIER_DISCOUNT_PCT: Record<string, number> = {
   premium: 10,
@@ -22,8 +24,90 @@ const CATEGORY_LABEL: Record<Product['category'], string> = {
 
 export default function ProductDetailPage() {
   const params = useParams<{ productId: string }>()
-  const product = PRODUCTS.find((p) => p.id === params.productId)
   const { tier } = useUser()
+  const [product, setProduct] = useState<Product | null>(() => {
+    return PRODUCTS.find((p) => p.id === params.productId) ?? null
+  })
+  const [loading, setLoading] = useState(() => {
+    // Only hit the DB if we didn't find the id in the seed catalog AND
+    // the id looks like a UUID. SEED ids like 'p1' shouldn't trigger a query.
+    const isUuid = /^[0-9a-f-]{32,}$/i.test(params.productId ?? '')
+    return isUuid && !PRODUCTS.some((p) => p.id === params.productId)
+  })
+
+  // Hydrate from the products table when the URL is a real DB UUID.
+  useEffect(() => {
+    if (!loading) return
+    let cancelled = false
+    void (async () => {
+      const supabase = getBrowserSupabase()
+      if (!supabase || !params.productId) {
+        if (!cancelled) setLoading(false)
+        return
+      }
+      type Row = {
+        id: string
+        name: string
+        category: string
+        price_cents: number
+        compare_price_cents: number | null
+        stock_quantity: number
+        description: string | null
+        nutritionist_note: string | null
+        is_nutritionist_pick: boolean | null
+        image_url: string | null
+      }
+      const { data } = await supabase
+        .from('products')
+        .select(
+          'id, name, category, price_cents, compare_price_cents, stock_quantity, description, nutritionist_note, is_nutritionist_pick, image_url',
+        )
+        .eq('id', params.productId)
+        .maybeSingle()
+      if (cancelled) return
+      const row = data as Row | null
+      if (row) {
+        const cat = (
+          ['supplements', 'superfoods', 'snacks', 'kitchen', 'books'].includes(row.category)
+            ? row.category
+            : 'supplements'
+        ) as Product['category']
+        const badges: Product['badges'] = []
+        if (row.is_nutritionist_pick) badges.push('drPick')
+        if (row.compare_price_cents && row.compare_price_cents > row.price_cents) {
+          badges.push('saleBadge')
+        }
+        setProduct({
+          id: row.id,
+          name: row.name,
+          category: cat,
+          price: row.price_cents / 100,
+          compareAt:
+            row.compare_price_cents != null
+              ? row.compare_price_cents / 100
+              : undefined,
+          stock: row.stock_quantity,
+          badges,
+          hue: 'rgb(132 204 22 / 0.16)',
+          image: row.image_url ?? undefined,
+          description: row.description ?? '',
+          benefits: row.nutritionist_note ? [row.nutritionist_note] : [],
+        })
+      }
+      setLoading(false)
+    })()
+    return () => { cancelled = true }
+  }, [loading, params.productId])
+
+  if (loading) {
+    return (
+      <div className="px-4 md:px-8 py-12 max-w-screen-xl mx-auto">
+        <p className="text-sm" style={{ color: 'var(--gf-fg-3)' }}>
+          Loading product…
+        </p>
+      </div>
+    )
+  }
 
   if (!product) notFound()
 
@@ -61,13 +145,23 @@ export default function ProductDetailPage() {
           className="relative w-full aspect-square rounded-2xl overflow-hidden"
           style={{ background: product.hue }}
         >
-          <div className="absolute inset-0 flex items-center justify-center">
-            <ShoppingBag
-              className="w-24 h-24"
-              strokeWidth={0.75}
-              style={{ color: 'rgba(255,255,255,0.35)' }}
+          {product.image ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={product.image}
+              alt={product.name}
+              className="absolute inset-0 w-full h-full object-cover"
+              loading="lazy"
             />
-          </div>
+          ) : (
+            <div className="absolute inset-0 flex items-center justify-center">
+              <ShoppingBag
+                className="w-24 h-24"
+                strokeWidth={0.75}
+                style={{ color: 'rgba(255,255,255,0.35)' }}
+              />
+            </div>
+          )}
 
           {isDrPick && (
             <span
@@ -114,28 +208,19 @@ export default function ProductDetailPage() {
           </h1>
 
           {/* Price */}
-          <div
-            className="mt-5 flex items-baseline gap-3 font-mono"
-            dir="ltr"
-          >
+          <div className="mt-5 flex items-baseline gap-3 font-mono" dir="ltr">
             <span
               className="font-bold"
               style={{ fontSize: 32, color: '#4ade80' }}
             >
-              {finalPrice}
-            </span>
-            <span
-              className="text-base font-semibold"
-              style={{ color: 'var(--gf-fg-2)' }}
-            >
-              USD
+              ${finalPrice.toFixed(2)}
             </span>
             {(onSale || discountPct > 0) && (
               <span
                 className="text-base line-through"
                 style={{ color: 'var(--gf-fg-3)' }}
               >
-                {onSale ? product.compareAt : product.price}
+                ${(onSale ? product.compareAt! : product.price).toFixed(2)}
               </span>
             )}
             {discountPct > 0 && (
@@ -152,12 +237,14 @@ export default function ProductDetailPage() {
           </div>
 
           {/* Description */}
-          <p
-            className="mt-6 leading-relaxed"
-            style={{ fontSize: 15, color: 'var(--gf-fg-2)' }}
-          >
-            {product.description}
-          </p>
+          {product.description && (
+            <p
+              className="mt-6 leading-relaxed"
+              style={{ fontSize: 15, color: 'var(--gf-fg-2)' }}
+            >
+              {product.description}
+            </p>
+          )}
 
           {/* Benefits */}
           {product.benefits.length > 0 && (
