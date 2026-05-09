@@ -371,7 +371,9 @@ export default function MealPlanBuilderPage() {
           <div className="flex flex-wrap items-center gap-2">
             <button
               type="button"
-              className="inline-flex items-center gap-1.5 rounded-pill bg-surface-raised border border-border h-10 px-4 text-xs font-semibold text-fg-1 hover:border-primary/40"
+              disabled
+              title="Assignment flow coming soon"
+              className="inline-flex items-center gap-1.5 rounded-pill bg-surface-raised border border-border h-10 px-4 text-xs font-semibold text-fg-1 opacity-50 cursor-not-allowed"
             >
               <Users className="w-3.5 h-3.5" strokeWidth={1.75} />
               {t('assignTo')}

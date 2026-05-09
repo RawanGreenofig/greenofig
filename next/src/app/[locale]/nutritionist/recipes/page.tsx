@@ -706,7 +706,9 @@ function RecipeForm({
               <Camera className="w-8 h-8 text-fg-3" strokeWidth={1.25} />
               <button
                 type="button"
-                className="inline-flex items-center gap-1.5 rounded-pill bg-primary/15 text-lime-400 h-9 px-4 text-xs font-semibold hover:bg-primary/25"
+                disabled
+                title="Image upload not yet wired"
+                className="inline-flex items-center gap-1.5 rounded-pill bg-primary/15 text-lime-400 h-9 px-4 text-xs font-semibold opacity-50 cursor-not-allowed"
               >
                 <Plus className="w-3.5 h-3.5" strokeWidth={2} />
                 {t('form.uploadImage')}

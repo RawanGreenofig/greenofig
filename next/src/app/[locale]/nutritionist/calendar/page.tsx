@@ -35,6 +35,9 @@ interface Session {
   clientName: string
   clientInitials: string
   type: SessionType
+  /** Meeting URL set by the Stripe webhook (or admin override) once
+   *  the booking is paid. Null while the session isn't joinable yet. */
+  meetingUrl?: string | null
 }
 
 const TYPE_TINT: Record<SessionType, string> = {
@@ -82,10 +85,11 @@ export default function CalendarPage() {
       scheduled_at: string
       duration_min: number
       status: string
+      meeting_url: string | null
     }
     const { data: rows } = await supabase
       .from('bookings')
-      .select('id, client_id, type, scheduled_at, duration_min, status')
+      .select('id, client_id, type, scheduled_at, duration_min, status, meeting_url')
       .eq('nutritionist_id', profile.id)
       .gte('scheduled_at', monthStart.toISOString())
       .lt('scheduled_at',  monthEnd.toISOString())
@@ -117,6 +121,7 @@ export default function CalendarPage() {
         clientName: name,
         clientInitials: initialsOf(name),
         type: r.type,
+        meetingUrl: r.meeting_url,
       }
     })
   }, [profile?.id, anchor.getMonth(), anchor.getFullYear()])
@@ -540,7 +545,12 @@ function DayPanel({
                 </div>
                 <button
                   type="button"
-                  className="mt-3 inline-flex items-center gap-1 rounded-pill bg-primary/15 text-lime-400 h-8 px-3 text-[11px] font-semibold hover:bg-primary/25"
+                  disabled={!s.meetingUrl}
+                  title={s.meetingUrl ? undefined : 'Meeting link not yet generated'}
+                  onClick={() => {
+                    if (s.meetingUrl) window.open(s.meetingUrl, '_blank')
+                  }}
+                  className="mt-3 inline-flex items-center gap-1 rounded-pill bg-primary/15 text-lime-400 h-8 px-3 text-[11px] font-semibold hover:bg-primary/25 disabled:opacity-40 disabled:cursor-not-allowed"
                 >
                   <Video className="w-3 h-3" strokeWidth={2} />
                   {tBookings('joinSession')}

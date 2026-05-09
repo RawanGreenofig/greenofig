@@ -193,7 +193,9 @@ export default function ResearchPage() {
           </div>
           <button
             type="button"
-            className="w-full inline-flex items-center justify-center gap-1.5 rounded-pill bg-primary/15 text-lime-400 h-9 px-4 text-xs font-semibold hover:bg-primary/25"
+            disabled
+            title="Document upload not yet wired"
+            className="w-full inline-flex items-center justify-center gap-1.5 rounded-pill bg-primary/15 text-lime-400 h-9 px-4 text-xs font-semibold opacity-50 cursor-not-allowed"
           >
             <Plus className="w-3.5 h-3.5" strokeWidth={2} />
             {t('addDocument')}
@@ -479,7 +481,15 @@ function Turn({
               onClick={onToggleSave}
               activeIcon={turn.saved ? Check : undefined}
             />
-            <ActionBtn Icon={Copy}     label={t('copyAnswer')} />
+            <ActionBtn
+              Icon={Copy}
+              label={t('copyAnswer')}
+              onClick={() => {
+                if (typeof navigator !== 'undefined' && navigator.clipboard) {
+                  void navigator.clipboard.writeText(turn.body)
+                }
+              }}
+            />
             <ActionBtn Icon={RefreshCw} label={t('regenerate')} onClick={onRegenerate} />
           </div>
         </div>

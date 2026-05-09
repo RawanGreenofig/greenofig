@@ -159,6 +159,27 @@ export default function AdminOrdersPage() {
         </div>
         <button
           type="button"
+          onClick={() => {
+            const header = 'order_id,customer,items,total_usd,status,placed_at\n'
+            const csvCell = (v: unknown): string => {
+              const s = v == null ? '' : String(v)
+              return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s
+            }
+            const body = visible
+              .map((r) =>
+                [r.id, r.customerName, r.itemCount, r.total, r.status, r.placedISO]
+                  .map(csvCell)
+                  .join(','),
+              )
+              .join('\n')
+            const blob = new Blob([header + body], { type: 'text/csv' })
+            const url = URL.createObjectURL(blob)
+            const a = document.createElement('a')
+            a.href = url
+            a.download = `greenofig-orders-${new Date().toISOString().slice(0, 10)}.csv`
+            a.click()
+            URL.revokeObjectURL(url)
+          }}
           className="inline-flex items-center gap-1.5 rounded-pill bg-surface-raised border border-border h-10 px-4 text-xs font-semibold text-fg-1 hover:border-primary/40"
         >
           <Download className="w-3.5 h-3.5" strokeWidth={1.75} />
@@ -300,7 +321,9 @@ function OrderRow({
           <div className="flex items-center gap-2">
             <button
               type="button"
-              className="inline-flex items-center gap-1.5 rounded-pill bg-surface-raised border border-border h-9 px-4 text-xs font-semibold text-fg-1 hover:border-primary/40"
+              disabled
+              title="Coming soon"
+              className="inline-flex items-center gap-1.5 rounded-pill bg-surface-raised border border-border h-9 px-4 text-xs font-semibold text-fg-1 opacity-50 cursor-not-allowed"
             >
               {tO('viewDetails')}
             </button>
@@ -308,7 +331,9 @@ function OrderRow({
               <>
                 <button
                   type="button"
-                  className="inline-flex items-center gap-1.5 rounded-pill bg-amber-500/15 h-9 px-4 text-xs font-semibold hover:bg-amber-500/25"
+                  disabled
+                  title="Refund flow not yet wired — process refunds in the Stripe dashboard for now"
+                  className="inline-flex items-center gap-1.5 rounded-pill bg-amber-500/15 h-9 px-4 text-xs font-semibold opacity-50 cursor-not-allowed"
                   style={{ color: '#e8912a' }}
                 >
                   <RotateCcw className="w-3 h-3" strokeWidth={1.75} />
@@ -316,7 +341,9 @@ function OrderRow({
                 </button>
                 <button
                   type="button"
-                  className="inline-flex items-center gap-1.5 rounded-pill bg-rose-500/15 text-rose-400 h-9 px-4 text-xs font-semibold hover:bg-rose-500/25"
+                  disabled
+                  title="Coming soon"
+                  className="inline-flex items-center gap-1.5 rounded-pill bg-rose-500/15 text-rose-400 h-9 px-4 text-xs font-semibold opacity-50 cursor-not-allowed"
                 >
                   <XCircle className="w-3 h-3" strokeWidth={1.75} />
                   {tO('cancel')}
