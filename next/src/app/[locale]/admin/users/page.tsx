@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from 'react'
 import { useTranslations } from 'next-intl'
+import { Avatar } from '@/components/Avatar'
 import {
   Search,
   Download,
@@ -290,15 +291,7 @@ function UserTable({
             className="md:grid md:grid-cols-[2fr_1fr_1fr_1fr_1fr_1fr_auto] gap-3 items-center px-5 py-3 hover:bg-surface-raised transition-colors"
           >
             <div className="flex items-center gap-3 min-w-0 mb-3 md:mb-0">
-              <span
-                className="shrink-0 w-9 h-9 rounded-full inline-flex items-center justify-center font-display text-xs font-bold"
-                style={{
-                  background: 'linear-gradient(135deg,#5c7262,#2c3e35)',
-                  color: '#f0ede6',
-                }}
-              >
-                {u.initials}
-              </span>
+              <Avatar text={u.initials} size={36} />
               <div className="min-w-0">
                 <p className="text-sm font-medium text-fg-1 truncate">{u.name}</p>
                 <p className="text-xs text-fg-3 truncate font-mono" dir="ltr">

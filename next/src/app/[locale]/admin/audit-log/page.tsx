@@ -3,6 +3,7 @@
 import { useMemo, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { useSupabaseQuery } from '@/lib/hooks/useSupabaseQuery'
+import { Avatar } from '@/components/Avatar'
 import {
   Search,
   Download,
@@ -279,15 +280,7 @@ function Row({ tA, event }: { tA: ReturnType<typeof useTranslations>; event: Aud
           {tA('col.actor')}
         </span>
         <div className="flex items-center gap-2 min-w-0">
-          <span
-            className="shrink-0 w-7 h-7 rounded-full inline-flex items-center justify-center font-display text-[10px] font-bold"
-            style={{
-              background: 'linear-gradient(135deg,#5c7262,#2c3e35)',
-              color: '#f0ede6',
-            }}
-          >
-            {event.actorInitials}
-          </span>
+          <Avatar text={event.actorInitials} size={28} />
           <p className="text-sm text-fg-1 truncate">{event.actor}</p>
         </div>
       </div>
