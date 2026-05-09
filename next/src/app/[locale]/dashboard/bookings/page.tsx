@@ -211,61 +211,65 @@ export default function BookingsPage() {
             onChangeNut={setSelectedNutId}
             onConfirm={async (rec) => {
               setConflictMsg(null)
-              const supabase = getBrowserSupabase()
-              if (!supabase || !userId || !selectedNutId) return
+              if (!userId || !selectedNutId) return
 
-              const scheduledAt = new Date(`${rec.date}T${rec.time}:00`).toISOString()
-              const durationMin = durationFor(rec.type)
-              const { data: row, error } = await supabase
-                .from('bookings')
-                .insert({
-                  client_id: userId,
-                  nutritionist_id: selectedNutId,
-                  type: rec.type,
-                  scheduled_at: scheduledAt,
-                  duration_min: durationMin,
-                  status: 'scheduled',
-                  notes: rec.notes ?? null,
-                } as never)
-                .select('id')
-                .maybeSingle()
-
-              // Postgres EXCLUDE-constraint violation = slot was taken between
-              // when the picker fetched availability and now.
-              if (error) {
-                const code = (error as { code?: string }).code
-                const taken = code === '23P01'
-                setConflictMsg(
-                  taken
-                    ? 'That slot was just taken. Pick another time and try again.'
-                    : 'Could not save booking. Please try again.',
-                )
+              // Server-side booking creation interprets date+time in the
+              // *nutritionist's* timezone (read from profiles.timezone) and
+              // returns a 409 with `error: 'slot_taken'` if the EXCLUDE
+              // constraint fires.
+              let bookingId: string | null = null
+              try {
+                const res = await fetch('/api/bookings/create', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    nutritionist_id: selectedNutId,
+                    type: rec.type,
+                    date: rec.date,
+                    time: rec.time,
+                    notes: rec.notes ?? null,
+                  }),
+                })
+                if (res.status === 409) {
+                  setConflictMsg(
+                    'That slot was just taken. Pick another time and try again.',
+                  )
+                  return
+                }
+                if (!res.ok) {
+                  setConflictMsg('Could not save booking. Please try again.')
+                  return
+                }
+                const payload = (await res.json()) as {
+                  booking?: { id: string }
+                }
+                bookingId = payload.booking?.id ?? null
+              } catch {
+                setConflictMsg('Network error. Please try again.')
+                return
+              }
+              if (!bookingId) {
+                setConflictMsg('Could not save booking. Please try again.')
                 return
               }
 
-              setBookings((curr) => [rec, ...curr])
+              setBookings((curr) => [{ ...rec, id: bookingId! }, ...curr])
               setTab('upcoming')
 
-              const realId = (row as { id?: string } | null)?.id
-              if (realId) {
-                setBookings((curr) =>
-                  curr.map((b) => (b.id === rec.id ? { ...b, id: realId } : b)),
-                )
-                // Paid sessions go through Stripe; VIP + intro skip payment.
-                if (rec.type !== 'introCall') {
-                  try {
-                    const res = await fetch('/api/stripe/checkout', {
-                      method: 'POST',
-                      headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify({ kind: 'booking', bookingId: realId }),
-                    })
-                    if (res.ok) {
-                      const { url } = (await res.json()) as { url?: string | null }
-                      if (url) window.location.href = url
-                    }
-                  } catch {
-                    /* keep the booking; user can retry payment from the row */
+              // Paid sessions go through Stripe; VIP + intro skip payment.
+              if (rec.type !== 'introCall') {
+                try {
+                  const res = await fetch('/api/stripe/checkout', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ kind: 'booking', bookingId }),
+                  })
+                  if (res.ok) {
+                    const { url } = (await res.json()) as { url?: string | null }
+                    if (url) window.location.href = url
                   }
+                } catch {
+                  /* keep the booking; user can retry payment from the row */
                 }
               }
             }}

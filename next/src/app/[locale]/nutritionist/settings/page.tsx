@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { useUser } from '@/lib/hooks/useUser'
 import { getBrowserSupabase } from '@/lib/supabase/client'
+import { TimeOffManager } from '@/components/nutritionist/TimeOffManager'
 import {
   User,
   Calendar,
@@ -252,24 +253,27 @@ export default function NutritionistSettingsPage() {
           )}
 
           {tab === 'availability' && (
-            <AvailabilityPane
-              t={t}
-              schedule={schedule}
-              vacation={vacation}
-              bufferMin={bufferMin}
-              onSchedule={(s) => {
-                setSchedule(s)
-                markDirty()
-              }}
-              onVacation={(v) => {
-                setVacation(v)
-                markDirty()
-              }}
-              onBuffer={(n) => {
-                setBufferMin(n)
-                markDirty()
-              }}
-            />
+            <div className="space-y-6">
+              <AvailabilityPane
+                t={t}
+                schedule={schedule}
+                vacation={vacation}
+                bufferMin={bufferMin}
+                onSchedule={(s) => {
+                  setSchedule(s)
+                  markDirty()
+                }}
+                onVacation={(v) => {
+                  setVacation(v)
+                  markDirty()
+                }}
+                onBuffer={(n) => {
+                  setBufferMin(n)
+                  markDirty()
+                }}
+              />
+              <TimeOffManager nutritionistId={currentUserId} />
+            </div>
           )}
 
           {tab === 'sessions' && (

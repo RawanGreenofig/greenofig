@@ -95,6 +95,7 @@ export const ADMIN_NAV: DashboardNavItem[] = [
   { href: '/admin/coupons',        labelKey: 'admin.coupons',      Icon: Gift },
   { href: '/admin/orders',         labelKey: 'admin.orders',       Icon: Package },
   { href: '/admin/bookings',       labelKey: 'admin.bookings',     Icon: Calendar },
+  { href: '/admin/availability',   labelKey: 'admin.availability', Icon: Calendar },
   { href: '/admin/content',        labelKey: 'admin.content',      Icon: PenLine },
   { href: '/admin/moderation',     labelKey: 'admin.moderation',   Icon: AlertOctagon },
   { href: '/admin/contacts',       labelKey: 'admin.contacts',     Icon: Mail },
@@ -115,10 +116,10 @@ export const ADMIN_NAV: DashboardNavItem[] = [
 export const ADMIN_MOBILE_TABS: DashboardNavItem[] = [
   ADMIN_NAV[0],  // Overview
   ADMIN_NAV[1],  // Users
-  ADMIN_NAV[11], // Analytics
-  ADMIN_NAV[7],  // Moderation
+  ADMIN_NAV[12], // Analytics
+  ADMIN_NAV[8],  // Moderation
 ]
-export const ADMIN_MOBILE_FAB = ADMIN_NAV[6] // Content — center FAB
+export const ADMIN_MOBILE_FAB = ADMIN_NAV[7] // Content — center FAB
 
 /** Top-level mobile tabs (4 + FAB). Picked from USER_NAV.
  * Layout: Home · Track | (Scanner FAB) | Meals · Profile  */

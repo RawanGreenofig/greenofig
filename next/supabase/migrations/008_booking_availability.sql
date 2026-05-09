@@ -73,9 +73,13 @@ create policy "bk_party_update"
     or public.get_my_role()::text = 'admin'
   );
 
--- 4) Status enum values the app already writes
-alter type appointment_status add value if not exists 'scheduled';
-alter type appointment_status add value if not exists 'noShow';
+-- 4) Status enum values the app already writes.
+--    Postgres requires `ALTER TYPE ADD VALUE` to run outside of the same
+--    transaction that creates the EXCLUDE constraint (which references
+--    `'cancelled'::appointment_status`). Apply these in a separate
+--    migration step — the live DB has them as migration 008b.
+--    For a fresh DB the values are added by the dedicated migration
+--    `008b_booking_status_values.sql`.
 
 -- 5) Nutritionist working hours, keyed by day-of-week (0=Sunday, 6=Saturday).
 --    The customer-facing availability picker reads this to know which slots
@@ -147,18 +151,29 @@ create policy "nto_write_own_or_admin"
 -- 7) Double-booking prevention: no two active bookings on the same
 --    nutritionist may share any second of time. Cancelled bookings are
 --    excluded so the slot reopens once cancelled.
+--
+--    `tstzrange(...)` and timestamptz arithmetic are STABLE in Postgres,
+--    but PG requires every expression in an EXCLUDE / index predicate to
+--    be IMMUTABLE. Wrap the range computation in a custom function we
+--    explicitly mark IMMUTABLE — the result is purely a function of its
+--    inputs.
+create or replace function public.booking_range(s timestamptz, dur int)
+returns tstzrange
+language sql
+immutable
+as $$
+  select tstzrange(s, s + make_interval(mins => dur))
+$$;
+
 do $$
 begin
   alter table public.bookings
     add constraint bookings_no_overlap
     exclude using gist (
       nutritionist_id with =,
-      tstzrange(
-        scheduled_at,
-        scheduled_at + (duration_min || ' min')::interval
-      ) with &&
+      public.booking_range(scheduled_at, duration_min) with &&
     )
-    where (status::text <> 'cancelled');
+    where (status <> 'cancelled'::appointment_status);
 exception
   when duplicate_object then null;
   when invalid_table_definition then null;
