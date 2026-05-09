@@ -244,6 +244,7 @@ export default function AdminOrdersPage() {
               order={o}
               expanded={openId === o.id}
               onToggle={() => setOpenId((c) => (c === o.id ? null : o.id))}
+              onRefunded={() => live.reload()}
             />
           ))}
         </ul>
@@ -258,13 +259,47 @@ function OrderRow({
   order,
   expanded,
   onToggle,
+  onRefunded,
 }: {
   tO: ReturnType<typeof useTranslations>
   tStatus: ReturnType<typeof useTranslations>
   order: AdminOrder
   expanded: boolean
   onToggle: () => void
+  onRefunded: () => void
 }) {
+  const [refunding, setRefunding] = useState(false)
+  const refund = async () => {
+    if (refunding) return
+    if (!confirm(`Refund order ${order.id}? This cannot be undone.`)) return
+    setRefunding(true)
+    try {
+      const res = await fetch('/api/admin/orders/refund', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ orderId: order.id }),
+      })
+      const data = (await res.json().catch(() => ({}))) as {
+        ok?: boolean
+        refundId?: string
+        error?: string | { message?: string }
+      }
+      if (res.ok && data.ok) {
+        onRefunded()
+      } else {
+        const msg =
+          typeof data.error === 'string'
+            ? data.error
+            : data.error?.message ?? `Refund failed (${res.status})`
+        alert(msg)
+      }
+    } catch {
+      alert('Network error during refund.')
+    } finally {
+      setRefunding(false)
+    }
+  }
+
   const meta = STATUS_META[order.status]
   return (
     <li className="bg-surface">
@@ -331,13 +366,13 @@ function OrderRow({
               <>
                 <button
                   type="button"
-                  disabled
-                  title="Refund flow not yet wired — process refunds in the Stripe dashboard for now"
-                  className="inline-flex items-center gap-1.5 rounded-pill bg-amber-500/15 h-9 px-4 text-xs font-semibold opacity-50 cursor-not-allowed"
+                  onClick={refund}
+                  disabled={refunding}
+                  className="inline-flex items-center gap-1.5 rounded-pill bg-amber-500/15 h-9 px-4 text-xs font-semibold hover:bg-amber-500/25 disabled:opacity-50 disabled:cursor-wait"
                   style={{ color: '#e8912a' }}
                 >
                   <RotateCcw className="w-3 h-3" strokeWidth={1.75} />
-                  {tO('refund')}
+                  {refunding ? 'Refunding…' : tO('refund')}
                 </button>
                 <button
                   type="button"
