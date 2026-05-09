@@ -142,7 +142,7 @@ export async function POST(req: NextRequest) {
     return Response.json({ error: 'Could not save lead' }, { status: 500 })
   }
 
-  const leadId = data.id as string
+  const leadId = (data as { id: string }).id
   const ebookUrl = '/ebooks/greenofig-healthy-habits.pdf'
 
   // Fire-and-forget the thank-you email; if it fails the lead still
