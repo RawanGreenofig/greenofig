@@ -116,9 +116,15 @@ async function openBillingPortal(): Promise<void> {
     toast.error('Network error — please try again')
     return
   }
-  let data: { url?: string; error?: string } = {}
+  // The /api/stripe/portal route returns either { url } on success or
+  // { error: { code, message } } on failure (jsonError shape). Coerce
+  // any error variant — string OR object — to a plain string for toast.
+  let data: {
+    url?: string
+    error?: string | { code?: string; message?: string }
+  } = {}
   try {
-    data = (await res.json()) as { url?: string; error?: string }
+    data = await res.json()
   } catch {
     /* non-JSON body — fall through with empty `data` */
   }
@@ -130,7 +136,11 @@ async function openBillingPortal(): Promise<void> {
     }
     return
   }
-  toast.error(data.error ?? `Could not open billing portal (${res.status})`)
+  const message =
+    typeof data.error === 'string'
+      ? data.error
+      : data.error?.message ?? `Could not open billing portal (${res.status})`
+  toast.error(message)
 }
 
 const containerVariants = {
@@ -1139,6 +1149,18 @@ function SubscriptionPane({
     if (upgrading || target === safeTier) return
     setUpgrading(true)
     try {
+      // If the user already has a paid subscription, switching tiers
+      // (e.g. premium → vip) belongs in the billing portal so Stripe
+      // handles proration and prevents creating a duplicate sub.
+      // Free → paid is the only case that goes through Checkout.
+      const isUpgradeOnExistingSub =
+        safeTier === 'basic' || safeTier === 'premium' || safeTier === 'vip'
+
+      if (isUpgradeOnExistingSub) {
+        await openBillingPortal()
+        return
+      }
+
       const origin = window.location.origin
       const res = await fetch('/api/stripe/checkout', {
         method: 'POST',
