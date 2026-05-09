@@ -29,6 +29,7 @@ import {
   CartesianGrid,
 } from 'recharts'
 import { Link } from '@/i18n/navigation'
+import { Avatar } from '@/components/Avatar'
 import { useSupabaseQuery } from '@/lib/hooks/useSupabaseQuery'
 import type { Tier } from '@/lib/constants'
 import { DemoAccountsCard } from '@/components/admin/DemoAccountsCard'
@@ -369,15 +370,7 @@ export default function AdminOverviewPage() {
                   key={s.id}
                   className="flex items-center gap-3 px-5 py-3 hover:bg-surface-raised transition-colors"
                 >
-                  <span
-                    className="shrink-0 w-9 h-9 rounded-full inline-flex items-center justify-center font-display text-xs font-bold"
-                    style={{
-                      background: 'linear-gradient(135deg,#5c7262,#2c3e35)',
-                      color: 'var(--gf-fg-1)',
-                    }}
-                  >
-                    {s.initials}
-                  </span>
+                  <Avatar text={s.initials} size={36} />
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-fg-1 truncate">
                       {s.name}

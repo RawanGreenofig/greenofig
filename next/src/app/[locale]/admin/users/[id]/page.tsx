@@ -24,6 +24,7 @@ import {
   type LucideIcon,
 } from '@/icons'
 import { Link } from '@/i18n/navigation'
+import { Avatar } from '@/components/Avatar'
 import { useSupabaseQuery } from '@/lib/hooks/useSupabaseQuery'
 import { TIERS, type Tier } from '@/lib/constants'
 
@@ -215,15 +216,7 @@ export default function AdminUserDetailPage() {
       <header className="rounded-xl border border-border bg-surface p-5 md:p-6">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="flex items-start gap-4 min-w-0">
-            <span
-              className="shrink-0 w-16 h-16 rounded-full inline-flex items-center justify-center font-display text-xl font-bold"
-              style={{
-                background: 'linear-gradient(135deg,#5c7262,#2c3e35)',
-                color: '#f0ede6',
-              }}
-            >
-              {profile.initials}
-            </span>
+            <Avatar text={profile.initials} size={64} />
             <div className="min-w-0">
               <h1
                 className="font-display font-bold text-fg-1 tracking-tight"

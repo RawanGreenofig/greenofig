@@ -269,36 +269,56 @@ function OrderRow({
   onRefunded: () => void
 }) {
   const [refunding, setRefunding] = useState(false)
-  const refund = async () => {
-    if (refunding) return
-    if (!confirm(`Refund order ${order.id}? This cannot be undone.`)) return
-    setRefunding(true)
+  const [cancelling, setCancelling] = useState(false)
+
+  const callAction = async (
+    path: string,
+    confirmMsg: string,
+    setBusy: (v: boolean) => void,
+    onSuccess: () => void,
+  ) => {
+    if (!confirm(confirmMsg)) return
+    setBusy(true)
     try {
-      const res = await fetch('/api/admin/orders/refund', {
+      const res = await fetch(path, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ orderId: order.id }),
       })
       const data = (await res.json().catch(() => ({}))) as {
         ok?: boolean
-        refundId?: string
         error?: string | { message?: string }
       }
       if (res.ok && data.ok) {
-        onRefunded()
+        onSuccess()
       } else {
         const msg =
           typeof data.error === 'string'
             ? data.error
-            : data.error?.message ?? `Refund failed (${res.status})`
+            : data.error?.message ?? `Action failed (${res.status})`
         alert(msg)
       }
     } catch {
-      alert('Network error during refund.')
+      alert('Network error.')
     } finally {
-      setRefunding(false)
+      setBusy(false)
     }
   }
+
+  const refund = () =>
+    callAction(
+      '/api/admin/orders/refund',
+      `Refund order ${order.id}? This cannot be undone.`,
+      setRefunding,
+      onRefunded,
+    )
+  const cancelOrder = () =>
+    callAction(
+      '/api/admin/orders/cancel',
+      `Cancel order ${order.id}?`,
+      setCancelling,
+      onRefunded, // same reload callback; the live query refetches and the row moves to the cancelled filter
+    )
 
   const meta = STATUS_META[order.status]
   return (
@@ -349,43 +369,55 @@ function OrderRow({
         />
       </button>
       {expanded && (
-        <div className="border-t border-border bg-bg-deeper/30 px-5 py-4 flex flex-wrap items-center justify-between gap-3 text-xs text-fg-2 font-mono" dir="ltr">
-          <span>
-            placed {new Date(order.placedISO).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
-          </span>
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              disabled
-              title="Coming soon"
-              className="inline-flex items-center gap-1.5 rounded-pill bg-surface-raised border border-border h-9 px-4 text-xs font-semibold text-fg-1 opacity-50 cursor-not-allowed"
-            >
-              {tO('viewDetails')}
-            </button>
-            {order.status !== 'refunded' && order.status !== 'cancelled' && (
-              <>
+        <div className="border-t border-border bg-bg-deeper/30 px-5 py-4 space-y-3 text-xs text-fg-2">
+          <div className="flex flex-wrap items-center gap-x-6 gap-y-2 font-mono" dir="ltr">
+            <span>
+              <span className="text-fg-3">placed </span>
+              {new Date(order.placedISO).toLocaleDateString(undefined, {
+                month: 'short',
+                day: 'numeric',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+              })}
+            </span>
+            <span>
+              <span className="text-fg-3">customer </span>
+              {order.customerEmail || order.customerName}
+            </span>
+            <span>
+              <span className="text-fg-3">items </span>
+              {order.itemCount}
+            </span>
+            <span>
+              <span className="text-fg-3">total </span>${order.total.toFixed(2)}
+            </span>
+          </div>
+          {order.status !== 'refunded' && order.status !== 'cancelled' && (
+            <div className="flex items-center gap-2">
+              {(order.status === 'pending' || order.status === 'processing') && (
                 <button
                   type="button"
-                  onClick={refund}
-                  disabled={refunding}
-                  className="inline-flex items-center gap-1.5 rounded-pill bg-amber-500/15 h-9 px-4 text-xs font-semibold hover:bg-amber-500/25 disabled:opacity-50 disabled:cursor-wait"
-                  style={{ color: '#e8912a' }}
-                >
-                  <RotateCcw className="w-3 h-3" strokeWidth={1.75} />
-                  {refunding ? 'Refunding…' : tO('refund')}
-                </button>
-                <button
-                  type="button"
-                  disabled
-                  title="Coming soon"
-                  className="inline-flex items-center gap-1.5 rounded-pill bg-rose-500/15 text-rose-400 h-9 px-4 text-xs font-semibold opacity-50 cursor-not-allowed"
+                  onClick={cancelOrder}
+                  disabled={cancelling || refunding}
+                  className="inline-flex items-center gap-1.5 rounded-pill bg-rose-500/15 text-rose-400 h-9 px-4 text-xs font-semibold hover:bg-rose-500/25 disabled:opacity-50 disabled:cursor-wait"
                 >
                   <XCircle className="w-3 h-3" strokeWidth={1.75} />
-                  {tO('cancel')}
+                  {cancelling ? 'Cancelling…' : tO('cancel')}
                 </button>
-              </>
-            )}
-          </div>
+              )}
+              <button
+                type="button"
+                onClick={refund}
+                disabled={refunding || cancelling}
+                className="inline-flex items-center gap-1.5 rounded-pill bg-amber-500/15 h-9 px-4 text-xs font-semibold hover:bg-amber-500/25 disabled:opacity-50 disabled:cursor-wait"
+                style={{ color: '#e8912a' }}
+              >
+                <RotateCcw className="w-3 h-3" strokeWidth={1.75} />
+                {refunding ? 'Refunding…' : tO('refund')}
+              </button>
+            </div>
+          )}
         </div>
       )}
     </li>

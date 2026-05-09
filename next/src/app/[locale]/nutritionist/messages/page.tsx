@@ -14,6 +14,7 @@ import {
 } from '@/icons'
 import type { Tier } from '@/lib/constants'
 import { useUser } from '@/lib/hooks/useUser'
+import { Avatar } from '@/components/Avatar'
 import { getBrowserSupabase } from '@/lib/supabase/client'
 
 function initialsOf(name: string): string {
@@ -619,19 +620,7 @@ function ClientAvatar({
   initials: string
   small?: boolean
 }) {
-  return (
-    <span
-      className={`shrink-0 rounded-full inline-flex items-center justify-center font-display font-bold ${
-        small ? 'w-9 h-9 text-xs' : 'w-11 h-11 text-sm'
-      }`}
-      style={{
-        background: 'linear-gradient(135deg,#5c7262,#2c3e35)',
-        color: '#f0ede6',
-      }}
-    >
-      {initials}
-    </span>
-  )
+  return <Avatar text={initials} size={small ? 36 : 44} />
 }
 
 function Bubble({

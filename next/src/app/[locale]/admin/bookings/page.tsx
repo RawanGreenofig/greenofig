@@ -18,6 +18,7 @@ import {
   type LucideIcon,
 } from '@/icons'
 import { useSupabaseQuery } from '@/lib/hooks/useSupabaseQuery'
+import { Avatar } from '@/components/Avatar'
 
 type Status = 'scheduled' | 'completed' | 'cancelled' | 'noShow'
 type SessionType = 'introCall' | 'followUp' | 'deepDive'
@@ -264,12 +265,7 @@ function Row({ tB, booking }: { tB: ReturnType<typeof useTranslations>; booking:
       {/* Client */}
       <Cell label={tB('col.client')}>
         <div className="flex items-center gap-2 min-w-0">
-          <span
-            className="shrink-0 w-7 h-7 rounded-full inline-flex items-center justify-center font-display text-[10px] font-bold"
-            style={{ background: 'linear-gradient(135deg,#5c7262,#2c3e35)', color: '#f0ede6' }}
-          >
-            {booking.clientInitials}
-          </span>
+          <Avatar text={booking.clientInitials} size={28} />
           <div className="min-w-0">
             <p className="text-sm text-fg-1 truncate">{booking.client}</p>
             <p className="text-[10px] text-fg-3 font-mono truncate" dir="ltr">

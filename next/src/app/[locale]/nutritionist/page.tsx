@@ -361,15 +361,7 @@ function SessionItem({
 
   return (
     <li className="flex items-center gap-4 py-3 first:pt-0 last:pb-0">
-      <span
-        className="shrink-0 w-11 h-11 rounded-full flex items-center justify-center font-display text-sm font-bold"
-        style={{
-          background: 'linear-gradient(135deg,#5c7262,#2c3e35)',
-          color: '#f0ede6',
-        }}
-      >
-        {session.clientInitials}
-      </span>
+      <Avatar text={session.clientInitials} size={44} />
       <div className="flex-1 min-w-0">
         <p className="text-sm font-semibold text-fg-1 truncate">
           {session.clientName}

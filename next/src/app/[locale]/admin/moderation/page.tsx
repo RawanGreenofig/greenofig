@@ -15,6 +15,7 @@ import {
   type LucideIcon,
 } from '@/icons'
 import { getBrowserSupabase } from '@/lib/supabase/client'
+import { Avatar } from '@/components/Avatar'
 
 type Reason = 'spam' | 'harassment' | 'misinformation' | 'inappropriate' | 'off_topic' | 'other'
 type Severity = 'low' | 'medium' | 'high'
@@ -372,15 +373,7 @@ function FlagCard({
 
       <div className="mt-4 rounded-lg bg-bg-deeper/40 border border-border p-4">
         <div className="flex items-center gap-2 mb-2">
-          <span
-            className="shrink-0 w-7 h-7 rounded-full inline-flex items-center justify-center font-display text-[10px] font-bold"
-            style={{
-              background: 'linear-gradient(135deg,#5c7262,#2c3e35)',
-              color: '#f0ede6',
-            }}
-          >
-            {item.authorInitials}
-          </span>
+          <Avatar text={item.authorInitials} size={28} />
           <p className="text-xs text-fg-2">{item.authorName}</p>
         </div>
         <p className="text-sm text-fg-1 leading-relaxed">{item.body}</p>
