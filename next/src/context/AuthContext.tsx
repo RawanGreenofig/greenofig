@@ -187,20 +187,37 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [supabase, refresh, fetchAndApplyProfile])
 
   const signOut = useCallback(async () => {
-    if (!supabase) return
-    // Sign out at Supabase + scope=local also wipes the localStorage
-    // session so the next page render can't read it back. Without this,
-    // some setups left the cookie behind and the user appeared "signed
-    // back in" on the next protected page.
-    await supabase.auth.signOut({ scope: 'local' })
+    // The redirect must run even if anything below throws — otherwise
+    // the user gets "stuck" with React state showing them as still
+    // signed in. Wrap every supabase call in try/catch and always fall
+    // through to the hard navigation at the end.
+    try {
+      // Sign out on the server (revoke session + clear cookies). 'global'
+      // ensures we hit Supabase even when the local session is the only
+      // copy. Wrapped because some configs throw when there's no session.
+      await supabase?.auth.signOut({ scope: 'global' })
+    } catch {
+      /* fall through — local cleanup + redirect still happen */
+    }
+    // Clear all local React + cached state.
     setSession(null)
     setProfile(null)
     setTier(null)
     clearCachedTier()
-    // Hard-redirect to the marketing home so the middleware sees no
-    // cookie and protected components don't try to render with stale
-    // state during the React unmount.
+    // Wipe any lingering supabase tokens from localStorage. supabase-js
+    // stores them under sb-<project-ref>-auth-token; nuke any key
+    // starting with sb- to be exhaustive.
     if (typeof window !== 'undefined') {
+      try {
+        for (let i = window.localStorage.length - 1; i >= 0; i -= 1) {
+          const k = window.localStorage.key(i)
+          if (k && k.startsWith('sb-')) window.localStorage.removeItem(k)
+        }
+      } catch {
+        /* private mode / disabled — fine */
+      }
+      // Hard-redirect to the marketing home so the middleware sees no
+      // cookie and no protected component lingers in memory.
       window.location.href = '/'
     }
   }, [supabase])

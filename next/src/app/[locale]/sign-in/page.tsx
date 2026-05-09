@@ -63,6 +63,18 @@ export default function SignInPage() {
         : role === 'nutritionist'
           ? '/nutritionist'
           : '/dashboard'
+    // Wipe any cached tier from a previous account on this device. The
+    // never-downgrade rule in AuthContext otherwise stamps a stale 'vip'
+    // tier onto the new sign-in (e.g. admin signing in after a VIP demo
+    // session would briefly chrome the dashboard as VIP).
+    if (typeof window !== 'undefined') {
+      try {
+        window.localStorage.removeItem('gf_tier')
+        window.localStorage.removeItem('gf_tier_ts')
+      } catch {
+        /* private mode — fine */
+      }
+    }
     toast.success(t('signInTitle'))
     router.replace(dest)
   }
