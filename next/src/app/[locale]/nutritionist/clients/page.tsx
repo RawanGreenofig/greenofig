@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from 'react'
 import { useTranslations } from 'next-intl'
+import toast from 'react-hot-toast'
 import { Avatar } from '@/components/Avatar'
 import {
   Search,
@@ -14,6 +15,10 @@ import {
   TrendingUp,
   Minus,
   Users,
+  CheckCircle2,
+  AlertTriangle,
+  Moon,
+  X,
   type LucideIcon,
 } from '@/icons'
 import { Link } from '@/i18n/navigation'
@@ -178,7 +183,19 @@ export default function ClientsListPage() {
     return rows
   }, [sourceList, query, statusFilter, tierFilter, sort])
 
-  const activeCount = sourceList.filter((c) => c.status !== 'inactive').length
+  const counts = useMemo(() => {
+    let onTrack = 0
+    let atRisk = 0
+    let inactive = 0
+    for (const c of sourceList) {
+      if (c.status === 'onTrack') onTrack += 1
+      else if (c.status === 'atRisk') atRisk += 1
+      else inactive += 1
+    }
+    return { total: sourceList.length, onTrack, atRisk, inactive }
+  }, [sourceList])
+
+  const [inviteOpen, setInviteOpen] = useState(false)
 
   return (
     <div className="px-4 md:px-8 py-6 md:py-8 max-w-screen-xl mx-auto space-y-6">
@@ -191,14 +208,11 @@ export default function ClientsListPage() {
             {t('subtitle').split('—')[0]?.trim() || 'My Clients'}
           </h1>
           <p className="mt-2 text-sm md:text-base text-fg-2">{t('subtitle')}</p>
-          <p className="mt-2 text-xs text-fg-3 inline-flex items-center gap-1.5">
-            <Users className="w-3 h-3" strokeWidth={2} />
-            {t('active', { count: activeCount })}
-          </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <button
             type="button"
+            onClick={() => exportClientsCsv(visible)}
             className="inline-flex items-center gap-1.5 rounded-pill bg-surface-raised border border-border h-10 px-4 text-xs font-semibold text-fg-1 hover:border-primary/40"
           >
             <Download className="w-3.5 h-3.5" strokeWidth={1.75} />
@@ -206,6 +220,7 @@ export default function ClientsListPage() {
           </button>
           <button
             type="button"
+            onClick={() => setInviteOpen(true)}
             className="inline-flex items-center gap-1.5 rounded-pill bg-gradient-to-b from-lime-400 to-lime-600 text-bg font-semibold h-10 px-4 text-xs shadow-lime-glow border border-lime-600/60 hover:-translate-y-px transition-transform"
           >
             <UserPlus className="w-3.5 h-3.5" strokeWidth={2} />
@@ -213,6 +228,34 @@ export default function ClientsListPage() {
           </button>
         </div>
       </header>
+
+      {/* KPI strip — quick read on the entire client roster */}
+      <section className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <KpiCard
+          Icon={Users}
+          tint="#60a5fa"
+          label="Total clients"
+          value={counts.total}
+        />
+        <KpiCard
+          Icon={CheckCircle2}
+          tint="#a3e635"
+          label="On track"
+          value={counts.onTrack}
+        />
+        <KpiCard
+          Icon={AlertTriangle}
+          tint="#fb923c"
+          label="At risk"
+          value={counts.atRisk}
+        />
+        <KpiCard
+          Icon={Moon}
+          tint="#9baf9f"
+          label="Inactive"
+          value={counts.inactive}
+        />
+      </section>
 
       {/* Search + filters */}
       <div className="space-y-3">
@@ -276,6 +319,202 @@ export default function ClientsListPage() {
           rows={visible}
         />
       )}
+
+      {inviteOpen && (
+        <InviteClientModal
+          onClose={() => setInviteOpen(false)}
+          onInvited={() => {
+            setInviteOpen(false)
+            live.reload()
+          }}
+        />
+      )}
+    </div>
+  )
+}
+
+function KpiCard({
+  Icon,
+  tint,
+  label,
+  value,
+}: {
+  Icon: LucideIcon
+  tint: string
+  label: string
+  value: number
+}) {
+  return (
+    <article
+      className="rounded-xl border border-border bg-surface p-4"
+      style={{ boxShadow: `inset 4px 0 0 ${tint}` }}
+    >
+      <div className="flex items-center gap-2">
+        <Icon className="w-4 h-4" strokeWidth={1.75} style={{ color: tint }} />
+        <p className="text-[11px] uppercase tracking-eyebrow text-fg-3 font-semibold">
+          {label}
+        </p>
+      </div>
+      <p
+        className="mt-2 font-display text-2xl font-bold"
+        style={{ color: tint }}
+      >
+        {value.toLocaleString()}
+      </p>
+    </article>
+  )
+}
+
+function exportClientsCsv(rows: Client[]): void {
+  const header =
+    'name,email,tier,status,last_log_hours,weight_delta_kg,has_plan,joined_days_ago\n'
+  const cell = (v: unknown): string => {
+    const s = v == null ? '' : String(v)
+    return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s
+  }
+  const body = rows
+    .map((r) =>
+      [
+        r.name,
+        r.email,
+        r.tier,
+        r.status,
+        Math.round(r.lastLogHours),
+        r.weightDelta,
+        r.hasPlan ? 'yes' : 'no',
+        r.joinedDaysAgo,
+      ]
+        .map(cell)
+        .join(','),
+    )
+    .join('\n')
+  const blob = new Blob([header + body], { type: 'text/csv' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = `greenofig-clients-${new Date().toISOString().slice(0, 10)}.csv`
+  a.click()
+  URL.revokeObjectURL(url)
+}
+
+function InviteClientModal({
+  onClose,
+  onInvited,
+}: {
+  onClose: () => void
+  onInvited: () => void
+}) {
+  const [email, setEmail] = useState('')
+  const [tier, setTier] = useState<Tier>('free')
+  const [busy, setBusy] = useState(false)
+
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (busy) return
+    setBusy(true)
+    try {
+      const res = await fetch('/api/admin/users/invite', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email.trim(), role: 'user', tier }),
+      })
+      const data = (await res.json().catch(() => ({}))) as {
+        ok?: boolean
+        error?: string | { message?: string }
+      }
+      if (res.ok && data.ok) {
+        toast.success(`Invite sent to ${email}`)
+        onInvited()
+      } else {
+        const msg =
+          typeof data.error === 'string'
+            ? data.error
+            : data.error?.message ?? 'Could not send invite'
+        toast.error(msg)
+      }
+    } catch {
+      toast.error('Network error')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }}
+      onClick={(e) => e.target === e.currentTarget && onClose()}
+    >
+      <form
+        onSubmit={submit}
+        className="w-full max-w-md rounded-2xl border border-border bg-surface p-6 space-y-5"
+      >
+        <header className="flex items-start justify-between gap-3">
+          <div>
+            <h2 className="text-lg font-bold text-fg-1">Invite a client</h2>
+            <p className="mt-1 text-xs text-fg-3">
+              They&apos;ll get a magic-link email to claim the account.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="text-fg-3 hover:text-fg-1"
+            aria-label="Close"
+          >
+            <X className="w-5 h-5" strokeWidth={1.75} />
+          </button>
+        </header>
+
+        <label className="block">
+          <span className="text-xs uppercase tracking-eyebrow text-fg-3 font-semibold mb-1.5 block">
+            Email
+          </span>
+          <input
+            type="email"
+            required
+            autoFocus
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="client@example.com"
+            className="w-full h-10 rounded-md bg-bg-deeper border border-border px-3 text-sm text-fg-1 placeholder-fg-3 focus:outline-none focus:border-primary"
+          />
+        </label>
+
+        <label className="block">
+          <span className="text-xs uppercase tracking-eyebrow text-fg-3 font-semibold mb-1.5 block">
+            Starting tier
+          </span>
+          <select
+            value={tier}
+            onChange={(e) => setTier(e.target.value as Tier)}
+            className="w-full h-10 rounded-md bg-bg-deeper border border-border px-3 text-sm text-fg-1 focus:outline-none focus:border-primary"
+          >
+            <option value="free">Free</option>
+            <option value="basic">Basic</option>
+            <option value="premium">Premium</option>
+            <option value="vip">VIP</option>
+          </select>
+        </label>
+
+        <div className="flex items-center justify-end gap-2 pt-2">
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-pill bg-surface-raised border border-border h-9 px-4 text-xs font-semibold text-fg-1 hover:border-primary/40"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            disabled={busy}
+            className="inline-flex items-center gap-1.5 rounded-pill bg-gradient-to-b from-lime-400 to-lime-600 text-bg font-semibold h-9 px-4 text-xs shadow-lime-glow border border-lime-600/60 disabled:opacity-50 disabled:cursor-wait"
+          >
+            <UserPlus className="w-3.5 h-3.5" strokeWidth={2} />
+            {busy ? 'Sending…' : 'Send invite'}
+          </button>
+        </div>
+      </form>
     </div>
   )
 }
@@ -377,10 +616,11 @@ function ClientTable({
       </div>
       <ul className="divide-y divide-border">
         {rows.map((c) => (
-          <li
-            key={c.id}
-            className="md:grid md:grid-cols-[2fr_1fr_1fr_1fr_1fr_1fr_auto] gap-3 items-center px-5 py-3 hover:bg-surface-raised transition-colors"
-          >
+          <li key={c.id} className="hover:bg-surface-raised transition-colors">
+            <Link
+              href={`/nutritionist/clients/${c.id}` as `/nutritionist/clients/${string}`}
+              className="md:grid md:grid-cols-[2fr_1fr_1fr_1fr_1fr_1fr_auto] gap-3 items-center px-5 py-3 cursor-pointer"
+            >
             {/* Client */}
             <div className="flex items-center gap-3 min-w-0 mb-3 md:mb-0">
               <Avatar text={c.initials} size={36} />
@@ -458,16 +698,12 @@ function ClientTable({
               )}
             </div>
 
-            {/* Actions */}
-            <div className="md:justify-self-end">
-              <Link
-                href={`/nutritionist/clients/${c.id}`}
-                className="inline-flex items-center gap-1.5 rounded-pill bg-surface-raised border border-border h-9 px-4 text-xs font-semibold text-fg-1 hover:border-primary/40"
-              >
-                {t('openProfile')}
-                <ArrowRight className="w-3.5 h-3.5 rtl:rotate-180" strokeWidth={2} />
-              </Link>
+            {/* Affordance — the row itself is the link, this is just the visual */}
+            <div className="md:justify-self-end flex items-center gap-1 text-xs text-fg-3">
+              <span className="hidden md:inline">{t('openProfile')}</span>
+              <ArrowRight className="w-3.5 h-3.5 rtl:rotate-180" strokeWidth={2} />
             </div>
+            </Link>
           </li>
         ))}
       </ul>
