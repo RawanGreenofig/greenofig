@@ -157,6 +157,9 @@ export default function ContentPage() {
         id: string
         title: string
         content: string | null
+        excerpt: string | null
+        audience: string | null
+        hue: string | null
         type: Category
         is_published: boolean
         scheduled_at: string | null
@@ -168,7 +171,7 @@ export default function ContentPage() {
       const { data } = await supabase
         .from('posts')
         .select(
-          'id, title, content, type, is_published, scheduled_at, published_at, views, reactions, image_url',
+          'id, title, content, excerpt, audience, hue, type, is_published, scheduled_at, published_at, views, reactions, image_url',
         )
         .eq('author_id', profile.id)
         .order('updated_at', { ascending: false })
@@ -188,16 +191,16 @@ export default function ContentPage() {
           return {
             id: r.id,
             title: r.title,
-            excerpt: '',
+            excerpt: r.excerpt ?? '',
             body: r.content ?? '',
             category: r.type,
             status,
-            audience: 'all' as Audience,
+            audience: ((r.audience as Audience) ?? 'all'),
             publishAt,
             views: r.views ?? 0,
             likes: reactions.likes ?? 0,
             comments: reactions.comments ?? 0,
-            hue: 'rgb(163 230 53 / 0.18)',
+            hue: r.hue ?? 'rgb(163 230 53 / 0.18)',
             imageUrl: r.image_url ?? undefined,
           }
         }),
@@ -254,13 +257,16 @@ export default function ContentPage() {
     const supabase = getBrowserSupabase()
     if (!supabase || !profile?.id) return
     const isExisting = /^[0-9a-f-]{32,}$/i.test(final.id)
-    // Translate UI fields → DB columns. excerpt/audience/comments/hue
-    // don't have DB equivalents and are local UI only.
+    // Translate UI fields → DB columns. comments has no DB column
+    // (sourced from reactions jsonb on read).
     const isScheduled = status === 'scheduled' && final.publishAt
     const row = {
       author_id: profile.id,
       title: final.title,
       content: final.body || null,
+      excerpt: final.excerpt || null,
+      audience: final.audience,
+      hue: final.hue,
       type: final.category,
       is_published: status === 'published',
       scheduled_at: isScheduled ? final.publishAt : null,

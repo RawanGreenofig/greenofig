@@ -285,11 +285,13 @@ function PlanView({ t }: { t: ReturnType<typeof useTranslations> }) {
       cook_time_minutes: number
       servings: number
       description: string | null
+      category: string | null
+      hue: string | null
     }
     const { data: recipeRows } = recipeIds.length
       ? await supabase
           .from('recipes')
-          .select('id, title, ingredients, instructions, prep_time_minutes, cook_time_minutes, servings, description')
+          .select('id, title, ingredients, instructions, prep_time_minutes, cook_time_minutes, servings, description, category, hue')
           .in('id', recipeIds)
       : { data: [] }
     const recipes = (recipeRows as RecipeRow[] | null) ?? []

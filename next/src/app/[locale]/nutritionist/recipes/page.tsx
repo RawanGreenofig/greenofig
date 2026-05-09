@@ -185,11 +185,13 @@ export default function RecipeBuilderPage() {
         is_published: boolean
         image_url: string | null
         description: string | null
+        category: string | null
+        hue: string | null
       }
       const { data } = await supabase
         .from('recipes')
         .select(
-          'id, title, servings, prep_time_minutes, cook_time_minutes, dietary_tags, ingredients, instructions, is_published, image_url, description',
+          'id, title, servings, prep_time_minutes, cook_time_minutes, dietary_tags, ingredients, instructions, is_published, image_url, description, category, hue',
         )
         .or(`created_by.eq.${profile.id},is_published.eq.true`)
         .order('created_at', { ascending: false })
@@ -200,7 +202,11 @@ export default function RecipeBuilderPage() {
       const next: Recipe[] = rows.map((r) => ({
         id: r.id,
         name: r.title,
-        category: 'lunch' as Category,
+        category: (
+          ['breakfast','lunch','dinner','snack','drink'].includes(r.category ?? '')
+            ? (r.category as Category)
+            : 'lunch'
+        ),
         servings: r.servings,
         prepMin: r.prep_time_minutes,
         cookMin: r.cook_time_minutes,
@@ -213,7 +219,7 @@ export default function RecipeBuilderPage() {
         steps: Array.isArray(r.instructions) ? (r.instructions as Step[]) : [],
         drNote: r.description ?? '',
         status: r.is_published ? 'published' : 'draft',
-        hue: 'rgb(132 204 22 / 0.18)',
+        hue: r.hue ?? 'rgb(132 204 22 / 0.18)',
         imageUrl: r.image_url ?? undefined,
       }))
       setRecipes(next)
@@ -264,11 +270,13 @@ export default function RecipeBuilderPage() {
     const supabase = getBrowserSupabase()
     if (!supabase || !profile?.id) return
     const isExisting = /^[0-9a-f-]{32,}$/i.test(final.id)
-    // Translate UI fields → DB columns. category/hue/status text are
-    // local-only; status maps to is_published, drNote into description.
+    // Translate UI fields → DB columns. status maps to is_published,
+    // drNote into description.
     const row = {
       created_by: profile.id,
       title: final.name,
+      category: final.category,
+      hue: final.hue,
       servings: final.servings,
       prep_time_minutes: final.prepMin,
       cook_time_minutes: final.cookMin,
