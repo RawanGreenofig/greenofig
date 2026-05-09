@@ -100,13 +100,15 @@ export default function AdminContentPage() {
         published_at: string | null
         views: number | null
         reactions: { likes?: number; comments?: number } | null
+        pinned: boolean | null
         created_at: string
       }
       const { data: rows } = await supabase
         .from('posts')
         .select(
-          'id, author_id, title, type, is_published, scheduled_at, published_at, views, reactions, created_at',
+          'id, author_id, title, type, is_published, scheduled_at, published_at, views, reactions, pinned, created_at',
         )
+        .order('pinned', { ascending: false })
         .order('updated_at', { ascending: false })
         .limit(80)
       const list = (rows as PostRow[] | null) ?? []
@@ -150,7 +152,7 @@ export default function AdminContentPage() {
           views: r.views ?? 0,
           likes: reactions.likes ?? 0,
           comments: reactions.comments ?? 0,
-          pinned: false,
+          pinned: !!r.pinned,
           hue: CATEGORY_HUE[cat],
         }
       })
@@ -190,12 +192,21 @@ export default function AdminContentPage() {
   const isUuid = (id: string) => /^[0-9a-f-]{32,}$/i.test(id)
 
   const togglePin = (id: string) => {
-    // posts.pinned doesn't exist in the DB schema — UI-local only.
-    // Visual pin sticks for the session; will not persist across page
-    // reloads until a `pinned` column is added.
+    let nextPinned = false
     setPosts((curr) =>
-      curr.map((p) => (p.id === id ? { ...p, pinned: !p.pinned } : p)),
+      curr.map((p) => {
+        if (p.id !== id) return p
+        nextPinned = !p.pinned
+        return { ...p, pinned: nextPinned }
+      }),
     )
+    const supabase = getBrowserSupabase()
+    if (supabase && isUuid(id)) {
+      void supabase
+        .from('posts')
+        .update({ pinned: nextPinned } as never)
+        .eq('id', id)
+    }
   }
 
   const remove = (id: string) => {

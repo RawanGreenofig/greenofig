@@ -87,6 +87,11 @@ export async function POST(req: NextRequest) {
         await handlePaymentIntentSucceeded(pi, service)
         break
       }
+      case 'charge.refunded': {
+        const charge = event.data.object as Stripe.Charge
+        await handleChargeRefunded(charge, service)
+        break
+      }
       default:
         // Unknown event types are acknowledged with 200 so Stripe doesn't retry.
         break
@@ -388,6 +393,55 @@ async function handlePaymentIntentSucceeded(
   // Currently a no-op — checkout.session.completed already records orders.
   // Reserved for future flows (e.g. saved-card off-session charges for
   // recurring product top-ups).
+}
+
+/** charge.refunded — fired both when admin issues a refund through our
+ *  /api/admin/orders/refund route AND when an admin refunds directly in
+ *  the Stripe dashboard. We dedupe by checking the local order's status
+ *  (the in-app refund flips it synchronously, so the second call here is
+ *  a no-op). For dashboard-initiated refunds this is the only path that
+ *  flips orders.status — without it the in-app order list would still
+ *  show 'processing' for a refunded charge. */
+async function handleChargeRefunded(
+  charge: Stripe.Charge,
+  service: ServiceClient,
+) {
+  const piId = typeof charge.payment_intent === 'string'
+    ? charge.payment_intent
+    : charge.payment_intent?.id
+  if (!piId) return
+
+  type OrderRow = { id: string; status: string; user_id: string }
+  const { data: orderRow } = await service
+    .from('orders')
+    .select('id, status, user_id')
+    .eq('stripe_payment_intent_id', piId)
+    .maybeSingle()
+  const order = orderRow as OrderRow | null
+  if (!order || order.status === 'refunded') return
+
+  await service
+    .from('orders')
+    .update({ status: 'refunded' } as never)
+    .eq('id', order.id)
+
+  await service.from('audit_log').insert({
+    actor_id: null,
+    actor_role: 'system',
+    action: 'order_refunded_via_stripe',
+    resource_type: 'order',
+    resource_id: order.id,
+    new_value: { chargeId: charge.id, amountRefunded: charge.amount_refunded },
+  } as never)
+
+  await service.from('notifications').insert({
+    user_id: order.user_id,
+    type: 'order',
+    title: 'Order refunded',
+    body: 'Your order has been refunded. Funds will return to your card in 5-10 business days.',
+    data: { orderId: order.id },
+    is_read: false,
+  } as never)
 }
 
 /** Look up an internal user_id by email via the Supabase admin API.

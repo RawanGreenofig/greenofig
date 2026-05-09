@@ -85,20 +85,37 @@ export const POST = withNutritionistOrAdmin(
     const supabase = getServerSupabase()
     if (!supabase) return serviceUnavailable('Supabase')
 
-    // Pull recent docs as the document corpus. Cluster I switches this to
-    // pgvector similarity search via an RPC.
+    // Pull active docs as the document corpus. Real DB columns are
+    // filename + content_summary (the summary is what Gemini actually
+    // grounds the answer on; without it we'd just be feeding it
+    // titles). Cluster I will swap this for pgvector similarity.
+    type DocRow = {
+      id: string
+      filename: string
+      content_summary: string | null
+    }
     const { data: docs } = await supabase
       .from('research_documents')
-      .select('id, name')
+      .select('id, filename, content_summary')
+      .eq('is_active', true)
       .order('created_at', { ascending: false })
       .limit(8)
 
-    const corpus: { id: string; name: string }[] =
-      (docs as { id: string; name: string }[] | null) ?? []
+    const corpus: { id: string; name: string; summary: string }[] =
+      ((docs as DocRow[] | null) ?? []).map((d) => ({
+        id: d.id,
+        name: d.filename,
+        summary: d.content_summary ?? '',
+      }))
 
-    // Build context block for Gemini
+    // Build context block for Gemini — include the summary text when
+    // present so the model can cite real content rather than just the
+    // filename.
     const contextBlock = corpus
-      .map((d, i) => `[${i + 1}] ${d.name}\nDocument id: ${d.id}`)
+      .map((d, i) => {
+        const head = `[${i + 1}] ${d.name} (id: ${d.id})`
+        return d.summary ? `${head}\n${d.summary}` : head
+      })
       .join('\n\n')
 
     const userPrompt = corpus.length
@@ -124,7 +141,9 @@ export const POST = withNutritionistOrAdmin(
       )
     }
 
-    // Hydrate source names from corpus by docId
+    // Hydrate source names from corpus by docId. We only return docs
+    // that exist in the corpus we sent — Gemini sometimes hallucinates
+    // ids; flatMap silently drops those.
     const sources: ResearchSource[] = (parsed.sources ?? []).flatMap((s) => {
       const doc = corpus.find((d) => d.id === s.docId)
       if (!doc) return []
