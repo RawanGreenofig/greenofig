@@ -139,12 +139,15 @@ export async function POST(req: NextRequest) {
         tagsByReview.get(rid)!.add(t.name)
       }
     }
-    for (const [rid, tagSet] of tagsByReview) {
-      await supabase
-        .from('reviews')
-        .update({ auto_themes: Array.from(tagSet) } as never)
-        .eq('id', rid)
-    }
+    const entries = Array.from(tagsByReview.entries())
+    await Promise.all(
+      entries.map(([rid, tagSet]) =>
+        supabase
+          .from('reviews')
+          .update({ auto_themes: Array.from(tagSet) } as never)
+          .eq('id', rid),
+      ),
+    )
   }
 
   return Response.json({ themes, analyzed: reviews.length })
