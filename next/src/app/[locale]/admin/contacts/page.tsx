@@ -112,7 +112,7 @@ export default function AdminContactsPage() {
     if (next === 'replied') {
       patch.replied_at = new Date().toISOString()
     }
-    const { error } = await supabase.from('contact_messages').update(patch).eq('id', id)
+    const { error } = await supabase.from('contact_messages').update(patch as never).eq('id', id)
     if (error) console.error('[admin/contacts] update failed:', error)
     else reload()
   }

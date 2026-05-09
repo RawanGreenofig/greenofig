@@ -90,7 +90,7 @@ export async function POST(req: NextRequest) {
     marketing_opt_in: marketingOptIn,
     user_agent: userAgent,
     ip_country: ipCountry,
-  })
+  } as never)
 
   if (error) {
     console.error('[contact] insert failed:', error)

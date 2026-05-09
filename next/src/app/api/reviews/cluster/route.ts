@@ -141,7 +141,7 @@ export async function POST(req: NextRequest) {
     for (const [rid, tagSet] of tagsByReview) {
       await supabase
         .from('reviews')
-        .update({ auto_themes: Array.from(tagSet) })
+        .update({ auto_themes: Array.from(tagSet) } as never)
         .eq('id', rid)
     }
   }

@@ -176,7 +176,7 @@ export function LeadsPanel() {
     }
     const { error } = await supabase
       .from('consultation_leads')
-      .update(patch)
+      .update(patch as never)
       .eq('id', id)
     if (error) console.error('[leads] update failed:', error)
     else reload()
@@ -188,7 +188,7 @@ export function LeadsPanel() {
     if (!supabase) return
     const { error } = await supabase
       .from('consultation_leads')
-      .update({ notes })
+      .update({ notes } as never)
       .eq('id', id)
     if (error) console.error('[leads] notes save failed:', error)
     else reload()

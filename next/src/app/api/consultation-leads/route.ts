@@ -129,7 +129,7 @@ export async function POST(req: NextRequest) {
       ip_country: ipCountry,
       utm_source: utmSource,
       utm_campaign: utmCampaign,
-    })
+    } as never)
     .select('id')
     .single()
 
@@ -154,7 +154,7 @@ export async function POST(req: NextRequest) {
       if (sent && sb.hasServiceRole) {
         await supabase
           .from('consultation_leads')
-          .update({ thank_you_sent: true, ebook_sent: true })
+          .update({ thank_you_sent: true, ebook_sent: true } as never)
           .eq('id', leadId)
       }
     })

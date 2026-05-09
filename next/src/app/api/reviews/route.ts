@@ -182,7 +182,7 @@ export async function POST(req: NextRequest) {
       body: reviewBody,
       photo_paths: photoPaths,
       ip_country: ipCountry,
-    })
+    } as never)
     .select('id')
     .single()
 
