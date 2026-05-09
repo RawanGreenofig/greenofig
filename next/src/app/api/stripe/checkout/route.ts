@@ -230,7 +230,14 @@ export const POST = withAuth(async (req: NextRequest, ctx: AuthedContext) => {
     }
 
     return badRequest('Unknown kind.')
-  } catch {
+  } catch (err) {
+    console.error('[stripe/checkout] failed:', {
+      kind: body?.kind,
+      tier: body?.tier,
+      cycle: body?.cycle,
+      message: err instanceof Error ? err.message : String(err),
+      stack: err instanceof Error ? err.stack : undefined,
+    })
     return internalError()
   }
 })
