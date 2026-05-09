@@ -28,11 +28,11 @@ interface Product {
 }
 
 const PRODUCTS: Product[] = [
-  { Icon: Lightbulb, iconColor: 'var(--gf-lime-400)', name: 'Omega-3 Premium',    price: 'SAR 34.99', badge: 'pick' },
-  { Icon: Sun,       iconColor: 'var(--gf-amber)',    name: 'Vitamin D3 + K2',    price: 'SAR 28.99' },
-  { Icon: Heart,     iconColor: 'var(--gf-beet)',     name: 'Magnesium Complex',  price: 'SAR 32.99', badge: 'bestseller' },
-  { Icon: Rocket,    iconColor: 'var(--gf-lime-400)', name: 'Whey Protein Blend', price: 'SAR 59.99', badge: 'pick' },
-  { Icon: Play,      iconColor: 'var(--gf-fig-gold)', name: 'Collagen Peptides',  price: 'SAR 44.99' },
+  { Icon: Lightbulb, iconColor: 'var(--gf-lime-400)', name: 'Omega-3 Premium',    price: '$34.99', badge: 'pick' },
+  { Icon: Sun,       iconColor: 'var(--gf-amber)',    name: 'Vitamin D3 + K2',    price: '$28.99' },
+  { Icon: Heart,     iconColor: 'var(--gf-beet)',     name: 'Magnesium Complex',  price: '$32.99', badge: 'bestseller' },
+  { Icon: Rocket,    iconColor: 'var(--gf-lime-400)', name: 'Whey Protein Blend', price: '$59.99', badge: 'pick' },
+  { Icon: Play,      iconColor: 'var(--gf-fig-gold)', name: 'Collagen Peptides',  price: '$44.99' },
 ]
 
 export function StoreSection() {

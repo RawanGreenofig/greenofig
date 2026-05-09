@@ -40,7 +40,7 @@ export default function PrivacyPage() {
         <H2>حقوقك</H2>
         <P>
           يمكنك في أي وقت طلب نسخة من بياناتك، تصحيح المعلومات الخاطئة، أو حذف حسابك بالكامل.
-          راسلنا على support@greenofig.com لتقديم أي طلب.
+          راسلنا على health@greenofig.com لتقديم أي طلب.
         </P>
 
         <H2>الكوكيز والتتبّع</H2>
@@ -53,7 +53,7 @@ export default function PrivacyPage() {
         <P>غرينوفيغ غير مخصص لمن هم دون 18 عاماً. لا نجمع بيانات الأطفال عمداً.</P>
 
         <H2>التواصل</H2>
-        <P>لأي سؤال حول الخصوصية: support@greenofig.com</P>
+        <P>لأي سؤال حول الخصوصية: health@greenofig.com</P>
       </SimplePage>
     )
   }
@@ -81,7 +81,7 @@ export default function PrivacyPage() {
       <H2>Your rights</H2>
       <P>
         You can at any time request a copy of your data, correct inaccurate information, or
-        delete your account entirely. Email support@greenofig.com to make any request.
+        delete your account entirely. Email health@greenofig.com to make any request.
       </P>
 
       <H2>Cookies and tracking</H2>
@@ -94,7 +94,7 @@ export default function PrivacyPage() {
       <P>Greenofig is not intended for users under 18. We do not knowingly collect data from children.</P>
 
       <H2>Contact</H2>
-      <P>For any privacy question: support@greenofig.com</P>
+      <P>For any privacy question: health@greenofig.com</P>
     </SimplePage>
   )
 }

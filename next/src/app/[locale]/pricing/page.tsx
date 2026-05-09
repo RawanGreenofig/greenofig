@@ -4,7 +4,7 @@ import { useState } from 'react'
 import Image from 'next/image'
 import { useLocale } from 'next-intl'
 import { Link } from '@/i18n/navigation'
-import { Check, X, Plus, Minus } from 'lucide-react'
+import { Check, X, Plus, Minus, Sparkles, Leaf, Star, Crown, type LucideIcon } from 'lucide-react'
 import { NUTRITIONIST } from '@/lib/tokens'
 import { SiteHeader } from '@/components/SiteHeader'
 import { useAuth } from '@/context/AuthContext'
@@ -21,47 +21,63 @@ const TIER_RANK: Record<TierKey, number> = {
  *  for the card border, badge tint, checkmark, and price. */
 const TIER_THEME: Record<TierKey, {
   border: string
+  hoverBorder: string
   badgeBg: string
   badgeText: string
   check: string
   price: string
-  glow?: string
+  glow: string
+  hoverGlow: string
   ringWidth: number
+  Icon: LucideIcon
 }> = {
   free: {
     border: '#374151',
+    hoverBorder: '#4b5563',
     badgeBg: '#1f2937',
     badgeText: '#9ca3af',
-    check: '#6b7280',
+    check: '#9ca3af',
     price: '#ffffff',
+    glow: '0 0 32px rgba(156,163,175,0.08)',
+    hoverGlow: '0 0 56px rgba(156,163,175,0.18)',
     ringWidth: 1,
+    Icon: Sparkles,
   },
   basic: {
-    border: 'rgba(96,165,250,0.4)',
+    border: 'rgba(96,165,250,0.5)',
+    hoverBorder: 'rgba(96,165,250,0.85)',
     badgeBg: 'rgba(96,165,250,0.1)',
     badgeText: '#60a5fa',
     check: '#60a5fa',
     price: '#60a5fa',
-    glow: '0 0 20px rgba(96,165,250,0.1)',
+    glow: '0 0 48px rgba(96,165,250,0.28)',
+    hoverGlow: '0 0 80px rgba(96,165,250,0.55)',
     ringWidth: 1,
+    Icon: Leaf,
   },
   premium: {
-    border: 'rgba(163,230,53,0.6)',
+    border: 'rgba(163,230,53,0.7)',
+    hoverBorder: 'rgba(163,230,53,1)',
     badgeBg: 'rgba(163,230,53,0.1)',
     badgeText: '#a3e635',
     check: '#a3e635',
     price: '#a3e635',
-    glow: '0 0 30px rgba(163,230,53,0.15)',
+    glow: '0 0 60px rgba(163,230,53,0.4)',
+    hoverGlow: '0 0 96px rgba(163,230,53,0.7)',
     ringWidth: 2,
+    Icon: Star,
   },
   vip: {
-    border: 'rgba(251,191,36,0.4)',
+    border: 'rgba(251,191,36,0.5)',
+    hoverBorder: 'rgba(251,191,36,0.9)',
     badgeBg: 'rgba(251,191,36,0.1)',
     badgeText: '#fbbf24',
     check: '#fbbf24',
     price: '#fbbf24',
-    glow: '0 0 20px rgba(251,191,36,0.1)',
+    glow: '0 0 48px rgba(251,191,36,0.28)',
+    hoverGlow: '0 0 80px rgba(251,191,36,0.55)',
     ringWidth: 1,
+    Icon: Crown,
   },
 }
 
@@ -86,7 +102,7 @@ const PLANS: Record<'en' | 'ar', Plan[]> = {
       name: 'Free',
       tier: 'free',
       price: { monthly: 0, annual: 0 },
-      currency: 'SAR',
+      currency: 'USD',
       description: 'Get started with basic access',
       cta: 'Get Started Free',
       href: '/sign-up',
@@ -109,8 +125,8 @@ const PLANS: Record<'en' | 'ar', Plan[]> = {
     {
       name: 'Basic',
       tier: 'basic',
-      price: { monthly: 29, annual: 23 },
-      currency: 'SAR',
+      price: { monthly: 14.99, annual: 9.99 },
+      currency: 'USD',
       description: 'Everything you need to track your nutrition',
       cta: 'Start Basic',
       href: '/sign-up?plan=basic',
@@ -135,8 +151,8 @@ const PLANS: Record<'en' | 'ar', Plan[]> = {
     {
       name: 'Premium',
       tier: 'premium',
-      price: { monthly: 79, annual: 63 },
-      currency: 'SAR',
+      price: { monthly: 29.99, annual: 19.99 },
+      currency: 'USD',
       description: 'Personalized plans and direct access to Dr. Rawan',
       cta: 'Start Premium',
       href: '/sign-up?plan=premium',
@@ -159,8 +175,8 @@ const PLANS: Record<'en' | 'ar', Plan[]> = {
     {
       name: 'VIP',
       tier: 'vip',
-      price: { monthly: 149, annual: 119 },
-      currency: 'SAR',
+      price: { monthly: 59.99, annual: 39.99 },
+      currency: 'USD',
       description: 'The complete Greenofig experience',
       cta: 'Go VIP',
       href: '/sign-up?plan=vip',
@@ -184,7 +200,7 @@ const PLANS: Record<'en' | 'ar', Plan[]> = {
       name: 'مجاني',
       tier: 'free',
       price: { monthly: 0, annual: 0 },
-      currency: 'SAR',
+      currency: 'USD',
       description: 'ابدأ بالوصول الأساسي',
       cta: 'ابدأ مجاناً',
       href: '/sign-up',
@@ -207,8 +223,8 @@ const PLANS: Record<'en' | 'ar', Plan[]> = {
     {
       name: 'أساسي',
       tier: 'basic',
-      price: { monthly: 29, annual: 23 },
-      currency: 'SAR',
+      price: { monthly: 14.99, annual: 9.99 },
+      currency: 'USD',
       description: 'كل ما تحتاجه لتتبع تغذيتك',
       cta: 'ابدأ الأساسي',
       href: '/sign-up?plan=basic',
@@ -233,8 +249,8 @@ const PLANS: Record<'en' | 'ar', Plan[]> = {
     {
       name: 'مميز',
       tier: 'premium',
-      price: { monthly: 79, annual: 63 },
-      currency: 'SAR',
+      price: { monthly: 29.99, annual: 19.99 },
+      currency: 'USD',
       description: 'خطط مخصصة ووصول مباشر لد. روان',
       cta: 'ابدأ المميز',
       href: '/sign-up?plan=premium',
@@ -257,8 +273,8 @@ const PLANS: Record<'en' | 'ar', Plan[]> = {
     {
       name: 'VIP',
       tier: 'vip',
-      price: { monthly: 149, annual: 119 },
-      currency: 'SAR',
+      price: { monthly: 59.99, annual: 39.99 },
+      currency: 'USD',
       description: 'تجربة Greenofig الكاملة',
       cta: 'انضم لـ VIP',
       href: '/sign-up?plan=vip',
@@ -303,7 +319,7 @@ const FAQS = {
     },
     {
       q: 'Is there a refund policy?',
-      a: '7-day money-back guarantee on your first paid subscription. Contact support@greenofig.com.',
+      a: '7-day money-back guarantee on your first paid subscription. Contact health@greenofig.com.',
     },
   ],
   ar: [
@@ -329,7 +345,7 @@ const FAQS = {
     },
     {
       q: 'ما سياسة الاسترداد؟',
-      a: 'ضمان استرداد خلال 7 أيام على أول اشتراك مدفوع. تواصل مع support@greenofig.com.',
+      a: 'ضمان استرداد خلال 7 أيام على أول اشتراك مدفوع. تواصل مع health@greenofig.com.',
     },
   ],
 }
@@ -337,13 +353,15 @@ const FAQS = {
 const COPY = {
   en: {
     eyebrow: 'SIMPLE PRICING',
-    h1: 'Choose your plan',
-    sub: 'Start free. Upgrade when ready. Cancel anytime.',
+    h1: 'Plans that pay for themselves.',
+    sub: 'Save 33% with annual. Backed by a 30-day money-back guarantee — cancel anytime, no questions asked.',
     monthly: 'Monthly',
     annual: 'Annual',
-    save: 'Save 20%',
+    save: 'Save 33%',
     free: 'Free',
     perMo: '/ mo',
+    year: 'year',
+    orAnnual: 'or ${price}/mo billed annually',
     billedAnnually: 'Billed annually',
     faqTitle: 'Frequently asked questions',
     guaranteeQuote:
@@ -352,13 +370,15 @@ const COPY = {
   },
   ar: {
     eyebrow: 'أسعار بسيطة',
-    h1: 'اختر خطتك',
-    sub: 'ابدأ مجاناً. قم بالترقية عندما تكون مستعداً. ألغِ في أي وقت.',
+    h1: 'خطط تستحق كل ريال.',
+    sub: 'وفّر 33% مع الاشتراك السنوي. مدعوم بضمان استرداد لمدة 30 يومًا — ألغِ في أي وقت، بلا أسئلة.',
     monthly: 'شهري',
     annual: 'سنوي',
-    save: 'وفّر 20%',
+    save: 'وفّر 33%',
     free: 'مجاني',
     perMo: '/ شهر',
+    year: 'سنة',
+    orAnnual: 'أو ${price}$ شهرياً عند الاشتراك سنوياً',
     billedAnnually: 'يُحسب سنوياً',
     faqTitle: 'أسئلة متكررة',
     guaranteeQuote:
@@ -450,7 +470,7 @@ export default function PricingPage() {
               onClick={() => setBilling('monthly')}
               className={`px-5 h-10 rounded-full text-sm font-semibold transition-colors ${
                 billing === 'monthly'
-                  ? 'bg-green-500 text-white'
+                  ? 'bg-gradient-to-b from-lime-400 to-lime-600 text-bg shadow-lime-glow'
                   : 'text-fg-2 hover:text-fg-1'
               }`}
             >
@@ -461,14 +481,30 @@ export default function PricingPage() {
               onClick={() => setBilling('annual')}
               className={`relative px-5 h-10 rounded-full text-sm font-semibold transition-colors ${
                 billing === 'annual'
-                  ? 'bg-green-500 text-white'
+                  ? 'text-bg'
                   : 'text-fg-2 hover:text-fg-1'
               }`}
+              style={
+                billing === 'annual'
+                  ? {
+                      background:
+                        'linear-gradient(180deg, #f59e0b, #d97706)',
+                      boxShadow: '0 0 16px rgba(245, 158, 11, 0.5)',
+                    }
+                  : undefined
+              }
             >
               {copy.annual}
               <span
-                className="absolute -top-2 -end-3 inline-flex items-center rounded-full bg-green-500 text-white text-[10px] font-bold px-2 py-0.5 leading-none"
-                style={{ minHeight: 18 }}
+                className="absolute -top-2 -end-3 inline-flex items-center rounded-full text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 leading-none"
+                style={{
+                  minHeight: 18,
+                  background: 'linear-gradient(135deg, #fb7185, #ef4444)',
+                  color: '#ffffff',
+                  boxShadow: '0 0 16px rgba(248, 113, 113, 0.7), 0 0 32px rgba(239, 68, 68, 0.35)',
+                  border: '1px solid rgba(248, 113, 113, 0.8)',
+                  textShadow: '0 0 6px rgba(255, 255, 255, 0.45)',
+                }}
               >
                 {copy.save}
               </span>
@@ -476,24 +512,51 @@ export default function PricingPage() {
           </div>
         </header>
 
-        {/* Plans grid: 4 across on xl+ */}
+        {/* Paid plans — Basic / Premium / VIP side by side. Free
+         *  isn't a "plan" the same way the paid tiers are, so we
+         *  pull it out into a smaller standalone card below to
+         *  reduce visual noise in the comparison grid. */}
         <ul
           dir={isAr ? 'rtl' : 'ltr'}
-          className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 items-start mt-16"
+          className="grid grid-cols-1 md:grid-cols-3 gap-6 items-start mt-16"
         >
-          {plans.map((plan) => (
-            <PlanCard
-              key={plan.tier}
-              plan={plan}
-              billing={billing}
-              copy={copy}
-              isLoggedIn={isLoggedIn}
-              currentTier={currentTier}
-              isAr={isAr}
-              loadingTier={loadingTier}
-              onUpgrade={handleUpgrade}
-            />
-          ))}
+          {plans
+            .filter((p) => p.tier !== 'free')
+            .map((plan) => (
+              <PlanCard
+                key={plan.tier}
+                plan={plan}
+                billing={billing}
+                copy={copy}
+                isLoggedIn={isLoggedIn}
+                currentTier={currentTier}
+                isAr={isAr}
+                loadingTier={loadingTier}
+                onUpgrade={handleUpgrade}
+              />
+            ))}
+        </ul>
+
+        {/* Free plan — standalone wide card centered below the paid grid */}
+        <ul
+          dir={isAr ? 'rtl' : 'ltr'}
+          className="max-w-5xl mx-auto mt-6"
+        >
+          {plans
+            .filter((p) => p.tier === 'free')
+            .map((plan) => (
+              <PlanCard
+                key={plan.tier}
+                plan={plan}
+                billing={billing}
+                copy={copy}
+                isLoggedIn={isLoggedIn}
+                currentTier={currentTier}
+                isAr={isAr}
+                loadingTier={loadingTier}
+                onUpgrade={handleUpgrade}
+              />
+            ))}
         </ul>
 
         {/* Dr. Rawan guarantee */}
@@ -574,6 +637,7 @@ function PlanCard({
   const price = billing === 'monthly' ? plan.price.monthly : plan.price.annual
   const isFree = price === 0
   const theme = TIER_THEME[plan.tier]
+  const [hovered, setHovered] = useState(false)
 
   // Tier comparison drives the entire CTA — what it says, where it
   // routes, whether it's clickable.
@@ -603,12 +667,18 @@ function PlanCard({
 
   return (
     <li
-      className="relative rounded-2xl p-8 transition-all"
+      className="relative rounded-2xl p-8"
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
       style={{
         background: '#0d1117',
-        border: `${theme.ringWidth}px solid ${theme.border}`,
-        boxShadow: theme.glow,
-        transform: plan.featured ? undefined : undefined,
+        border: `${theme.ringWidth}px solid ${
+          hovered ? theme.hoverBorder : theme.border
+        }`,
+        boxShadow: hovered ? theme.hoverGlow : theme.glow,
+        transform: hovered ? 'translateY(-6px)' : 'translateY(0)',
+        transition:
+          'transform 280ms cubic-bezier(0.16, 1, 0.3, 1), box-shadow 280ms cubic-bezier(0.16, 1, 0.3, 1), border-color 280ms cubic-bezier(0.16, 1, 0.3, 1)',
       }}
     >
       {/* Per-tier label badge above the card (Most Popular / Best Value) */}
@@ -646,26 +716,54 @@ function PlanCard({
         </span>
       )}
 
-      <div className="mb-3" style={{ marginTop: isCurrent ? 12 : 0 }}>
-        <h3 className="font-sans font-bold text-white text-2xl mb-1">
-          {plan.name}
-        </h3>
+      {/* Layout wrapper — Free splits horizontally (info left, features
+       *  right) so the standalone wide card stays compact vertically.
+       *  Paid tiers stack vertically inside their narrow grid cells. */}
+      <div
+        className={
+          plan.tier === 'free'
+            ? 'flex flex-col md:flex-row md:gap-10 md:items-stretch'
+            : ''
+        }
+      >
+      <div className={plan.tier === 'free' ? 'md:basis-1/3 md:shrink-0' : ''}>
+      {/* Card head — tier icon + name. Drops the small "BASIC/PREMIUM/VIP"
+       *  pill badge that used to sit below; the tier name is already in the
+       *  h3 so it was redundant. The icon gives each card visual identity
+       *  without needing a duplicate label. */}
+      <div
+        className="mb-3 flex items-center gap-3"
+        style={{ marginTop: isCurrent ? 12 : 0 }}
+      >
         <span
-          className="inline-block rounded-full text-[10px] uppercase tracking-eyebrow font-bold px-2 py-0.5"
+          aria-hidden
+          className="inline-flex items-center justify-center shrink-0 rounded-xl"
           style={{
+            width: 44,
+            height: 44,
             background: theme.badgeBg,
-            color: theme.badgeText,
             border: `1px solid ${theme.border}`,
           }}
         >
-          {plan.tier}
+          <theme.Icon
+            className="w-5 h-5"
+            strokeWidth={1.75}
+            style={{ color: theme.check }}
+          />
         </span>
+        <h3 className="font-sans font-bold text-white text-2xl">
+          {plan.name}
+        </h3>
       </div>
 
       <p className="text-sm text-fg-2 mb-6 leading-relaxed">{plan.description}</p>
 
-      {/* Price — colored to match the tier */}
-      <div className="mb-6 min-h-[80px]">
+      {/* Price — colored to match the tier.
+       *  Monthly mode → big per-month price.
+       *  Annual mode  → big per-month price + a sub-line that shows the
+       *  full year total with the regular yearly cost (monthly × 12)
+       *  scratched out, so the savings are obvious at a glance. */}
+      <div className={`mb-6 ${isFree ? 'min-h-[56px]' : 'min-h-[100px]'}`}>
         {isFree ? (
           <p
             className="text-4xl font-bold leading-none"
@@ -680,15 +778,28 @@ function PlanCard({
                 className="text-4xl font-bold leading-none"
                 style={{ color: theme.price }}
               >
-                {price}
-              </span>
-              <span className="text-sm text-fg-2 font-semibold">
-                {plan.currency}
+                ${price.toFixed(2)}
               </span>
               <span className="text-xs text-fg-3">{copy.perMo}</span>
             </div>
-            {billing === 'annual' && (
-              <p className="text-[11px] text-fg-3 mt-1.5">{copy.billedAnnually}</p>
+            {billing === 'annual' ? (
+              <p
+                className="text-[12px] text-fg-3 mt-2 flex items-center flex-wrap"
+                style={{ gap: 6 }}
+                dir="ltr"
+              >
+                <span className="line-through" style={{ opacity: 0.55 }}>
+                  ${(plan.price.monthly * 12).toFixed(2)}
+                </span>
+                <span className="font-semibold" style={{ color: theme.price }}>
+                  ${(plan.price.annual * 12).toFixed(2)}
+                </span>
+                <span style={{ opacity: 0.7 }}>/ {copy.year}</span>
+              </p>
+            ) : (
+              <p className="text-[11px] text-fg-3 mt-2" style={{ opacity: 0.7 }}>
+                {copy.orAnnual.replace('{price}', (plan.price.annual).toFixed(2))}
+              </p>
             )}
           </>
         )}
@@ -757,55 +868,106 @@ function PlanCard({
         </Link>
       )}
 
-      <hr className="my-6" style={{ borderColor: '#222' }} />
+      </div>
 
-      {/* Features — checkmarks colored per tier */}
-      <ul className="flex flex-col gap-y-3">
-        {plan.features.map((f) => {
-          const text = f.replace(/^✉️\s*/, '')
-          return (
-            <li key={f} className="flex items-start gap-2.5">
-              <span
-                aria-hidden
-                className="shrink-0 w-5 h-5 rounded-full inline-flex items-center justify-center mt-0.5"
-                style={{
-                  background: theme.badgeBg,
-                  border: `1px solid ${theme.border}`,
-                }}
-              >
+      {plan.tier !== 'free' && (
+        <hr className="my-6" style={{ borderColor: '#222' }} />
+      )}
+
+      {/* Features — flat tier-colored icons, matches the rest of the site.
+       *  Free is the wide standalone card and uses a 2-column layout so
+       *  included features (left) sit opposite the missing ones (right);
+       *  paid cards keep a single column to fit the narrow 3-col grid. */}
+      <div
+        className={
+          plan.tier === 'free'
+            ? 'flex-1 md:border-s md:border-[#222] md:ps-10 md:flex md:items-center'
+            : ''
+        }
+      >
+      {plan.tier === 'free' ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-3 w-full">
+          <ul className="flex flex-col gap-y-3">
+            {plan.features.map((f) => {
+              const text = f.replace(/^✉️\s*/, '')
+              return (
+                <li key={f} className="flex items-start gap-2.5">
+                  <Check
+                    aria-hidden
+                    className="shrink-0 w-5 h-5 mt-0.5"
+                    strokeWidth={2}
+                    style={{ color: theme.check }}
+                  />
+                  <span
+                    className="text-sm leading-relaxed"
+                    style={{ color: '#d1d5db' }}
+                  >
+                    {text}
+                  </span>
+                </li>
+              )
+            })}
+          </ul>
+          <ul className="flex flex-col gap-y-3">
+            {plan.missing.map((f) => (
+              <li key={f} className="flex items-start gap-2.5">
+                <X
+                  aria-hidden
+                  className="shrink-0 w-5 h-5 mt-0.5"
+                  strokeWidth={2}
+                  style={{ color: '#6b7280' }}
+                />
+                <span
+                  className="text-sm leading-relaxed line-through"
+                  style={{ color: '#6b7280' }}
+                >
+                  {f}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : (
+        <ul className="flex flex-col gap-y-3">
+          {plan.features.map((f) => {
+            const text = f.replace(/^✉️\s*/, '')
+            return (
+              <li key={f} className="flex items-start gap-2.5">
                 <Check
-                  className="w-3 h-3"
-                  strokeWidth={2.5}
+                  aria-hidden
+                  className="shrink-0 w-5 h-5 mt-0.5"
+                  strokeWidth={2}
                   style={{ color: theme.check }}
                 />
-              </span>
+                <span
+                  className="text-sm leading-relaxed"
+                  style={{ color: '#d1d5db' }}
+                >
+                  {text}
+                </span>
+              </li>
+            )
+          })}
+          {plan.missing.map((f) => (
+            <li key={f} className="flex items-start gap-2.5">
+              <X
+                aria-hidden
+                className="shrink-0 w-5 h-5 mt-0.5"
+                strokeWidth={2}
+                style={{ color: '#6b7280' }}
+              />
               <span
-                className="text-sm leading-relaxed"
-                style={{ color: '#d1d5db' }}
+                className="text-sm leading-relaxed line-through"
+                style={{ color: '#6b7280' }}
               >
-                {text}
+                {f}
               </span>
             </li>
-          )
-        })}
-        {plan.missing.map((f) => (
-          <li key={f} className="flex items-start gap-2.5">
-            <span
-              aria-hidden
-              className="shrink-0 w-5 h-5 rounded-full inline-flex items-center justify-center mt-0.5"
-              style={{ background: 'rgba(107,114,128,0.15)' }}
-            >
-              <X className="w-3 h-3" strokeWidth={2} style={{ color: '#6b7280' }} />
-            </span>
-            <span
-              className="text-sm leading-relaxed line-through"
-              style={{ color: '#6b7280' }}
-            >
-              {f}
-            </span>
-          </li>
-        ))}
-      </ul>
+          ))}
+        </ul>
+      )}
+      </div>
+      </div>
     </li>
   )
 }

@@ -359,7 +359,7 @@ function ProductRow({
       {/* Price */}
       <div className="md:text-end mb-1.5 md:mb-0">
         <p className="font-mono text-sm font-semibold text-fg-1" dir="ltr">
-          {product.price} <span className="text-xs text-fg-3 font-normal">JOD</span>
+          {product.price} <span className="text-xs text-fg-3 font-normal">USD</span>
         </p>
       </div>
 
@@ -517,7 +517,7 @@ function ProductForm({
                 <NumInput
                   value={p.price}
                   onChange={(n) => update('price', n)}
-                  suffix="JOD"
+                  suffix="USD"
                 />
               </Field>
               <Field label={t('form.stock')}>

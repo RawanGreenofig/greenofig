@@ -170,7 +170,19 @@
       "PowerShell(Get-Command gh -ErrorAction SilentlyContinue)",
       "Bash(rm -rf src greenofig-design-system figsequence logo public dist supabase)",
       "Bash(rm -f greenofig-deploy.tar greenofig-deploy.zip)",
-      "mcp__Claude_in_Chrome__list_connected_browsers"
+      "mcp__Claude_in_Chrome__list_connected_browsers",
+      "Bash(command -v gh)",
+      "mcp__Claude_Preview__preview_start",
+      "mcp__ebd49608-2ee3-41fe-b7a4-f08d058ce72e__get_stripe_account_info",
+      "mcp__ebd49608-2ee3-41fe-b7a4-f08d058ce72e__list_products",
+      "mcp__ebd49608-2ee3-41fe-b7a4-f08d058ce72e__list_subscriptions",
+      "mcp__ebd49608-2ee3-41fe-b7a4-f08d058ce72e__list_prices",
+      "mcp__c00aeab7-fa21-439c-9c74-0e28cbe3f5bc__list_projects",
+      "mcp__c00aeab7-fa21-439c-9c74-0e28cbe3f5bc__execute_sql",
+      "mcp__ebd49608-2ee3-41fe-b7a4-f08d058ce72e__create_price",
+      "mcp__c00aeab7-fa21-439c-9c74-0e28cbe3f5bc__apply_migration",
+      "Bash(mkdir -p \"next/src/components/admin-shared\" && mv \"next/src/app/[locale]/nutritionist/leads/page.tsx\" \"next/src/components/admin-shared/LeadsPanel.tsx\" && echo \"moved\" && ls \"next/src/app/[locale]/nutritionist/leads/\" 2>&1 || echo \"empty\")",
+      "Bash(cp \"C:/Users/ADMIN/OneDrive/Desktop/GreenofigV2/next/.env.local\" \"next/.env.local\" && echo \"copied\" && grep -c \"SUPABASE\" \"next/.env.local\")"
     ]
   }
 }

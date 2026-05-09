@@ -571,7 +571,7 @@ function SessionRow({
         </Field>
         <Field label={t('sessions.price')} compact>
           <div className={free ? 'opacity-40 pointer-events-none' : ''}>
-            <NumInput value={price} onChange={onPrice} suffix="JOD" />
+            <NumInput value={price} onChange={onPrice} suffix="USD" />
           </div>
         </Field>
       </div>

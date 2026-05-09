@@ -244,7 +244,7 @@ export default function NutritionistTodayPage() {
           accent="#a855f7"
           label={t('kpis.mrr')}
           value={kpis.mrrJod}
-          unit="JOD"
+          unit="USD"
         />
       </section>
 

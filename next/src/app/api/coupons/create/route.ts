@@ -109,9 +109,9 @@ export const POST = withNutritionistOrAdmin(
 
     // Build notification copy
     const discountText =
-      type === 'percent' ? `${value}% off` : `SAR ${value} off`
+      type === 'percent' ? `${value}% off` : `$${value} off`
     const discountTextAr =
-      type === 'percent' ? `خصم ${value}%` : `خصم ${value} ريال`
+      type === 'percent' ? `خصم ${value}%` : `خصم $${value}`
     const noteSuffix = body.personalNote ? ` ${body.personalNote.trim()}` : ''
     const notifBody = `Use code ${code} for ${discountText} on your next order.${noteSuffix}`
     const notifBodyAr = `استخدم الكود ${code} للحصول على ${discountTextAr} على طلبك القادم.${noteSuffix}`

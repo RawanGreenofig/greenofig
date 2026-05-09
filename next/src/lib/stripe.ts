@@ -31,23 +31,31 @@ export const isStripeConfigured = () => !!process.env.STRIPE_SECRET_KEY
  * Stripe Price IDs per tier, set as env vars in production:
  *   STRIPE_PRICE_BASIC_MONTHLY, STRIPE_PRICE_BASIC_YEARLY, etc.
  *
- * Falls back to empty strings during dev — checkout calls will fail
- * with a clear error instead of leaking the wrong customer to billing.
+ * The fallbacks below point at the demo's USD sandbox prices so the
+ * checkout still works locally without env vars set. Production should
+ * always set these env vars; if you rotate the prices in Stripe, update
+ * Vercel before relying on these defaults.
  */
+const USD_DEFAULTS = {
+  basic:   { monthly: 'price_1TUwA22OHDHL9Mv9AFCo1J4e', yearly: 'price_1TUwAA2OHDHL9Mv9jN1zTSFx' },
+  premium: { monthly: 'price_1TUwAI2OHDHL9Mv9qzVSRgIb', yearly: 'price_1TUwAT2OHDHL9Mv9iirB4qek' },
+  vip:     { monthly: 'price_1TUwAa2OHDHL9Mv9FRxQEJR1', yearly: 'price_1TUwAi2OHDHL9Mv9J4Xff5yh' },
+} as const
+
 export const STRIPE_PRICES: Record<
   'basic' | 'premium' | 'vip',
   { monthly: string; yearly: string }
 > = {
   basic: {
-    monthly: process.env.STRIPE_PRICE_BASIC_MONTHLY ?? '',
-    yearly:  process.env.STRIPE_PRICE_BASIC_YEARLY  ?? '',
+    monthly: process.env.STRIPE_PRICE_BASIC_MONTHLY ?? USD_DEFAULTS.basic.monthly,
+    yearly:  process.env.STRIPE_PRICE_BASIC_YEARLY  ?? USD_DEFAULTS.basic.yearly,
   },
   premium: {
-    monthly: process.env.STRIPE_PRICE_PREMIUM_MONTHLY ?? '',
-    yearly:  process.env.STRIPE_PRICE_PREMIUM_YEARLY  ?? '',
+    monthly: process.env.STRIPE_PRICE_PREMIUM_MONTHLY ?? USD_DEFAULTS.premium.monthly,
+    yearly:  process.env.STRIPE_PRICE_PREMIUM_YEARLY  ?? USD_DEFAULTS.premium.yearly,
   },
   vip: {
-    monthly: process.env.STRIPE_PRICE_VIP_MONTHLY ?? '',
-    yearly:  process.env.STRIPE_PRICE_VIP_YEARLY  ?? '',
+    monthly: process.env.STRIPE_PRICE_VIP_MONTHLY ?? USD_DEFAULTS.vip.monthly,
+    yearly:  process.env.STRIPE_PRICE_VIP_YEARLY  ?? USD_DEFAULTS.vip.yearly,
   },
 }

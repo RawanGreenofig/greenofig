@@ -3,6 +3,7 @@
 import Image from 'next/image'
 import { motion } from 'framer-motion'
 import { useLocale, useTranslations } from 'next-intl'
+import { BadgeCheck } from 'lucide-react'
 import { Link } from '@/i18n/navigation'
 import { ease, NUTRITIONIST } from '@/lib/tokens'
 
@@ -10,7 +11,6 @@ const EASE_OUT: [number, number, number, number] = [...ease.out]
 
 export function AboutSection() {
   const t = useTranslations('marketing')
-  const tCommon = useTranslations('common')
   const locale = useLocale()
   const isAr = locale === 'ar'
 
@@ -42,19 +42,17 @@ export function AboutSection() {
             priority
             className="w-full rounded-[var(--radius-2xl)] object-cover object-top"
           />
-          {/* Identity row — name, role, verified badge */}
+          {/* Identity row — name with verified-badge icon, role */}
           <div className="mt-6 space-y-1.5">
-            <p className="font-sans text-lg font-semibold text-fg-1">
+            <p className="inline-flex items-center font-sans text-lg font-semibold text-fg-1" style={{ gap: 10 }}>
               {name}
+              <BadgeCheck
+                className="w-4 h-4"
+                strokeWidth={1.75}
+                style={{ color: '#60a5fa' }}
+              />
             </p>
             <p className="text-sm text-fg-2">{role}</p>
-            <p className="inline-flex items-center gap-2 text-xs text-lime-400">
-              <span
-                aria-hidden
-                className="w-2 h-2 rounded-pill bg-success"
-              />
-              {tCommon('verifiedNutritionist')}
-            </p>
           </div>
         </motion.div>
 
@@ -81,7 +79,7 @@ export function AboutSection() {
               fontWeight: 600,
               letterSpacing: '0.2em',
               textTransform: 'uppercase',
-              color: '#4ade80',
+              color: '#a3e635',
             }}
           >
             {t('aboutEyebrow')}
@@ -127,12 +125,12 @@ export function AboutSection() {
               <span
                 key={cred}
                 style={{
-                  background: 'rgba(74,222,128,0.1)',
-                  color: '#4ade80',
+                  background: 'rgba(163,230,53,0.1)',
+                  color: '#a3e635',
                   fontSize: '13px',
                   padding: '6px 16px',
                   borderRadius: '999px',
-                  border: '1px solid rgba(74,222,128,0.2)',
+                  border: '1px solid rgba(163,230,53,0.2)',
                   fontWeight: 500,
                   whiteSpace: 'nowrap',
                 }}

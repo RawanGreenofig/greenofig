@@ -478,7 +478,7 @@ function SubPane({
         />
         <Stat
           label={t('subscription.lifetimeValue')}
-          value={`${profile.lifetimeValue} JOD`}
+          value={`${profile.lifetimeValue} USD`}
           mono
         />
         <Stat

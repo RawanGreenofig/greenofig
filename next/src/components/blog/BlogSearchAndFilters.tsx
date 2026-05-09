@@ -36,32 +36,34 @@ export function BlogSearchAndFilters({ isAr }: Props) {
           />
           <input
             placeholder={isAr ? 'ابحث في المقالات…' : 'Search articles...'}
-            className="h-12 w-full rounded-2xl ps-10 pe-4 text-base transition-all duration-200"
+            className="h-11 w-full rounded-full ps-10 pe-4 text-sm transition-colors duration-200"
             style={{
-              background: 'hsl(var(--background) / 0.5)',
-              backdropFilter: 'blur(4px)',
-              WebkitBackdropFilter: 'blur(4px)',
-              border: '1px solid hsl(var(--input))',
+              background: 'rgba(8, 20, 10, 0.6)',
+              backdropFilter: 'blur(8px)',
+              WebkitBackdropFilter: 'blur(8px)',
+              borderWidth: 1,
+              borderStyle: 'solid',
+              borderColor: 'rgba(255,255,255,0.14)',
               color: 'hsl(var(--foreground))',
               outline: 'none',
             }}
             onFocus={(e) => {
-              e.currentTarget.style.borderColor = 'hsl(var(--primary))'
-              e.currentTarget.style.boxShadow = '0 0 0 2px hsl(var(--ring))'
+              e.currentTarget.style.borderColor = '#a3e635'
+              e.currentTarget.style.boxShadow =
+                '0 0 0 3px rgba(163,230,53,0.18)'
             }}
             onBlur={(e) => {
-              e.currentTarget.style.borderColor = 'hsl(var(--input))'
+              e.currentTarget.style.borderColor = 'rgba(255,255,255,0.14)'
               e.currentTarget.style.boxShadow = 'none'
             }}
             onMouseEnter={(e) => {
               if (document.activeElement !== e.currentTarget) {
-                e.currentTarget.style.borderColor =
-                  'hsl(var(--primary) / 0.5)'
+                e.currentTarget.style.borderColor = 'rgba(255,255,255,0.28)'
               }
             }}
             onMouseLeave={(e) => {
               if (document.activeElement !== e.currentTarget) {
-                e.currentTarget.style.borderColor = 'hsl(var(--input))'
+                e.currentTarget.style.borderColor = 'rgba(255,255,255,0.14)'
               }
             }}
           />
@@ -69,7 +71,7 @@ export function BlogSearchAndFilters({ isAr }: Props) {
         <button
           type="button"
           className="btn-primary"
-          style={{ height: 48, padding: '0 24px', fontSize: 14 }}
+          style={{ height: 40, padding: '0 32px', fontSize: 13 }}
         >
           {isAr ? 'بحث' : 'Search'}
         </button>

@@ -84,10 +84,9 @@ export function SiteHeader() {
       .toUpperCase() || '?'
 
   const navLinks: { href: string; label: string }[] = [
-    { href: '/#about', label: t('about') },
     { href: '/pricing', label: t('pricing') },
     { href: '/blog', label: t('blog') },
-    { href: '/#store', label: t('store') },
+    { href: '/contact', label: t('contact') },
   ]
 
   const headerStyle: React.CSSProperties = scrolled
@@ -122,7 +121,7 @@ export function SiteHeader() {
           {/* Center nav */}
           <nav className="hidden md:flex items-center gap-8">
             {navLinks.map((l) => (
-              <a
+              <Link
                 key={l.href}
                 href={l.href}
                 className="text-sm transition-colors duration-200"
@@ -135,7 +134,7 @@ export function SiteHeader() {
                 }
               >
                 {l.label}
-              </a>
+              </Link>
             ))}
           </nav>
 
@@ -339,7 +338,7 @@ export function SiteHeader() {
               onClick={openDrawer}
               aria-label={t('openMenu')}
               className="md:hidden inline-flex items-center justify-center w-10 h-10 rounded-xl transition-colors"
-              style={{ background: '#111', border: '1px solid #222', color: '#fff' }}
+              style={{ background: 'transparent', border: 'none', color: '#fff' }}
             >
               <Menu className="w-5 h-5" strokeWidth={1.75} />
             </button>
@@ -369,49 +368,32 @@ export function SiteHeader() {
           <div
             role="dialog"
             aria-modal
-            className="md:hidden fixed inset-y-0 end-0 flex flex-col"
+            className="md:hidden fixed flex flex-col"
             style={{
               zIndex: 50,
-              width: 280,
-              maxWidth: '85vw',
-              background: 'rgba(8, 20, 10, 0.85)',
+              top: 'calc(64px + env(safe-area-inset-top) + 8px)',
+              insetInlineEnd: 16,
+              width: 'min(280px, calc(100vw - 32px))',
+              background: 'rgba(8, 20, 10, 0.92)',
               backdropFilter: 'blur(24px)',
               WebkitBackdropFilter: 'blur(24px)',
-              borderInlineStart: '1px solid rgba(255, 255, 255, 0.08)',
-              boxShadow: '-8px 0 32px rgba(0,0,0,0.4)',
+              border: '1px solid rgba(255, 255, 255, 0.08)',
+              borderRadius: 16,
+              boxShadow: '0 16px 40px rgba(0,0,0,0.45)',
+              transformOrigin: 'top right',
               transition:
-                'transform 350ms cubic-bezier(0.16, 1, 0.3, 1)',
-              transform: drawerOpen ? 'translateX(0)' : 'translateX(100%)',
-              paddingTop: 'calc(64px + env(safe-area-inset-top))',
-              paddingInlineEnd: '24px',
-              paddingInlineStart: '24px',
-              paddingBottom: 'calc(32px + env(safe-area-inset-bottom))',
+                'opacity 220ms cubic-bezier(0.16, 1, 0.3, 1), transform 220ms cubic-bezier(0.16, 1, 0.3, 1)',
+              opacity: drawerOpen ? 1 : 0,
+              transform: drawerOpen
+                ? 'translateY(0) scale(1)'
+                : 'translateY(-8px) scale(0.96)',
+              pointerEvents: drawerOpen ? 'auto' : 'none',
+              padding: 20,
             }}
           >
-            <button
-              type="button"
-              onClick={closeDrawer}
-              aria-label={t('closeMenu')}
-              className="inline-flex items-center justify-center"
-              style={{
-                position: 'absolute',
-                top: 'calc(16px + env(safe-area-inset-top))',
-                insetInlineEnd: 16,
-                width: 36,
-                height: 36,
-                borderRadius: '50%',
-                background: 'rgba(255,255,255,0.1)',
-                color: '#fff',
-                border: 'none',
-                cursor: 'pointer',
-              }}
-            >
-              <X className="w-[18px] h-[18px]" strokeWidth={1.75} />
-            </button>
-
             <nav className="flex flex-col">
               {navLinks.map((l) => (
-                <a
+                <Link
                   key={l.href}
                   href={l.href}
                   onClick={closeDrawer}
@@ -424,14 +406,14 @@ export function SiteHeader() {
                   borderBottom: '1px solid rgba(255,255,255,0.08)',
                 }}
                 onMouseEnter={(e) =>
-                  (e.currentTarget.style.color = '#4ade80')
+                  (e.currentTarget.style.color = '#a3e635')
                 }
                 onMouseLeave={(e) =>
                   (e.currentTarget.style.color = 'rgba(255,255,255,0.85)')
                 }
               >
                 {l.label}
-              </a>
+              </Link>
             ))}
           </nav>
 

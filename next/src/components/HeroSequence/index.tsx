@@ -215,15 +215,21 @@ export function HeroSequence() {
                 }}
               >
                 <p
-                  className="inline-block font-sans font-medium"
+                  className="inline-flex items-center justify-center font-sans font-medium"
                   style={{
                     color: '#ffffff',
-                    fontSize: 'clamp(16px, 2.5vw, 22px)',
+                    fontSize: 'clamp(15px, 2.2vw, 20px)',
                     fontWeight: 500,
-                    letterSpacing: '0.05em',
-                    lineHeight: 1.5,
+                    letterSpacing: '0.04em',
+                    lineHeight: 1,
                     opacity: 1,
-                    textShadow: '0 2px 16px rgba(0,0,0,0.9)',
+                    padding: '12px 24px',
+                    borderRadius: 9999,
+                    background: 'rgba(8, 20, 10, 0.55)',
+                    backdropFilter: 'blur(10px)',
+                    WebkitBackdropFilter: 'blur(10px)',
+                    border: '1px solid rgba(255, 255, 255, 0.12)',
+                    boxShadow: '0 4px 20px rgba(0, 0, 0, 0.35)',
                   }}
                 >
                   <WordReveal show={showSub} exit={exitInitial}>

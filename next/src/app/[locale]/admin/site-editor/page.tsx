@@ -622,7 +622,7 @@ function PricingPreview({ tiers }: { tiers: PricingTier[] }) {
           <div className="flex items-baseline justify-between gap-2">
             <p className="text-sm font-semibold text-fg-1">{t.name}</p>
             <p className="font-mono text-sm text-lime-400" dir="ltr">
-              {t.monthlyJod === 0 ? 'Free' : `${t.monthlyJod} JOD`}
+              {t.monthlyJod === 0 ? 'Free' : `${t.monthlyJod} USD`}
             </p>
           </div>
           <p className="mt-0.5 text-[11px] text-fg-3">{t.tagline}</p>

@@ -128,7 +128,7 @@ export default function EarningsPage() {
             </p>
             <p className="mt-2 font-display text-4xl md:text-5xl font-bold text-fg-1 tracking-tight font-mono" dir="ltr">
               {pendingPayout}
-              <span className="ms-2 text-base font-normal text-fg-3">JOD</span>
+              <span className="ms-2 text-base font-normal text-fg-3">USD</span>
             </p>
             <p className="mt-1 text-xs text-fg-3 font-mono" dir="ltr">
               {t('nextPayout', {
@@ -168,7 +168,7 @@ export default function EarningsPage() {
                         {t(src.key)}
                       </span>
                       <span className="font-mono text-xs text-fg-1" dir="ltr">
-                        {src.amount} JOD
+                        {src.amount} USD
                         <span className="text-fg-3 ms-1">· {pct.toFixed(0)}%</span>
                       </span>
                     </div>
@@ -192,7 +192,7 @@ export default function EarningsPage() {
           Icon={CreditCard}
           tint="#a3e635"
           label={t('thisMonth')}
-          value={`${thisMonth} JOD`}
+          value={`${thisMonth} USD`}
         />
         <Stat
           Icon={CalendarClock}
@@ -204,7 +204,7 @@ export default function EarningsPage() {
           Icon={TrendingUp}
           tint="#e8912a"
           label={t('totalEarned')}
-          value={`${totalEarned.toLocaleString()} JOD`}
+          value={`${totalEarned.toLocaleString()} USD`}
         />
       </section>
 
@@ -225,7 +225,7 @@ export default function EarningsPage() {
               <Tooltip
                 contentStyle={{ background: 'var(--gf-card-hover)', border: '1px solid rgb(255 255 255 / 0.08)', borderRadius: 8, fontSize: 12, color: 'var(--gf-fg-1)' }}
                 labelStyle={{ color: '#9baf9f' }}
-                formatter={(value) => [`${value} JOD`, '']}
+                formatter={(value) => [`${value} USD`, '']}
               />
               <Bar dataKey="revenue" fill="#a3e635" radius={[4, 4, 0, 0]} />
             </BarChart>
@@ -266,7 +266,7 @@ export default function EarningsPage() {
                   </p>
                 </div>
                 <p className="font-mono text-sm font-semibold text-fg-1" dir="ltr">
-                  {p.amount} <span className="text-xs text-fg-3 font-normal">JOD</span>
+                  {p.amount} <span className="text-xs text-fg-3 font-normal">USD</span>
                 </p>
                 <button
                   type="button"

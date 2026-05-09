@@ -377,7 +377,7 @@ function ProductCard({
           <span className="text-base font-bold text-fg-1">
             {product.price}
           </span>
-          <span className="text-xs text-fg-3">JOD</span>
+          <span className="text-xs text-fg-3">USD</span>
           {onSale && (
             <span className="text-xs text-fg-3 line-through">
               {product.compareAt}
@@ -547,7 +547,7 @@ function CartDrawer({
                       {line.product.name}
                     </p>
                     <p className="mt-0.5 text-xs text-fg-3 font-mono" dir="ltr">
-                      {line.product.price} JOD
+                      {line.product.price} USD
                     </p>
                     <div className="mt-3 inline-flex items-center gap-0.5 rounded-pill bg-bg-deeper border border-border p-0.5">
                       <button
@@ -628,7 +628,7 @@ function CartDrawer({
             <ul className="text-sm space-y-1.5 font-mono" dir="ltr">
               <li className="flex justify-between text-fg-2">
                 <span className="font-sans">{t('subtotal')}</span>
-                <span>{subtotal} JOD</span>
+                <span>{subtotal} USD</span>
               </li>
               {discountAmount > 0 && (
                 <li className="flex justify-between text-lime-400">
@@ -637,7 +637,7 @@ function CartDrawer({
                     {tierPct > 0 && ` · ${tier?.toUpperCase()} ${tierPct}%`}
                     {couponApplied && ` · +${couponApplied.pct}%`}
                   </span>
-                  <span>− {discountAmount.toFixed(2)} JOD</span>
+                  <span>− {discountAmount.toFixed(2)} USD</span>
                 </li>
               )}
               <li className="flex justify-between text-fg-2">
@@ -646,7 +646,7 @@ function CartDrawer({
               </li>
               <li className="pt-2 mt-1 border-t border-border flex justify-between text-fg-1 text-base font-bold">
                 <span className="font-sans">{t('total')}</span>
-                <span>{total.toFixed(2)} JOD</span>
+                <span>{total.toFixed(2)} USD</span>
               </li>
             </ul>
 

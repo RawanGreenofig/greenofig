@@ -330,7 +330,7 @@ function OrderRow({
         </div>
         <div className="shrink-0 text-end">
           <p className="text-sm font-mono font-semibold text-fg-1" dir="ltr">
-            {order.total} <span className="text-xs text-fg-3">JOD</span>
+            {order.total} <span className="text-xs text-fg-3">USD</span>
           </p>
           <ChevronDown
             className={`mt-1 ms-auto w-4 h-4 text-fg-3 transition-transform ${
@@ -383,7 +383,7 @@ function OrderRow({
                 </div>
                 <p className="font-mono text-sm text-fg-1 shrink-0" dir="ltr">
                   {item.qty * item.unitPrice}{' '}
-                  <span className="text-xs text-fg-3">JOD</span>
+                  <span className="text-xs text-fg-3">USD</span>
                 </p>
               </li>
             ))}

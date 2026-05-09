@@ -280,25 +280,17 @@ export default function CommunityPage() {
               </div>
               <div className="min-w-0">
                 <p
-                  className="truncate"
-                  style={{ fontSize: 14, fontWeight: 700, color: 'var(--gf-fg-1)' }}
+                  className="inline-flex items-center truncate"
+                  style={{ fontSize: 14, fontWeight: 700, color: 'var(--gf-fg-1)', gap: 10 }}
                 >
                   Dr. Rawan Othman
+                  <BadgeCheck
+                    className="w-4 h-4 shrink-0"
+                    strokeWidth={1.75}
+                    style={{ color: '#60a5fa' }}
+                  />
                 </p>
                 <div className="mt-1 flex items-center gap-2 flex-wrap">
-                  <span
-                    className="inline-flex items-center gap-1 rounded-full"
-                    style={{
-                      fontSize: 11,
-                      padding: '2px 8px',
-                      background: 'rgba(96,165,250,0.10)',
-                      color: '#60a5fa',
-                      border: '1px solid rgba(96,165,250,0.20)',
-                    }}
-                  >
-                    <BadgeCheck className="w-3 h-3" strokeWidth={2} />
-                    Verified Nutritionist
-                  </span>
                   <span
                     className="inline-flex items-center gap-1"
                     style={{ fontSize: 11, color: 'var(--gf-fg-3)' }}

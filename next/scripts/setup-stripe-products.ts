@@ -7,7 +7,7 @@
  * Reads STRIPE_SECRET_KEY from .env.local. Creates one product per tier
  * (Basic / Premium / VIP) with two prices each (monthly + yearly).
  *
- * Currency: SAR — universal across Arab markets.
+ * Currency: USD.
  * The yearly price total = (monthly_per_month * 12) so Stripe shows the
  * full annual charge while the marketing copy quotes the per-month cost.
  *
@@ -42,9 +42,9 @@ interface PlanSpec {
   tier: 'basic' | 'premium' | 'vip'
   name: string
   description: string
-  /** Monthly per-month cost in halalas (1 SAR = 100 halalas). */
+  /** Monthly per-month cost in cents (1 USD = 100 cents). */
   monthlyMinor: number
-  /** Yearly per-month cost in halalas (multiplied by 12 for the annual charge). */
+  /** Yearly per-month cost in cents (multiplied by 12 for the annual charge). */
   yearlyPerMonthMinor: number
 }
 
@@ -53,22 +53,22 @@ const PLANS: PlanSpec[] = [
     tier: 'basic',
     name: 'Greenofig Basic',
     description: 'Unlimited food scanning, daily nutrition tracking, full recipe library, and store discounts.',
-    monthlyMinor: 2900,        // SAR 29
-    yearlyPerMonthMinor: 2300, // SAR 23/mo billed yearly = SAR 276/year
+    monthlyMinor: 1499,        // $14.99
+    yearlyPerMonthMinor: 999,  // $9.99/mo billed yearly = $119.88/year
   },
   {
     tier: 'premium',
     name: 'Greenofig Premium',
     description: 'Custom meal plans, AI nutrition assistant, advanced analytics, and direct messaging with Dr. Rawan.',
-    monthlyMinor: 7900,        // SAR 79
-    yearlyPerMonthMinor: 6300, // SAR 63/mo billed yearly = SAR 756/year
+    monthlyMinor: 2999,        // $29.99
+    yearlyPerMonthMinor: 1999, // $19.99/mo billed yearly = $239.88/year
   },
   {
     tier: 'vip',
     name: 'Greenofig VIP',
     description: 'Everything in Premium + monthly consultation, fastest AI response, and exclusive products.',
-    monthlyMinor: 14900,        // SAR 149
-    yearlyPerMonthMinor: 11900, // SAR 119/mo billed yearly = SAR 1428/year
+    monthlyMinor: 5999,        // $59.99
+    yearlyPerMonthMinor: 3999, // $39.99/mo billed yearly = $479.88/year
   },
 ]
 
@@ -109,7 +109,7 @@ async function findOrCreatePrice(
   const created = await stripe.prices.create({
     product: productId,
     unit_amount: unitAmount,
-    currency: 'sar',
+    currency: 'usd',
     recurring: { interval: cycle === 'monthly' ? 'month' : 'year' },
     metadata: {
       greenofig_tier: tier,

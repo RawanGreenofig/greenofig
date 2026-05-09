@@ -33,7 +33,7 @@ export default function AccessibilityPage() {
 
         <H2>الإبلاغ عن مشكلة</H2>
         <P>
-          إن واجهت أي عائق يمنعك من استخدام الموقع، راسلنا على support@greenofig.com.
+          إن واجهت أي عائق يمنعك من استخدام الموقع، راسلنا على health@greenofig.com.
           نعالج جميع تقارير الوصول خلال 5 أيام عمل.
         </P>
       </SimplePage>
@@ -62,7 +62,7 @@ export default function AccessibilityPage() {
       <H2>Reporting an issue</H2>
       <P>
         If you encounter any barrier that prevents you from using the site, email us at
-        support@greenofig.com. We respond to all accessibility reports within 5 working days.
+        health@greenofig.com. We respond to all accessibility reports within 5 working days.
       </P>
     </SimplePage>
   )

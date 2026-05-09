@@ -121,10 +121,10 @@ export const POST = withAuth(async (req: NextRequest, ctx: AuthedContext) => {
       const productIds = items.map((i) => i.productId)
       const { data: products } = await supabase
         .from('products')
-        .select('id, name, price_jod')
+        .select('id, name, price_cents')
         .in('id', productIds)
 
-      type ProductRow = { id: string; name: string; price_jod: number }
+      type ProductRow = { id: string; name: string; price_cents: number }
       const rows = (products as ProductRow[] | null) ?? []
       if (rows.length !== items.length) return badRequest('Product not found.')
 
@@ -139,8 +139,8 @@ export const POST = withAuth(async (req: NextRequest, ctx: AuthedContext) => {
         const p = rows.find((r) => r.id === it.productId)
         return {
           price_data: {
-            currency: 'jod',
-            unit_amount: Math.round((p?.price_jod ?? 0) * 1000), // JOD has 3 minor units
+            currency: 'usd',
+            unit_amount: p?.price_cents ?? 0, // USD minor unit = cents (already stored as cents)
             product_data: { name: p?.name ?? 'Product' },
           },
           quantity: Math.max(1, it.qty),
@@ -180,12 +180,12 @@ export const POST = withAuth(async (req: NextRequest, ctx: AuthedContext) => {
         return badRequest('Booking not found.')
       }
 
-      // Per-type pricing; in production this comes from platform_settings
-      const priceJod =
+      // Per-type pricing in USD; in production this comes from platform_settings
+      const priceUsd =
         booking.type === 'introCall' ? 0 :
-        booking.type === 'followUp'  ? 15 :
-        booking.type === 'deepDive'  ? 35 : 0
-      if (priceJod === 0) {
+        booking.type === 'followUp'  ? 25 :
+        booking.type === 'deepDive'  ? 50 : 0
+      if (priceUsd === 0) {
         return badRequest('This session is free — no payment required.')
       }
 
@@ -195,8 +195,8 @@ export const POST = withAuth(async (req: NextRequest, ctx: AuthedContext) => {
         line_items: [
           {
             price_data: {
-              currency: 'jod',
-              unit_amount: priceJod * 1000,
+              currency: 'usd',
+              unit_amount: priceUsd * 100, // USD minor unit = cents
               product_data: { name: `${booking.type} session (${booking.duration_min} min)` },
             },
             quantity: 1,

@@ -303,7 +303,7 @@ async function getPlatformStats(service: ServiceClient): Promise<string> {
   return [
     `Greenofig snapshot:`,
     `• Total users: ${totalUsers ?? 0}`,
-    `• Revenue this month: ${revenue.toFixed(2)} JOD`,
+    `• Revenue this month: ${revenue.toFixed(2)} USD`,
     `• New signups this week: ${newWeek ?? 0}`,
     `• Pending orders: ${pendingOrders ?? 0}`,
     `• Bookings today: ${bookingsToday ?? 0}`,
@@ -378,7 +378,7 @@ async function getRevenueSummary(
 
   return [
     `Revenue · last ${period}:`,
-    `• Total: ${total.toFixed(2)} JOD`,
+    `• Total: ${total.toFixed(2)} USD`,
     `• Orders: ${orders.length} (${breakdown || 'none'})`,
   ].join('\n')
 }

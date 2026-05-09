@@ -27,6 +27,9 @@ import {
   ShieldCheck,
   Bell,
   AlertOctagon,
+  Mail,
+  UserCheck,
+  Star,
   Bot,
   type LucideIcon,
 } from 'lucide-react'
@@ -62,6 +65,7 @@ export const USER_NAV: DashboardNavItem[] = [
 export const NUTRITIONIST_NAV: DashboardNavItem[] = [
   { href: '/nutritionist',                 labelKey: 'nutritionist.today',           Icon: Sun },
   { href: '/nutritionist/clients',         labelKey: 'nutritionist.myClients',       Icon: Users },
+  { href: '/nutritionist/leads',           labelKey: 'nutritionist.leads',           Icon: Mail },
   { href: '/nutritionist/meal-plans',      labelKey: 'nutritionist.mealPlanBuilder', Icon: Lightbulb },
   { href: '/nutritionist/recipes',         labelKey: 'nutritionist.recipeBuilder',   Icon: ChefHat },
   { href: '/nutritionist/content',         labelKey: 'nutritionist.content',         Icon: PenLine },
@@ -91,6 +95,9 @@ export const ADMIN_NAV: DashboardNavItem[] = [
   { href: '/admin/bookings',       labelKey: 'admin.bookings',     Icon: Calendar },
   { href: '/admin/content',        labelKey: 'admin.content',      Icon: PenLine },
   { href: '/admin/moderation',     labelKey: 'admin.moderation',   Icon: AlertOctagon },
+  { href: '/admin/contacts',       labelKey: 'admin.contacts',     Icon: Mail },
+  { href: '/admin/leads',          labelKey: 'admin.leads',        Icon: UserCheck },
+  { href: '/admin/reviews-analytics', labelKey: 'admin.reviewsAnalytics', Icon: Star },
   { href: '/admin/analytics',      labelKey: 'admin.analytics',    Icon: TrendingUp },
   { href: '/admin/notifications',  labelKey: 'admin.notifications', Icon: Bell },
   { href: '/admin/feature-flags',  labelKey: 'admin.featureFlags', Icon: Flag },

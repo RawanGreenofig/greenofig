@@ -64,7 +64,7 @@ export default function AdminSettingsPage() {
     supportEmail: 'help@greenofig.com',
     defaultLocale: 'en',
     defaultTimezone: 'Asia/Amman',
-    currency: 'JOD',
+    currency: 'USD',
     minPayoutJod: 50,
     platformFeePct: 8,
     vatPct: 16,
@@ -269,9 +269,9 @@ function GeneralPane({
             value={form.currency}
             onChange={(v) => set('currency', v as 'JOD' | 'USD' | 'EUR')}
             options={[
-              ['JOD', 'JOD — Jordanian dinar'],
               ['USD', 'USD — US dollar'],
               ['EUR', 'EUR — Euro'],
+              ['JOD', 'JOD — Jordanian dinar'],
             ]}
           />
         </Field>
@@ -279,7 +279,7 @@ function GeneralPane({
           <NumInput
             value={form.minPayoutJod}
             onChange={(n) => set('minPayoutJod', n)}
-            suffix="JOD"
+            suffix="USD"
           />
         </Field>
         <Field label={tS('general.platformFeePct')}>

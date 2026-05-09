@@ -55,6 +55,21 @@ export function FooterSection() {
             <p className="mt-3 text-sm text-fg-2 leading-relaxed">
               {t('footerTagline')}
             </p>
+            {/* Email contacts — moved from /contact for a cleaner page */}
+            <div className="mt-5 space-y-1.5 text-xs">
+              <a
+                href="mailto:health@greenofig.com"
+                className="block text-fg-2 hover:text-lime-400 transition-colors"
+              >
+                health@greenofig.com
+              </a>
+              <a
+                href="mailto:support@greenofig.com"
+                className="block text-fg-2 hover:text-lime-400 transition-colors"
+              >
+                support@greenofig.com
+              </a>
+            </div>
             <div className="mt-5 flex items-center gap-3">
               <SocialLink href="https://instagram.com" icon={Instagram} label="Instagram" />
               <SocialLink href="https://twitter.com"   icon={Twitter}   label="Twitter / X" />
@@ -66,12 +81,13 @@ export function FooterSection() {
           {/* Col 2 — Navigate */}
           <FooterCol title={tRoot('footerNavigate')}>
             <FooterLink href="/" label={tNav('home')} />
-            <FooterLink href="/#about" label={tNav('about')} />
+            <FooterLink href="/about" label={tNav('about')} />
             <FooterLink href="/#services" label={tNav('services')} />
             <FooterLink href="/pricing" label={tNav('pricing')} />
             <FooterLink href="/#community" label={tNav('community')} />
             <FooterLink href="/#store" label={tNav('store')} />
             <FooterLink href="/blog" label={tNav('blog')} />
+            <FooterLink href="/reviews" label={tNav('reviews')} />
           </FooterCol>
 
           {/* Col 3 — Account */}

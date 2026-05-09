@@ -296,7 +296,7 @@ export function SendDiscountSection() {
                 dir="ltr"
               />
               <span className="absolute end-3 top-1/2 -translate-y-1/2 text-xs text-fg-3 font-mono">
-                {type === 'percent' ? '% off' : 'SAR off'}
+                {type === 'percent' ? '% off' : 'USD off'}
               </span>
             </div>
           </Field>
@@ -323,7 +323,7 @@ export function SendDiscountSection() {
                     dir="ltr"
                   />
                   <span className="absolute end-3 top-1/2 -translate-y-1/2 text-xs text-fg-3 font-mono">
-                    SAR
+                    USD
                   </span>
                 </div>
               )}
@@ -475,7 +475,7 @@ export function SendDiscountSection() {
                     </button>
                   </div>
                   <span className="text-sm text-fg-1 font-mono" dir="ltr">
-                    {c.type === 'percent' ? `${c.value}% off` : `SAR ${c.value} off`}
+                    {c.type === 'percent' ? `${c.value}% off` : `$${c.value} off`}
                   </span>
                   <span className="text-xs text-fg-2 truncate">{targetLabel}</span>
                   <span className="text-xs text-fg-3 font-mono" dir="ltr">

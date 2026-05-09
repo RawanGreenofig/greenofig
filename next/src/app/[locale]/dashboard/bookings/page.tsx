@@ -491,7 +491,7 @@ function SessionPicker({
                   >
                     {s.priceLabel}{' '}
                     <span style={{ color: 'hsl(var(--muted-foreground))' }}>
-                      JOD
+                      USD
                     </span>
                   </span>
                 )}
@@ -662,7 +662,7 @@ function ConfirmStep({
         {!session.free && (
           <Row
             label={t('perSession')}
-            value={`${session.priceLabel} JOD`}
+            value={`${session.priceLabel} USD`}
             mono
           />
         )}

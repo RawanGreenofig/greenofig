@@ -231,7 +231,7 @@ export default function AdminOverviewPage() {
           tint="#06b6d4"
           label={tT('kpis.mrr')}
           value={String(live.data?.mrr ?? 6180)}
-          unit="JOD"
+          unit="USD"
           delta={9}
           tT={tT}
         />
@@ -248,7 +248,7 @@ export default function AdminOverviewPage() {
           tint="#a855f7"
           label={tT('kpis.storeRev30d')}
           value={String(Math.round(live.data?.storeRev30d ?? 3420))}
-          unit="JOD"
+          unit="USD"
           delta={-4}
           tT={tT}
         />

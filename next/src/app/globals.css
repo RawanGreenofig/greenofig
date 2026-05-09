@@ -837,8 +837,9 @@ html[dir='rtl'] .lucide-arrow-right {
   color: #fff;
 }
 .lang-btn.active {
-  background: var(--gf-primary, #a3e635);
-  color: hsl(220, 15%, 8%);
+  background: linear-gradient(to bottom, #a3e635, #65a30d);
+  border: 1px solid rgba(101, 163, 13, 0.6);
+  color: #0d1a12;
   cursor: default;
 }
 .lang-btn:focus-visible {

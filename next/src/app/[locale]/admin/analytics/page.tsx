@@ -159,7 +159,7 @@ export default function AdminAnalyticsPage() {
     {
       Icon: CreditCard,
       labelKey: 'mrr',
-      value: liveKpis ? `${liveKpis.mrr.toLocaleString()} JOD` : '6,180 JOD',
+      value: liveKpis ? `${liveKpis.mrr.toLocaleString()} USD` : '6,180 USD',
       delta: 9,
       tint: '#a3e635',
     },

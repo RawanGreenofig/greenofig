@@ -171,9 +171,9 @@ export default function AdminOrdersPage() {
 
       {/* KPIs */}
       <section className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <Stat Icon={CreditCard} tint="#a3e635" label={tO('totalRevenue')}    value={`${totalRevenue} JOD`} />
+        <Stat Icon={CreditCard} tint="#a3e635" label={tO('totalRevenue')}    value={`${totalRevenue} USD`} />
         <Stat Icon={ShoppingBag} tint="#06b6d4" label={tO('ordersThisMonth')} value={ordersThisMonth} />
-        <Stat Icon={TrendingUp} tint="#e8912a" label={tO('avgOrderValue')}    value={`${aov} JOD`} />
+        <Stat Icon={TrendingUp} tint="#e8912a" label={tO('avgOrderValue')}    value={`${aov} USD`} />
         <Stat Icon={CheckCircle2} tint="#a855f7" label={tO('fulfillment')}     value={`${fulfillmentRate}%`} />
       </section>
 
@@ -280,7 +280,7 @@ function OrderRow({
           {tO('itemsCount', { count: order.itemCount })}
         </p>
         <p className="hidden md:block font-mono text-sm text-fg-1" dir="ltr">
-          {order.total} <span className="text-xs text-fg-3">JOD</span>
+          {order.total} <span className="text-xs text-fg-3">USD</span>
         </p>
         <span
           className="hidden md:inline-flex rounded-pill h-5 px-2 items-center text-[10px] uppercase tracking-eyebrow font-bold"

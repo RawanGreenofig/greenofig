@@ -128,7 +128,7 @@ export default function ProductDetailPage() {
               className="text-base font-semibold"
               style={{ color: 'var(--gf-fg-2)' }}
             >
-              JOD
+              USD
             </span>
             {(onSale || discountPct > 0) && (
               <span

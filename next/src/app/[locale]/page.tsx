@@ -7,7 +7,7 @@ import { ServicesSection } from '@/components/sections/ServicesSection'
 import { ReviewsSection } from '@/components/sections/ReviewsSection'
 import { CommunitySection } from '@/components/sections/CommunitySection'
 import { StoreSection } from '@/components/sections/StoreSection'
-import { BookingSection } from '@/components/sections/BookingSection'
+import { ConsultationQuiz } from '@/components/sections/ConsultationQuiz'
 import { FooterSection } from '@/components/sections/FooterSection'
 
 interface PageProps {
@@ -31,7 +31,7 @@ export default function Home({ params }: PageProps) {
       <ReviewsSection />
       <CommunitySection />
       <StoreSection />
-      <BookingSection />
+      <ConsultationQuiz />
       <FooterSection />
     </main>
   )

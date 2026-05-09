@@ -1075,8 +1075,8 @@ const TIER_CONFIG: Record<TierKey, {
     name: 'Basic',
     color: '#60a5fa',
     badge: '#1e3a5f',
-    price: '29',
-    currency: 'SAR/mo',
+    price: '9',
+    currency: 'USD/mo',
     features:
       'Unlimited scans · Full community · Progress charts · Recipe library',
   },
@@ -1084,8 +1084,8 @@ const TIER_CONFIG: Record<TierKey, {
     name: 'Premium',
     color: '#a3e635',
     badge: '#1a2e0a',
-    price: '79',
-    currency: 'SAR/mo',
+    price: '19',
+    currency: 'USD/mo',
     features:
       'Everything in Basic · Direct messaging · Custom meal plans · AI assistant',
   },
@@ -1093,8 +1093,8 @@ const TIER_CONFIG: Record<TierKey, {
     name: 'VIP',
     color: '#fbbf24',
     badge: '#2d1f00',
-    price: '149',
-    currency: 'SAR/mo',
+    price: '39',
+    currency: 'USD/mo',
     features:
       'Everything in Premium · Monthly consultation · Priority support · Exclusive products',
   },
@@ -1525,7 +1525,7 @@ function SubscriptionPane({
                   </p>
                 </div>
                 <p className="font-mono text-sm text-fg-1" dir="ltr">
-                  {inv.amount} JOD
+                  {inv.amount} USD
                 </p>
                 <div className="flex items-center gap-1">
                   <button

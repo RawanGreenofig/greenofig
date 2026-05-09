@@ -3,7 +3,7 @@
 import Image from 'next/image'
 import { motion } from 'framer-motion'
 import { useLocale, useTranslations } from 'next-intl'
-import { ArrowRight, CheckCircle } from 'lucide-react'
+import { ArrowRight, CheckCircle, BadgeCheck } from 'lucide-react'
 import { Fragment } from 'react'
 import { Link } from '@/i18n/navigation'
 import { ease, NUTRITIONIST } from '@/lib/tokens'
@@ -19,7 +19,6 @@ const STAGGER = (delay: number) => ({
 
 export function BookingSection() {
   const t = useTranslations('marketing')
-  const tCommon = useTranslations('common')
   const locale = useLocale()
   const isAr = locale === 'ar'
   const drName = isAr ? NUTRITIONIST.nameAr : NUTRITIONIST.name
@@ -104,17 +103,15 @@ export function BookingSection() {
               style={{ width: 56, height: 56 }}
             />
             <div className="min-w-0">
-              <p className="text-sm font-semibold text-fg-1 truncate">
+              <p className="inline-flex items-center text-sm font-semibold text-fg-1 truncate" style={{ gap: 10 }}>
                 {drName}
+                <BadgeCheck
+                  className="w-4 h-4 shrink-0"
+                  strokeWidth={1.75}
+                  style={{ color: '#60a5fa' }}
+                />
               </p>
               <p className="text-xs text-fg-2 truncate">{drRole}</p>
-              <p className="mt-1 inline-flex items-center gap-1.5 text-xs text-lime-400">
-                <span
-                  aria-hidden
-                  className="w-1.5 h-1.5 rounded-full bg-success"
-                />
-                {tCommon('verified')}
-              </p>
             </div>
           </div>
         </motion.div>

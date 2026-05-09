@@ -160,12 +160,15 @@ export function CommunitySection() {
                 </>
               ) : (
                 <>
-                  <div className="inline-flex items-center justify-center w-12 h-12 rounded-pill bg-lime-500/10 text-lime-500 mb-4">
-                    <Lock className="w-5 h-5" />
+                  <div className="flex items-center justify-center gap-3 mb-4">
+                    <Lock
+                      className="w-6 h-6 text-lime-400"
+                      strokeWidth={1.5}
+                    />
+                    <p className="inline-block text-xs font-semibold uppercase tracking-eyebrow text-amber bg-amber/15 rounded-pill px-3 py-1">
+                      {t('communityLocked')}
+                    </p>
                   </div>
-                  <p className="inline-block text-xs font-semibold uppercase tracking-eyebrow text-amber bg-amber/15 rounded-pill px-3 py-1 mb-4">
-                    {t('communityLocked')}
-                  </p>
                   <h3 className="font-display text-2xl font-bold tracking-tight text-fg-1">
                     {t('communityLockedTitle')}
                   </h3>

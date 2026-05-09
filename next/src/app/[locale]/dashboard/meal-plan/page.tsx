@@ -15,6 +15,7 @@ import {
   Calendar,
   ArrowRight,
   ShoppingBag,
+  BadgeCheck,
   type LucideIcon,
 } from '@/icons'
 import { Link } from '@/i18n/navigation'
@@ -632,19 +633,24 @@ function DrFootnote({
   void t
   return (
     <article className="glass-effect rounded-xl p-5 flex items-center gap-4">
-      <span
-        className="font-display text-base font-bold"
-        style={{ color: 'var(--gf-primary-text)' }}
-      >
-        {drName
-          .split(' ')
-          .map((n) => n[0])
-          .slice(0, 2)
-          .join('')}
-      </span>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src="/images/dr-rawan-othman.jpg"
+        alt={drName}
+        width={44}
+        height={44}
+        className="rounded-full object-cover object-top shrink-0"
+        style={{ width: 44, height: 44 }}
+      />
       <div className="min-w-0">
-        <p className="text-sm font-semibold text-fg-1">{drName}</p>
-        <p className="text-xs text-fg-3">Verified Nutritionist</p>
+        <p className="inline-flex items-center text-sm font-semibold text-fg-1" style={{ gap: 10 }}>
+          {drName}
+          <BadgeCheck
+            className="w-4 h-4 shrink-0"
+            strokeWidth={1.75}
+            style={{ color: '#60a5fa' }}
+          />
+        </p>
       </div>
     </article>
   )

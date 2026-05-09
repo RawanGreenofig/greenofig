@@ -3,10 +3,10 @@
 import { motion } from 'framer-motion'
 import { useTranslations } from 'next-intl'
 import {
-  Rocket,
-  BookOpen,
-  Camera,
-  CreditCard,
+  Stethoscope,
+  Utensils,
+  ScanLine,
+  Pill,
   type LucideIcon,
 } from 'lucide-react'
 import { ease } from '@/lib/tokens'
@@ -26,10 +26,10 @@ interface Service {
 }
 
 const SERVICES: Service[] = [
-  { Icon: Rocket,     iconColor: 'var(--gf-lime-400)', topColor: 'var(--gf-primary)',   titleKey: 'service1Title', bodyKey: 'service1Body' },
-  { Icon: BookOpen,   iconColor: 'var(--gf-amber)',    topColor: 'var(--gf-amber)',     titleKey: 'service2Title', bodyKey: 'service2Body' },
-  { Icon: Camera,     iconColor: 'var(--gf-berry)',    topColor: 'var(--gf-berry)',     titleKey: 'service3Title', bodyKey: 'service3Body' },
-  { Icon: CreditCard, iconColor: 'var(--gf-fig-gold)', topColor: 'var(--gf-fig-gold)',  titleKey: 'service4Title', bodyKey: 'service4Body' },
+  { Icon: Stethoscope, iconColor: 'var(--gf-lime-400)', topColor: 'var(--gf-primary)',   titleKey: 'service1Title', bodyKey: 'service1Body' },
+  { Icon: Utensils,    iconColor: 'var(--gf-amber)',    topColor: 'var(--gf-amber)',     titleKey: 'service2Title', bodyKey: 'service2Body' },
+  { Icon: ScanLine,    iconColor: 'var(--gf-berry)',    topColor: 'var(--gf-berry)',     titleKey: 'service3Title', bodyKey: 'service3Body' },
+  { Icon: Pill,        iconColor: 'var(--gf-fig-gold)', topColor: 'var(--gf-fig-gold)',  titleKey: 'service4Title', bodyKey: 'service4Body' },
 ]
 
 export function ServicesSection() {
