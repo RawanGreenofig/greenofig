@@ -3,6 +3,8 @@
 import { useEffect, useRef, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { getBrowserSupabase } from '@/lib/supabase/client'
+import { useUser } from '@/lib/hooks/useUser'
+import { UploadButton } from '@/components/UploadButton'
 import {
   Search,
   Send,
@@ -51,6 +53,7 @@ const PRESET_ANSWER =
 export default function ResearchPage() {
   const t = useTranslations('nutritionist.researchPage')
   const tNut = useTranslations('nutritionist')
+  const { profile } = useUser()
 
   const [query, setQuery] = useState('')
   const [docQuery, setDocQuery] = useState('')
@@ -60,29 +63,41 @@ export default function ResearchPage() {
   const [thinking, setThinking] = useState(false)
   const scrollRef = useRef<HTMLDivElement>(null)
 
-  // Hydrate document library
-  useEffect(() => {
+  // Hydrate document library. The DB schema uses filename +
+  // file_size_bytes (real column names); map at the boundary.
+  const reloadDocs = async () => {
     const supabase = getBrowserSupabase()
     if (!supabase) return
+    type Row = {
+      id: string
+      filename: string
+      file_size_bytes: number | null
+      created_at: string
+    }
+    const { data } = await supabase
+      .from('research_documents')
+      .select('id, filename, file_size_bytes, created_at')
+      .eq('is_active', true)
+      .order('created_at', { ascending: false })
+      .limit(40)
+    const rows = (data as Row[] | null) ?? []
+    if (rows.length === 0) return
+    setDocs(
+      rows.map((r) => ({
+        id: r.id,
+        name: r.filename,
+        sizeMb: r.file_size_bytes ? r.file_size_bytes / (1024 * 1024) : 0,
+        uploadedISO: r.created_at,
+      })),
+    )
+  }
+  useEffect(() => {
     let cancelled = false
     void (async () => {
-      type Row = { id: string; name: string; size_mb: number; created_at: string }
-      const { data } = await supabase
-        .from('research_documents')
-        .select('id, name, size_mb, created_at')
-        .order('created_at', { ascending: false })
-        .limit(20)
-      if (cancelled) return
-      const rows = (data as Row[] | null) ?? []
-      if (rows.length === 0) return
-      setDocs(rows.map((r) => ({
-        id: r.id,
-        name: r.name,
-        sizeMb: r.size_mb,
-        uploadedISO: r.created_at,
-      })))
+      if (!cancelled) await reloadDocs()
     })()
     return () => { cancelled = true }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const visibleDocs = docs.filter((d) =>
@@ -191,15 +206,28 @@ export default function ResearchPage() {
             <Library className="w-4 h-4 text-lime-400" strokeWidth={1.75} />
             <h2 className="text-sm font-semibold text-fg-1">{t('library')}</h2>
           </div>
-          <button
-            type="button"
-            disabled
-            title="Document upload not yet wired"
-            className="w-full inline-flex items-center justify-center gap-1.5 rounded-pill bg-primary/15 text-lime-400 h-9 px-4 text-xs font-semibold opacity-50 cursor-not-allowed"
+          <UploadButton
+            bucket="research-docs"
+            pathPrefix={profile?.id ?? 'shared'}
+            accept="application/pdf"
+            privateBucket
+            onUploaded={async (path, file) => {
+              const supabase = getBrowserSupabase()
+              if (!supabase || !profile?.id) return
+              await supabase.from('research_documents').insert({
+                uploaded_by: profile.id,
+                filename: file.name,
+                file_url: path,
+                file_size_bytes: file.size,
+                is_active: true,
+              } as never)
+              await reloadDocs()
+            }}
+            className="w-full inline-flex items-center justify-center gap-1.5 rounded-pill bg-primary/15 text-lime-400 h-9 px-4 text-xs font-semibold hover:bg-primary/25"
           >
             <Plus className="w-3.5 h-3.5" strokeWidth={2} />
             {t('addDocument')}
-          </button>
+          </UploadButton>
           <div className="relative">
             <Search
               className="absolute start-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-fg-3"
