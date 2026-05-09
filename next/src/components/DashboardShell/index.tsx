@@ -101,6 +101,7 @@ export function DashboardShell({
     <div
       data-theme="dashboard"
       data-tier={dataTier}
+      data-role={role}
       suppressHydrationWarning
       className="flex h-screen overflow-hidden text-fg-1"
       style={{ background: 'var(--gf-bg)' }}

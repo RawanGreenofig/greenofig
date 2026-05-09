@@ -19,8 +19,13 @@ const FIELD_BORDER = 'var(--gf-border)'
 export function Topbar({ onOpenMenu }: { onOpenMenu: () => void }) {
   const t = useTranslations('dashboard')
   const tNav = useTranslations('nav')
-  const { user, profile, signOut, tier } = useAuth()
+  const { user, profile, signOut, tier, role } = useAuth()
   const userTier = (tier ?? 'free') as 'free' | 'basic' | 'premium' | 'vip'
+  // Admin and nutritionist chrome shows their role (in role-tinted
+  // pill) instead of their tier — the user's tier is irrelevant for
+  // staff accounts.
+  const pillLabel =
+    role === 'admin' ? 'admin' : role === 'nutritionist' ? 'nutritionist' : `${userTier} plan`
   const displayName = resolveDisplayName(profile, user, 'Guest')
   const initials =
     displayName
@@ -126,7 +131,7 @@ export function Topbar({ onOpenMenu }: { onOpenMenu: () => void }) {
         }}
         suppressHydrationWarning
       >
-        {mounted ? `${userTier} plan` : ''}
+        {mounted ? pillLabel : ''}
       </span>
 
       <div className="sm:hidden flex-1" />

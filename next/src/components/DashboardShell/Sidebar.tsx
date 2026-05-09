@@ -85,7 +85,7 @@ export function Sidebar({
   // loads. Otherwise the sidebar would show "FREE" while the
   // topbar/settings (which already consume the cached tier) show
   // the real tier — the badges would disagree mid-render.
-  const { user, profile, tier: authTier, signOut } = useAuth()
+  const { user, profile, tier: authTier, role, signOut } = useAuth()
   const { theme, toggle: toggleTheme } = useTheme()
   // The sidebar's bottom user card flashed "free" then "vip" on every
   // dashboard load because profile loads asynchronously. Gate the
@@ -119,6 +119,10 @@ export function Sidebar({
     | 'basic'
     | 'premium'
     | 'vip'
+  // Admin/nutritionist chrome shows the role; only customer accounts
+  // show their tier on the pill.
+  const pillLabel =
+    role === 'admin' ? 'admin' : role === 'nutritionist' ? 'nutritionist' : tier
   const initials =
     displayName
       .split(/\s+/)
@@ -281,7 +285,7 @@ export function Sidebar({
                 }}
                 suppressHydrationWarning
               >
-                {mounted ? tier : ''}
+                {mounted ? pillLabel : ''}
               </span>
             </div>
             {email && (

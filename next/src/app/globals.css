@@ -409,6 +409,23 @@ html[dir='rtl'] .lucide-arrow-right {
   --tier-badge-text: #fbbf24;
 }
 
+/* ── Per-role accent colors (overrides tier when present) ───────
+ * Admin and nutritionist chrome show the role, not the tier. Set
+ * on the shell via data-role; the pill / glow tokens override the
+ * tier ones below them in the cascade. */
+[data-role='admin'] {
+  --tier-color: #a78bfa;
+  --tier-glow: rgba(167,139,250,0.18);
+  --tier-badge-bg: rgba(167,139,250,0.12);
+  --tier-badge-text: #c4b5fd;
+}
+[data-role='nutritionist'] {
+  --tier-color: #f472b6;
+  --tier-glow: rgba(244,114,182,0.18);
+  --tier-badge-bg: rgba(244,114,182,0.12);
+  --tier-badge-text: #f9a8d4;
+}
+
 /* The previous design used a 3px tier-colored top border on the
  * sidebar — replaced with an inline tier pill in the topbar (cleaner
  * visual, no smudgy 3px line at the top of the chrome). */
