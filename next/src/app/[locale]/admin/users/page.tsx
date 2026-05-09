@@ -2,15 +2,19 @@
 
 import { useMemo, useState } from 'react'
 import { useTranslations } from 'next-intl'
+import toast from 'react-hot-toast'
 import { Avatar } from '@/components/Avatar'
+import { Switch } from '@/components/Switch'
 import {
   Search,
   Download,
   UserPlus,
   ArrowRight,
   Users as UsersIcon,
+  X,
 } from '@/icons'
 import { Link } from '@/i18n/navigation'
+import { useUser } from '@/lib/hooks/useUser'
 import { useSupabaseQuery } from '@/lib/hooks/useSupabaseQuery'
 import type { Tier } from '@/lib/constants'
 
@@ -71,11 +75,14 @@ export default function AdminUsersPage() {
   const t = useTranslations('admin')
   const tU = useTranslations('admin.usersPage')
   const tTiers = useTranslations('tiers')
+  const { profile: meProfile } = useUser()
+  const meId = meProfile?.id ?? null
 
   const [query, setQuery] = useState('')
   const [roleF, setRoleF] = useState<'all' | Role>('all')
   const [tierF, setTierF] = useState<'all' | Tier>('all')
   const [statusF, setStatusF] = useState<'all' | Status>('all')
+  const [inviteOpen, setInviteOpen] = useState(false)
 
   const live = useSupabaseQuery<AdminUser[]>(async (supabase) => {
     type Row = {
@@ -150,6 +157,7 @@ export default function AdminUsersPage() {
         <div className="flex flex-wrap items-center gap-2">
           <button
             type="button"
+            onClick={() => exportUsersCsv(visible)}
             className="inline-flex items-center gap-1.5 rounded-pill bg-surface-raised border border-border h-10 px-4 text-xs font-semibold text-fg-1 hover:border-primary/40"
           >
             <Download className="w-3.5 h-3.5" strokeWidth={1.75} />
@@ -157,6 +165,7 @@ export default function AdminUsersPage() {
           </button>
           <button
             type="button"
+            onClick={() => setInviteOpen(true)}
             className="inline-flex items-center gap-1.5 rounded-pill bg-gradient-to-b from-lime-400 to-lime-600 text-bg font-semibold h-10 px-4 text-xs shadow-lime-glow border border-lime-600/60 hover:-translate-y-px transition-transform"
           >
             <UserPlus className="w-3.5 h-3.5" strokeWidth={2} />
@@ -220,10 +229,56 @@ export default function AdminUsersPage() {
           <p className="mt-1 text-sm text-fg-2">{tU('noResultsBody')}</p>
         </div>
       ) : (
-        <UserTable t={tU} tTiers={tTiers} rows={visible} />
+        <UserTable
+          t={tU}
+          tTiers={tTiers}
+          rows={visible}
+          meId={meId}
+          onChanged={() => live.reload()}
+        />
+      )}
+
+      {inviteOpen && (
+        <InviteUserModal
+          onClose={() => setInviteOpen(false)}
+          onInvited={() => {
+            setInviteOpen(false)
+            live.reload()
+          }}
+        />
       )}
     </div>
   )
+}
+
+function exportUsersCsv(rows: AdminUser[]): void {
+  const header = 'name,email,role,tier,status,joined,last_seen_hours\n'
+  const cell = (v: unknown): string => {
+    const s = v == null ? '' : String(v)
+    return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s
+  }
+  const body = rows
+    .map((r) =>
+      [
+        r.name,
+        r.email,
+        r.role,
+        r.tier,
+        r.status,
+        r.joinedISO,
+        Math.round(r.lastSeenHours),
+      ]
+        .map(cell)
+        .join(','),
+    )
+    .join('\n')
+  const blob = new Blob([header + body], { type: 'text/csv' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = `greenofig-users-${new Date().toISOString().slice(0, 10)}.csv`
+  a.click()
+  URL.revokeObjectURL(url)
 }
 
 /* ── Components ──────────────────────────────────────────────────── */
@@ -268,27 +323,32 @@ function UserTable({
   t,
   tTiers,
   rows,
+  meId,
+  onChanged,
 }: {
   t: ReturnType<typeof useTranslations>
   tTiers: ReturnType<typeof useTranslations>
   rows: AdminUser[]
+  meId: string | null
+  onChanged: () => void
 }) {
   return (
     <div className="rounded-xl border border-border bg-surface overflow-hidden">
-      <div className="hidden md:grid grid-cols-[2fr_1fr_1fr_1fr_1fr_1fr_auto] gap-3 px-5 py-3 bg-bg-deeper/40 border-b border-border text-[10px] uppercase tracking-eyebrow text-fg-3 font-semibold">
+      <div className="hidden md:grid grid-cols-[2fr_1fr_1fr_1fr_1fr_1fr_72px_auto] gap-3 px-5 py-3 bg-bg-deeper/40 border-b border-border text-[10px] uppercase tracking-eyebrow text-fg-3 font-semibold">
         <div>{t('col.user')}</div>
         <div>{t('col.role')}</div>
         <div>{t('col.tier')}</div>
         <div>{t('col.status')}</div>
         <div>{t('col.joined')}</div>
         <div>{t('col.lastSeen')}</div>
+        <div className="text-end">Active</div>
         <div className="sr-only">{t('col.actions')}</div>
       </div>
       <ul className="divide-y divide-border">
         {rows.map((u) => (
           <li
             key={u.id}
-            className="md:grid md:grid-cols-[2fr_1fr_1fr_1fr_1fr_1fr_auto] gap-3 items-center px-5 py-3 hover:bg-surface-raised transition-colors"
+            className="md:grid md:grid-cols-[2fr_1fr_1fr_1fr_1fr_1fr_72px_auto] gap-3 items-center px-5 py-3 hover:bg-surface-raised transition-colors"
           >
             <div className="flex items-center gap-3 min-w-0 mb-3 md:mb-0">
               <Avatar text={u.initials} size={36} />
@@ -351,6 +411,13 @@ function UserTable({
                   : t('lastSeenAgo', { value: formatHours(u.lastSeenHours) })}
             </ColCell>
 
+            <div className="flex items-center justify-between md:justify-end gap-2 mb-2 md:mb-0">
+              <span className="md:hidden text-[10px] uppercase tracking-eyebrow text-fg-3 font-semibold">
+                Active
+              </span>
+              <SuspendSwitch user={u} meId={meId} onChanged={onChanged} />
+            </div>
+
             <div className="md:justify-self-end">
               <Link
                 href={`/admin/users/${u.id}`}
@@ -363,6 +430,200 @@ function UserTable({
           </li>
         ))}
       </ul>
+    </div>
+  )
+}
+
+function SuspendSwitch({
+  user,
+  meId,
+  onChanged,
+}: {
+  user: AdminUser
+  meId: string | null
+  onChanged: () => void
+}) {
+  const [busy, setBusy] = useState(false)
+  // Optimistic flag — the live query will refetch on success.
+  const isSelf = meId === user.id
+  const isActive = user.status !== 'suspended'
+
+  const toggle = async (next: boolean) => {
+    if (busy || isSelf) return
+    setBusy(true)
+    try {
+      const res = await fetch('/api/admin/users/suspend', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: user.id, suspend: !next }),
+      })
+      const data = (await res.json().catch(() => ({}))) as {
+        ok?: boolean
+        error?: string | { message?: string }
+      }
+      if (res.ok && data.ok) {
+        toast.success(next ? `${user.name} restored` : `${user.name} suspended`)
+        onChanged()
+      } else {
+        const msg =
+          typeof data.error === 'string'
+            ? data.error
+            : data.error?.message ?? 'Action failed'
+        toast.error(msg)
+      }
+    } catch {
+      toast.error('Network error')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  return (
+    <Switch
+      on={isActive}
+      onChange={toggle}
+      disabled={busy || isSelf}
+      ariaLabel={isActive ? `Suspend ${user.name}` : `Restore ${user.name}`}
+    />
+  )
+}
+
+function InviteUserModal({
+  onClose,
+  onInvited,
+}: {
+  onClose: () => void
+  onInvited: () => void
+}) {
+  const [email, setEmail] = useState('')
+  const [role, setRole] = useState<'user' | 'nutritionist' | 'admin'>('user')
+  const [tier, setTier] = useState<Tier>('free')
+  const [busy, setBusy] = useState(false)
+
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (busy) return
+    setBusy(true)
+    try {
+      const res = await fetch('/api/admin/users/invite', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email.trim(), role, tier }),
+      })
+      const data = (await res.json().catch(() => ({}))) as {
+        ok?: boolean
+        error?: string | { message?: string }
+      }
+      if (res.ok && data.ok) {
+        toast.success(`Invite sent to ${email}`)
+        onInvited()
+      } else {
+        const msg =
+          typeof data.error === 'string'
+            ? data.error
+            : data.error?.message ?? 'Could not send invite'
+        toast.error(msg)
+      }
+    } catch {
+      toast.error('Network error')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }}
+      onClick={(e) => e.target === e.currentTarget && onClose()}
+    >
+      <form
+        onSubmit={submit}
+        className="w-full max-w-md rounded-2xl border border-border bg-surface p-6 space-y-5"
+      >
+        <header className="flex items-start justify-between gap-3">
+          <div>
+            <h2 className="text-lg font-bold text-fg-1">Invite a user</h2>
+            <p className="mt-1 text-xs text-fg-3">
+              They&apos;ll get a magic-link email to claim the account.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="text-fg-3 hover:text-fg-1"
+            aria-label="Close"
+          >
+            <X className="w-5 h-5" strokeWidth={1.75} />
+          </button>
+        </header>
+
+        <label className="block">
+          <span className="text-xs uppercase tracking-eyebrow text-fg-3 font-semibold mb-1.5 block">
+            Email
+          </span>
+          <input
+            type="email"
+            required
+            autoFocus
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="person@example.com"
+            className="w-full h-10 rounded-md bg-bg-deeper border border-border px-3 text-sm text-fg-1 placeholder-fg-3 focus:outline-none focus:border-primary"
+          />
+        </label>
+
+        <label className="block">
+          <span className="text-xs uppercase tracking-eyebrow text-fg-3 font-semibold mb-1.5 block">
+            Role
+          </span>
+          <select
+            value={role}
+            onChange={(e) => setRole(e.target.value as 'user' | 'nutritionist' | 'admin')}
+            className="w-full h-10 rounded-md bg-bg-deeper border border-border px-3 text-sm text-fg-1 focus:outline-none focus:border-primary"
+          >
+            <option value="user">User</option>
+            <option value="nutritionist">Nutritionist</option>
+            <option value="admin">Admin</option>
+          </select>
+        </label>
+
+        {role === 'user' && (
+          <label className="block">
+            <span className="text-xs uppercase tracking-eyebrow text-fg-3 font-semibold mb-1.5 block">
+              Tier
+            </span>
+            <select
+              value={tier}
+              onChange={(e) => setTier(e.target.value as Tier)}
+              className="w-full h-10 rounded-md bg-bg-deeper border border-border px-3 text-sm text-fg-1 focus:outline-none focus:border-primary"
+            >
+              <option value="free">Free</option>
+              <option value="basic">Basic</option>
+              <option value="premium">Premium</option>
+              <option value="vip">VIP</option>
+            </select>
+          </label>
+        )}
+
+        <div className="flex items-center justify-end gap-2 pt-2">
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-pill bg-surface-raised border border-border h-9 px-4 text-xs font-semibold text-fg-1 hover:border-primary/40"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            disabled={busy}
+            className="inline-flex items-center gap-1.5 rounded-pill bg-gradient-to-b from-lime-400 to-lime-600 text-bg font-semibold h-9 px-4 text-xs shadow-lime-glow border border-lime-600/60 disabled:opacity-50 disabled:cursor-wait"
+          >
+            <UserPlus className="w-3.5 h-3.5" strokeWidth={2} />
+            {busy ? 'Sending…' : 'Send invite'}
+          </button>
+        </div>
+      </form>
     </div>
   )
 }
