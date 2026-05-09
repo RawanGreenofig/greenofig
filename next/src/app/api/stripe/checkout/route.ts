@@ -180,6 +180,22 @@ export const POST = withAuth(async (req: NextRequest, ctx: AuthedContext) => {
         return badRequest('Booking not found.')
       }
 
+      // VIP members get every consultation free — skip Stripe entirely and
+      // mark the booking confirmed in the same shape the webhook would, so
+      // it appears in the upcoming list with a meeting URL.
+      if (ctx.profile.tier === 'vip') {
+        const service = getServiceSupabase()
+        if (service) {
+          await service
+            .from('bookings')
+            .update({
+              meeting_url: `https://meet.greenofig.com/${bookingId}`,
+            } as never)
+            .eq('id', bookingId)
+        }
+        return json({ free: true, url: null })
+      }
+
       // Per-type pricing in USD; in production this comes from platform_settings
       const priceUsd =
         booking.type === 'introCall' ? 0 :

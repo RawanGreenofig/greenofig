@@ -31,6 +31,7 @@ import {
   UserCheck,
   Star,
   Bot,
+  Gift,
   type LucideIcon,
 } from 'lucide-react'
 import type { Tier } from '@/lib/constants'
@@ -91,6 +92,7 @@ export const ADMIN_NAV: DashboardNavItem[] = [
   { href: '/admin',                labelKey: 'admin.overview',     Icon: LayoutDashboard },
   { href: '/admin/users',          labelKey: 'admin.users',        Icon: Users },
   { href: '/admin/store',          labelKey: 'admin.store',        Icon: ShoppingBag },
+  { href: '/admin/coupons',        labelKey: 'admin.coupons',      Icon: Gift },
   { href: '/admin/orders',         labelKey: 'admin.orders',       Icon: Package },
   { href: '/admin/bookings',       labelKey: 'admin.bookings',     Icon: Calendar },
   { href: '/admin/content',        labelKey: 'admin.content',      Icon: PenLine },
@@ -113,10 +115,10 @@ export const ADMIN_NAV: DashboardNavItem[] = [
 export const ADMIN_MOBILE_TABS: DashboardNavItem[] = [
   ADMIN_NAV[0],  // Overview
   ADMIN_NAV[1],  // Users
-  ADMIN_NAV[7],  // Analytics
-  ADMIN_NAV[6],  // Moderation
+  ADMIN_NAV[11], // Analytics
+  ADMIN_NAV[7],  // Moderation
 ]
-export const ADMIN_MOBILE_FAB = ADMIN_NAV[5] // Content — center FAB
+export const ADMIN_MOBILE_FAB = ADMIN_NAV[6] // Content — center FAB
 
 /** Top-level mobile tabs (4 + FAB). Picked from USER_NAV.
  * Layout: Home · Track | (Scanner FAB) | Meals · Profile  */
