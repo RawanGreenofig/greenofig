@@ -15,7 +15,10 @@ export const dynamic = 'force-dynamic'
  * roles, and the conversation insert needs to write
  * `nutritionist_id` for someone other than the caller.
  *
- * Response: { conversationId: string } | { error: string }
+ * Response: { conversationId, nutritionistId } | { error }
+ *
+ * The client uses `nutritionistId` as `recipient_id` on subsequent
+ * message inserts — `messages.recipient_id` is NOT NULL.
  */
 export const POST = withAuth(async (_req, ctx: AuthedContext) => {
   const supabase = getServiceSupabase()
@@ -24,13 +27,20 @@ export const POST = withAuth(async (_req, ctx: AuthedContext) => {
   // Look for an existing conversation owned by this client first.
   const { data: existing } = await supabase
     .from('conversations')
-    .select('id')
+    .select('id, nutritionist_id')
     .eq('user_id', ctx.userId)
     .order('last_message_at', { ascending: false })
     .limit(1)
     .maybeSingle()
-  const existingId = (existing as { id?: string } | null)?.id
-  if (existingId) return json({ conversationId: existingId })
+  const existingRow = existing as
+    | { id: string; nutritionist_id: string }
+    | null
+  if (existingRow?.id) {
+    return json({
+      conversationId: existingRow.id,
+      nutritionistId: existingRow.nutritionist_id,
+    })
+  }
 
   // No conversation yet. Find the nutritionist.
   const { data: nutri } = await supabase
@@ -59,5 +69,8 @@ export const POST = withAuth(async (_req, ctx: AuthedContext) => {
   if (error || !created) {
     return internalError()
   }
-  return json({ conversationId: (created as { id: string }).id })
+  return json({
+    conversationId: (created as { id: string }).id,
+    nutritionistId: nutriId,
+  })
 })

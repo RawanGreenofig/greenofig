@@ -39,6 +39,9 @@ interface Msg {
 
 interface ThreadRow {
   id: string
+  /** Profile id of the client — needed as recipient_id when the
+   *  nutritionist sends a message into this conversation. */
+  clientId?: string
   clientName: string
   clientInitials: string
   tier: Tier
@@ -211,6 +214,7 @@ export default function NutritionistMessagesPage() {
         const lastBody = list[list.length - 1]?.content ?? ''
         return {
           id: c.id,
+          clientId: c.user_id,
           clientName: name,
           clientInitials: initialsOf(name),
           tier: client?.tier ?? 'basic',
@@ -315,16 +319,18 @@ export default function NutritionistMessagesPage() {
 
     void (async () => {
       const supabase = getBrowserSupabase()
-      if (supabase && /^[0-9a-f-]{32,}$/i.test(active.id)) {
-        const { data } = await supabase
+      if (supabase && /^[0-9a-f-]{32,}$/i.test(active.id) && active.clientId) {
+        const { data, error } = await supabase
           .from('messages')
           .insert({
             conversation_id: active.id,
             sender_id: userId,
+            recipient_id: active.clientId,
             content: body,
           } as never)
           .select('id')
           .maybeSingle()
+        if (error) console.error('[nutritionist/messages/insert]', error)
         const realId = (data as { id?: string } | null)?.id
         if (realId) {
           setThreads((curr) =>

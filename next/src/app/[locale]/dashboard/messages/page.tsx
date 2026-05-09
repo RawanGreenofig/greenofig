@@ -462,6 +462,7 @@ function Thread() {
   const userId = profile?.id ?? null
   const [messages, setMessages] = useState<Msg[]>(SEED)
   const [conversationId, setConversationId] = useState<string | null>(null)
+  const [nutritionistId, setNutritionistId] = useState<string | null>(null)
   const [draft, setDraft] = useState('')
   const [sending, setSending] = useState(false)
   const scrollRef = useRef<HTMLDivElement>(null)
@@ -481,14 +482,18 @@ function Thread() {
     void (async () => {
       const { data: convRow } = await supabase
         .from('conversations')
-        .select('id')
+        .select('id, nutritionist_id')
         .eq('user_id', userId)
         .order('last_message_at', { ascending: false })
         .limit(1)
         .maybeSingle()
-      const id = (convRow as { id?: string } | null)?.id ?? null
+      const conv = convRow as
+        | { id: string; nutritionist_id: string | null }
+        | null
+      const id = conv?.id ?? null
       if (cancelled) return
       setConversationId(id)
+      setNutritionistId(conv?.nutritionist_id ?? null)
       if (!id) return
 
       const { data } = await supabase
@@ -556,16 +561,22 @@ function Thread() {
       // creates the conversation row using the service-role key
       // (RLS otherwise blocks the cross-user lookup).
       let convId = conversationId
+      let recipId = nutritionistId
       if (!convId) {
         try {
           const res = await fetch('/api/messages/start', { method: 'POST' })
           const data = (await res.json().catch(() => ({}))) as {
             conversationId?: string
+            nutritionistId?: string
             error?: string
           }
           if (res.ok && data.conversationId) {
             convId = data.conversationId
             setConversationId(convId)
+            if (data.nutritionistId) {
+              recipId = data.nutritionistId
+              setNutritionistId(data.nutritionistId)
+            }
           } else {
             toast.error(data.error ?? 'Could not start conversation')
           }
@@ -574,12 +585,13 @@ function Thread() {
         }
       }
 
-      if (convId) {
-        const { data } = await supabase
+      if (convId && recipId) {
+        const { data, error } = await supabase
           .from('messages')
           .insert({
             conversation_id: convId,
             sender_id: userId,
+            recipient_id: recipId,
             content: text,
           } as never)
           .select('id')
@@ -590,8 +602,11 @@ function Thread() {
             curr.map((m) => (m.id === localId ? { ...m, id: realId } : m)),
           )
         } else {
+          if (error) console.error('[messages/insert]', error)
           toast.error('Could not deliver message — please retry')
         }
+      } else if (!recipId) {
+        toast.error('Could not find nutritionist — please refresh.')
       }
       setSending(false)
     })()
