@@ -115,6 +115,8 @@ export default function MealPlanBuilderPage() {
   const [filter, setFilter] = useState<'all' | RecipeRef['category']>('all')
   const [activeDrag, setActiveDrag] = useState<RecipeRef | null>(null)
   const [saveState, setSaveState] = useState<'idle' | 'saving' | 'saved'>('idle')
+  const [assignedClient, setAssignedClient] = useState<{ id: string; name: string } | null>(null)
+  const [assignOpen, setAssignOpen] = useState(false)
 
   // Pull the published recipe library from Supabase. Falls back to the
   // 12-card seed when env unset.
@@ -281,12 +283,15 @@ export default function MealPlanBuilderPage() {
       const { data: planRow } = await supabase
         .from('meal_plans')
         .insert({
-          client_id: profile.id, // self-owned until assigned
+          // Self-owned (draft) when no client picked. The Assign To
+          // modal sets assignedClient, in which case the plan is
+          // assigned + activated immediately.
+          client_id: assignedClient?.id ?? profile.id,
           nutritionist_id: profile.id,
           title: planName.trim() || 'Untitled plan',
           start_date: new Date().toISOString().slice(0, 10),
           weeks: weekCount,
-          is_active: false,
+          is_active: !!assignedClient,
         } as never)
         .select('id')
         .maybeSingle()
@@ -371,12 +376,15 @@ export default function MealPlanBuilderPage() {
           <div className="flex flex-wrap items-center gap-2">
             <button
               type="button"
-              disabled
-              title="Assignment flow coming soon"
-              className="inline-flex items-center gap-1.5 rounded-pill bg-surface-raised border border-border h-10 px-4 text-xs font-semibold text-fg-1 opacity-50 cursor-not-allowed"
+              onClick={() => setAssignOpen(true)}
+              className={`inline-flex items-center gap-1.5 rounded-pill h-10 px-4 text-xs font-semibold transition-colors ${
+                assignedClient
+                  ? 'bg-primary/15 text-lime-400 border border-primary/40'
+                  : 'bg-surface-raised border border-border text-fg-1 hover:border-primary/40'
+              }`}
             >
               <Users className="w-3.5 h-3.5" strokeWidth={1.75} />
-              {t('assignTo')}
+              {assignedClient ? assignedClient.name : t('assignTo')}
             </button>
             <button
               type="button"
@@ -473,7 +481,153 @@ export default function MealPlanBuilderPage() {
           <RecipeCard recipe={activeDrag} dragging />
         )}
       </DragOverlay>
+
+      {assignOpen && (
+        <AssignClientModal
+          nutritionistId={profile?.id ?? null}
+          currentId={assignedClient?.id ?? null}
+          onClose={() => setAssignOpen(false)}
+          onPick={(client) => {
+            setAssignedClient(client)
+            setAssignOpen(false)
+          }}
+          onUnassign={() => {
+            setAssignedClient(null)
+            setAssignOpen(false)
+          }}
+        />
+      )}
     </DndContext>
+  )
+}
+
+/* ── Assign-to-client modal ─────────────────────────────────────── */
+
+function AssignClientModal({
+  nutritionistId,
+  currentId,
+  onClose,
+  onPick,
+  onUnassign,
+}: {
+  nutritionistId: string | null
+  currentId: string | null
+  onClose: () => void
+  onPick: (client: { id: string; name: string }) => void
+  onUnassign: () => void
+}) {
+  const [query, setQuery] = useState('')
+  type ClientLite = { id: string; name: string; tier: string }
+  const clients = useSupabaseQuery<ClientLite[]>(async (supabase) => {
+    type Row = { id: string; full_name: string | null; tier: string }
+    const { data } = await supabase
+      .from('profiles')
+      .select('id, full_name, tier')
+      .eq('role', 'user')
+      .order('full_name', { ascending: true })
+      .limit(200)
+    return ((data as Row[] | null) ?? []).map((r) => ({
+      id: r.id,
+      name: r.full_name?.trim() || 'Unnamed client',
+      tier: r.tier,
+    }))
+  }, [nutritionistId])
+
+  const list = clients.data ?? []
+  const filtered = query.trim()
+    ? list.filter((c) =>
+        c.name.toLowerCase().includes(query.trim().toLowerCase()),
+      )
+    : list
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }}
+      onClick={(e) => e.target === e.currentTarget && onClose()}
+    >
+      <div className="w-full max-w-lg rounded-2xl border border-border bg-surface flex flex-col" style={{ maxHeight: '80vh' }}>
+        <header className="flex items-start justify-between gap-3 px-6 pt-6 pb-4 border-b border-border">
+          <div>
+            <h2 className="text-lg font-bold text-fg-1">Assign meal plan</h2>
+            <p className="mt-1 text-xs text-fg-3">
+              Pick a client. The plan will be saved as their active plan.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="text-fg-3 hover:text-fg-1"
+            aria-label="Close"
+          >
+            <X className="w-5 h-5" strokeWidth={1.75} />
+          </button>
+        </header>
+
+        <div className="px-6 py-3 border-b border-border">
+          <div className="relative">
+            <Search
+              className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-fg-3"
+              strokeWidth={1.75}
+            />
+            <input
+              type="text"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Search clients…"
+              autoFocus
+              className="w-full h-10 rounded-md bg-bg-deeper border border-border ps-10 pe-3 text-sm text-fg-1 placeholder-fg-3 focus:outline-none focus:border-primary"
+            />
+          </div>
+        </div>
+
+        <div className="flex-1 overflow-y-auto px-2 py-2">
+          {clients.loading ? (
+            <p className="text-sm text-fg-3 px-4 py-3">Loading clients…</p>
+          ) : filtered.length === 0 ? (
+            <p className="text-sm text-fg-3 px-4 py-3">No clients match that search.</p>
+          ) : (
+            <ul className="space-y-1">
+              {filtered.map((c) => {
+                const isCurrent = c.id === currentId
+                return (
+                  <li key={c.id}>
+                    <button
+                      type="button"
+                      onClick={() => onPick({ id: c.id, name: c.name })}
+                      className={`w-full flex items-center justify-between gap-3 rounded-md px-4 py-2.5 text-start transition-colors ${
+                        isCurrent
+                          ? 'bg-primary/15 text-lime-400'
+                          : 'text-fg-1 hover:bg-surface-raised'
+                      }`}
+                    >
+                      <span className="text-sm font-medium truncate">
+                        {c.name}
+                      </span>
+                      <span className="text-[10px] uppercase tracking-eyebrow text-fg-3 font-semibold">
+                        {c.tier}
+                      </span>
+                    </button>
+                  </li>
+                )
+              })}
+            </ul>
+          )}
+        </div>
+
+        {currentId && (
+          <footer className="px-6 py-3 border-t border-border">
+            <button
+              type="button"
+              onClick={onUnassign}
+              className="text-xs text-rose-400 hover:text-rose-300"
+            >
+              Unassign — keep as draft
+            </button>
+          </footer>
+        )}
+      </div>
+    </div>
   )
 }
 
