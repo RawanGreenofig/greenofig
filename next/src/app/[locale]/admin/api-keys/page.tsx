@@ -16,7 +16,7 @@ import {
   XCircle,
   AlertTriangle,
   X,
-} from 'lucide-react'
+} from '@/icons'
 
 type Provider =
   | 'stripe'

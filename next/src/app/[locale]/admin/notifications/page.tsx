@@ -13,7 +13,7 @@ import {
   Check,
   Users,
   type LucideIcon,
-} from 'lucide-react'
+} from '@/icons'
 
 type Audience = 'all' | 'free' | 'basic' | 'premium' | 'vip' | 'nutritionist' | 'admin'
 type Channel = 'inApp' | 'email' | 'push'

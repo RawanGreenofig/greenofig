@@ -16,7 +16,7 @@ import {
   TrendingDown,
   Minus,
   type LucideIcon,
-} from 'lucide-react'
+} from '@/icons'
 import {
   AreaChart,
   Area,

@@ -8,7 +8,7 @@ import {
   UserPlus,
   ArrowRight,
   Users as UsersIcon,
-} from 'lucide-react'
+} from '@/icons'
 import { Link } from '@/i18n/navigation'
 import { useSupabaseQuery } from '@/lib/hooks/useSupabaseQuery'
 import type { Tier } from '@/lib/constants'

@@ -12,7 +12,7 @@ import {
   ExternalLink,
   ShieldCheck,
   type LucideIcon,
-} from 'lucide-react'
+} from '@/icons'
 
 interface TestResult {
   configured: boolean

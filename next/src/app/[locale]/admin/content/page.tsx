@@ -14,7 +14,7 @@ import {
   EyeOff,
   PenLine,
   type LucideIcon,
-} from 'lucide-react'
+} from '@/icons'
 import { getBrowserSupabase } from '@/lib/supabase/client'
 
 type Status = 'draft' | 'scheduled' | 'published'

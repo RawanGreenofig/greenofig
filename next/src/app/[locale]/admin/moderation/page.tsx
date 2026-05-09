@@ -13,7 +13,7 @@ import {
   ExternalLink,
   Flag,
   type LucideIcon,
-} from 'lucide-react'
+} from '@/icons'
 import { getBrowserSupabase } from '@/lib/supabase/client'
 
 type Reason = 'spam' | 'harassment' | 'misinformation' | 'inappropriate' | 'off_topic' | 'other'

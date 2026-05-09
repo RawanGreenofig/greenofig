@@ -22,7 +22,7 @@ import {
   PenLine,
   ShieldCheck,
   type LucideIcon,
-} from 'lucide-react'
+} from '@/icons'
 import { Link } from '@/i18n/navigation'
 import { useSupabaseQuery } from '@/lib/hooks/useSupabaseQuery'
 import { TIERS, type Tier } from '@/lib/constants'

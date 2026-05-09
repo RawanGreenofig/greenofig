@@ -14,7 +14,7 @@ import {
   Plus,
   ExternalLink,
   type LucideIcon,
-} from 'lucide-react'
+} from '@/icons'
 
 type Tab = 'general' | 'branding' | 'legal' | 'integrations'
 

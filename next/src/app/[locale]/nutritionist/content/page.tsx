@@ -19,7 +19,7 @@ import {
   Camera,
   Edit3,
   type LucideIcon,
-} from 'lucide-react'
+} from '@/icons'
 
 type Status = 'draft' | 'scheduled' | 'published'
 type Category = 'tip' | 'article' | 'announcement' | 'recipe' | 'story'

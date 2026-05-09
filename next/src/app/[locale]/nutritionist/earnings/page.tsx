@@ -13,7 +13,7 @@ import {
   CreditCard,
   TrendingUp,
   type LucideIcon,
-} from 'lucide-react'
+} from '@/icons'
 import {
   BarChart,
   Bar,

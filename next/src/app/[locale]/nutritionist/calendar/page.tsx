@@ -8,7 +8,7 @@ import {
   Plus,
   Video,
   Calendar as CalIcon,
-} from 'lucide-react'
+} from '@/icons'
 import { useUser } from '@/lib/hooks/useUser'
 import { useSupabaseQuery } from '@/lib/hooks/useSupabaseQuery'
 

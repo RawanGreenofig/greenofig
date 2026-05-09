@@ -12,7 +12,7 @@ import {
   Info,
   Activity,
   type LucideIcon,
-} from 'lucide-react'
+} from '@/icons'
 
 type Severity = 'info' | 'warn' | 'danger'
 type DateRange = 'all' | 'today' | '7d' | '30d'

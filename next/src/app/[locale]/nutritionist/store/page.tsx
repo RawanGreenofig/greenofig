@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { getBrowserSupabase } from '@/lib/supabase/client'
 import { SendDiscountSection } from '@/components/nutritionist/SendDiscountSection'
+import { Switch } from '@/components/Switch'
 import {
   Plus,
   Search,
@@ -16,7 +17,7 @@ import {
   Save,
   Camera,
   ShoppingBag,
-} from 'lucide-react'
+} from '@/icons'
 
 type Category = 'supplements' | 'superfoods' | 'snacks' | 'kitchen' | 'books'
 
@@ -642,29 +643,3 @@ function NumInput({
   )
 }
 
-function Switch({
-  on,
-  onChange,
-}: {
-  on: boolean
-  onChange: (v: boolean) => void
-}) {
-  return (
-    <button
-      type="button"
-      role="switch"
-      aria-checked={on}
-      onClick={() => onChange(!on)}
-      className={`shrink-0 relative w-10 h-6 rounded-full transition-colors ${
-        on ? 'bg-lime-400' : 'bg-bg-deeper border border-border'
-      }`}
-    >
-      <span
-        aria-hidden
-        className={`absolute top-0.5 w-5 h-5 rounded-full bg-bg shadow transition-all ${
-          on ? 'start-[18px]' : 'start-0.5'
-        }`}
-      />
-    </button>
-  )
-}

@@ -5,6 +5,7 @@ import { useTranslations } from 'next-intl'
 import { useUser } from '@/lib/hooks/useUser'
 import { getBrowserSupabase } from '@/lib/supabase/client'
 import { TimeOffManager } from '@/components/nutritionist/TimeOffManager'
+import { Switch } from '@/components/Switch'
 import {
   User,
   Calendar,
@@ -16,7 +17,7 @@ import {
   Check,
   KeyRound,
   type LucideIcon,
-} from 'lucide-react'
+} from '@/icons'
 
 type TabKey = 'profile' | 'availability' | 'sessions' | 'account'
 type Day = 'mon' | 'tue' | 'wed' | 'thu' | 'fri' | 'sat' | 'sun'
@@ -839,27 +840,6 @@ function TimeInput({ value, onChange }: { value: string; onChange: (v: string) =
       className="h-9 rounded-md bg-bg-deeper border border-border px-2 text-sm font-mono text-fg-1 focus:outline-none focus:border-primary"
       dir="ltr"
     />
-  )
-}
-
-function Switch({ on, onChange }: { on: boolean; onChange: (v: boolean) => void }) {
-  return (
-    <button
-      type="button"
-      role="switch"
-      aria-checked={on}
-      onClick={() => onChange(!on)}
-      className={`shrink-0 relative w-10 h-6 rounded-full transition-colors ${
-        on ? 'bg-lime-400' : 'bg-bg-deeper border border-border'
-      }`}
-    >
-      <span
-        aria-hidden
-        className={`absolute top-0.5 w-5 h-5 rounded-full bg-bg shadow transition-all ${
-          on ? 'start-[18px]' : 'start-0.5'
-        }`}
-      />
-    </button>
   )
 }
 

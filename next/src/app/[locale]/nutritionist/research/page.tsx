@@ -15,7 +15,7 @@ import {
   Microscope,
   Check,
   Library,
-} from 'lucide-react'
+} from '@/icons'
 
 interface Doc {
   id: string

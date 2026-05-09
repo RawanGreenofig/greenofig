@@ -11,7 +11,7 @@ import {
   Check,
   Inbox,
   Flag,
-} from 'lucide-react'
+} from '@/icons'
 import type { Tier } from '@/lib/constants'
 import { useUser } from '@/lib/hooks/useUser'
 import { getBrowserSupabase } from '@/lib/supabase/client'

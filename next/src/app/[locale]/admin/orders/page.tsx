@@ -16,7 +16,7 @@ import {
   RotateCcw,
   ChevronDown,
   type LucideIcon,
-} from 'lucide-react'
+} from '@/icons'
 import { useSupabaseQuery } from '@/lib/hooks/useSupabaseQuery'
 
 type Status = 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled' | 'refunded'

@@ -24,7 +24,7 @@ import {
   GripVertical,
   X,
   Users,
-} from 'lucide-react'
+} from '@/icons'
 import { useUser } from '@/lib/hooks/useUser'
 import { useSupabaseQuery } from '@/lib/hooks/useSupabaseQuery'
 import { getBrowserSupabase } from '@/lib/supabase/client'

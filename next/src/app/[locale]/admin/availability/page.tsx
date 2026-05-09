@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Calendar, Globe, Save, User } from 'lucide-react'
+import { Calendar, Globe, Save, User } from '@/icons'
 import { getBrowserSupabase } from '@/lib/supabase/client'
 import { TimeOffManager } from '@/components/nutritionist/TimeOffManager'
 

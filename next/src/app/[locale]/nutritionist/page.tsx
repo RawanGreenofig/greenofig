@@ -19,7 +19,7 @@ import {
   Copy,
   Check,
   type LucideIcon,
-} from 'lucide-react'
+} from '@/icons'
 import { Link } from '@/i18n/navigation'
 import { useState } from 'react'
 import { useUser } from '@/lib/hooks/useUser'

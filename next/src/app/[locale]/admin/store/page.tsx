@@ -17,8 +17,9 @@ import {
   CheckCircle2,
   Wrench,
   type LucideIcon,
-} from 'lucide-react'
+} from '@/icons'
 import { Link } from '@/i18n/navigation'
+import { Switch } from '@/components/Switch'
 
 interface Product {
   id: string
@@ -404,33 +405,6 @@ function KpiCard({
   )
 }
 
-function Switch({
-  on,
-  onChange,
-}: {
-  on: boolean
-  onChange: (v: boolean) => void
-}) {
-  return (
-    <button
-      type="button"
-      role="switch"
-      aria-checked={on}
-      onClick={() => onChange(!on)}
-      className={`shrink-0 relative w-10 h-6 rounded-full transition-colors ${
-        on ? 'bg-amber-400' : 'bg-bg-deeper border border-border'
-      }`}
-      style={on ? { background: '#e8912a' } : undefined}
-    >
-      <span
-        aria-hidden
-        className={`absolute top-0.5 w-5 h-5 rounded-full bg-bg shadow transition-all ${
-          on ? 'start-[18px]' : 'start-0.5'
-        }`}
-      />
-    </button>
-  )
-}
 
 function ConfirmDialog({
   title,

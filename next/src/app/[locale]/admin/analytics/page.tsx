@@ -11,7 +11,7 @@ import {
   Download,
   Globe,
   type LucideIcon,
-} from 'lucide-react'
+} from '@/icons'
 import { getBrowserSupabase } from '@/lib/supabase/client'
 import { AIUsageTodaySection } from '@/components/admin/AIUsageTodaySection'
 import {

@@ -13,7 +13,7 @@ import {
   Search,
   Trash2,
   X,
-} from 'lucide-react'
+} from '@/icons'
 
 type BulkKind = 'users' | 'subscriptions' | 'orders' | 'bookings' | 'logs' | 'feedback'
 type Format = 'json' | 'csv'

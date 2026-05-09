@@ -16,7 +16,7 @@ import {
   TrendingUp,
   RotateCcw,
   type LucideIcon,
-} from 'lucide-react'
+} from '@/icons'
 import { useSupabaseQuery } from '@/lib/hooks/useSupabaseQuery'
 
 type Status = 'scheduled' | 'completed' | 'cancelled' | 'noShow'

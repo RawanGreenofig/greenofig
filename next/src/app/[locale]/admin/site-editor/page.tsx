@@ -15,7 +15,7 @@ import {
   Eye,
   Check,
   type LucideIcon,
-} from 'lucide-react'
+} from '@/icons'
 
 type Tab = 'hero' | 'about' | 'pricing' | 'faq' | 'footer'
 

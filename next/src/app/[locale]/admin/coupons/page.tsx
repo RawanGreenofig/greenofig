@@ -1,4 +1,4 @@
-import { Gift } from 'lucide-react'
+import { Gift } from '@/icons'
 import { SendDiscountSection } from '@/components/nutritionist/SendDiscountSection'
 
 export default function AdminCouponsPage() {

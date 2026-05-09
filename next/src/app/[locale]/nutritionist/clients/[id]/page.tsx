@@ -26,7 +26,7 @@ import {
   ArrowRight,
   Video,
   type LucideIcon,
-} from 'lucide-react'
+} from '@/icons'
 import {
   AreaChart,
   Area,

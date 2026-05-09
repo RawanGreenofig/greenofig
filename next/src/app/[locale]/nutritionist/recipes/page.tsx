@@ -31,7 +31,7 @@ import {
   Copy,
   Camera,
   Sparkles,
-} from 'lucide-react'
+} from '@/icons'
 
 type Status = 'draft' | 'published'
 type Category = 'breakfast' | 'lunch' | 'dinner' | 'snack' | 'drink'

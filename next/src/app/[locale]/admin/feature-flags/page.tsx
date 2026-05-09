@@ -8,7 +8,7 @@ import {
   AlertTriangle,
   Check,
   Power,
-} from 'lucide-react'
+} from '@/icons'
 import { FEATURES, type FeatureFlag, type Tier, TIERS } from '@/lib/constants'
 import { getBrowserSupabase } from '@/lib/supabase/client'
 
