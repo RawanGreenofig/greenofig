@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { useTranslations } from 'next-intl'
-import { Menu, X, ChevronDown, LayoutDashboard, Settings, LogOut } from 'lucide-react'
+import { Menu, ChevronDown, LayoutDashboard, Settings, LogOut } from 'lucide-react'
 import { Link, usePathname } from '@/i18n/navigation'
 import { LanguageSwitcher } from '@/components/LanguageSwitcher'
 import { Wordmark } from '@/components/Wordmark'

@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import {
   Mail, Search, CheckCircle2, MailOpen, Archive, Trash2, ChevronDown,
   ExternalLink, Download, MessageSquare,
