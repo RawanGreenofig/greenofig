@@ -118,6 +118,7 @@ export function FooterSection() {
             <FooterLink href="/#store" label={tNav('store')} />
             <FooterLink href="/blog" label={tNav('blog')} />
             <FooterLink href="/reviews" label={tNav('reviews')} />
+            <FooterLink href="/careers" label={tNav('careers')} />
           </FooterCol>
 
           {/* Col 3 — Account */}

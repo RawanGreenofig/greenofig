@@ -32,6 +32,7 @@ import {
   Star,
   Bot,
   Gift,
+  Briefcase,
   type LucideIcon,
 } from 'lucide-react'
 import type { Tier } from '@/lib/constants'
@@ -79,6 +80,8 @@ export const NUTRITIONIST_NAV: DashboardNavItem[] = [
   { href: '/nutritionist/research',        labelKey: 'nutritionist.research',        Icon: Microscope },
   { href: '/nutritionist/analytics',       labelKey: 'nutritionist.analytics',       Icon: TrendingUp,  headCoachOnly: true },
   { href: '/nutritionist/earnings',        labelKey: 'nutritionist.earnings',        Icon: Wallet,      headCoachOnly: true },
+  { href: '/nutritionist/team-messages',   labelKey: 'nutritionist.teamMessages',    Icon: MessageSquare, headCoachOnly: true },
+  { href: '/nutritionist/careers',         labelKey: 'nutritionist.careers',         Icon: Briefcase,   headCoachOnly: true },
   { href: '/nutritionist/settings',        labelKey: 'nutritionist.settings',        Icon: Settings },
 ]
 
@@ -103,6 +106,7 @@ export const ADMIN_NAV: DashboardNavItem[] = [
   { href: '/admin/moderation',     labelKey: 'admin.moderation',   Icon: AlertOctagon },
   { href: '/admin/contacts',       labelKey: 'admin.contacts',     Icon: Mail },
   { href: '/admin/leads',          labelKey: 'admin.leads',        Icon: UserCheck },
+  { href: '/admin/careers',        labelKey: 'admin.careers',      Icon: Briefcase },
   { href: '/admin/reviews-analytics', labelKey: 'admin.reviewsAnalytics', Icon: Star },
   { href: '/admin/analytics',      labelKey: 'admin.analytics',    Icon: TrendingUp },
   { href: '/admin/notifications',  labelKey: 'admin.notifications', Icon: Bell },
