@@ -93,21 +93,22 @@ export function AIUsageTodaySection() {
           return (
             <li
               key={f.key}
-              className="rounded-xl border border-border bg-surface p-5"
+              className="rounded-xl border border-border bg-surface p-4"
+              style={{ boxShadow: `inset 4px 0 0 ${f.tint}` }}
             >
-              <div className="flex items-center gap-2.5 mb-3">
-                <span
-                  className="w-9 h-9 rounded-lg flex items-center justify-center"
-                  style={{ background: `${f.tint}1a`, color: f.tint }}
-                >
-                  <f.Icon className="w-4 h-4" strokeWidth={1.75} />
-                </span>
-                <span className="text-xs uppercase tracking-eyebrow text-fg-3 font-medium">
+              <div className="flex items-center gap-2">
+                <f.Icon
+                  className="w-4 h-4 flex-shrink-0"
+                  strokeWidth={1.75}
+                  color={f.tint}
+                />
+                <p className="text-[11px] uppercase tracking-eyebrow text-fg-3 font-semibold">
                   {isAr ? f.labelAr : f.label}
-                </span>
+                </p>
               </div>
               <p
-                className="font-mono text-2xl font-bold text-fg-1"
+                className="mt-2 font-display text-2xl font-bold"
+                style={{ color: f.tint }}
                 dir="ltr"
               >
                 {value.toLocaleString()}

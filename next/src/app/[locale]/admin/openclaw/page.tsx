@@ -131,16 +131,20 @@ export default function AdminOpenClawPage() {
 
   return (
     <div className="px-4 md:px-8 py-6 md:py-8 max-w-screen-xl mx-auto space-y-6">
-      <header className="flex flex-wrap items-end justify-between gap-3">
-        <div>
+      <header className="flex items-start gap-3">
+        <Bot
+          className="w-6 h-6 mt-1 flex-shrink-0"
+          strokeWidth={1.75}
+          color="#a78bfa"
+        />
+        <div className="min-w-0">
           <h1
-            className="font-display font-bold text-fg-1 tracking-tight inline-flex items-center gap-3"
+            className="font-display font-bold text-fg-1 tracking-tight"
             style={{ fontSize: 'clamp(28px, 4vw, 40px)', lineHeight: 1.1 }}
           >
-            <Bot className="w-7 h-7 text-lime-400" strokeWidth={1.75} />
             {t('openclaw')}
           </h1>
-          <p className="mt-2 text-sm md:text-base text-fg-2">
+          <p className="mt-2 text-sm md:text-base text-fg-2 max-w-2xl">
             Your AI assistant for managing Greenofig via WhatsApp or Telegram.
           </p>
         </div>
@@ -160,15 +164,15 @@ export default function AdminOpenClawPage() {
           <div className="flex items-start gap-3 min-w-0">
             {status === 'connected' ? (
               <CheckCircle2
-                className="w-6 h-6 text-primary flex-shrink-0"
+                className="w-5 h-5 mt-0.5 flex-shrink-0"
                 strokeWidth={1.75}
+                color="#a3e635"
               />
             ) : (
               <AlertTriangle
-                className={`w-6 h-6 flex-shrink-0 ${
-                  status === 'misconfigured' ? 'text-rose-500' : 'text-yellow-500'
-                }`}
+                className="w-5 h-5 mt-0.5 flex-shrink-0"
                 strokeWidth={1.75}
+                color={status === 'misconfigured' ? '#f43f5e' : '#fbbf24'}
               />
             )}
             <div className="min-w-0">
@@ -195,17 +199,31 @@ export default function AdminOpenClawPage() {
             type="button"
             onClick={runTest}
             disabled={testing}
-            className="inline-flex items-center gap-1.5 rounded-pill bg-surface-raised border border-border h-10 px-4 text-xs font-semibold text-fg-1 hover:border-primary/40 disabled:opacity-50"
+            className="inline-flex items-center gap-1.5 h-9 px-3 text-xs font-semibold text-fg-1 transition-colors disabled:opacity-50"
+            style={{
+              background: 'var(--gf-input-bg)',
+              border: '1px solid var(--gf-border)',
+              borderRadius: 8,
+            }}
           >
             <RefreshCw
               className={`w-3.5 h-3.5 ${testing ? 'animate-spin' : ''}`}
               strokeWidth={1.75}
+              color="var(--gf-fg-3)"
             />
             {testing ? 'Testing…' : 'Test connection'}
           </button>
         </div>
         {test?.body && (
-          <pre className="mt-4 rounded-lg bg-bg-deeper/60 border border-border p-3 text-[11px] text-fg-2 font-mono overflow-x-auto whitespace-pre-wrap" dir="ltr">
+          <pre
+            className="mt-4 p-3 text-[11px] text-fg-2 font-mono overflow-x-auto whitespace-pre-wrap"
+            style={{
+              background: 'var(--gf-input-bg)',
+              border: '1px solid var(--gf-border)',
+              borderRadius: 8,
+            }}
+            dir="ltr"
+          >
             {test.body}
           </pre>
         )}
@@ -226,7 +244,16 @@ export default function AdminOpenClawPage() {
             ].map(([title, body], i) => (
               <li key={i} className="flex items-start gap-3">
                 <span
-                  className="shrink-0 w-6 h-6 rounded-full bg-primary/15 text-lime-400 text-[11px] font-bold inline-flex items-center justify-center mt-0.5"
+                  className="shrink-0 inline-flex items-center justify-center font-mono font-bold mt-0.5"
+                  style={{
+                    width: 22,
+                    height: 22,
+                    borderRadius: 999,
+                    background: 'rgba(163,230,53,0.12)',
+                    color: '#a3e635',
+                    fontSize: 11,
+                    letterSpacing: '0.02em',
+                  }}
                   dir="ltr"
                 >
                   {i + 1}
@@ -244,7 +271,11 @@ export default function AdminOpenClawPage() {
             rel="noopener noreferrer"
             className="mt-5 inline-flex items-center gap-1.5 text-xs text-lime-400 hover:underline"
           >
-            <ExternalLink className="w-3 h-3" strokeWidth={1.75} />
+            <ExternalLink
+              className="w-3 h-3"
+              strokeWidth={1.75}
+              color="currentColor"
+            />
             Full setup guide on GitHub
           </a>
         </article>
@@ -257,7 +288,12 @@ export default function AdminOpenClawPage() {
           </p>
           <div className="flex items-stretch gap-2">
             <code
-              className="flex-1 rounded-md bg-bg-deeper border border-border px-3 py-2 text-xs font-mono text-fg-1 overflow-x-auto"
+              className="flex-1 px-3 py-2 text-xs font-mono text-fg-1 overflow-x-auto"
+              style={{
+                background: 'var(--gf-input-bg)',
+                border: '1px solid var(--gf-border)',
+                borderRadius: 8,
+              }}
               dir="ltr"
             >
               {webhookUrl}
@@ -265,27 +301,47 @@ export default function AdminOpenClawPage() {
             <button
               type="button"
               onClick={() => copy('webhook', webhookUrl)}
-              className="inline-flex items-center gap-1 rounded-md bg-surface-raised border border-border h-9 px-3 text-xs font-semibold text-fg-1 hover:border-primary/40"
+              className="inline-flex items-center gap-1 h-9 px-3 text-xs font-semibold text-fg-1 transition-colors"
+              style={{
+                background: 'var(--gf-input-bg)',
+                border: '1px solid var(--gf-border)',
+                borderRadius: 8,
+              }}
             >
               {copied === 'webhook' ? (
                 <>
-                  <Check className="w-3 h-3 text-lime-400" strokeWidth={2.5} />
+                  <Check
+                    className="w-3 h-3"
+                    strokeWidth={2.5}
+                    color="#a3e635"
+                  />
                   Copied
                 </>
               ) : (
                 <>
-                  <Copy className="w-3 h-3" strokeWidth={1.75} />
+                  <Copy
+                    className="w-3 h-3"
+                    strokeWidth={1.75}
+                    color="var(--gf-fg-3)"
+                  />
                   Copy
                 </>
               )}
             </button>
           </div>
-          <div className="mt-4 rounded-md bg-amber-500/10 border border-amber-500/30 px-3 py-2.5">
+          <div
+            className="mt-4 px-3 py-2.5"
+            style={{
+              background: 'rgba(232,145,42,0.08)',
+              border: '1px solid rgba(232,145,42,0.3)',
+              borderRadius: 8,
+            }}
+          >
             <p className="text-xs text-fg-1 inline-flex items-start gap-2">
               <AlertTriangle
                 className="w-3.5 h-3.5 mt-0.5 shrink-0"
-                style={{ color: '#e8912a' }}
                 strokeWidth={1.75}
+                color="#e8912a"
               />
               <span>
                 Keep your <code className="font-mono text-fg-1">OPENCLAW_WEBHOOK_SECRET</code> private. Anyone holding it can issue commands to Greenofig.
@@ -298,25 +354,43 @@ export default function AdminOpenClawPage() {
       {/* Recent OpenClaw actions */}
       <section>
         <h2 className="text-xs uppercase tracking-eyebrow text-fg-3 font-semibold mb-3 inline-flex items-center gap-1.5">
-          <ShieldCheck className="w-3 h-3" strokeWidth={2} />
+          <ShieldCheck
+            className="w-3 h-3"
+            strokeWidth={2}
+            color="var(--gf-fg-3)"
+          />
           Recent OpenClaw actions
         </h2>
         {recent.length === 0 ? (
-          <div className="rounded-xl border border-dashed border-border bg-surface/50 p-8 text-center text-sm text-fg-3">
-            No OpenClaw activity yet — actions will show up here once the webhook starts firing.
+          <div className="rounded-xl border border-dashed border-border bg-surface/50 p-8 text-center">
+            <Bot
+              className="w-8 h-8 mx-auto mb-3"
+              strokeWidth={1.5}
+              color="#a78bfa"
+            />
+            <p className="text-sm text-fg-3">
+              No OpenClaw activity yet — actions will show up here once the webhook starts firing.
+            </p>
           </div>
         ) : (
-          <ul className="rounded-xl border border-border bg-surface divide-y divide-border overflow-hidden">
+          <ul className="rounded-xl border border-border bg-surface overflow-hidden divide-y divide-border">
             {recent.map((row) => (
               <li
                 key={row.id}
-                className="flex items-center gap-3 px-5 py-3 text-sm"
+                className="flex items-center gap-3 px-5 py-3 text-sm transition-colors"
+                style={{ background: 'transparent' }}
+                onMouseEnter={(e) =>
+                  (e.currentTarget.style.background = 'var(--gf-card-hover)')
+                }
+                onMouseLeave={(e) =>
+                  (e.currentTarget.style.background = 'transparent')
+                }
               >
-                <span
-                  className="shrink-0 w-8 h-8 rounded-md inline-flex items-center justify-center bg-primary/15 text-lime-400"
-                >
-                  <Bot className="w-4 h-4" strokeWidth={1.75} />
-                </span>
+                <Bot
+                  className="w-5 h-5 shrink-0"
+                  strokeWidth={1.75}
+                  color="#a78bfa"
+                />
                 <div className="flex-1 min-w-0">
                   <p className="text-fg-1 font-mono text-xs truncate" dir="ltr">
                     {row.action}
@@ -367,9 +441,11 @@ function CommandCard({
   return (
     <li className="rounded-xl border border-border bg-surface p-4">
       <div className="flex items-start gap-3">
-        <span className="shrink-0 w-9 h-9 rounded-lg inline-flex items-center justify-center bg-primary/15 text-lime-400">
-          <Icon className="w-4 h-4" strokeWidth={1.75} />
-        </span>
+        <Icon
+          className="w-5 h-5 shrink-0 mt-0.5"
+          strokeWidth={1.75}
+          color="#a78bfa"
+        />
         <div className="flex-1 min-w-0">
           <p className="text-sm font-mono text-fg-1" dir="ltr">
             {t.name}
@@ -380,12 +456,37 @@ function CommandCard({
           type="button"
           onClick={onCopy}
           aria-label="Copy"
-          className="w-8 h-8 rounded-md inline-flex items-center justify-center text-fg-3 hover:text-fg-1 hover:bg-surface-raised"
+          title="Copy"
+          className="w-8 h-8 rounded-md inline-flex items-center justify-center transition-colors"
+          style={{
+            background: 'transparent',
+            color: copied ? '#a3e635' : 'var(--gf-fg-3)',
+          }}
+          onMouseEnter={(e) => {
+            if (!copied) {
+              e.currentTarget.style.background = 'var(--gf-input-bg)'
+              e.currentTarget.style.color = 'var(--gf-fg-1)'
+            }
+          }}
+          onMouseLeave={(e) => {
+            if (!copied) {
+              e.currentTarget.style.background = 'transparent'
+              e.currentTarget.style.color = 'var(--gf-fg-3)'
+            }
+          }}
         >
           {copied ? (
-            <Check className="w-3.5 h-3.5 text-lime-400" strokeWidth={2.5} />
+            <Check
+              className="w-3.5 h-3.5"
+              strokeWidth={2.5}
+              color="currentColor"
+            />
           ) : (
-            <Copy className="w-3.5 h-3.5" strokeWidth={1.75} />
+            <Copy
+              className="w-3.5 h-3.5"
+              strokeWidth={1.75}
+              color="currentColor"
+            />
           )}
         </button>
       </div>

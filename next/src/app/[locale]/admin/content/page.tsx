@@ -16,6 +16,7 @@ import {
   type LucideIcon,
 } from '@/icons'
 import { getBrowserSupabase } from '@/lib/supabase/client'
+import { Avatar } from '@/components/Avatar'
 
 type Status = 'draft' | 'scheduled' | 'published'
 type Category = 'tip' | 'article' | 'announcement' | 'recipe' | 'story'
@@ -258,23 +259,35 @@ export default function AdminContentPage() {
 
       {/* Search + filters */}
       <div className="flex flex-wrap items-center gap-3">
-        <div className="relative flex-1 min-w-[240px]">
+        <div className="relative w-full sm:w-[280px]">
           <Search
-            className="absolute start-4 top-1/2 -translate-y-1/2 w-4 h-4 text-fg-3"
+            className="absolute top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none"
+            style={{ insetInlineStart: '12px' }}
             strokeWidth={1.75}
+            color="var(--gf-fg-3)"
           />
           <input
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder={tC('search')}
-            className="w-full h-11 rounded-pill bg-surface border border-border ps-11 pe-4 text-sm text-fg-1 placeholder-fg-3 focus:outline-none focus:border-primary"
+            className="w-full h-10 rounded-lg text-sm text-fg-1 placeholder-fg-3 focus:outline-none"
+            style={{
+              background: 'var(--gf-input-bg)',
+              border: '1px solid var(--gf-border)',
+              paddingInlineStart: '36px',
+              paddingInlineEnd: '12px',
+            }}
           />
         </div>
         <select
           value={author}
           onChange={(e) => setAuthor(e.target.value)}
-          className="h-10 rounded-md bg-surface border border-border px-3 text-sm text-fg-1 focus:outline-none focus:border-primary appearance-none"
+          className="h-10 rounded-lg px-3 text-sm text-fg-1 focus:outline-none appearance-none"
+          style={{
+            background: 'var(--gf-input-bg)',
+            border: '1px solid var(--gf-border)',
+          }}
         >
           <option value="all" className="bg-surface">
             {tC('authorAll')}
@@ -385,16 +398,7 @@ function Row({
 
       {/* Author */}
       <div className="flex items-center gap-2 min-w-0">
-        <span
-          className="shrink-0 w-7 h-7 rounded-full inline-flex items-center justify-center font-display text-[10px] font-bold"
-          style={
-            post.authorRole === 'nutritionist'
-              ? { background: 'linear-gradient(135deg,#a3e635,#65a30d)', color: '#0d1a12' }
-              : { background: 'linear-gradient(135deg,#a855f7,#7c3aed)', color: '#f0ede6' }
-          }
-        >
-          {post.authorInitials}
-        </span>
+        <Avatar text={post.authorInitials} size={28} />
         <p className="text-xs text-fg-1 truncate">{post.authorName}</p>
       </div>
 

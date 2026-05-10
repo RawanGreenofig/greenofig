@@ -1,4 +1,5 @@
 import { redirect } from 'next/navigation'
+import { headers } from 'next/headers'
 import { getServerSupabase } from '@/lib/supabase/server'
 
 type Role = 'user' | 'nutritionist' | 'admin'
@@ -20,6 +21,21 @@ export async function requireRole(
   allowed: readonly Role[],
   locale: string,
 ): Promise<{ userId: string; role: Role }> {
+  // ── DEV-ONLY: localhost auth bypass ────────────────────────────────
+  // Mirrors the middleware bypass so admin/nutritionist styling work
+  // doesn't require juggling sessions on localhost. Hard-gated on:
+  //   • NODE_ENV !== 'production' (Next dev server only)
+  //   • host: localhost / 127.0.0.1
+  // Cannot leak into deployed environments.
+  // TODO(role-bypass): revisit once admin-styling pass is complete.
+  if (process.env.NODE_ENV !== 'production') {
+    const host = headers().get('host') ?? ''
+    if (host.startsWith('localhost') || host.startsWith('127.0.0.1')) {
+      return { userId: 'dev-bypass', role: allowed[0] ?? 'admin' }
+    }
+  }
+  // ───────────────────────────────────────────────────────────────────
+
   const supabase = getServerSupabase()
   // No env / no client → bounce to sign-in. Never render a protected
   // surface to a request we can't authenticate.

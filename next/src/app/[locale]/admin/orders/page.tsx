@@ -180,9 +180,18 @@ export default function AdminOrdersPage() {
             a.click()
             URL.revokeObjectURL(url)
           }}
-          className="inline-flex items-center gap-1.5 rounded-pill bg-surface-raised border border-border h-10 px-4 text-xs font-semibold text-fg-1 hover:border-primary/40"
+          className="inline-flex items-center gap-1.5 h-9 px-3 text-xs font-semibold text-fg-1 transition-colors"
+          style={{
+            background: 'var(--gf-input-bg)',
+            border: '1px solid var(--gf-border)',
+            borderRadius: 8,
+          }}
         >
-          <Download className="w-3.5 h-3.5" strokeWidth={1.75} />
+          <Download
+            className="w-3.5 h-3.5"
+            strokeWidth={1.75}
+            color="var(--gf-fg-3)"
+          />
           {tO('exportCsv')}
         </button>
       </header>
@@ -195,36 +204,59 @@ export default function AdminOrdersPage() {
         <Stat Icon={CheckCircle2} tint="#a855f7" label={tO('fulfillment')}     value={`${fulfillmentRate}%`} />
       </section>
 
-      {/* Search + filter */}
+      {/* Search + filter — search sized for ~order-id queries, filter
+       * takes the rest of the row. Both share the same 40px height +
+       * 8px radius + var(--gf-input-bg)/border recipe. */}
       <div className="flex flex-wrap items-center gap-3">
-        <div className="relative flex-1 min-w-[240px]">
+        <div className="relative w-full sm:w-[280px]">
           <Search
-            className="absolute start-4 top-1/2 -translate-y-1/2 w-4 h-4 text-fg-3"
+            className="absolute top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none"
+            style={{ insetInlineStart: '12px' }}
             strokeWidth={1.75}
+            color="var(--gf-fg-3)"
           />
           <input
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder={tO('search')}
-            className="w-full h-11 rounded-pill bg-surface border border-border ps-11 pe-4 text-sm text-fg-1 placeholder-fg-3 focus:outline-none focus:border-primary"
+            className="w-full h-10 rounded-lg text-sm text-fg-1 placeholder-fg-3 focus:outline-none"
+            style={{
+              background: 'var(--gf-input-bg)',
+              border: '1px solid var(--gf-border)',
+              paddingInlineStart: '36px',
+              paddingInlineEnd: '12px',
+            }}
           />
         </div>
-        <div className="flex items-center gap-1 overflow-x-auto -mx-1 px-1">
-          {FILTERS.map((f) => (
-            <button
-              key={f}
-              type="button"
-              onClick={() => setFilter(f)}
-              className={`shrink-0 rounded-pill h-9 px-4 text-xs font-semibold transition-colors ${
-                filter === f
-                  ? 'bg-primary/20 text-lime-400 border border-primary/40'
-                  : 'bg-surface border border-border text-fg-2 hover:border-primary/40'
-              }`}
-            >
-              {f === 'all' ? tO('filterAll') : tStatus(f)}
-            </button>
-          ))}
+        <div
+          className="inline-flex items-center overflow-x-auto flex-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+          style={{
+            background: 'var(--gf-input-bg)',
+            border: '1px solid var(--gf-border)',
+            borderRadius: 8,
+            padding: 2,
+            gap: 2,
+          }}
+        >
+          {FILTERS.map((f) => {
+            const active = filter === f
+            return (
+              <button
+                key={f}
+                type="button"
+                onClick={() => setFilter(f)}
+                className="shrink-0 inline-flex items-center justify-center h-8 px-3 text-xs font-semibold transition-colors whitespace-nowrap"
+                style={{
+                  borderRadius: 6,
+                  background: active ? 'rgba(132,217,61,0.12)' : 'transparent',
+                  color: active ? '#a3e635' : 'var(--gf-fg-2)',
+                }}
+              >
+                {f === 'all' ? tO('filterAll') : tStatus(f)}
+              </button>
+            )
+          })}
         </div>
       </div>
 
@@ -358,15 +390,21 @@ function OrderRow({
       <button
         type="button"
         onClick={onToggle}
-        className="w-full text-start grid grid-cols-[36px_1fr_auto] md:grid-cols-[36px_1.5fr_2fr_1fr_1fr_auto_36px] gap-3 items-center px-5 py-3 hover:bg-surface-raised transition-colors"
+        className="w-full text-start grid grid-cols-[20px_1fr_auto] md:grid-cols-[20px_1.5fr_2fr_1fr_1fr_auto_20px] gap-3 items-center px-5 py-3 transition-colors"
+        style={{ background: 'transparent' }}
+        onMouseEnter={(e) =>
+          (e.currentTarget.style.background = 'var(--gf-card-hover)')
+        }
+        onMouseLeave={(e) =>
+          (e.currentTarget.style.background = 'transparent')
+        }
         aria-expanded={expanded}
       >
-        <span
-          className="shrink-0 w-9 h-9 rounded-lg inline-flex items-center justify-center"
-          style={{ background: `${meta.tint}1a`, color: meta.tint }}
-        >
-          <meta.Icon className="w-4 h-4" strokeWidth={1.75} />
-        </span>
+        <meta.Icon
+          className="w-5 h-5 shrink-0"
+          strokeWidth={1.75}
+          color={meta.tint}
+        />
         <div className="min-w-0">
           <p className="text-sm font-mono text-fg-1 truncate" dir="ltr">
             {order.id}
@@ -388,16 +426,28 @@ function OrderRow({
           {order.total} <span className="text-xs text-fg-3">USD</span>
         </p>
         <span
-          className="hidden md:inline-flex rounded-pill h-5 px-2 items-center text-[10px] uppercase tracking-eyebrow font-bold"
-          style={{ background: `${meta.tint}1a`, color: meta.tint }}
+          className="hidden md:inline-flex items-center"
+          style={{
+            height: 18,
+            padding: '0 8px',
+            borderRadius: 999,
+            fontSize: 9.5,
+            fontWeight: 800,
+            letterSpacing: '0.08em',
+            textTransform: 'uppercase',
+            lineHeight: 1,
+            background: `${meta.tint}1f`,
+            color: meta.tint,
+          }}
         >
           {tStatus(order.status)}
         </span>
         <ChevronDown
-          className={`hidden md:block w-4 h-4 text-fg-3 justify-self-end transition-transform ${
+          className={`hidden md:block w-4 h-4 justify-self-end transition-transform ${
             expanded ? 'rotate-180' : ''
           }`}
           strokeWidth={1.75}
+          color="var(--gf-fg-3)"
         />
       </button>
       {expanded && (
@@ -468,14 +518,25 @@ function Stat({
   value: string | number
 }) {
   return (
-    <article className="rounded-xl border border-border bg-surface p-5">
-      <div className="flex items-center gap-2.5 mb-3">
-        <Icon className="w-6 h-6 flex-shrink-0" strokeWidth={1.75} style={{ color: tint }} />
-        <span className="text-xs uppercase tracking-eyebrow text-fg-3 font-medium">
+    <article
+      className="rounded-xl border border-border bg-surface p-4"
+      style={{ boxShadow: `inset 4px 0 0 ${tint}` }}
+    >
+      <div className="flex items-center gap-2">
+        <Icon
+          className="w-4 h-4 flex-shrink-0"
+          strokeWidth={1.75}
+          color={tint}
+        />
+        <p className="text-[11px] uppercase tracking-eyebrow text-fg-3 font-semibold">
           {label}
-        </span>
+        </p>
       </div>
-      <p className="font-mono text-2xl font-bold text-fg-1" dir="ltr">
+      <p
+        className="mt-2 font-display text-2xl font-bold"
+        style={{ color: tint }}
+        dir="ltr"
+      >
         {value}
       </p>
     </article>

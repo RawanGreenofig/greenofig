@@ -61,6 +61,24 @@ export async function middleware(request: NextRequest) {
   const response =
     intlResponse instanceof NextResponse ? intlResponse : NextResponse.next()
 
+  // ── DEV-ONLY: localhost auth bypass ────────────────────────────────
+  // Skip both the auth check and the role check so that styling work on
+  // /admin, /nutritionist, etc. doesn't require juggling sessions.
+  // Hard-gated on BOTH:
+  //   • NODE_ENV !== 'production' (Next dev server only)
+  //   • hostname === 'localhost' / 127.0.0.1
+  // so this cannot leak into any deployed environment. Remove this
+  // block before enforcing roles in dev again.
+  // TODO(role-bypass): revisit once admin-styling pass is complete.
+  const isLocalDev =
+    process.env.NODE_ENV !== 'production' &&
+    (request.nextUrl.hostname === 'localhost' ||
+      request.nextUrl.hostname === '127.0.0.1')
+  if (isLocalDev) {
+    return response
+  }
+  // ───────────────────────────────────────────────────────────────────
+
   const supabase = getMiddlewareSupabase(request, response)
   if (!supabase) {
     // Env missing: redirect any protected hit to sign-in so we never

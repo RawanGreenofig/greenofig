@@ -4,6 +4,7 @@ import { useMemo, useState } from 'react'
 import {
   Mail, Search, CheckCircle2, MailOpen, Archive, Trash2, ChevronDown,
   ExternalLink, Download, MessageSquare,
+  type LucideIcon,
 } from '@/icons'
 import { useSupabaseQuery } from '@/lib/hooks/useSupabaseQuery'
 import { getBrowserSupabase } from '@/lib/supabase/client'
@@ -142,71 +143,100 @@ export default function AdminContactsPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <header>
-        <h1 className="text-2xl font-bold text-fg-1 flex items-center gap-2">
-          <Mail className="w-6 h-6" strokeWidth={1.75} style={{ color: '#a3e635' }} />
-          Contacts
-        </h1>
-        <p className="text-sm text-fg-3 mt-1">
-          Form submissions and marketing opt-ins from /contact.
-        </p>
+    <div className="px-4 md:px-8 py-6 md:py-8 max-w-screen-xl mx-auto space-y-6">
+      <header className="flex items-start gap-3">
+        <Mail
+          className="w-6 h-6 mt-1 flex-shrink-0"
+          strokeWidth={1.75}
+          color="#a3e635"
+        />
+        <div className="min-w-0">
+          <h1
+            className="font-display font-bold text-fg-1 tracking-tight"
+            style={{ fontSize: 'clamp(28px, 4vw, 40px)', lineHeight: 1.1 }}
+          >
+            Contacts
+          </h1>
+          <p className="mt-2 text-sm md:text-base text-fg-2 max-w-2xl">
+            Form submissions and marketing opt-ins from /contact.
+          </p>
+        </div>
       </header>
 
       {/* KPIs */}
       <section className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <KpiCard label="Total messages" value={counts.total} tint="#60a5fa" />
-        <KpiCard label="New / unread" value={counts.new} tint="#a3e635" />
-        <KpiCard label="Marketing opt-ins" value={counts.marketing} tint="#fbbf24" />
+        <KpiCard Icon={Mail}            label="Total messages"      value={counts.total}     tint="#60a5fa" />
+        <KpiCard Icon={MailOpen}        label="New / unread"        value={counts.new}       tint="#a3e635" />
+        <KpiCard Icon={Download}        label="Marketing opt-ins"   value={counts.marketing} tint="#fbbf24" />
       </section>
 
-      {/* Filter row */}
+      {/* Search + filter — same recipe as Orders/Bookings: right-sized
+       * search, segmented filter shell, ghost export action. */}
       <section className="flex flex-wrap items-center gap-3">
-        <div className="relative flex-1 min-w-[240px]">
+        <div className="relative w-full sm:w-[280px]">
           <Search
-            className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-fg-3"
+            className="absolute top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none"
+            style={{ insetInlineStart: '12px' }}
             strokeWidth={1.75}
+            color="var(--gf-fg-3)"
           />
           <input
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search name, email, subject, message…"
-            className="w-full h-10 rounded-lg ps-9 pe-3 text-sm"
+            className="w-full h-10 rounded-lg text-sm text-fg-1 placeholder-fg-3 focus:outline-none"
             style={{
-              background: 'rgba(8, 20, 10, 0.55)',
-              border: '1px solid rgba(255,255,255,0.14)',
-              color: '#f3f4f6',
+              background: 'var(--gf-input-bg)',
+              border: '1px solid var(--gf-border)',
+              paddingInlineStart: '36px',
+              paddingInlineEnd: '12px',
             }}
           />
         </div>
-        <div className="flex gap-1.5 flex-wrap">
-          {STATUS_FILTERS.map((f) => (
-            <button
-              key={f.value}
-              onClick={() => setStatusFilter(f.value)}
-              className="text-xs rounded-full px-3 py-1.5 transition-colors"
-              style={{
-                background: statusFilter === f.value ? 'rgba(163,230,53,0.15)' : 'rgba(255,255,255,0.04)',
-                color: statusFilter === f.value ? '#a3e635' : 'var(--gf-fg-2)',
-                border: `1px solid ${statusFilter === f.value ? 'rgba(163,230,53,0.4)' : 'var(--gf-border)'}`,
-              }}
-            >
-              {f.label}
-            </button>
-          ))}
+        <div
+          className="inline-flex items-center overflow-x-auto flex-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+          style={{
+            background: 'var(--gf-input-bg)',
+            border: '1px solid var(--gf-border)',
+            borderRadius: 8,
+            padding: 2,
+            gap: 2,
+          }}
+        >
+          {STATUS_FILTERS.map((f) => {
+            const active = statusFilter === f.value
+            return (
+              <button
+                key={f.value}
+                onClick={() => setStatusFilter(f.value)}
+                className="shrink-0 inline-flex items-center justify-center h-8 px-3 text-xs font-semibold transition-colors whitespace-nowrap"
+                style={{
+                  borderRadius: 6,
+                  background: active ? 'rgba(132,217,61,0.12)' : 'transparent',
+                  color: active ? '#a3e635' : 'var(--gf-fg-2)',
+                }}
+              >
+                {f.label}
+              </button>
+            )
+          })}
         </div>
         <button
           onClick={exportMarketingCsv}
-          className="inline-flex items-center gap-1.5 text-xs rounded-full px-3 py-1.5"
+          className="inline-flex items-center gap-1.5 h-9 px-3 text-xs font-semibold text-fg-1 transition-colors"
           style={{
-            background: 'rgba(251,191,36,0.10)',
-            color: '#fbbf24',
-            border: '1px solid rgba(251,191,36,0.35)',
+            background: 'var(--gf-input-bg)',
+            border: '1px solid var(--gf-border)',
+            borderRadius: 8,
           }}
           title="Export everyone who opted in to marketing"
         >
-          <Download className="w-3.5 h-3.5" strokeWidth={2} />
+          <Download
+            className="w-3.5 h-3.5"
+            strokeWidth={1.75}
+            color="var(--gf-fg-3)"
+          />
           Export marketing list ({counts.marketing})
         </button>
       </section>
@@ -219,13 +249,15 @@ export default function AdminContactsPage() {
         </p>
       )}
       {!loading && filtered.length === 0 && (
-        <div
-          className="rounded-xl p-10 text-center"
-          style={{ background: 'var(--gf-surface)', border: '1px solid var(--gf-border)' }}
-        >
-          <MessageSquare className="w-10 h-10 mx-auto text-fg-3 mb-3" strokeWidth={1.5} />
-          <p className="text-sm text-fg-2">
-            No messages yet. Submissions to <code>/api/contact</code> show up here.
+        <div className="rounded-xl border border-dashed border-border bg-surface/50 p-12 text-center">
+          <MessageSquare
+            className="w-9 h-9 mx-auto mb-3"
+            strokeWidth={1.5}
+            color="var(--gf-fg-3)"
+          />
+          <p className="text-sm font-semibold text-fg-1">No messages yet</p>
+          <p className="mt-1 text-xs text-fg-3">
+            Submissions to <code>/api/contact</code> will show up here.
           </p>
         </div>
       )}
@@ -383,17 +415,40 @@ export default function AdminContactsPage() {
   )
 }
 
-function KpiCard({ label, value, tint }: { label: string; value: number; tint: string }) {
+function KpiCard({
+  Icon,
+  label,
+  value,
+  tint,
+}: {
+  Icon: LucideIcon
+  label: string
+  value: number
+  tint: string
+}) {
   return (
-    <div
-      className="rounded-xl p-4"
-      style={{ background: 'var(--gf-surface)', border: '1px solid var(--gf-border)' }}
+    <article
+      className="rounded-xl border border-border bg-surface p-4"
+      style={{ boxShadow: `inset 4px 0 0 ${tint}` }}
     >
-      <p className="text-xs uppercase tracking-eyebrow text-fg-3">{label}</p>
-      <p className="mt-1.5 font-mono text-2xl font-bold" style={{ color: tint }}>
+      <div className="flex items-center gap-2">
+        <Icon
+          className="w-4 h-4 flex-shrink-0"
+          strokeWidth={1.75}
+          color={tint}
+        />
+        <p className="text-[11px] uppercase tracking-eyebrow text-fg-3 font-semibold">
+          {label}
+        </p>
+      </div>
+      <p
+        className="mt-2 font-display text-2xl font-bold"
+        style={{ color: tint }}
+        dir="ltr"
+      >
         {value.toLocaleString()}
       </p>
-    </div>
+    </article>
   )
 }
 

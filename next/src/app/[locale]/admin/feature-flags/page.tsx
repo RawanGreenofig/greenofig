@@ -197,8 +197,26 @@ export default function AdminFeatureFlagsPage() {
           </p>
         </div>
         {savedFlash && (
-          <span className="inline-flex items-center gap-1.5 rounded-pill bg-primary/15 text-lime-400 h-9 px-4 text-xs font-semibold">
-            <Check className="w-3.5 h-3.5" strokeWidth={2.5} />
+          <span
+            className="inline-flex items-center gap-1.5"
+            style={{
+              height: 18,
+              padding: '0 8px',
+              borderRadius: 999,
+              fontSize: 9.5,
+              fontWeight: 800,
+              letterSpacing: '0.08em',
+              textTransform: 'uppercase',
+              lineHeight: 1,
+              background: 'rgba(132,217,61,0.14)',
+              color: '#a3e635',
+            }}
+          >
+            <Check
+              className="w-2.5 h-2.5"
+              strokeWidth={2.5}
+              color="currentColor"
+            />
             {tF('saved')}
           </span>
         )}
@@ -206,15 +224,23 @@ export default function AdminFeatureFlagsPage() {
 
       <div className="relative">
         <Search
-          className="absolute start-4 top-1/2 -translate-y-1/2 w-4 h-4 text-fg-3"
+          className="absolute top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none"
+          style={{ insetInlineStart: '12px' }}
           strokeWidth={1.75}
+          color="var(--gf-fg-3)"
         />
         <input
           type="text"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder={tF('search')}
-          className="w-full h-11 rounded-pill bg-surface border border-border ps-11 pe-4 text-sm text-fg-1 placeholder-fg-3 focus:outline-none focus:border-primary"
+          className="w-full h-10 rounded-lg text-sm text-fg-1 placeholder-fg-3 focus:outline-none"
+          style={{
+            background: 'var(--gf-input-bg)',
+            border: '1px solid var(--gf-border)',
+            paddingInlineStart: '36px',
+            paddingInlineEnd: '12px',
+          }}
         />
       </div>
 
@@ -287,7 +313,11 @@ function FlagRow({
     }`}>
       {/* Feature */}
       <div className="flex items-center gap-3 min-w-0 mb-3 md:mb-0">
-        <Power className="w-6 h-6 flex-shrink-0" strokeWidth={1.75} style={{ color: flag.globalOn ? 'var(--gf-lime-400)' : 'var(--gf-fg-3)' }} />
+        <Power
+          className="w-5 h-5 flex-shrink-0"
+          strokeWidth={1.75}
+          color={flag.globalOn ? '#a3e635' : 'var(--gf-fg-3)'}
+        />
         <div className="min-w-0">
           <p className="text-sm font-mono text-fg-1 truncate" dir="ltr">
             {flag.feature}
@@ -310,41 +340,60 @@ function FlagRow({
         />
       </div>
 
-      {/* Tier checks */}
-      {TIERS.map((tier) => (
-        <div
-          key={tier}
-          className="flex md:justify-center items-center gap-2 mb-2 md:mb-0"
-        >
-          <span className="md:hidden text-[10px] uppercase tracking-eyebrow text-fg-3 font-semibold">
-            {tier}
-          </span>
-          <button
-            type="button"
-            onClick={() => onToggleTier(tier)}
-            disabled={!flag.globalOn}
-            aria-label={tier}
-            className={`w-7 h-7 rounded-md inline-flex items-center justify-center transition-colors ${
-              flag.tiers.has(tier)
-                ? ''
-                : 'bg-bg-deeper border border-border'
-            } ${!flag.globalOn ? 'cursor-not-allowed opacity-60' : 'cursor-pointer hover:scale-110'}`}
-            style={
-              flag.tiers.has(tier)
-                ? { background: TIER_TINT[tier], color: '#0d1a12' }
-                : {}
-            }
+      {/* Tier checks — tint-bg + tint-check when on, neutral surface
+       * when off. Reads as a row of allowed tiers without screaming
+       * candy colors at the user, matches the rest of the admin chrome. */}
+      {TIERS.map((tier) => {
+        const on = flag.tiers.has(tier)
+        const tint = TIER_TINT[tier]
+        return (
+          <div
+            key={tier}
+            className="flex md:justify-center items-center gap-2 mb-2 md:mb-0"
           >
-            {flag.tiers.has(tier) ? (
-              <Check className="w-3.5 h-3.5" strokeWidth={2.5} />
-            ) : null}
-          </button>
-        </div>
-      ))}
+            <span className="md:hidden text-[10px] uppercase tracking-eyebrow text-fg-3 font-semibold">
+              {tier}
+            </span>
+            <button
+              type="button"
+              onClick={() => onToggleTier(tier)}
+              disabled={!flag.globalOn}
+              aria-label={tier}
+              className={`inline-flex items-center justify-center transition-all overflow-hidden ${
+                !flag.globalOn ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'
+              }`}
+              style={{
+                width: 28,
+                height: 28,
+                borderRadius: 6,
+                background: on ? `${tint}24` : 'var(--gf-input-bg)',
+                border: `1px solid ${on ? `${tint}66` : 'var(--gf-border)'}`,
+                color: on ? tint : 'transparent',
+                lineHeight: 0,
+              }}
+            >
+              {on && (
+                <Check
+                  className="w-3.5 h-3.5"
+                  strokeWidth={2}
+                  color="currentColor"
+                />
+              )}
+            </button>
+          </div>
+        )
+      })}
     </li>
   )
 }
 
+/**
+ * Feature-flag switch — same geometry + colors as the shared
+ * @/components/Switch component (44×24, lime-500 on, white thumb,
+ * thumb-shadow), with an extra red danger dot in the corner when the
+ * flag is globally enabled. The dot exists to remind admins that
+ * disabling it is a destructive global kill action.
+ */
 function Switch({
   on,
   onChange,
@@ -360,21 +409,41 @@ function Switch({
       role="switch"
       aria-checked={on}
       onClick={onChange}
-      className={`shrink-0 relative w-10 h-6 rounded-full transition-colors ${
-        on ? 'bg-lime-400' : 'bg-bg-deeper border border-border'
-      }`}
+      className="shrink-0 relative transition-colors"
+      style={{
+        width: 44,
+        height: 24,
+        borderRadius: 12,
+        background: on ? '#84cc16' : 'rgba(255,255,255,0.12)',
+      }}
     >
       <span
         aria-hidden
-        className={`absolute top-0.5 w-5 h-5 rounded-full bg-bg shadow transition-all ${
-          on ? 'start-[18px]' : 'start-0.5'
-        }`}
+        style={{
+          position: 'absolute',
+          top: 3,
+          left: on ? 23 : 3,
+          width: 18,
+          height: 18,
+          borderRadius: 9,
+          background: '#fff',
+          boxShadow: '0 1px 3px rgba(0,0,0,0.3)',
+          transition: 'left 200ms',
+        }}
       />
       {danger && on && (
         <span
           aria-hidden
-          className="absolute -top-0.5 -end-0.5 w-2 h-2 rounded-full"
-          style={{ background: '#f43f5e' }}
+          className="absolute"
+          style={{
+            top: -2,
+            insetInlineEnd: -2,
+            width: 8,
+            height: 8,
+            borderRadius: 999,
+            background: '#f43f5e',
+            boxShadow: '0 0 6px rgba(244,63,94,0.7)',
+          }}
         />
       )}
     </button>
@@ -419,14 +488,31 @@ function ConfirmDialog({
           <button
             type="button"
             onClick={onCancel}
-            className="inline-flex items-center gap-1.5 rounded-pill bg-surface-raised border border-border h-10 px-4 text-sm font-medium text-fg-1 hover:border-primary/40"
+            className="inline-flex items-center gap-1.5 h-10 px-4 text-sm font-medium text-fg-1 transition-colors"
+            style={{
+              background: 'var(--gf-input-bg)',
+              border: '1px solid var(--gf-border)',
+              borderRadius: 8,
+            }}
           >
             {cancelLabel}
           </button>
           <button
             type="button"
             onClick={onConfirm}
-            className="inline-flex items-center gap-1.5 rounded-pill bg-rose-500/20 text-rose-400 h-10 px-5 text-sm font-semibold hover:bg-rose-500/30"
+            className="inline-flex items-center gap-1.5 h-10 px-5 text-sm font-semibold transition-colors"
+            style={{
+              background: 'rgba(244,63,94,0.18)',
+              color: '#f43f5e',
+              borderRadius: 8,
+              border: '1px solid rgba(244,63,94,0.3)',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = 'rgba(244,63,94,0.28)'
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = 'rgba(244,63,94,0.18)'
+            }}
           >
             {confirmLabel}
           </button>

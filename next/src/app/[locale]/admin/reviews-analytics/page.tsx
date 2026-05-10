@@ -4,6 +4,7 @@ import { useMemo, useState } from 'react'
 import {
   Sparkles, Star, ThumbsUp, ThumbsDown, Filter, RefreshCw,
   MessageSquare, TrendingUp,
+  type LucideIcon,
 } from '@/icons'
 import { useSupabaseQuery } from '@/lib/hooks/useSupabaseQuery'
 import { getBrowserSupabase } from '@/lib/supabase/client'
@@ -99,18 +100,27 @@ export default function ReviewsAnalyticsPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="px-4 md:px-8 py-6 md:py-8 max-w-screen-xl mx-auto space-y-6">
       <header className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-bold text-fg-1 flex items-center gap-2">
-            <Sparkles className="w-6 h-6" strokeWidth={1.75} style={{ color: '#a3e635' }} />
-            Reviews analytics
-          </h1>
-          <p className="text-sm text-fg-3 mt-1 max-w-xl">
-            Autopilot theme clustering. Run the AI grouping to see what
-            customers keep talking about — patterns, sentiment, and
-            sample reviews per theme.
-          </p>
+        <div className="flex items-start gap-3">
+          <Sparkles
+            className="w-6 h-6 mt-1 flex-shrink-0"
+            strokeWidth={1.75}
+            color="#a3e635"
+          />
+          <div className="min-w-0">
+            <h1
+              className="font-display font-bold text-fg-1 tracking-tight"
+              style={{ fontSize: 'clamp(28px, 4vw, 40px)', lineHeight: 1.1 }}
+            >
+              Reviews analytics
+            </h1>
+            <p className="mt-2 text-sm md:text-base text-fg-2 max-w-xl">
+              Autopilot theme clustering. Run the AI grouping to see what
+              customers keep talking about — patterns, sentiment, and
+              sample reviews per theme.
+            </p>
+          </div>
         </div>
         <button
           type="button"
@@ -135,13 +145,20 @@ export default function ReviewsAnalyticsPage() {
 
       {/* Top-line stats */}
       <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <KpiCard label="Total reviews" value={stats.total.toString()} tint="#60a5fa" />
         <KpiCard
+          Icon={MessageSquare}
+          label="Total reviews"
+          value={stats.total.toString()}
+          tint="#60a5fa"
+        />
+        <KpiCard
+          Icon={Star}
           label="Average rating"
           value={stats.avg ? stats.avg.toFixed(2) : '—'}
           tint="#fbbf24"
         />
         <KpiCard
+          Icon={TrendingUp}
           label="5-star share"
           value={
             stats.total
@@ -151,6 +168,7 @@ export default function ReviewsAnalyticsPage() {
           tint="#a3e635"
         />
         <KpiCard
+          Icon={Sparkles}
           label="Themes detected"
           value={themes.length.toString()}
           tint="#a855f7"
@@ -228,15 +246,19 @@ export default function ReviewsAnalyticsPage() {
         )}
 
         {themes.length === 0 ? (
-          <div
-            className="rounded-xl p-10 text-center"
-            style={{ background: 'var(--gf-surface)', border: '1px solid var(--gf-border)' }}
-          >
-            <Sparkles className="w-10 h-10 mx-auto text-fg-3 mb-3" strokeWidth={1.5} />
-            <p className="text-sm text-fg-2 leading-relaxed max-w-md mx-auto">
-              Click <strong>Cluster reviews</strong> above to ask the AI to
-              group every approved review into themes. Each theme shows the
-              count, sentiment, and which reviews matched.
+          <div className="rounded-xl border border-dashed border-border bg-surface/50 p-12 text-center">
+            <Sparkles
+              className="w-9 h-9 mx-auto mb-3"
+              strokeWidth={1.5}
+              color="#a3e635"
+            />
+            <p className="text-sm font-semibold text-fg-1">
+              No themes clustered yet
+            </p>
+            <p className="mt-1 text-xs text-fg-3 max-w-md mx-auto leading-relaxed">
+              Click <strong className="text-fg-2">Cluster reviews</strong>{' '}
+              above to ask the AI to group every approved review into themes.
+              Each theme shows count, sentiment, and matched reviews.
             </p>
           </div>
         ) : (
@@ -261,14 +283,20 @@ export default function ReviewsAnalyticsPage() {
                         {t.name}
                       </p>
                       <span
-                        className="inline-flex items-center gap-1 text-[10px] uppercase tracking-wide rounded-full px-1.5 py-0.5 shrink-0"
+                        className="inline-flex items-center shrink-0"
                         style={{
+                          height: 18,
+                          padding: '0 8px',
+                          borderRadius: 999,
+                          fontSize: 9.5,
+                          fontWeight: 800,
+                          letterSpacing: '0.08em',
+                          textTransform: 'uppercase',
+                          lineHeight: 1,
                           background: tint.bg,
                           color: tint.fg,
-                          border: `1px solid ${tint.border}`,
                         }}
                       >
-                        <tint.Icon className="w-3 h-3" strokeWidth={2} />
                         {t.sentiment}
                       </span>
                     </div>
@@ -356,15 +384,22 @@ export default function ReviewsAnalyticsPage() {
                 {r.body}
               </p>
               {r.auto_themes.length > 0 && (
-                <div className="mt-2 flex flex-wrap gap-1">
+                <div className="mt-2.5 flex flex-wrap gap-1.5">
                   {r.auto_themes.map((tag) => (
                     <span
                       key={tag}
-                      className="text-[10px] uppercase tracking-wide rounded-full px-1.5 py-0.5"
+                      className="inline-flex items-center"
                       style={{
-                        background: 'rgba(163,230,53,0.10)',
+                        height: 18,
+                        padding: '0 8px',
+                        borderRadius: 999,
+                        fontSize: 9.5,
+                        fontWeight: 800,
+                        letterSpacing: '0.08em',
+                        textTransform: 'uppercase',
+                        lineHeight: 1,
+                        background: 'rgba(163,230,53,0.14)',
                         color: '#a3e635',
-                        border: '1px solid rgba(163,230,53,0.30)',
                       }}
                     >
                       {tag}
@@ -380,17 +415,40 @@ export default function ReviewsAnalyticsPage() {
   )
 }
 
-function KpiCard({ label, value, tint }: { label: string; value: string; tint: string }) {
+function KpiCard({
+  Icon,
+  label,
+  value,
+  tint,
+}: {
+  Icon: LucideIcon
+  label: string
+  value: string
+  tint: string
+}) {
   return (
-    <div
-      className="rounded-xl p-4"
-      style={{ background: 'var(--gf-surface)', border: '1px solid var(--gf-border)' }}
+    <article
+      className="rounded-xl border border-border bg-surface p-4"
+      style={{ boxShadow: `inset 4px 0 0 ${tint}` }}
     >
-      <p className="text-xs uppercase tracking-eyebrow text-fg-3">{label}</p>
-      <p className="mt-1.5 font-mono text-2xl font-bold" style={{ color: tint }}>
+      <div className="flex items-center gap-2">
+        <Icon
+          className="w-4 h-4 flex-shrink-0"
+          strokeWidth={1.75}
+          color={tint}
+        />
+        <p className="text-[11px] uppercase tracking-eyebrow text-fg-3 font-semibold">
+          {label}
+        </p>
+      </div>
+      <p
+        className="mt-2 font-display text-2xl font-bold"
+        style={{ color: tint }}
+        dir="ltr"
+      >
         {value}
       </p>
-    </div>
+    </article>
   )
 }
 

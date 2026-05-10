@@ -171,9 +171,18 @@ export default function AdminBookingsPage() {
         </div>
         <button
           type="button"
-          className="inline-flex items-center gap-1.5 rounded-pill bg-surface-raised border border-border h-10 px-4 text-xs font-semibold text-fg-1 hover:border-primary/40"
+          className="inline-flex items-center gap-1.5 h-9 px-3 text-xs font-semibold text-fg-1 transition-colors"
+          style={{
+            background: 'var(--gf-input-bg)',
+            border: '1px solid var(--gf-border)',
+            borderRadius: 8,
+          }}
         >
-          <Download className="w-3.5 h-3.5" strokeWidth={1.75} />
+          <Download
+            className="w-3.5 h-3.5"
+            strokeWidth={1.75}
+            color="var(--gf-fg-3)"
+          />
           {tB('exportCsv')}
         </button>
       </header>
@@ -186,36 +195,58 @@ export default function AdminBookingsPage() {
         <Stat Icon={CalendarX}      tint="#f43f5e" label={tB('cancelRate')}         value={`${cancelRate}%`} />
       </section>
 
-      {/* Search + filter */}
+      {/* Search + filter — search sized for client/nutritionist queries,
+       * filter takes the rest of the row. Same recipe used on /admin/orders. */}
       <div className="flex flex-wrap items-center gap-3">
-        <div className="relative flex-1 min-w-[240px]">
+        <div className="relative w-full sm:w-[280px]">
           <Search
-            className="absolute start-4 top-1/2 -translate-y-1/2 w-4 h-4 text-fg-3"
+            className="absolute top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none"
+            style={{ insetInlineStart: '12px' }}
             strokeWidth={1.75}
+            color="var(--gf-fg-3)"
           />
           <input
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder={tB('search')}
-            className="w-full h-11 rounded-pill bg-surface border border-border ps-11 pe-4 text-sm text-fg-1 placeholder-fg-3 focus:outline-none focus:border-primary"
+            className="w-full h-10 rounded-lg text-sm text-fg-1 placeholder-fg-3 focus:outline-none"
+            style={{
+              background: 'var(--gf-input-bg)',
+              border: '1px solid var(--gf-border)',
+              paddingInlineStart: '36px',
+              paddingInlineEnd: '12px',
+            }}
           />
         </div>
-        <div className="flex items-center gap-1 overflow-x-auto -mx-1 px-1">
-          {FILTERS.map((f) => (
-            <button
-              key={f}
-              type="button"
-              onClick={() => setFilter(f)}
-              className={`shrink-0 rounded-pill h-9 px-4 text-xs font-semibold transition-colors ${
-                filter === f
-                  ? 'bg-primary/20 text-lime-400 border border-primary/40'
-                  : 'bg-surface border border-border text-fg-2 hover:border-primary/40'
-              }`}
-            >
-              {f === 'all' ? tB('filterAll') : tB(`statuses.${f}` as 'statuses.scheduled')}
-            </button>
-          ))}
+        <div
+          className="inline-flex items-center overflow-x-auto flex-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+          style={{
+            background: 'var(--gf-input-bg)',
+            border: '1px solid var(--gf-border)',
+            borderRadius: 8,
+            padding: 2,
+            gap: 2,
+          }}
+        >
+          {FILTERS.map((f) => {
+            const active = filter === f
+            return (
+              <button
+                key={f}
+                type="button"
+                onClick={() => setFilter(f)}
+                className="shrink-0 inline-flex items-center justify-center h-8 px-3 text-xs font-semibold transition-colors whitespace-nowrap"
+                style={{
+                  borderRadius: 6,
+                  background: active ? 'rgba(132,217,61,0.12)' : 'transparent',
+                  color: active ? '#a3e635' : 'var(--gf-fg-2)',
+                }}
+              >
+                {f === 'all' ? tB('filterAll') : tB(`statuses.${f}` as 'statuses.scheduled')}
+              </button>
+            )
+          })}
         </div>
       </div>
 
@@ -253,10 +284,23 @@ function Row({ tB, booking }: { tB: ReturnType<typeof useTranslations>; booking:
   const tint = TYPE_TINT[booking.type]
   const dt = new Date(booking.scheduledISO)
   return (
-    <li className="md:grid md:grid-cols-[1.2fr_1.5fr_1.2fr_1.3fr_0.8fr_0.8fr_auto] gap-3 items-center px-5 py-3 hover:bg-surface-raised transition-colors">
+    <li
+      className="md:grid md:grid-cols-[1.2fr_1.5fr_1.2fr_1.3fr_0.8fr_0.8fr_auto] gap-3 items-center px-5 py-3 transition-colors"
+      style={{ background: 'transparent' }}
+      onMouseEnter={(e) =>
+        (e.currentTarget.style.background = 'var(--gf-card-hover)')
+      }
+      onMouseLeave={(e) =>
+        (e.currentTarget.style.background = 'transparent')
+      }
+    >
       {/* Session type */}
       <div className="flex items-center gap-2 mb-2 md:mb-0">
-        <TypeIcon className="w-6 h-6 flex-shrink-0" strokeWidth={1.75} style={{ color: tint }} />
+        <TypeIcon
+          className="w-5 h-5 flex-shrink-0"
+          strokeWidth={1.75}
+          color={tint}
+        />
         <p className="text-sm font-semibold text-fg-1">
           {tB(`types.${booking.type}` as 'types.introCall')}
         </p>
@@ -278,12 +322,7 @@ function Row({ tB, booking }: { tB: ReturnType<typeof useTranslations>; booking:
       {/* Nutritionist */}
       <Cell label={tB('col.nutritionist')}>
         <div className="flex items-center gap-2 min-w-0">
-          <span
-            className="shrink-0 w-7 h-7 rounded-full inline-flex items-center justify-center font-display text-[10px] font-bold"
-            style={{ background: 'linear-gradient(135deg,#a3e635,#65a30d)', color: '#0d1a12' }}
-          >
-            {booking.nutritionistInitials}
-          </span>
+          <Avatar text={booking.nutritionistInitials} size={28} />
           <p className="text-sm text-fg-1 truncate">{booking.nutritionist}</p>
         </div>
       </Cell>
@@ -302,8 +341,19 @@ function Row({ tB, booking }: { tB: ReturnType<typeof useTranslations>; booking:
       {/* Status */}
       <Cell label={tB('col.status')}>
         <span
-          className="rounded-pill h-5 px-2 inline-flex items-center text-[10px] uppercase tracking-eyebrow font-bold"
-          style={{ background: `${status.tint}1a`, color: status.tint }}
+          className="inline-flex items-center"
+          style={{
+            height: 18,
+            padding: '0 8px',
+            borderRadius: 999,
+            fontSize: 9.5,
+            fontWeight: 800,
+            letterSpacing: '0.08em',
+            textTransform: 'uppercase',
+            lineHeight: 1,
+            background: `${status.tint}1f`,
+            color: status.tint,
+          }}
         >
           {tB(`statuses.${booking.status}` as 'statuses.scheduled')}
         </span>
@@ -315,24 +365,53 @@ function Row({ tB, booking }: { tB: ReturnType<typeof useTranslations>; booking:
           <>
             <button
               type="button"
-              className="inline-flex items-center gap-1 rounded-md h-8 px-2.5 text-[11px] font-semibold bg-amber-500/15 hover:bg-amber-500/25"
-              style={{ color: '#e8912a' }}
+              aria-label={tB('refundBooking')}
+              title={tB('refundBooking')}
+              className="inline-flex items-center justify-center w-8 h-8 rounded-md transition-colors"
+              style={{ background: 'transparent', color: '#e8912a' }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = 'rgba(232,145,42,0.14)'
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = 'transparent'
+              }}
             >
-              <RotateCcw className="w-3 h-3" strokeWidth={1.75} />
-              {tB('refundBooking')}
+              <RotateCcw
+                className="w-3.5 h-3.5"
+                strokeWidth={1.75}
+                color="currentColor"
+              />
             </button>
             <button
               type="button"
-              className="inline-flex items-center gap-1 rounded-md h-8 px-2.5 text-[11px] font-semibold bg-rose-500/15 text-rose-400 hover:bg-rose-500/25"
+              aria-label={tB('cancelBooking')}
+              title={tB('cancelBooking')}
+              className="inline-flex items-center justify-center w-8 h-8 rounded-md transition-colors"
+              style={{ background: 'transparent', color: '#f43f5e' }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = 'rgba(244,63,94,0.14)'
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = 'transparent'
+              }}
             >
-              <XCircle className="w-3 h-3" strokeWidth={1.75} />
-              {tB('cancelBooking')}
+              <XCircle
+                className="w-3.5 h-3.5"
+                strokeWidth={1.75}
+                color="currentColor"
+              />
             </button>
           </>
         )}
         <button
           type="button"
-          className="inline-flex items-center gap-1 rounded-md h-8 px-2.5 text-[11px] font-semibold bg-surface-raised border border-border text-fg-1 hover:border-primary/40"
+          className="inline-flex items-center gap-1 h-8 px-3 text-xs font-semibold transition-colors"
+          style={{
+            background: 'var(--gf-input-bg)',
+            border: '1px solid var(--gf-border)',
+            borderRadius: 8,
+            color: 'var(--gf-fg-1)',
+          }}
         >
           {tB('viewDetails')}
         </button>
@@ -374,14 +453,25 @@ function Stat({
   value: string | number
 }) {
   return (
-    <article className="rounded-xl border border-border bg-surface p-5">
-      <div className="flex items-center gap-2.5 mb-3">
-        <Icon className="w-6 h-6 flex-shrink-0" strokeWidth={1.75} style={{ color: tint }} />
-        <span className="text-xs uppercase tracking-eyebrow text-fg-3 font-medium">
+    <article
+      className="rounded-xl border border-border bg-surface p-4"
+      style={{ boxShadow: `inset 4px 0 0 ${tint}` }}
+    >
+      <div className="flex items-center gap-2">
+        <Icon
+          className="w-4 h-4 flex-shrink-0"
+          strokeWidth={1.75}
+          color={tint}
+        />
+        <p className="text-[11px] uppercase tracking-eyebrow text-fg-3 font-semibold">
           {label}
-        </span>
+        </p>
       </div>
-      <p className="font-mono text-2xl font-bold text-fg-1" dir="ltr">
+      <p
+        className="mt-2 font-display text-2xl font-bold"
+        style={{ color: tint }}
+        dir="ltr"
+      >
         {value}
       </p>
     </article>

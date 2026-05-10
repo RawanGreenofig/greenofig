@@ -203,34 +203,55 @@ export default function AdminApiKeysPage() {
       </header>
 
       <div className="flex flex-wrap items-center gap-3">
-        <div className="relative flex-1 min-w-[240px]">
+        <div className="relative w-full sm:w-[280px]">
           <Search
-            className="absolute start-4 top-1/2 -translate-y-1/2 w-4 h-4 text-fg-3"
+            className="absolute top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none"
+            style={{ insetInlineStart: '12px' }}
             strokeWidth={1.75}
+            color="var(--gf-fg-3)"
           />
           <input
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder={tA('search')}
-            className="w-full h-11 rounded-pill bg-surface border border-border ps-11 pe-4 text-sm text-fg-1 placeholder-fg-3 focus:outline-none focus:border-primary"
+            className="w-full h-10 rounded-lg text-sm text-fg-1 placeholder-fg-3 focus:outline-none"
+            style={{
+              background: 'var(--gf-input-bg)',
+              border: '1px solid var(--gf-border)',
+              paddingInlineStart: '36px',
+              paddingInlineEnd: '12px',
+            }}
           />
         </div>
-        <div className="inline-flex items-center gap-0.5 rounded-pill bg-bg-deeper border border-border p-0.5">
-          {(['all', 'active', 'inactive'] as const).map((f) => (
-            <button
-              key={f}
-              type="button"
-              onClick={() => setFilter(f)}
-              className={`px-3 h-8 rounded-pill text-[11px] font-semibold transition-colors ${
-                filter === f
-                  ? 'bg-primary/20 text-lime-400'
-                  : 'text-fg-3 hover:text-fg-1'
-              }`}
-            >
-              {f === 'all' ? tA('filterAll') : f === 'active' ? tA('filterActive') : tA('filterInactive')}
-            </button>
-          ))}
+        <div
+          className="inline-flex items-center"
+          style={{
+            background: 'var(--gf-input-bg)',
+            border: '1px solid var(--gf-border)',
+            borderRadius: 8,
+            padding: 2,
+            gap: 2,
+          }}
+        >
+          {(['all', 'active', 'inactive'] as const).map((f) => {
+            const active = filter === f
+            return (
+              <button
+                key={f}
+                type="button"
+                onClick={() => setFilter(f)}
+                className="inline-flex items-center justify-center h-8 px-3 text-xs font-semibold transition-colors whitespace-nowrap"
+                style={{
+                  borderRadius: 6,
+                  background: active ? 'rgba(132,217,61,0.12)' : 'transparent',
+                  color: active ? '#a3e635' : 'var(--gf-fg-2)',
+                }}
+              >
+                {f === 'all' ? tA('filterAll') : f === 'active' ? tA('filterActive') : tA('filterInactive')}
+              </button>
+            )
+          })}
         </div>
       </div>
 
@@ -324,21 +345,56 @@ function KeyRow({
 }) {
   const tint = PROVIDER_TINT[apiKey.provider]
   return (
-    <li className="flex flex-wrap items-center gap-3 px-5 py-3 hover:bg-surface-raised transition-colors">
-      <Key className="w-6 h-6 flex-shrink-0" strokeWidth={1.75} style={{ color: tint }} />
+    <li
+      className="flex flex-wrap items-center gap-3 px-5 py-3 transition-colors"
+      style={{ background: 'transparent' }}
+      onMouseEnter={(e) =>
+        (e.currentTarget.style.background = 'var(--gf-card-hover)')
+      }
+      onMouseLeave={(e) =>
+        (e.currentTarget.style.background = 'transparent')
+      }
+    >
+      <Key
+        className="w-5 h-5 flex-shrink-0"
+        strokeWidth={1.75}
+        color={tint}
+      />
       <div className="flex-1 min-w-[200px]">
-        <div className="flex items-baseline gap-2 flex-wrap">
+        <div className="flex items-center gap-2 flex-wrap">
           <p className="text-sm font-semibold text-fg-1">{apiKey.name}</p>
           <span
-            className="rounded-pill h-5 px-2 inline-flex items-center text-[10px] uppercase tracking-eyebrow font-bold"
-            style={{ background: `${tint}1a`, color: tint }}
+            className="inline-flex items-center"
+            style={{
+              height: 18,
+              padding: '0 8px',
+              borderRadius: 999,
+              fontSize: 9.5,
+              fontWeight: 800,
+              letterSpacing: '0.08em',
+              textTransform: 'uppercase',
+              lineHeight: 1,
+              background: `${tint}1f`,
+              color: tint,
+            }}
           >
             {tA(`providers.${apiKey.provider}` as 'providers.stripe')}
           </span>
           {!apiKey.active && (
             <span
-              className="rounded-pill h-5 px-2 inline-flex items-center text-[10px] uppercase tracking-eyebrow font-bold"
-              style={{ background: 'rgb(155 175 159 / 0.14)', color: '#9baf9f' }}
+              className="inline-flex items-center"
+              style={{
+                height: 18,
+                padding: '0 8px',
+                borderRadius: 999,
+                fontSize: 9.5,
+                fontWeight: 800,
+                letterSpacing: '0.08em',
+                textTransform: 'uppercase',
+                lineHeight: 1,
+                background: 'rgba(155, 175, 159, 0.14)',
+                color: '#9baf9f',
+              }}
             >
               {tA('inactive')}
             </span>
@@ -352,24 +408,65 @@ function KeyRow({
             type="button"
             onClick={onToggleReveal}
             aria-label={revealed ? tA('hide') : tA('reveal')}
-            className="w-6 h-6 rounded-md inline-flex items-center justify-center text-fg-3 hover:text-fg-1 hover:bg-surface"
+            className="w-7 h-7 rounded-md inline-flex items-center justify-center transition-colors"
+            style={{ background: 'transparent', color: 'var(--gf-fg-3)' }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = 'var(--gf-input-bg)'
+              e.currentTarget.style.color = 'var(--gf-fg-1)'
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = 'transparent'
+              e.currentTarget.style.color = 'var(--gf-fg-3)'
+            }}
           >
             {revealed ? (
-              <EyeOff className="w-3 h-3" strokeWidth={1.75} />
+              <EyeOff
+                className="w-3.5 h-3.5"
+                strokeWidth={1.75}
+                color="currentColor"
+              />
             ) : (
-              <Eye className="w-3 h-3" strokeWidth={1.75} />
+              <Eye
+                className="w-3.5 h-3.5"
+                strokeWidth={1.75}
+                color="currentColor"
+              />
             )}
           </button>
           <button
             type="button"
             onClick={onCopy}
             aria-label={copied ? tA('copied') : tA('copy')}
-            className="w-6 h-6 rounded-md inline-flex items-center justify-center text-fg-3 hover:text-fg-1 hover:bg-surface"
+            className="w-7 h-7 rounded-md inline-flex items-center justify-center transition-colors"
+            style={{
+              background: 'transparent',
+              color: copied ? '#a3e635' : 'var(--gf-fg-3)',
+            }}
+            onMouseEnter={(e) => {
+              if (!copied) {
+                e.currentTarget.style.background = 'var(--gf-input-bg)'
+                e.currentTarget.style.color = 'var(--gf-fg-1)'
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (!copied) {
+                e.currentTarget.style.background = 'transparent'
+                e.currentTarget.style.color = 'var(--gf-fg-3)'
+              }
+            }}
           >
             {copied ? (
-              <Check className="w-3 h-3 text-lime-400" strokeWidth={2.5} />
+              <Check
+                className="w-3.5 h-3.5"
+                strokeWidth={2.5}
+                color="currentColor"
+              />
             ) : (
-              <Copy className="w-3 h-3" strokeWidth={1.75} />
+              <Copy
+                className="w-3.5 h-3.5"
+                strokeWidth={1.75}
+                color="currentColor"
+              />
             )}
           </button>
         </div>
@@ -389,22 +486,46 @@ function KeyRow({
         <button
           type="button"
           onClick={onTest}
-          className={`inline-flex items-center gap-1 rounded-md h-8 px-2.5 text-[11px] font-semibold transition-colors ${
-            tested === true
-              ? 'bg-primary/20 text-lime-400'
-              : tested === false
-                ? 'bg-rose-500/15 text-rose-400'
-                : 'bg-surface-raised border border-border text-fg-1 hover:border-primary/40'
-          }`}
+          className="inline-flex items-center gap-1 h-8 px-3 text-[11px] font-semibold transition-colors"
+          style={{
+            background:
+              tested === true
+                ? 'rgba(132,217,61,0.12)'
+                : tested === false
+                  ? 'rgba(244,63,94,0.14)'
+                  : 'var(--gf-input-bg)',
+            border: `1px solid ${
+              tested === true
+                ? 'rgba(132,217,61,0.4)'
+                : tested === false
+                  ? 'rgba(244,63,94,0.4)'
+                  : 'var(--gf-border)'
+            }`,
+            borderRadius: 8,
+            color:
+              tested === true
+                ? '#a3e635'
+                : tested === false
+                  ? '#f43f5e'
+                  : 'var(--gf-fg-1)',
+          }}
         >
           {tested === true ? (
             <>
-              <Check className="w-3 h-3" strokeWidth={2.5} />
+              <Check
+                className="w-3 h-3"
+                strokeWidth={2.5}
+                color="currentColor"
+              />
               {tA('testResult.ok')}
             </>
           ) : tested === false ? (
             <>
-              <XCircle className="w-3 h-3" strokeWidth={2} />
+              <XCircle
+                className="w-3 h-3"
+                strokeWidth={2}
+                color="currentColor"
+              />
               {tA('testResult.fail')}
             </>
           ) : (
@@ -415,18 +536,41 @@ function KeyRow({
           type="button"
           onClick={onRotate}
           aria-label={tA('rotate')}
-          className="w-8 h-8 rounded-md inline-flex items-center justify-center text-fg-3 hover:text-amber-400 hover:bg-surface-raised"
-          style={{ color: '#e8912a' }}
+          title={tA('rotate')}
+          className="w-8 h-8 rounded-md inline-flex items-center justify-center transition-colors"
+          style={{ background: 'transparent', color: '#e8912a' }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = 'rgba(232,145,42,0.14)'
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = 'transparent'
+          }}
         >
-          <RotateCcw className="w-3.5 h-3.5" strokeWidth={1.75} />
+          <RotateCcw
+            className="w-3.5 h-3.5"
+            strokeWidth={1.75}
+            color="currentColor"
+          />
         </button>
         <button
           type="button"
           onClick={onRevoke}
           aria-label={tA('revoke')}
-          className="w-8 h-8 rounded-md inline-flex items-center justify-center text-fg-3 hover:text-rose-400 hover:bg-surface-raised"
+          title={tA('revoke')}
+          className="w-8 h-8 rounded-md inline-flex items-center justify-center transition-colors"
+          style={{ background: 'transparent', color: '#f43f5e' }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = 'rgba(244,63,94,0.14)'
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = 'transparent'
+          }}
         >
-          <XCircle className="w-3.5 h-3.5" strokeWidth={1.75} />
+          <XCircle
+            className="w-3.5 h-3.5"
+            strokeWidth={1.75}
+            color="currentColor"
+          />
         </button>
       </div>
     </li>
@@ -477,9 +621,22 @@ function AddKeyDialog({
             type="button"
             onClick={onCancel}
             aria-label="Close"
-            className="w-9 h-9 rounded-md bg-surface-raised text-fg-2 hover:text-fg-1 inline-flex items-center justify-center"
+            className="w-8 h-8 rounded-md inline-flex items-center justify-center transition-colors"
+            style={{ background: 'transparent', color: 'var(--gf-fg-3)' }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = 'var(--gf-input-bg)'
+              e.currentTarget.style.color = 'var(--gf-fg-1)'
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = 'transparent'
+              e.currentTarget.style.color = 'var(--gf-fg-3)'
+            }}
           >
-            <X className="w-4 h-4" strokeWidth={1.75} />
+            <X
+              className="w-4 h-4"
+              strokeWidth={1.75}
+              color="currentColor"
+            />
           </button>
         </header>
         <Field label={tA('addForm.name')}>
@@ -489,14 +646,22 @@ function AddKeyDialog({
             onChange={(e) => setName(e.target.value)}
             placeholder={tA('addForm.namePh')}
             autoFocus
-            className="w-full h-10 rounded-md bg-bg-deeper border border-border px-3 text-sm text-fg-1 placeholder-fg-3 focus:outline-none focus:border-primary"
+            className="w-full h-10 rounded-lg px-3 text-sm text-fg-1 placeholder-fg-3 focus:outline-none"
+            style={{
+              background: 'var(--gf-input-bg)',
+              border: '1px solid var(--gf-border)',
+            }}
           />
         </Field>
         <Field label={tA('addForm.provider')}>
           <select
             value={provider}
             onChange={(e) => setProvider(e.target.value as Provider)}
-            className="w-full h-10 rounded-md bg-bg-deeper border border-border px-3 text-sm text-fg-1 focus:outline-none focus:border-primary appearance-none"
+            className="w-full h-10 rounded-lg px-3 text-sm text-fg-1 focus:outline-none appearance-none"
+            style={{
+              background: 'var(--gf-input-bg)',
+              border: '1px solid var(--gf-border)',
+            }}
           >
             {PROVIDERS.map((p) => (
               <option key={p} value={p} className="bg-surface">
@@ -519,7 +684,12 @@ function AddKeyDialog({
           <button
             type="button"
             onClick={onCancel}
-            className="inline-flex items-center gap-1.5 rounded-pill bg-surface-raised border border-border h-10 px-4 text-sm font-medium text-fg-1 hover:border-primary/40"
+            className="inline-flex items-center gap-1.5 h-10 px-4 text-sm font-medium text-fg-1 transition-colors"
+            style={{
+              background: 'var(--gf-input-bg)',
+              border: '1px solid var(--gf-border)',
+              borderRadius: 8,
+            }}
           >
             {tA('addForm.cancel')}
           </button>
@@ -593,7 +763,12 @@ function ConfirmDialog({
           <button
             type="button"
             onClick={onCancel}
-            className="inline-flex items-center gap-1.5 rounded-pill bg-surface-raised border border-border h-10 px-4 text-sm font-medium text-fg-1 hover:border-primary/40"
+            className="inline-flex items-center gap-1.5 h-10 px-4 text-sm font-medium text-fg-1 transition-colors"
+            style={{
+              background: 'var(--gf-input-bg)',
+              border: '1px solid var(--gf-border)',
+              borderRadius: 8,
+            }}
           >
             {cancelLabel}
           </button>
