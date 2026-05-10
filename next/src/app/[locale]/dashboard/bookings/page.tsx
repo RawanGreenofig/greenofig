@@ -2,6 +2,7 @@
 
 
 import { motion } from 'framer-motion'
+import { FeatureGate } from '@/components/FeatureGate'
 import { useEffect, useMemo, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { useUser } from '@/lib/hooks/useUser'
@@ -96,6 +97,14 @@ const containerVariants = {
 }
 
 export default function BookingsPage() {
+  return (
+    <FeatureGate settingKey="booking_enabled" label="Booking">
+      <BookingsPageInner />
+    </FeatureGate>
+  )
+}
+
+function BookingsPageInner() {
   const t = useTranslations('bookings')
   const { profile } = useUser()
   const userId = profile?.id ?? null

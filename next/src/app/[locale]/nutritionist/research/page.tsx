@@ -1,5 +1,6 @@
 'use client'
 
+import { FeatureGate } from '@/components/FeatureGate'
 import { useEffect, useRef, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { getBrowserSupabase } from '@/lib/supabase/client'
@@ -58,6 +59,14 @@ const PRESET_ANSWER =
   "Magnesium glycinate generally reaches peak plasma concentration faster than citrate (about 90 minutes vs. 2.5 hours), and it tends to be better tolerated by clients with sensitive GI systems because glycine acts as a buffering ligand. For sleep onset specifically, the literature is mixed, but the small RCTs that show benefit (Abbasi 2012, Boyle 2017) used 200–400 mg of elemental magnesium 60–90 min before bed.\n\nClinically, I would start at 200 mg glycinate 60 min before bed, hold for 14 days, and use sleep latency as the outcome rather than sleep quality scores."
 
 export default function ResearchPage() {
+  return (
+    <FeatureGate settingKey="research_desk_enabled" label="Research Desk">
+      <ResearchPageInner />
+    </FeatureGate>
+  )
+}
+
+function ResearchPageInner() {
   const t = useTranslations('nutritionist.researchPage')
   const tNut = useTranslations('nutritionist')
   const { profile } = useUser()

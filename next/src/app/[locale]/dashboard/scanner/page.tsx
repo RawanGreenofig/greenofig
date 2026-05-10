@@ -2,6 +2,7 @@
 
 
 import { motion } from 'framer-motion'
+import { FeatureGate } from '@/components/FeatureGate'
 import { useCallback, useRef, useState } from 'react'
 import Image from 'next/image'
 import { useTranslations } from 'next-intl'
@@ -62,6 +63,14 @@ const containerVariants = {
 }
 
 export default function ScannerPage() {
+  return (
+    <FeatureGate settingKey="scanner_enabled" label="Food Scanner">
+      <ScannerPageInner />
+    </FeatureGate>
+  )
+}
+
+function ScannerPageInner() {
   const t = useTranslations('scanner')
   const { tier } = useUser()
   const fileInputRef = useRef<HTMLInputElement>(null)

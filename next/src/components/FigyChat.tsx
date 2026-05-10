@@ -22,6 +22,7 @@ import Image from 'next/image'
 import { useEffect, useRef, useState } from 'react'
 import { Send, X, Sparkles, GripHorizontal } from 'lucide-react'
 import { useUser } from '@/lib/hooks/useUser'
+import { usePlatformSetting } from '@/lib/hooks/usePlatformSetting'
 import { tierAtLeast } from '@/lib/tier'
 
 interface FigyMessage {
@@ -74,6 +75,10 @@ function clampToViewport(
 
 export function FigyChat() {
   const { user, profile, tier } = useUser()
+  // Admin can disable the AI chat platform-wide via /admin/store →
+  // ai_chat_enabled. Default is enabled (null/undefined → show); admin
+  // explicitly flipping to false hides Figy for everyone.
+  const { value: chatEnabled } = usePlatformSetting<boolean>('ai_chat_enabled')
   const [open, setOpen] = useState(false)
   const [messages, setMessages] = useState<FigyMessage[]>([])
   const [draft, setDraft] = useState('')
@@ -151,6 +156,8 @@ export function FigyChat() {
 
   // Don't render the button at all for signed-out users.
   if (!user) return null
+  // Admin disabled the AI chat platform-wide.
+  if (chatEnabled === false) return null
 
   const send = async () => {
     const text = draft.trim()

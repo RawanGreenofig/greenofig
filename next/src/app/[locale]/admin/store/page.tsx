@@ -38,12 +38,43 @@ const ALL_PRODUCTS: Product[] = [
   { id: 'p8', name: 'Cold-Pressed Tahini',         category: 'Kitchen',     stock: 3,  hue: 'rgb(234 179 8 / 0.18)' },
 ]
 
+/**
+ * Persist a single platform_settings value to the server whenever it
+ * changes after the initial hydration read. The settled ref skips the
+ * very first effect run so the value loaded from the DB doesn't
+ * immediately echo back as a write.
+ */
+function usePersistSetting(key: string, value: unknown): void {
+  const settled = useRef(false)
+  useEffect(() => {
+    if (!settled.current) {
+      settled.current = true
+      return
+    }
+    void fetch(`/api/settings/${key}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ value }),
+    })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [value])
+}
+
 export default function AdminStorePage() {
   const t = useTranslations('admin')
   const tS = useTranslations('admin.storePage')
 
   const [live, setLive] = useState(true)
   const [maintenance, setMaintenance] = useState(false)
+  // Platform controls — admin can disable each feature surface site-wide.
+  // Default true (enabled) so a missing row reads as on. Each toggle has
+  // a consumer that hides the corresponding feature when flipped off.
+  const [aiChatEnabled, setAiChatEnabled] = useState(true)
+  const [bookingEnabled, setBookingEnabled] = useState(true)
+  const [scannerEnabled, setScannerEnabled] = useState(true)
+  const [communityEnabled, setCommunityEnabled] = useState(true)
+  const [researchEnabled, setResearchEnabled] = useState(true)
+  const [announcement, setAnnouncement] = useState('')
   const [confirm, setConfirm] = useState<null | 'go-live' | 'go-offline'>(null)
   const [featured, setFeatured] = useState<string[]>(
     ['p1', 'p2', 'p4', 'p7'],
@@ -80,11 +111,31 @@ export default function AdminStorePage() {
       const { data: settingsRows } = await supabase
         .from('platform_settings')
         .select('key, value')
-        .in('key', ['store_enabled', 'maintenance_mode'])
+        .in('key', [
+          'store_enabled',
+          'maintenance_mode',
+          'ai_chat_enabled',
+          'booking_enabled',
+          'scanner_enabled',
+          'community_enabled',
+          'research_desk_enabled',
+          'site_announcement',
+        ])
       if (!cancelled) {
         for (const s of (settingsRows as SettingRow[] | null) ?? []) {
-          if (s.key === 'store_enabled')   setLive(s.value === true || s.value === 'true')
-          if (s.key === 'maintenance_mode') setMaintenance(s.value === true || s.value === 'true')
+          const truthy = s.value === true || s.value === 'true'
+          // Default-true toggles read as enabled when row absent or null.
+          // Only an explicit `false`/`'false'` string disables the feature.
+          const explicitFalse = s.value === false || s.value === 'false'
+          if (s.key === 'store_enabled')        setLive(truthy)
+          if (s.key === 'maintenance_mode')     setMaintenance(truthy)
+          if (s.key === 'ai_chat_enabled')      setAiChatEnabled(!explicitFalse)
+          if (s.key === 'booking_enabled')      setBookingEnabled(!explicitFalse)
+          if (s.key === 'scanner_enabled')      setScannerEnabled(!explicitFalse)
+          if (s.key === 'community_enabled')    setCommunityEnabled(!explicitFalse)
+          if (s.key === 'research_desk_enabled') setResearchEnabled(!explicitFalse)
+          if (s.key === 'site_announcement')
+            setAnnouncement(typeof s.value === 'string' ? s.value : '')
         }
       }
     })()
@@ -124,6 +175,33 @@ export default function AdminStorePage() {
     })
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [maintenance])
+
+  // Persist each toggle to platform_settings on user change. Each
+  // setting has its own settled ref so we don't echo the hydrated DB
+  // value back as a write.
+  usePersistSetting('ai_chat_enabled',       aiChatEnabled)
+  usePersistSetting('booking_enabled',       bookingEnabled)
+  usePersistSetting('scanner_enabled',       scannerEnabled)
+  usePersistSetting('community_enabled',     communityEnabled)
+  usePersistSetting('research_desk_enabled', researchEnabled)
+
+  // Announcement is a free-text field — debounce the write so we don't
+  // POST on every keystroke. 600ms after the user stops typing is enough.
+  const announcementSettled = useRef(false)
+  useEffect(() => {
+    if (!announcementSettled.current) {
+      announcementSettled.current = true
+      return
+    }
+    const id = window.setTimeout(() => {
+      void fetch('/api/settings/site_announcement', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ value: announcement }),
+      })
+    }, 600)
+    return () => window.clearTimeout(id)
+  }, [announcement])
 
   const move = (id: string, dir: -1 | 1) => {
     setFeatured((curr) => {
@@ -199,6 +277,77 @@ export default function AdminStorePage() {
         </div>
         <Switch on={maintenance} onChange={setMaintenance} />
       </article>
+
+      {/* Platform controls — site-wide feature switches. Each toggle
+       * writes to platform_settings via /api/settings/<key>; the matching
+       * consumer (FigyChat, dashboard pages, banner) hides its surface
+       * within milliseconds via Supabase realtime. Default-true: a
+       * missing or null row reads as enabled. */}
+      <section className="rounded-xl border border-border bg-surface p-5 space-y-4">
+        <header>
+          <h2 className="text-base font-semibold text-fg-1">Platform controls</h2>
+          <p className="text-xs text-fg-3 mt-0.5">
+            Disable a feature site-wide. Changes propagate live to every
+            open browser tab.
+          </p>
+        </header>
+
+        <div className="space-y-3 divide-y divide-border">
+          <PlatformToggle
+            label="AI chat (Figy)"
+            body="The floating AI nutrition assistant on every dashboard."
+            on={aiChatEnabled}
+            onChange={setAiChatEnabled}
+          />
+          <PlatformToggle
+            label="Bookings"
+            body="Customers can book consultations from their dashboard."
+            on={bookingEnabled}
+            onChange={setBookingEnabled}
+          />
+          <PlatformToggle
+            label="Food scanner"
+            body="Camera-based food scanner page in the customer dashboard."
+            on={scannerEnabled}
+            onChange={setScannerEnabled}
+          />
+          <PlatformToggle
+            label="Community feed"
+            body="Customer-side social feed and post composer."
+            on={communityEnabled}
+            onChange={setCommunityEnabled}
+          />
+          <PlatformToggle
+            label="Research desk"
+            body="Nutritionist research page and document library."
+            on={researchEnabled}
+            onChange={setResearchEnabled}
+          />
+        </div>
+
+        <div className="pt-3 border-t border-border">
+          <label className="block">
+            <span className="text-sm font-medium text-fg-1">
+              Site announcement
+            </span>
+            <span className="block text-xs text-fg-3 mt-0.5 mb-2">
+              Shows a lime banner site-wide. Leave empty to hide. Saves
+              automatically.
+            </span>
+            <input
+              type="text"
+              value={announcement}
+              onChange={(e) => setAnnouncement(e.target.value)}
+              placeholder="e.g. Free shipping on orders over $50 this week"
+              className="w-full h-10 rounded-lg text-sm text-fg-1 placeholder-fg-3 focus:outline-none px-3"
+              style={{
+                background: 'var(--gf-input-bg)',
+                border: '1px solid var(--gf-border)',
+              }}
+            />
+          </label>
+        </div>
+      </section>
 
       {/* KPIs */}
       <section className="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -311,7 +460,7 @@ export default function AdminStorePage() {
               <p className="text-xs text-fg-3 mt-0.5">{tS('featuredBody')}</p>
             </div>
             <Link
-              href="/nutritionist/store"
+              href="/admin/store/curation"
               className="text-xs text-lime-400 hover:underline inline-flex items-center gap-1"
             >
               {tS('openCuration')}
@@ -539,6 +688,28 @@ function ConfirmDialog({
           </button>
         </div>
       </div>
+    </div>
+  )
+}
+
+function PlatformToggle({
+  label,
+  body,
+  on,
+  onChange,
+}: {
+  label: string
+  body: string
+  on: boolean
+  onChange: (next: boolean) => void
+}) {
+  return (
+    <div className="flex flex-wrap items-start gap-4 pt-3 first:pt-0">
+      <div className="flex-1 min-w-0">
+        <p className="text-sm font-medium text-fg-1">{label}</p>
+        <p className="mt-0.5 text-xs text-fg-3 leading-relaxed">{body}</p>
+      </div>
+      <Switch on={on} onChange={() => onChange(!on)} />
     </div>
   )
 }

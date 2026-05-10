@@ -2,6 +2,7 @@
 
 
 import { motion } from 'framer-motion'
+import { FeatureGate } from '@/components/FeatureGate'
 import { useEffect, useState } from 'react'
 import { useLocale } from 'next-intl'
 import { useRouter } from 'next/navigation'
@@ -46,6 +47,14 @@ const containerVariants = {
 }
 
 export default function CommunityPage() {
+  return (
+    <FeatureGate settingKey="community_enabled" label="Community">
+      <CommunityPageInner />
+    </FeatureGate>
+  )
+}
+
+function CommunityPageInner() {
   const router = useRouter()
   const locale = useLocale()
   const { user, profile, tier } = useUser()
