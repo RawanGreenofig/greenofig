@@ -5,6 +5,7 @@ import { notFound } from 'next/navigation'
 import { NextIntlClientProvider, hasLocale } from 'next-intl'
 import { getMessages, setRequestLocale } from 'next-intl/server'
 import { Analytics } from '@vercel/analytics/next'
+import Script from 'next/script'
 
 import '../globals.css'
 
@@ -116,6 +117,12 @@ interface LayoutProps {
   params: { locale: string }
 }
 
+// Google Analytics 4 measurement id. Public by design (it's visible
+// in the page source). Allow an env override so a staging deploy can
+// point at a separate property; falls back to the prod stream id.
+const GA_MEASUREMENT_ID =
+  process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID ?? 'G-SYXCWBYXPB'
+
 const NUTRITIONIST_JSON_LD = {
   '@context': 'https://schema.org',
   '@type': 'Person',
@@ -155,6 +162,26 @@ export default async function LocaleLayout({ children, params }: LayoutProps) {
           </AuthProvider>
         </NextIntlClientProvider>
         <Analytics />
+        {/* Google Analytics 4 — fires pageviews + lets us pull live
+            traffic from the GA Data API in /admin/analytics. The
+            `afterInteractive` strategy means the tag loads after the
+            page is interactive so it doesn't block first paint. */}
+        {GA_MEASUREMENT_ID && (
+          <>
+            <Script
+              src={`https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`}
+              strategy="afterInteractive"
+            />
+            <Script id="ga4-init" strategy="afterInteractive">
+              {`
+                window.dataLayer = window.dataLayer || [];
+                function gtag(){dataLayer.push(arguments);}
+                gtag('js', new Date());
+                gtag('config', '${GA_MEASUREMENT_ID}', { anonymize_ip: true });
+              `}
+            </Script>
+          </>
+        )}
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
