@@ -245,23 +245,25 @@ export default function AdminUserDetailPage() {
                 >
                   {tStatus(`roles.${profile.role}` as 'roles.user')}
                 </span>
-                <span
-                  className="inline-flex items-center"
-                  style={{
-                    height: 18,
-                    padding: '0 8px',
-                    borderRadius: 999,
-                    fontSize: 9.5,
-                    fontWeight: 800,
-                    letterSpacing: '0.08em',
-                    textTransform: 'uppercase',
-                    lineHeight: 1,
-                    background: `${TIER_TINT[profile.tier]}1f`,
-                    color: TIER_TINT[profile.tier],
-                  }}
-                >
-                  {tTiers(`${profile.tier}.name`)}
-                </span>
+                {profile.role === 'user' && (
+                  <span
+                    className="inline-flex items-center"
+                    style={{
+                      height: 18,
+                      padding: '0 8px',
+                      borderRadius: 999,
+                      fontSize: 9.5,
+                      fontWeight: 800,
+                      letterSpacing: '0.08em',
+                      textTransform: 'uppercase',
+                      lineHeight: 1,
+                      background: `${TIER_TINT[profile.tier]}1f`,
+                      color: TIER_TINT[profile.tier],
+                    }}
+                  >
+                    {tTiers(`${profile.tier}.name`)}
+                  </span>
+                )}
                 <span
                   className="inline-flex items-center"
                   style={{
@@ -315,7 +317,7 @@ export default function AdminUserDetailPage() {
         aria-label="Admin user tabs"
         className="flex items-center gap-1 overflow-x-auto -mx-1 px-1 pb-1 border-b border-border"
       >
-        {TABS.map(({ key, Icon }) => {
+        {TABS.filter((tab) => tab.key !== 'subscription' || profile.role === 'user').map(({ key, Icon }) => {
           const active = tab === key
           return (
             <button
@@ -340,7 +342,7 @@ export default function AdminUserDetailPage() {
       </nav>
 
       {tab === 'profile'      && <ProfilePane t={t} profile={profile} />}
-      {tab === 'subscription' && <SubPane     t={t} profile={profile} tTiers={tTiers} />}
+      {tab === 'subscription' && profile.role === 'user' && <SubPane     t={t} profile={profile} tTiers={tTiers} />}
       {tab === 'activity'     && <ActivityPane t={t} events={ACTIVITY} />}
       {tab === 'danger'       && <DangerPane  t={t} status={profile.status} />}
     </div>
@@ -398,13 +400,15 @@ function ProfilePane({
             ]}
           />
         </Field>
-        <Field label={t('profile.tier')}>
-          <Select
-            value={form.tier}
-            onChange={(v) => update('tier', v as Tier)}
-            options={TIERS.map((tier) => [tier, tier.toUpperCase()])}
-          />
-        </Field>
+        {form.role === 'user' && (
+          <Field label={t('profile.tier')}>
+            <Select
+              value={form.tier}
+              onChange={(v) => update('tier', v as Tier)}
+              options={TIERS.map((tier) => [tier, tier.toUpperCase()])}
+            />
+          </Field>
+        )}
         <Field label={t('profile.preferredLocale')}>
           <Select
             value={form.preferredLocale}
