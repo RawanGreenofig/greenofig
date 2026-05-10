@@ -256,20 +256,38 @@ export default function ClientDetailPage() {
                 {profile.email} · {profile.phone}
               </p>
               <div className="mt-3 flex flex-wrap items-center gap-1.5">
+                {/* Unified pill style — matches /admin/users tier badge,
+                 * /clients list pills, and the .tier-pill helper. */}
                 <span
-                  className="rounded-pill h-6 px-2.5 inline-flex items-center text-[10px] uppercase tracking-eyebrow font-bold"
+                  className="inline-flex items-center justify-center"
                   style={{
-                    background: `${TIER_TINT[profile.tier]}1a`,
+                    height: 18,
+                    padding: '0 8px',
+                    borderRadius: 999,
+                    background: `${TIER_TINT[profile.tier]}1f`,
                     color: TIER_TINT[profile.tier],
+                    fontSize: 9.5,
+                    fontWeight: 800,
+                    letterSpacing: '0.08em',
+                    textTransform: 'uppercase',
+                    lineHeight: 1,
                   }}
                 >
                   {tTiers(`${profile.tier}.name`)}
                 </span>
                 <span
-                  className="rounded-pill h-6 px-2.5 inline-flex items-center text-[10px] uppercase tracking-eyebrow font-bold"
+                  className="inline-flex items-center justify-center"
                   style={{
+                    height: 18,
+                    padding: '0 8px',
+                    borderRadius: 999,
                     background: STATUS_META[profile.status].bg,
                     color: STATUS_META[profile.status].tint,
+                    fontSize: 9.5,
+                    fontWeight: 800,
+                    letterSpacing: '0.08em',
+                    textTransform: 'uppercase',
+                    lineHeight: 1,
                   }}
                 >
                   {tStatus(profile.status)}
@@ -520,15 +538,28 @@ function KeyChips({
       {items.length === 0 ? (
         <p className="mt-1 text-xs text-fg-3 italic">{empty}</p>
       ) : (
-        <div className="mt-1.5 flex flex-wrap gap-1.5">
+        <div className="mt-2 flex flex-wrap gap-1.5">
+          {/* Unified pill — tinted background + matching text colour
+           * when a `tint` is supplied (Allergies → red, Conditions →
+           * purple), neutral surface otherwise. No border ring; the
+           * bg + text combo carries identity, same as the .tier-pill
+           * helper used everywhere else. */}
           {items.map((it) => (
             <span
               key={it}
-              className="rounded-pill h-6 px-2.5 inline-flex items-center text-[11px] font-medium border"
+              className="inline-flex items-center justify-center"
               style={{
-                background: tint ? `${tint}10` : 'var(--gf-surface-raised)',
+                height: 22,
+                padding: '0 10px',
+                borderRadius: 999,
+                background: tint
+                  ? `${tint}1f`
+                  : 'var(--gf-card-hover)',
                 color: tint ?? 'var(--gf-fg-1)',
-                borderColor: tint ? `${tint}40` : 'var(--gf-border)',
+                fontSize: 11,
+                fontWeight: 600,
+                lineHeight: 1,
+                whiteSpace: 'nowrap',
               }}
             >
               {it}

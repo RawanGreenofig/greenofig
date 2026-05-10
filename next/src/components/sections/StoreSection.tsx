@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef } from 'react'
+import { useEffect, useRef } from 'react'
 import { motion } from 'framer-motion'
 import { useLocale, useTranslations } from 'next-intl'
 import {
@@ -70,55 +70,69 @@ export function StoreSection() {
     scrollerRef.current?.scrollBy({ left: delta, behavior: 'smooth' })
   }
 
+  // Auto-advance the carousel every 3.5s, pause on hover/focus, and loop
+  // back to the start when reaching the end. Direction flips for RTL so the
+  // visual progression always reads "next card" on either locale.
+  useEffect(() => {
+    const el = scrollerRef.current
+    if (!el) return
+    if (typeof window !== 'undefined') {
+      const reduce = window.matchMedia('(prefers-reduced-motion: reduce)')
+      if (reduce.matches) return
+    }
+    let paused = false
+    const pause = () => { paused = true }
+    const resume = () => { paused = false }
+    el.addEventListener('mouseenter', pause)
+    el.addEventListener('mouseleave', resume)
+    el.addEventListener('focusin', pause)
+    el.addEventListener('focusout', resume)
+    const dir = locale === 'ar' ? -1 : 1
+    const step = 240
+    const id = window.setInterval(() => {
+      if (paused) return
+      const max = el.scrollWidth - el.clientWidth
+      const cur = Math.abs(el.scrollLeft)
+      if (cur >= max - 8) {
+        el.scrollTo({ left: 0, behavior: 'smooth' })
+      } else {
+        el.scrollBy({ left: step * dir, behavior: 'smooth' })
+      }
+    }, 3500)
+    return () => {
+      el.removeEventListener('mouseenter', pause)
+      el.removeEventListener('mouseleave', resume)
+      el.removeEventListener('focusin', pause)
+      el.removeEventListener('focusout', resume)
+      window.clearInterval(id)
+    }
+  }, [locale])
+
   return (
     <section id="store" className="relative z-10 w-full py-16 lg:py-24">
       <div className="max-w-screen-xl mx-auto px-6">
-        <header className="flex items-end justify-between gap-4 mb-12">
-          <div>
-            <p className="text-xs uppercase tracking-eyebrow font-semibold text-lime-400">
-              {t('storeEyebrow')}
-            </p>
-            <h2
-              className="mt-3 font-display font-bold text-fg-1 tracking-tight"
-              style={{
-                fontSize: 'clamp(36px, 5vw, 56px)',
-                lineHeight: 1.05,
-                fontVariationSettings:
-                  "'opsz' 144, 'wght' 700, 'SOFT' 100, 'WONK' 1",
-              }}
-            >
-              {t('storeHeadline')}
-            </h2>
-            <p className="mt-3 text-base text-fg-2 max-w-md">
-              {t('storeSub')}
-            </p>
-          </div>
-          <div className="hidden md:flex items-center gap-2">
-            <button
-              type="button"
-              onClick={() => scrollBy(-260)}
-              aria-label={tCommon('previous')}
-              className="w-11 h-11 rounded-full border border-border bg-surface text-fg-1 hover:border-primary hover:text-lime-400 transition-colors"
-            >
-              <ChevronLeft
-                className={`w-4 h-4 mx-auto ${locale === 'ar' ? 'rotate-180' : ''}`}
-              />
-            </button>
-            <button
-              type="button"
-              onClick={() => scrollBy(260)}
-              aria-label={tCommon('next')}
-              className="w-11 h-11 rounded-full border border-border bg-surface text-fg-1 hover:border-primary hover:text-lime-400 transition-colors"
-            >
-              <ChevronRight
-                className={`w-4 h-4 mx-auto ${locale === 'ar' ? 'rotate-180' : ''}`}
-              />
-            </button>
-          </div>
+        <header className="mb-12 max-w-2xl">
+          <p className="text-xs uppercase tracking-eyebrow font-semibold text-lime-400">
+            {t('storeEyebrow')}
+          </p>
+          <h2
+            className="mt-3 font-display font-bold text-fg-1 tracking-tight"
+            style={{
+              fontSize: 'clamp(36px, 5vw, 56px)',
+              lineHeight: 1.05,
+              fontVariationSettings:
+                "'opsz' 144, 'wght' 700, 'SOFT' 100, 'WONK' 1",
+            }}
+          >
+            {t('storeHeadline')}
+          </h2>
+          <p className="mt-3 text-base text-fg-2 max-w-md">
+            {t('storeSub')}
+          </p>
         </header>
       </div>
 
-      <div className="max-w-screen-xl mx-auto">
+      <div className="relative max-w-screen-xl mx-auto group/carousel">
         <div
           ref={scrollerRef}
           className="flex gap-4 overflow-x-auto px-6 pb-2 snap-x snap-mandatory scroll-smooth [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
@@ -136,11 +150,22 @@ export function StoreSection() {
                   delay: idx * 0.05,
                 }}
                 viewport={{ once: true, margin: '-50px' }}
-                className="snap-start shrink-0 w-[220px] rounded-xl border border-border bg-surface overflow-hidden flex flex-col"
+                whileHover={{ y: -4 }}
+                className="snap-start shrink-0 w-[220px] rounded-xl border border-border bg-surface overflow-hidden flex flex-col transition-colors duration-300 hover:border-primary/40"
+                style={{
+                  boxShadow:
+                    '0 1px 0 rgba(255,255,255,0.02) inset, 0 12px 32px rgba(0,0,0,0.25)',
+                }}
               >
-                <div className="relative aspect-square bg-bg-deeper flex items-center justify-center">
+                <div
+                  className="relative aspect-square flex items-center justify-center"
+                  style={{
+                    background:
+                      'radial-gradient(circle at 50% 35%, rgba(163,230,53,0.06), rgba(13,26,18,0) 60%), #0d1a12',
+                  }}
+                >
                   <Icon
-                    className="w-16 h-16"
+                    className="w-16 h-16 transition-transform duration-500 group-hover/carousel:scale-105"
                     strokeWidth={1.5}
                     style={{ color: product.iconColor }}
                   />
@@ -174,6 +199,40 @@ export function StoreSection() {
             )
           })}
         </div>
+
+        {/* Overlay arrows — sit on the carousel edges, fade in on hover. */}
+        <button
+          type="button"
+          onClick={() => scrollBy(-260)}
+          aria-label={tCommon('previous')}
+          className="hidden md:flex absolute start-3 top-1/2 -translate-y-1/2 z-10 w-11 h-11 items-center justify-center rounded-full border border-border text-fg-1 opacity-0 group-hover/carousel:opacity-100 hover:border-primary hover:text-lime-400 transition-all duration-200"
+          style={{
+            background: 'rgba(13, 26, 18, 0.85)',
+            backdropFilter: 'blur(8px)',
+            WebkitBackdropFilter: 'blur(8px)',
+            boxShadow: '0 8px 24px rgba(0,0,0,0.4)',
+          }}
+        >
+          <ChevronLeft
+            className={`w-4 h-4 ${locale === 'ar' ? 'rotate-180' : ''}`}
+          />
+        </button>
+        <button
+          type="button"
+          onClick={() => scrollBy(260)}
+          aria-label={tCommon('next')}
+          className="hidden md:flex absolute end-3 top-1/2 -translate-y-1/2 z-10 w-11 h-11 items-center justify-center rounded-full border border-border text-fg-1 opacity-0 group-hover/carousel:opacity-100 hover:border-primary hover:text-lime-400 transition-all duration-200"
+          style={{
+            background: 'rgba(13, 26, 18, 0.85)',
+            backdropFilter: 'blur(8px)',
+            WebkitBackdropFilter: 'blur(8px)',
+            boxShadow: '0 8px 24px rgba(0,0,0,0.4)',
+          }}
+        >
+          <ChevronRight
+            className={`w-4 h-4 ${locale === 'ar' ? 'rotate-180' : ''}`}
+          />
+        </button>
       </div>
 
       <div className="max-w-screen-xl mx-auto px-6 mt-6 flex justify-end">

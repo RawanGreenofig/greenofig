@@ -32,7 +32,66 @@ import {
   Copy,
   Camera,
   Sparkles,
+  Coffee,
+  Utensils,
+  Apple,
+  Flame,
+  Droplets,
+  Pill,
+  Heart,
+  Star,
+  Sun,
+  BookOpen,
+  Check,
 } from '@/icons'
+import type { LucideIcon } from 'lucide-react'
+
+/**
+ * Per-recipe icon picker — the nutritionist chooses an icon that
+ * actually fits the dish. Default falls back to a category icon
+ * when nothing has been picked. The icon's brand colour comes from
+ * the catalog so the rendered card stays visually consistent with
+ * the rest of the dashboard.
+ */
+type RecipeIconKey =
+  | 'coffee'
+  | 'utensils'
+  | 'chefHat'
+  | 'apple'
+  | 'flame'
+  | 'droplets'
+  | 'pill'
+  | 'heart'
+  | 'star'
+  | 'sun'
+  | 'bookOpen'
+  | 'sparkles'
+
+const RECIPE_ICON_CATALOG: Record<
+  RecipeIconKey,
+  { Icon: LucideIcon; tint: string; label: string }
+> = {
+  coffee:    { Icon: Coffee,    tint: '#fb923c', label: 'Coffee'  },
+  utensils:  { Icon: Utensils,  tint: '#a3e635', label: 'Plate'   },
+  chefHat:   { Icon: ChefHat,   tint: '#a78bfa', label: 'Chef'    },
+  apple:     { Icon: Apple,     tint: '#fb923c', label: 'Fruit'   },
+  flame:     { Icon: Flame,     tint: '#a3e635', label: 'Greens'  },
+  droplets:  { Icon: Droplets,  tint: '#60a5fa', label: 'Drink'   },
+  pill:      { Icon: Pill,      tint: '#a78bfa', label: 'Supp'    },
+  heart:     { Icon: Heart,     tint: '#f87171', label: 'Heart'   },
+  star:      { Icon: Star,      tint: '#fbbf24', label: 'Star'    },
+  sun:       { Icon: Sun,       tint: '#fbbf24', label: 'Sun'     },
+  bookOpen:  { Icon: BookOpen,  tint: '#60a5fa', label: 'Book'    },
+  sparkles:  { Icon: Sparkles,  tint: '#fbbf24', label: 'Spark'   },
+}
+
+const DEFAULT_RECIPE_ICON: Record<Category, RecipeIconKey> = {
+  breakfast: 'coffee',
+  lunch:     'utensils',
+  dinner:    'chefHat',
+  snack:     'apple',
+  drink:     'droplets',
+}
 
 type Status = 'draft' | 'published'
 type Category = 'breakfast' | 'lunch' | 'dinner' | 'snack' | 'drink'
@@ -75,6 +134,9 @@ interface Recipe {
   status: Status
   hue: string
   imageUrl?: string
+  /** Optional per-recipe icon override. When unset, falls back to
+   * DEFAULT_RECIPE_ICON[category]. */
+  icon?: RecipeIconKey
 }
 
 const CATEGORIES: Category[] = ['breakfast', 'lunch', 'dinner', 'snack', 'drink']
@@ -360,36 +422,72 @@ export default function RecipeBuilderPage() {
         </button>
       </header>
 
-      {/* Search + filter */}
+      {/* Search + filter — dashboard chrome (40px tall, --gf-input-bg
+       * surface, lime-tinted active state) matching the rest of the
+       * dashboard. */}
       <div className="flex flex-wrap items-center gap-3">
-        <div className="relative flex-1 min-w-[240px]">
+        <div className="relative flex-1 min-w-0 basis-full sm:basis-auto sm:min-w-[200px]">
           <Search
-            className="absolute start-4 top-1/2 -translate-y-1/2 w-4 h-4 text-fg-3"
+            className="absolute start-3.5 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none"
             strokeWidth={1.75}
+            color="var(--gf-fg-3)"
           />
           <input
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder={t('search')}
-            className="w-full h-11 rounded-pill bg-surface border border-border ps-11 pe-4 text-sm text-fg-1 placeholder-fg-3 focus:outline-none focus:border-primary"
+            className="w-full h-10 ps-10 pe-3 text-sm text-fg-1 placeholder-fg-3"
           />
         </div>
-        <div className="inline-flex items-center gap-0.5 rounded-pill bg-bg-deeper border border-border p-0.5">
-          {(['all', 'draft', 'published'] as ('all' | Status)[]).map((f) => (
-            <button
-              key={f}
-              type="button"
-              onClick={() => setFilter(f)}
-              className={`px-3 h-8 rounded-pill text-[11px] font-semibold transition-colors ${
-                filter === f
-                  ? 'bg-primary/20 text-lime-400'
-                  : 'text-fg-3 hover:text-fg-1'
-              }`}
-            >
-              {f === 'all' ? t('filterAll') : f === 'draft' ? t('filterDraft') : t('filterPublished')}
-            </button>
-          ))}
+        <div
+          className="inline-flex items-center flex-wrap"
+          style={{
+            minHeight: 40,
+            background: 'var(--gf-input-bg)',
+            border: '1px solid var(--gf-border)',
+            borderRadius: 8,
+            padding: 3,
+            gap: 2,
+          }}
+        >
+          {(['all', 'draft', 'published'] as ('all' | Status)[]).map((f) => {
+            const active = filter === f
+            return (
+              <button
+                key={f}
+                type="button"
+                onClick={() => setFilter(f)}
+                className="inline-flex items-center justify-center px-3 transition-colors"
+                style={{
+                  height: 32,
+                  borderRadius: 6,
+                  background: active ? 'rgba(132,217,61,0.12)' : 'transparent',
+                  color: active ? '#a3e635' : 'var(--gf-fg-2)',
+                  fontSize: 12,
+                  fontWeight: 600,
+                }}
+                onMouseEnter={(e) => {
+                  if (!active) {
+                    e.currentTarget.style.background = 'var(--gf-card-hover)'
+                    e.currentTarget.style.color = 'var(--gf-fg-1)'
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (!active) {
+                    e.currentTarget.style.background = 'transparent'
+                    e.currentTarget.style.color = 'var(--gf-fg-2)'
+                  }
+                }}
+              >
+                {f === 'all'
+                  ? t('filterAll')
+                  : f === 'draft'
+                    ? t('filterDraft')
+                    : t('filterPublished')}
+              </button>
+            )
+          })}
         </div>
       </div>
 
@@ -437,26 +535,38 @@ function RecipeRow({
 }) {
   const totals = useMemo(() => sumIngredients(recipe.ingredients), [recipe.ingredients])
   const perServing = recipe.servings > 0 ? totals.calories / recipe.servings : totals.calories
+  // Picked icon wins; otherwise fall back to the category default.
+  const iconKey = recipe.icon ?? DEFAULT_RECIPE_ICON[recipe.category]
+  const { Icon: RecipeRowIcon, tint: iconTint } = RECIPE_ICON_CATALOG[iconKey]
   return (
     <li className="flex items-center gap-4 px-5 py-3">
-      <span
-        className="shrink-0 w-12 h-12 rounded-md flex items-center justify-center"
-        style={{ background: recipe.hue }}
-      >
-        <ChefHat className="w-5 h-5 text-fg-1/50" strokeWidth={1.25} />
-      </span>
+      <RecipeRowIcon
+        className="w-6 h-6 shrink-0"
+        strokeWidth={1.75}
+        color={iconTint}
+      />
       <div className="flex-1 min-w-0">
         <div className="flex items-baseline gap-2 flex-wrap">
           <p className="text-sm font-semibold text-fg-1 truncate">
             {recipe.name || '— Untitled —'}
           </p>
           <span
-            className="rounded-pill h-5 px-2 inline-flex items-center text-[10px] uppercase tracking-eyebrow font-bold"
-            style={
-              recipe.status === 'published'
-                ? { background: 'rgb(163 230 53 / 0.14)', color: '#a3e635' }
-                : { background: 'rgb(155 175 159 / 0.14)', color: '#9baf9f' }
-            }
+            className="inline-flex items-center justify-center"
+            style={{
+              height: 18,
+              padding: '0 8px',
+              borderRadius: 999,
+              background:
+                recipe.status === 'published'
+                  ? 'rgba(163,230,53,0.14)'
+                  : 'rgba(155,175,159,0.14)',
+              color: recipe.status === 'published' ? '#a3e635' : '#9baf9f',
+              fontSize: 9.5,
+              fontWeight: 800,
+              letterSpacing: '0.08em',
+              textTransform: 'uppercase',
+              lineHeight: 1,
+            }}
           >
             {recipe.status === 'published' ? t('publishedBadge') : t('draftBadge')}
           </span>
@@ -672,6 +782,70 @@ function RecipeForm({
                     onChange={(n) => update('servings', n)}
                   />
                 </FormField>
+              </div>
+
+              {/* Icon picker — choose what shows up next to the recipe
+               * across the meal-plan builder, store, etc. Defaults to
+               * the category icon when nothing is picked. */}
+              <FormField label="Icon">
+                <div className="flex flex-wrap gap-1.5">
+                  {(Object.keys(RECIPE_ICON_CATALOG) as RecipeIconKey[]).map(
+                    (key) => {
+                      const { Icon: PickIcon, tint, label } =
+                        RECIPE_ICON_CATALOG[key]
+                      const active =
+                        (r.icon ?? DEFAULT_RECIPE_ICON[r.category]) === key
+                      return (
+                        <button
+                          key={key}
+                          type="button"
+                          onClick={() => update('icon', key)}
+                          aria-pressed={active}
+                          aria-label={label}
+                          title={label}
+                          className="inline-flex items-center justify-center transition-colors"
+                          style={{
+                            width: 38,
+                            height: 38,
+                            borderRadius: 8,
+                            background: active
+                              ? `${tint}1f`
+                              : 'var(--gf-input-bg)',
+                            border: `1px solid ${
+                              active ? tint : 'var(--gf-border)'
+                            }`,
+                            color: tint,
+                          }}
+                          onMouseEnter={(e) => {
+                            if (!active) {
+                              e.currentTarget.style.background =
+                                'var(--gf-card-hover)'
+                              e.currentTarget.style.borderColor =
+                                'var(--gf-border-hover)'
+                            }
+                          }}
+                          onMouseLeave={(e) => {
+                            if (!active) {
+                              e.currentTarget.style.background =
+                                'var(--gf-input-bg)'
+                              e.currentTarget.style.borderColor =
+                                'var(--gf-border)'
+                            }
+                          }}
+                        >
+                          <PickIcon
+                            className="w-4 h-4"
+                            strokeWidth={1.75}
+                            color="currentColor"
+                          />
+                        </button>
+                      )
+                    },
+                  )}
+                </div>
+              </FormField>
+
+              <div className="grid grid-cols-2 gap-3">
                 <FormField label={t('form.prepTime')}>
                   <NumInput
                     value={r.prepMin}

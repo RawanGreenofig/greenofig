@@ -17,6 +17,9 @@ import {
   Microscope,
   Check,
   Library,
+  Eye,
+  Edit3,
+  Trash2,
 } from '@/icons'
 
 interface Doc {
@@ -24,6 +27,10 @@ interface Doc {
   name: string
   uploadedISO: string
   sizeMb: number
+  /** Storage path inside the `research-docs` bucket (private). Used
+   * to mint a short-lived signed URL when the nutritionist clicks
+   * View. Empty for the local SEED rows (which can't be opened). */
+  filePath?: string
 }
 
 interface Source {
@@ -72,11 +79,12 @@ export default function ResearchPage() {
       id: string
       filename: string
       file_size_bytes: number | null
+      file_url: string | null
       created_at: string
     }
     const { data } = await supabase
       .from('research_documents')
-      .select('id, filename, file_size_bytes, created_at')
+      .select('id, filename, file_size_bytes, file_url, created_at')
       .eq('is_active', true)
       .order('created_at', { ascending: false })
       .limit(40)
@@ -88,8 +96,51 @@ export default function ResearchPage() {
         name: r.filename,
         sizeMb: r.file_size_bytes ? r.file_size_bytes / (1024 * 1024) : 0,
         uploadedISO: r.created_at,
+        filePath: r.file_url ?? undefined,
       })),
     )
+  }
+
+  // Open a doc in a new tab. The bucket is private so we mint a
+  // short-lived signed URL on demand instead of storing public links.
+  const viewDoc = async (d: Doc) => {
+    if (!d.filePath) return
+    const supabase = getBrowserSupabase()
+    if (!supabase) return
+    const { data } = await supabase.storage
+      .from('research-docs')
+      .createSignedUrl(d.filePath, 60 * 5) // 5 minutes
+    if (data?.signedUrl) {
+      window.open(data.signedUrl, '_blank', 'noopener,noreferrer')
+    }
+  }
+
+  // Rename — uses a window.prompt so we don't need a separate modal
+  // shell. The `filename` column on research_documents is updated
+  // and the local state mirrors immediately for instant feedback.
+  const renameDoc = async (d: Doc) => {
+    const next = window.prompt('Rename document', d.name)?.trim()
+    if (!next || next === d.name) return
+    setDocs((curr) => curr.map((x) => (x.id === d.id ? { ...x, name: next } : x)))
+    const supabase = getBrowserSupabase()
+    if (!supabase) return
+    await supabase
+      .from('research_documents')
+      .update({ filename: next } as never)
+      .eq('id', d.id)
+  }
+
+  // Soft-delete — flip `is_active` so the row drops out of the list
+  // but we keep the file in storage for audit/recovery.
+  const deleteDoc = async (d: Doc) => {
+    if (!window.confirm(`Delete "${d.name}"? This can't be undone.`)) return
+    setDocs((curr) => curr.filter((x) => x.id !== d.id))
+    const supabase = getBrowserSupabase()
+    if (!supabase) return
+    await supabase
+      .from('research_documents')
+      .update({ is_active: false } as never)
+      .eq('id', d.id)
   }
   useEffect(() => {
     let cancelled = false
@@ -223,22 +274,23 @@ export default function ResearchPage() {
               } as never)
               await reloadDocs()
             }}
-            className="w-full inline-flex items-center justify-center gap-1.5 rounded-pill bg-primary/15 text-lime-400 h-9 px-4 text-xs font-semibold hover:bg-primary/25"
+            className="w-full inline-flex items-center justify-center gap-1.5 rounded-pill bg-gradient-to-b from-lime-400 to-lime-600 text-bg font-semibold h-10 px-4 text-xs shadow-lime-glow border border-lime-600/60 hover:-translate-y-px transition-transform"
           >
-            <Plus className="w-3.5 h-3.5" strokeWidth={2} />
+            <Plus className="w-3.5 h-3.5" strokeWidth={2.25} color="#0d1a12" />
             {t('addDocument')}
           </UploadButton>
           <div className="relative">
             <Search
-              className="absolute start-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-fg-3"
+              className="absolute start-3.5 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none"
               strokeWidth={1.75}
+              color="var(--gf-fg-3)"
             />
             <input
               type="text"
               value={docQuery}
               onChange={(e) => setDocQuery(e.target.value)}
               placeholder={t('documentSearch')}
-              className="w-full h-9 rounded-pill bg-bg-deeper border border-border ps-9 pe-3 text-sm text-fg-1 placeholder-fg-3 focus:outline-none focus:border-primary"
+              className="w-full h-10 ps-10 pe-3 text-sm text-fg-1 placeholder-fg-3"
             />
           </div>
         </header>
@@ -251,18 +303,25 @@ export default function ResearchPage() {
               <p className="mt-1 text-xs text-fg-3">{t('noDocumentsBody')}</p>
             </div>
           ) : (
-            <ul className="divide-y divide-border">
+            <ul className="divide-y" style={{ borderColor: 'var(--gf-border)' }}>
               {visibleDocs.map((d) => (
                 <li
                   key={d.id}
-                  className="px-4 py-3 hover:bg-surface-raised flex items-start gap-3"
+                  className="group px-4 py-3 flex items-center gap-3 transition-colors"
+                  onMouseEnter={(e) =>
+                    (e.currentTarget.style.background = 'var(--gf-card-hover)')
+                  }
+                  onMouseLeave={(e) =>
+                    (e.currentTarget.style.background = 'transparent')
+                  }
                 >
-                  <span className="shrink-0 w-9 h-9 rounded-md bg-bg-deeper border border-border inline-flex items-center justify-center">
-                    <FileText
-                      className="w-4 h-4 text-lime-400"
-                      strokeWidth={1.5}
-                    />
-                  </span>
+                  {/* Brand-coloured bare icon (sidebar-style) — no
+                   * tile chrome, lime icon carries the doc-type cue. */}
+                  <FileText
+                    className="w-5 h-5 shrink-0"
+                    strokeWidth={1.75}
+                    color="#a3e635"
+                  />
                   <div className="flex-1 min-w-0">
                     <p className="text-xs font-medium text-fg-1 leading-tight line-clamp-2">
                       {d.name}
@@ -276,6 +335,31 @@ export default function ResearchPage() {
                       })}{' '}
                       · {t('sizeMb', { size: d.sizeMb })}
                     </p>
+                  </div>
+                  {/* Row actions — ghost icon buttons appear on row
+                   * hover. Same Linear / Stripe pattern used across
+                   * the dashboard (Store Curation, Clients list). */}
+                  <div className="shrink-0 inline-flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity focus-within:opacity-100">
+                    <DocAction
+                      onClick={() => viewDoc(d)}
+                      ariaLabel="View"
+                      Icon={Eye}
+                      disabled={!d.filePath}
+                      hoverColor="#a3e635"
+                    />
+                    <DocAction
+                      onClick={() => renameDoc(d)}
+                      ariaLabel="Rename"
+                      Icon={Edit3}
+                      hoverColor="var(--gf-fg-1)"
+                    />
+                    <DocAction
+                      onClick={() => deleteDoc(d)}
+                      ariaLabel="Delete"
+                      Icon={Trash2}
+                      hoverColor="#f43f5e"
+                      hoverBg="rgba(244,63,94,0.10)"
+                    />
                   </div>
                 </li>
               ))}
@@ -590,5 +674,57 @@ function Dot({ delay }: { delay: number }) {
       style={{ animationDelay: `${delay}ms` }}
       aria-hidden
     />
+  )
+}
+
+/**
+ * Ghost icon button used for the per-document row actions
+ * (View / Rename / Delete). Bare icon, hover lifts to a soft bg
+ * tinted by the action's intent (lime for view, neutral for rename,
+ * red for delete). Same pattern as the row actions on Store
+ * Curation and the Clients list.
+ */
+function DocAction({
+  onClick,
+  ariaLabel,
+  Icon,
+  disabled,
+  hoverColor,
+  hoverBg,
+}: {
+  onClick: () => void
+  ariaLabel: string
+  Icon: typeof Eye
+  disabled?: boolean
+  hoverColor: string
+  hoverBg?: string
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-label={ariaLabel}
+      title={ariaLabel}
+      disabled={disabled}
+      className="inline-flex items-center justify-center transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+      style={{
+        width: 28,
+        height: 28,
+        borderRadius: 8,
+        background: 'transparent',
+        color: 'var(--gf-fg-3)',
+      }}
+      onMouseEnter={(e) => {
+        if (disabled) return
+        e.currentTarget.style.background = hoverBg ?? 'var(--gf-card-hover)'
+        e.currentTarget.style.color = hoverColor
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.background = 'transparent'
+        e.currentTarget.style.color = 'var(--gf-fg-3)'
+      }}
+    >
+      <Icon className="w-3.5 h-3.5" strokeWidth={1.75} color="currentColor" />
+    </button>
   )
 }
