@@ -9,7 +9,7 @@ import {
 import { getServerSupabase } from '@/lib/supabase/server'
 import { getServiceSupabase } from '@/lib/supabase/service'
 import {
-  STRIPE_PRICES,
+  getStripePrice,
   getStripe,
   isStripeConfigured,
 } from '@/lib/stripe'
@@ -80,7 +80,7 @@ export const POST = withAuth(async (req: NextRequest, ctx: AuthedContext) => {
       if (!tier || !TIERS.includes(tier as Tier)) {
         return badRequest('tier is required.')
       }
-      const priceId = STRIPE_PRICES[tier][cycle]
+      const priceId = await getStripePrice(tier, cycle)
       if (!priceId) return badRequest(`No Stripe price configured for ${tier}/${cycle}.`)
 
       const session = await stripe.checkout.sessions.create({

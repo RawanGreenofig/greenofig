@@ -1,4 +1,5 @@
 import Stripe from 'stripe'
+import { getServiceSupabase } from '@/lib/supabase/service'
 
 /**
  * Singleton Stripe client. Returns null when STRIPE_SECRET_KEY is missing
@@ -28,41 +29,66 @@ export function getStripe(): Stripe | null {
 export const isStripeConfigured = () => !!process.env.STRIPE_SECRET_KEY
 
 /**
- * Stripe Price IDs per tier, set as env vars in production:
- *   STRIPE_PRICE_BASIC_MONTHLY, STRIPE_PRICE_BASIC_YEARLY, etc.
+ * Stripe Price IDs per tier. Lookup order:
+ *   1. process.env override (legacy / prod safety)
+ *   2. platform_settings rows (`stripe_price_<tier>_<cycle>`)
+ *   3. USD_DEFAULTS hardcoded fallback
  *
- * The fallbacks below point at the demo's USD sandbox prices so the
- * checkout still works locally without env vars set. Production should
- * always set these env vars; if you rotate the prices in Stripe, update
- * Vercel before relying on these defaults.
+ * The /admin/pricing UI updates the platform_settings rows; that flows
+ * through here on the next checkout without a redeploy.
  */
-// 2026-05 pricing bump: monthly and annual rates each raised by $20 to
-// reflect the nutritionist-coaching market range. Old prices have been
-// archived in Stripe — existing subscribers stay on whatever price they
-// signed up with until they switch plans.
-//   basic:   $14.99/mo + $9.99 annual-per-mo  →  $34.99/mo + $29.99 annual-per-mo  ($359.88/yr)
-//   premium: $29.99/mo + $19.99 annual-per-mo →  $49.99/mo + $39.99 annual-per-mo  ($479.88/yr)
-//   vip:     $59.99/mo + $39.99 annual-per-mo →  $79.99/mo + $59.99 annual-per-mo  ($719.88/yr)
-const USD_DEFAULTS = {
+type Cycle = 'monthly' | 'yearly'
+type Tier = 'basic' | 'premium' | 'vip'
+
+const USD_DEFAULTS: Record<Tier, Record<Cycle, string>> = {
   basic:   { monthly: 'price_1TVKfh2OHDHL9Mv9EEODgruh', yearly: 'price_1TVKfk2OHDHL9Mv9OITv4FK3' },
   premium: { monthly: 'price_1TVKfn2OHDHL9Mv99p9FfkUM', yearly: 'price_1TVKfq2OHDHL9Mv9I3377K4g' },
   vip:     { monthly: 'price_1TVKft2OHDHL9Mv9UcFoLzlf', yearly: 'price_1TVKfw2OHDHL9Mv9TDTW8Cip' },
-} as const
+}
 
-export const STRIPE_PRICES: Record<
-  'basic' | 'premium' | 'vip',
-  { monthly: string; yearly: string }
-> = {
-  basic: {
-    monthly: process.env.STRIPE_PRICE_BASIC_MONTHLY ?? USD_DEFAULTS.basic.monthly,
-    yearly:  process.env.STRIPE_PRICE_BASIC_YEARLY  ?? USD_DEFAULTS.basic.yearly,
-  },
-  premium: {
-    monthly: process.env.STRIPE_PRICE_PREMIUM_MONTHLY ?? USD_DEFAULTS.premium.monthly,
-    yearly:  process.env.STRIPE_PRICE_PREMIUM_YEARLY  ?? USD_DEFAULTS.premium.yearly,
-  },
-  vip: {
-    monthly: process.env.STRIPE_PRICE_VIP_MONTHLY ?? USD_DEFAULTS.vip.monthly,
-    yearly:  process.env.STRIPE_PRICE_VIP_YEARLY  ?? USD_DEFAULTS.vip.yearly,
-  },
+const ENV_KEYS: Record<Tier, Record<Cycle, string>> = {
+  basic:   { monthly: 'STRIPE_PRICE_BASIC_MONTHLY',   yearly: 'STRIPE_PRICE_BASIC_YEARLY' },
+  premium: { monthly: 'STRIPE_PRICE_PREMIUM_MONTHLY', yearly: 'STRIPE_PRICE_PREMIUM_YEARLY' },
+  vip:     { monthly: 'STRIPE_PRICE_VIP_MONTHLY',     yearly: 'STRIPE_PRICE_VIP_YEARLY' },
+}
+
+const settingKey = (tier: Tier, cycle: Cycle): string =>
+  `stripe_price_${tier}_${cycle === 'monthly' ? 'monthly' : 'yearly'}`
+
+export async function getStripePrice(tier: Tier, cycle: Cycle): Promise<string> {
+  const envValue = process.env[ENV_KEYS[tier][cycle]]
+  if (envValue) return envValue
+
+  const service = getServiceSupabase()
+  if (service) {
+    const { data } = await service
+      .from('platform_settings')
+      .select('value')
+      .eq('key', settingKey(tier, cycle))
+      .maybeSingle()
+    const raw = (data as { value?: unknown } | null)?.value
+    if (typeof raw === 'string' && raw.trim().length > 0) return raw
+  }
+
+  return USD_DEFAULTS[tier][cycle]
+}
+
+/**
+ * Synchronous accessor that returns env var or the hardcoded default.
+ * Used by code paths that can't async (e.g. shared constants). Prefer
+ * `getStripePrice` for routes that touch Supabase anyway.
+ */
+export function getStripePriceSync(tier: Tier, cycle: Cycle): string {
+  return process.env[ENV_KEYS[tier][cycle]] ?? USD_DEFAULTS[tier][cycle]
+}
+
+/**
+ * Backwards-compat shape for callers that don't yet `await`. Reads env
+ * vars + falls back to defaults — does NOT consult platform_settings.
+ * Migrate call sites to `getStripePrice` when they touch DB anyway.
+ */
+export const STRIPE_PRICES: Record<Tier, Record<Cycle, string>> = {
+  basic:   { monthly: getStripePriceSync('basic', 'monthly'),   yearly: getStripePriceSync('basic', 'yearly') },
+  premium: { monthly: getStripePriceSync('premium', 'monthly'), yearly: getStripePriceSync('premium', 'yearly') },
+  vip:     { monthly: getStripePriceSync('vip', 'monthly'),     yearly: getStripePriceSync('vip', 'yearly') },
 }

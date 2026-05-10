@@ -1,10 +1,10 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import Image from 'next/image'
 import { useLocale } from 'next-intl'
 import { Link } from '@/i18n/navigation'
-import { Check, X, Plus, Minus, Sparkles, Leaf, Star, Crown, type LucideIcon } from 'lucide-react'
+import { Check, X, Plus, Minus, Sparkles, Leaf, Star, Crown, Edit3, type LucideIcon } from 'lucide-react'
 import { NUTRITIONIST } from '@/lib/tokens'
 import { SiteHeader } from '@/components/SiteHeader'
 import { useAuth } from '@/context/AuthContext'
@@ -392,10 +392,31 @@ export default function PricingPage() {
   const isAr = locale === 'ar'
   const [billing, setBilling] = useState<'monthly' | 'annual'>('monthly')
   const [openFaq, setOpenFaq] = useState<number | null>(0)
-  const { user, tier: rawTier } = useAuth()
+  const { user, tier: rawTier, role } = useAuth()
   const isLoggedIn = !!user
+  const isAdmin = role === 'admin'
   const currentTier = (rawTier ?? 'free') as TierKey
   const [loadingTier, setLoadingTier] = useState<TierKey | null>(null)
+  // Live sticker amounts loaded from /api/pricing (admin-editable). Falls
+  // through to the hardcoded PLANS values until the fetch completes.
+  type LivePricing = Record<'basic' | 'premium' | 'vip', { monthly: number; annual: number }>
+  const [livePricing, setLivePricing] = useState<LivePricing | null>(null)
+  const [editingTier, setEditingTier] = useState<'basic' | 'premium' | 'vip' | null>(null)
+
+  const fetchLivePricing = async () => {
+    try {
+      const res = await fetch('/api/pricing')
+      if (!res.ok) return
+      const data = (await res.json()) as LivePricing
+      setLivePricing(data)
+    } catch {
+      /* offline — fall back to hardcoded */
+    }
+  }
+  useEffect(() => {
+    void fetchLivePricing()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const handleUpgrade = async (tier: TierKey) => {
     if (loadingTier || tier === 'free') return
@@ -533,6 +554,13 @@ export default function PricingPage() {
                 isAr={isAr}
                 loadingTier={loadingTier}
                 onUpgrade={handleUpgrade}
+                isAdmin={isAdmin}
+                onEdit={() => setEditingTier(plan.tier as 'basic' | 'premium' | 'vip')}
+                livePrice={
+                  plan.tier === 'basic' || plan.tier === 'premium' || plan.tier === 'vip'
+                    ? livePricing?.[plan.tier]
+                    : undefined
+                }
               />
             ))}
         </ul>
@@ -555,6 +583,9 @@ export default function PricingPage() {
                 isAr={isAr}
                 loadingTier={loadingTier}
                 onUpgrade={handleUpgrade}
+                isAdmin={false}
+                onEdit={() => undefined}
+                livePrice={undefined}
               />
             ))}
         </ul>
@@ -611,7 +642,177 @@ export default function PricingPage() {
           </ul>
         </section>
       </div>
+
+      {editingTier && livePricing && (
+        <EditPricingModal
+          tier={editingTier}
+          current={livePricing[editingTier]}
+          onClose={() => setEditingTier(null)}
+          onSaved={async () => {
+            setEditingTier(null)
+            await fetchLivePricing()
+          }}
+        />
+      )}
     </main>
+  )
+}
+
+function EditPricingModal({
+  tier,
+  current,
+  onClose,
+  onSaved,
+}: {
+  tier: 'basic' | 'premium' | 'vip'
+  current: { monthly: number; annual: number }
+  onClose: () => void
+  onSaved: () => void
+}) {
+  const [monthly, setMonthly] = useState(current.monthly.toFixed(2))
+  const [annual, setAnnual] = useState(current.annual.toFixed(2))
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (busy) return
+    setError(null)
+
+    const monthlyNum = Number(monthly)
+    const annualNum = Number(annual)
+    if (!Number.isFinite(monthlyNum) || monthlyNum <= 0) {
+      setError('Monthly price must be a positive number')
+      return
+    }
+    if (!Number.isFinite(annualNum) || annualNum <= 0) {
+      setError('Annual-per-month price must be a positive number')
+      return
+    }
+
+    // Send updates only for the cycles that actually changed.
+    const updates: { cycle: 'monthly' | 'yearly'; amountUsd: number }[] = []
+    if (Math.abs(monthlyNum - current.monthly) > 0.001) {
+      updates.push({ cycle: 'monthly', amountUsd: monthlyNum })
+    }
+    if (Math.abs(annualNum - current.annual) > 0.001) {
+      // Stripe yearly amount = annual-per-month * 12 — the user enters
+      // the per-month cost which we convert here.
+      updates.push({ cycle: 'yearly', amountUsd: Number((annualNum * 12).toFixed(2)) })
+    }
+    if (updates.length === 0) {
+      onClose()
+      return
+    }
+
+    setBusy(true)
+    try {
+      for (const upd of updates) {
+        const res = await fetch('/api/admin/pricing', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ tier, ...upd }),
+        })
+        if (!res.ok) {
+          const data = (await res.json().catch(() => ({}))) as {
+            error?: string | { message?: string }
+          }
+          const msg =
+            typeof data.error === 'string'
+              ? data.error
+              : data.error?.message ?? `Save failed (${res.status})`
+          setError(msg)
+          setBusy(false)
+          return
+        }
+      }
+      onSaved()
+    } catch {
+      setError('Network error')
+      setBusy(false)
+    }
+  }
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      style={{ background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(4px)' }}
+      onClick={(e) => e.target === e.currentTarget && onClose()}
+    >
+      <form
+        onSubmit={submit}
+        className="w-full max-w-md rounded-2xl border border-border bg-surface p-6 space-y-5"
+      >
+        <header>
+          <h2 className="text-lg font-bold text-fg-1">
+            Edit {tier.toUpperCase()} pricing
+          </h2>
+          <p className="mt-1 text-xs text-fg-3">
+            Updates the Stripe price + sticker amount on this page. Existing
+            subscribers keep their old price until they switch plans.
+          </p>
+        </header>
+
+        <label className="block">
+          <span className="text-xs uppercase tracking-eyebrow text-fg-3 font-semibold mb-1.5 block">
+            Monthly (USD)
+          </span>
+          <input
+            type="number"
+            step="0.01"
+            min="0.01"
+            required
+            value={monthly}
+            onChange={(e) => setMonthly(e.target.value)}
+            className="w-full h-10 rounded-md bg-bg-deeper border border-border px-3 text-sm font-mono text-fg-1 focus:outline-none focus:border-primary"
+            dir="ltr"
+          />
+        </label>
+
+        <label className="block">
+          <span className="text-xs uppercase tracking-eyebrow text-fg-3 font-semibold mb-1.5 block">
+            Annual — per-month USD
+          </span>
+          <input
+            type="number"
+            step="0.01"
+            min="0.01"
+            required
+            value={annual}
+            onChange={(e) => setAnnual(e.target.value)}
+            className="w-full h-10 rounded-md bg-bg-deeper border border-border px-3 text-sm font-mono text-fg-1 focus:outline-none focus:border-primary"
+            dir="ltr"
+          />
+          <p className="mt-1 text-[11px] text-fg-3">
+            Stripe will charge ${(Number(annual || '0') * 12).toFixed(2)} per year.
+          </p>
+        </label>
+
+        {error && (
+          <p className="text-xs" style={{ color: '#fca5a5' }}>
+            {error}
+          </p>
+        )}
+
+        <div className="flex items-center justify-end gap-2 pt-2">
+          <button
+            type="button"
+            onClick={onClose}
+            disabled={busy}
+            className="rounded-pill bg-surface-raised border border-border h-9 px-4 text-xs font-semibold text-fg-1 hover:border-primary/40 disabled:opacity-50"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            disabled={busy}
+            className="inline-flex items-center gap-1.5 rounded-pill bg-gradient-to-b from-lime-400 to-lime-600 text-bg font-semibold h-9 px-4 text-xs shadow-lime-glow border border-lime-600/60 disabled:opacity-50 disabled:cursor-wait"
+          >
+            {busy ? 'Saving…' : 'Save & sync to Stripe'}
+          </button>
+        </div>
+      </form>
+    </div>
   )
 }
 
@@ -624,6 +825,9 @@ function PlanCard({
   isAr,
   loadingTier,
   onUpgrade,
+  isAdmin,
+  onEdit,
+  livePrice,
 }: {
   plan: Plan
   billing: 'monthly' | 'annual'
@@ -633,8 +837,15 @@ function PlanCard({
   isAr: boolean
   loadingTier: TierKey | null
   onUpgrade: (tier: TierKey) => void
+  isAdmin: boolean
+  onEdit: () => void
+  livePrice?: { monthly: number; annual: number }
 }) {
-  const price = billing === 'monthly' ? plan.price.monthly : plan.price.annual
+  // Effective price = live (admin-editable) OR fallback to the hardcoded
+  // plan.price. Both monthly and annual.
+  const monthly = livePrice?.monthly ?? plan.price.monthly
+  const annual = livePrice?.annual ?? plan.price.annual
+  const price = billing === 'monthly' ? monthly : annual
   const isFree = price === 0
   const theme = TIER_THEME[plan.tier]
   const [hovered, setHovered] = useState(false)
@@ -789,17 +1000,32 @@ function PlanCard({
                 dir="ltr"
               >
                 <span className="line-through" style={{ opacity: 0.55 }}>
-                  ${(plan.price.monthly * 12).toFixed(2)}
+                  ${(monthly * 12).toFixed(2)}
                 </span>
                 <span className="font-semibold" style={{ color: theme.price }}>
-                  ${(plan.price.annual * 12).toFixed(2)}
+                  ${(annual * 12).toFixed(2)}
                 </span>
                 <span style={{ opacity: 0.7 }}>/ {copy.year}</span>
               </p>
             ) : (
               <p className="text-[11px] text-fg-3 mt-2" style={{ opacity: 0.7 }}>
-                {copy.orAnnual.replace('{price}', (plan.price.annual).toFixed(2))}
+                {copy.orAnnual.replace('{price}', annual.toFixed(2))}
               </p>
+            )}
+            {isAdmin && plan.tier !== 'free' && (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault()
+                  e.stopPropagation()
+                  onEdit()
+                }}
+                className="mt-3 inline-flex items-center gap-1.5 rounded-pill bg-amber-500/10 text-amber-300 border border-amber-500/30 h-8 px-3 text-[11px] font-semibold hover:bg-amber-500/20"
+                title="Admin: edit pricing"
+              >
+                <Edit3 className="w-3 h-3" strokeWidth={2} />
+                Edit pricing
+              </button>
             )}
           </>
         )}
