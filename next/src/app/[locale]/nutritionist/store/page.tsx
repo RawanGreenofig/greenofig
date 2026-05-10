@@ -70,7 +70,7 @@ const SEED: Product[] = [
   { id: 'p4',  name: 'Mediterranean Olive Oil',     category: 'kitchen',     price: 22, stock: 30, description: 'Cold-pressed extra virgin from Ajloun.',             drNote: 'Use raw — drizzle on plates after cooking.', drPick: true, visible: true, hue: 'rgb(132 204 22 / 0.18)' },
   { id: 'p5',  name: 'Almond Butter, raw',          category: 'snacks',      price: 14, stock: 24, description: 'No oils added, no sugar, just almonds.',             drNote: '', drPick: false, visible: true,  hue: 'rgb(232 145 42 / 0.16)' },
   { id: 'p6',  name: 'Probiotic 25 Billion',        category: 'supplements', price: 38, stock: 0,  description: 'Multi-strain shelf-stable probiotic.',               drNote: '', drPick: true,  visible: false, hue: 'rgb(34 197 94 / 0.18)' },
-  { id: 'p7',  name: 'Eat Real — Dr. Rawan',        category: 'books',       price: 18, stock: 12, description: 'Hardback first edition. Signed copies available.',   drNote: 'My take on Mediterranean eating, written for Arab kitchens.', drPick: true, visible: true,  hue: 'rgb(61 122 74 / 0.22)' },
+  { id: 'p7',  name: 'Eat Real — Coach Rawan',        category: 'books',       price: 18, stock: 12, description: 'Hardback first edition. Signed copies available.',   drNote: 'My take on Mediterranean eating, written for Arab kitchens.', drPick: true, visible: true,  hue: 'rgb(61 122 74 / 0.22)' },
 ]
 
 export default function StoreCurationPage() {

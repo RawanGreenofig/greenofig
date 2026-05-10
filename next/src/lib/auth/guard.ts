@@ -65,6 +65,39 @@ export async function requireRole(
   return { userId: user.id, role }
 }
 
+/**
+ * Variant of requireRole() for routes that should only be visible to
+ * the head coach (business areas — earnings, store curation, business
+ * analytics). Employee nutritionists are bounced back to /nutritionist.
+ */
+export async function requireHeadCoach(
+  locale: string,
+): Promise<{ userId: string }> {
+  if (process.env.NODE_ENV !== 'production') {
+    const host = headers().get('host') ?? ''
+    if (host.startsWith('localhost') || host.startsWith('127.0.0.1')) {
+      return { userId: 'dev-bypass' }
+    }
+  }
+  const supabase = getServerSupabase()
+  if (!supabase) redirect(localePath(locale, '/sign-in'))
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user) redirect(localePath(locale, '/sign-in'))
+
+  const { data } = await supabase
+    .from('profiles')
+    .select('role, is_head_coach')
+    .eq('id', user.id)
+    .maybeSingle()
+  const row = data as { role?: string; is_head_coach?: boolean } | null
+  if (row?.role !== 'nutritionist' || !row.is_head_coach) {
+    redirect(localePath(locale, '/nutritionist'))
+  }
+  return { userId: user.id }
+}
+
 function localePath(locale: string, path: string): string {
   if (locale === 'en' || !locale) return path
   return `/${locale}${path === '/' ? '' : path}`

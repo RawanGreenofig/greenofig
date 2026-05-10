@@ -233,7 +233,7 @@ function CommunityPageInner() {
             }}
           />
 
-          {/* Pinned post — Dr. Rawan */}
+          {/* Pinned post — Coach Rawan */}
           <article
             style={{
               background: 'var(--gf-surface-raised)',
@@ -259,7 +259,7 @@ function CommunityPageInner() {
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src="/images/dr-rawan-othman.jpg"
-                  alt="Dr. Rawan Othman"
+                  alt="Coach Rawan Othman"
                   width={40}
                   height={40}
                   style={{
@@ -305,7 +305,7 @@ function CommunityPageInner() {
                   className="inline-flex items-center truncate"
                   style={{ fontSize: 14, fontWeight: 700, color: 'var(--gf-fg-1)', gap: 10 }}
                 >
-                  Dr. Rawan Othman
+                  Coach Rawan Othman
                   <BadgeCheck
                     className="w-4 h-4 shrink-0"
                     strokeWidth={1.75}
@@ -462,7 +462,7 @@ function CommunityPageInner() {
             display: 'none',
           }}
         >
-          {/* Dr. Rawan profile card */}
+          {/* Coach Rawan profile card */}
           <div
             style={{
               background: 'var(--gf-surface)',
@@ -481,7 +481,7 @@ function CommunityPageInner() {
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src="/images/dr-rawan-othman.jpg"
-                alt="Dr. Rawan Othman"
+                alt="Coach Rawan Othman"
                 style={{
                   position: 'absolute',
                   inset: 0,
@@ -518,7 +518,7 @@ function CommunityPageInner() {
               <p
                 style={{ fontSize: 15, fontWeight: 700, color: 'var(--gf-fg-1)' }}
               >
-                Dr. Rawan Othman
+                Coach Rawan Othman
               </p>
               <p
                 style={{ fontSize: 12, color: 'var(--gf-fg-3)', marginTop: 2 }}
@@ -580,7 +580,7 @@ function CommunityPageInner() {
                 See all
               </button>
             </header>
-            <NotifRow icon="🍎" title="New meal plan added" body="Dr. Rawan added your weekly plan" time="1h" />
+            <NotifRow icon="🍎" title="New meal plan added" body="Coach Rawan added your weekly plan" time="1h" />
             <NotifRow icon="💧" title="Hydration reminder" body="You need 750ml more to hit your goal" time="2h" />
             <NotifRow icon="⭐" title="Streak milestone" body="You've logged meals 3 days in a row!" time="1d" last />
           </div>
@@ -657,7 +657,7 @@ function PersonRow({ person }: { person: Person }) {
  * Functional Like / Comment / Share row for a feed post.
  *
  * Why client-side only: there's no posts table yet. The home feed
- * currently renders two seeded posts (Dr. Rawan + Tip of the week)
+ * currently renders two seeded posts (Coach Rawan + Tip of the week)
  * — once a `community_posts` schema lands, swap the local state for
  * a Supabase-backed mutation and the call sites stay the same.
  *

@@ -34,7 +34,7 @@ const ALL_PRODUCTS: Product[] = [
   { id: 'p4', name: 'Mediterranean Olive Oil',     category: 'Kitchen',     stock: 30, hue: 'rgb(132 204 22 / 0.18)' },
   { id: 'p5', name: 'Almond Butter, raw',          category: 'Snacks',      stock: 24, hue: 'rgb(232 145 42 / 0.16)' },
   { id: 'p6', name: 'Probiotic 25 Billion',        category: 'Supplements', stock: 0,  hue: 'rgb(34 197 94 / 0.18)' },
-  { id: 'p7', name: 'Eat Real — Dr. Rawan',        category: 'Books',       stock: 12, hue: 'rgb(61 122 74 / 0.22)' },
+  { id: 'p7', name: 'Eat Real — Coach Rawan',        category: 'Books',       stock: 12, hue: 'rgb(61 122 74 / 0.22)' },
   { id: 'p8', name: 'Cold-Pressed Tahini',         category: 'Kitchen',     stock: 3,  hue: 'rgb(234 179 8 / 0.18)' },
 ]
 

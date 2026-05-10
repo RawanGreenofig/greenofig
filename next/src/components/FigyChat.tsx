@@ -498,7 +498,7 @@ function Welcome({ displayName }: { displayName: string }) {
         Hi {displayName} — I&apos;m Figy
       </p>
       <p className="text-xs text-fg-3 leading-relaxed">
-        Dr. Rawan&apos;s AI nutrition assistant. Ask me about meal ideas,
+        Greenofig&apos;s AI nutrition assistant. Ask me about meal ideas,
         macros, supplements, or anything between sessions.
       </p>
     </div>
@@ -517,7 +517,7 @@ function UpgradePrompt() {
         Figy is a Premium feature
       </p>
       <p className="text-xs text-fg-3 leading-relaxed mb-4">
-        Upgrade to Premium to chat with Dr. Rawan&apos;s AI assistant
+        Upgrade to Premium to chat with our AI nutrition assistant
         between sessions — meal ideas, macros, supplements, and more.
       </p>
       <a

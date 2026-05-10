@@ -172,7 +172,7 @@ export default function DashboardTodayPage() {
           }}
         >
           <span style={{ fontSize: 13, color: 'var(--gf-fg-1)' }}>
-            🔔 Get notified when Dr. Rawan posts or messages you
+            🔔 Get notified when Coach Rawan posts or messages you
           </span>
           <div className="flex gap-2">
             <button

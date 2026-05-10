@@ -32,6 +32,14 @@ export interface Profile {
   last_seen_at: string | null
   created_at: string
   updated_at: string
+  country?: string | null
+  // Multi-coach (migration 020): is_head_coach distinguishes the owner-
+  // coach (full nutritionist privileges + business areas like earnings
+  // and store curation) from employee coaches (clients/content/plans
+  // only). assigned_coach_id on customer profiles points at the coach
+  // who owns that client.
+  is_head_coach?: boolean
+  assigned_coach_id?: string | null
 }
 
 export interface FeatureFlagRow {

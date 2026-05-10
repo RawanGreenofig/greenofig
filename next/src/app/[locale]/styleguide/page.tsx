@@ -549,7 +549,7 @@ function Cards() {
               LH
             </div>
             <div>
-              <p className="text-sm font-semibold">Dr. Rawan Othman</p>
+              <p className="text-sm font-semibold">Coach Rawan Othman</p>
               <p className="text-xs text-fg-2">Registered Dietitian · 3h ago</p>
             </div>
           </div>

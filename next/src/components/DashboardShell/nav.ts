@@ -44,6 +44,9 @@ export interface DashboardNavItem {
   Icon: LucideIcon
   /** Tier gate hint — display the lock state when user is below this set. */
   tiers?: Tier[]
+  /** Multi-coach gate — when true, only the head coach (is_head_coach)
+   *  sees the link. Employee coaches don't get this entry rendered. */
+  headCoachOnly?: boolean
 }
 
 /** User-role sidebar. Order matters — first 5 power the mobile bottom bar. */
@@ -72,10 +75,10 @@ export const NUTRITIONIST_NAV: DashboardNavItem[] = [
   { href: '/nutritionist/content',         labelKey: 'nutritionist.content',         Icon: PenLine },
   { href: '/nutritionist/calendar',        labelKey: 'nutritionist.calendar',        Icon: Calendar },
   { href: '/nutritionist/messages',        labelKey: 'nutritionist.messages',        Icon: MessageSquare },
-  { href: '/nutritionist/store',           labelKey: 'nutritionist.storeCuration',   Icon: ShoppingBag },
+  { href: '/nutritionist/store',           labelKey: 'nutritionist.storeCuration',   Icon: ShoppingBag, headCoachOnly: true },
   { href: '/nutritionist/research',        labelKey: 'nutritionist.research',        Icon: Microscope },
-  { href: '/nutritionist/analytics',       labelKey: 'nutritionist.analytics',       Icon: TrendingUp },
-  { href: '/nutritionist/earnings',        labelKey: 'nutritionist.earnings',        Icon: Wallet },
+  { href: '/nutritionist/analytics',       labelKey: 'nutritionist.analytics',       Icon: TrendingUp,  headCoachOnly: true },
+  { href: '/nutritionist/earnings',        labelKey: 'nutritionist.earnings',        Icon: Wallet,      headCoachOnly: true },
   { href: '/nutritionist/settings',        labelKey: 'nutritionist.settings',        Icon: Settings },
 ]
 

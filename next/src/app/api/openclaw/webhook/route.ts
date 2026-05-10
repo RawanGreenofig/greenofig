@@ -11,7 +11,7 @@ import type {
 /**
  * POST /api/openclaw/webhook
  *
- * Secret-gated entry point for OpenClaw — Dr. Rawan's WhatsApp/Telegram
+ * Secret-gated entry point for OpenClaw — Coach Rawan's WhatsApp/Telegram
  * AI assistant. Validates `x-openclaw-secret` against the
  * OPENCLAW_WEBHOOK_SECRET env var. Body is JSON; the response is plain
  * text so OpenClaw can read it back to her in chat without parsing.
@@ -62,7 +62,7 @@ export async function POST(req: NextRequest) {
   const action = body.action?.trim()
   if (!action) return text('action is required.', 400)
   const params = body.params ?? {}
-  const requestedBy = body.requestedBy ?? 'Dr. Rawan'
+  const requestedBy = body.requestedBy ?? 'Coach Rawan'
 
   const service = getServiceSupabase()
   if (!service) return text('Supabase is not configured.', 503)
@@ -131,7 +131,7 @@ export async function POST(req: NextRequest) {
 
         const sent = await broadcast(service, {
           tiers: targetTiers,
-          title: 'A note from Dr. Rawan',
+          title: 'A note from Coach Rawan',
           body: message,
           bodyAr: messageAr,
           category: 'reminder',
@@ -152,7 +152,7 @@ export async function POST(req: NextRequest) {
 
         const sent = await broadcast(service, {
           tiers: null,
-          title: 'A note from Dr. Rawan',
+          title: 'A note from Coach Rawan',
           body: message,
           bodyAr: messageAr,
           category: 'broadcast',

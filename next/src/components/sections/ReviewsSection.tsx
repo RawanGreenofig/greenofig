@@ -203,7 +203,7 @@ export function ReviewsSection() {
           </Link>
         </div>
 
-        {/* Dr. Rawan post — full width */}
+        {/* Coach Rawan post — full width */}
         <motion.article
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}

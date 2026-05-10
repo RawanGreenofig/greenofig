@@ -56,13 +56,13 @@ const notoArabic = Noto_Sans_Arabic({
 })
 
 export const metadata: Metadata = {
-  title: 'Greenofig | Personalized Nutrition Plans — Dr. Rawan Othman',
+  title: 'Greenofig | Personalized Nutrition Plans — Coach Rawan Othman',
   description:
-    'Get a personalized nutrition plan from Dr. Rawan Othman, certified clinical nutritionist. Science-backed meal plans, AI food scanning, and one-on-one consultations designed specifically for your body and goals.',
+    'Get a personalized nutrition plan from Coach Rawan Othman, certified clinical nutritionist. Science-backed meal plans, AI food scanning, and one-on-one consultations designed specifically for your body and goals.',
   keywords: [
     'personalized nutrition plan',
     'nutritionist consultation',
-    'Dr. Rawan Othman',
+    'Coach Rawan Othman',
     'certified nutritionist',
     'custom meal plan',
     'science-backed nutrition',
@@ -119,7 +119,7 @@ interface LayoutProps {
 const NUTRITIONIST_JSON_LD = {
   '@context': 'https://schema.org',
   '@type': 'Person',
-  name: 'Dr. Rawan Othman',
+  name: 'Coach Rawan Othman',
   jobTitle: 'Certified Clinical Nutritionist',
   worksFor: { '@type': 'Organization', name: 'Greenofig' },
   url: 'https://greenofig.com',

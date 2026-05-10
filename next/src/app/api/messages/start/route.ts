@@ -9,11 +9,18 @@ export const dynamic = 'force-dynamic'
 /**
  * POST /api/messages/start
  *
- * Returns the conversation id between the signed-in client and Dr.
- * Rawan, creating it on first call. Server-side because the
- * client RLS policy on `profiles` may block reading other users'
- * roles, and the conversation insert needs to write
- * `nutritionist_id` for someone other than the caller.
+ * Returns the conversation id between the signed-in client and the
+ * coach they should talk to, creating it on first call. Selection
+ * priority (multi-coach safe):
+ *   1. profile.assigned_coach_id when set (head coach has assigned
+ *      this client to a specific employee coach)
+ *   2. head coach (profiles.is_head_coach=true) as the default for
+ *      unassigned clients
+ *   3. oldest nutritionist as a last-resort fallback
+ *
+ * Server-side because the client RLS policy on `profiles` may block
+ * reading other users' roles, and the conversation insert needs to
+ * write `nutritionist_id` for someone other than the caller.
  *
  * Response: { conversationId, nutritionistId } | { error }
  *
@@ -42,15 +49,36 @@ export const POST = withAuth(async (_req, ctx: AuthedContext) => {
     })
   }
 
-  // No conversation yet. Find the nutritionist.
-  const { data: nutri } = await supabase
+  // No conversation yet. Pick the right coach (assigned → head → any).
+  const { data: clientProfile } = await supabase
     .from('profiles')
-    .select('id')
-    .eq('role', 'nutritionist')
-    .order('created_at', { ascending: true })
-    .limit(1)
+    .select('assigned_coach_id')
+    .eq('id', ctx.userId)
     .maybeSingle()
-  const nutriId = (nutri as { id?: string } | null)?.id
+  let nutriId =
+    (clientProfile as { assigned_coach_id?: string | null } | null)
+      ?.assigned_coach_id ?? null
+
+  if (!nutriId) {
+    const { data: head } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('role', 'nutritionist')
+      .eq('is_head_coach', true)
+      .limit(1)
+      .maybeSingle()
+    nutriId = (head as { id?: string } | null)?.id ?? null
+  }
+  if (!nutriId) {
+    const { data: anyNutri } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('role', 'nutritionist')
+      .order('created_at', { ascending: true })
+      .limit(1)
+      .maybeSingle()
+    nutriId = (anyNutri as { id?: string } | null)?.id ?? null
+  }
   if (!nutriId) {
     return NextResponse.json(
       { error: 'No nutritionist account configured' },

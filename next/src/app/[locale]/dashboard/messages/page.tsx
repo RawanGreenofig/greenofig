@@ -31,7 +31,7 @@ import { NUTRITIONIST } from '@/lib/tokens'
  *
  * Two states:
  *   - Free / basic tier  → premium-pitch upgrade card with mock chat input
- *   - Premium / VIP      → real chat thread with Dr. Rawan
+ *   - Premium / VIP      → real chat thread with Coach Rawan
  *
  * The upgrade flow POSTs to /api/stripe/checkout and routes the user back
  * to this page with `?success=1`, where we surface a toast and clean the
@@ -61,7 +61,7 @@ function MessagesInner() {
   // Welcome toast after returning from a successful Stripe checkout.
   useEffect(() => {
     if (searchParams.get('success') === '1') {
-      toast.success('🎉 Premium unlocked! You can now message Dr. Rawan.')
+      toast.success('🎉 Premium unlocked! You can now message Coach Rawan.')
       router.replace(pathname)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -122,7 +122,7 @@ function UpgradeCard({ firstName }: { firstName: string }) {
     },
     {
       icon: '📋',
-      title: 'Get a personalized meal plan from Dr. Rawan',
+      title: 'Get a personalized meal plan from Coach Rawan',
       sub: 'Meal Planning',
     },
     {
@@ -472,7 +472,7 @@ function Thread() {
     if (el) el.scrollTop = el.scrollHeight
   }, [messages])
 
-  // Load the user's existing conversation with Dr. Rawan + its messages.
+  // Load the user's existing conversation with Coach Rawan + its messages.
   useEffect(() => {
     if (!userId) return
     const supabase = getBrowserSupabase()
@@ -538,7 +538,7 @@ function Thread() {
   }, [userId])
 
   // Realtime: subscribe to new messages on the active conversation so
-  // a reply from Dr. Rawan appears without a refresh. Re-runs whenever
+  // a reply from Coach Rawan appears without a refresh. Re-runs whenever
   // conversationId changes (i.e. after the very first message creates
   // the conversation row).
   useEffect(() => {
@@ -615,7 +615,7 @@ function Thread() {
         return
       }
 
-      // First message ever: server route looks up Dr. Rawan and
+      // First message ever: server route looks up Coach Rawan and
       // creates the conversation row using the service-role key
       // (RLS otherwise blocks the cross-user lookup).
       let convId = conversationId

@@ -141,16 +141,23 @@ export function Sidebar({
       .join('')
       .toUpperCase() || '?'
 
+  // Hide head-coach-only links (earnings, store curation, analytics)
+  // from employee nutritionists. The head coach has is_head_coach=true.
+  const isHeadCoach = !!profile?.is_head_coach
+  const visibleNavItems = navItems.filter(
+    (n) => !n.headCoachOnly || isHeadCoach,
+  )
+
   // Group nav items by URL prefix (only for the user role; nutritionist /
   // admin nav lists are smaller and stay flat).
-  const isUserRole = navItems.some((n) => n.href.startsWith('/dashboard'))
+  const isUserRole = visibleNavItems.some((n) => n.href.startsWith('/dashboard'))
   const grouped: { section: SectionDef | null; items: DashboardNavItem[] }[] =
     isUserRole
       ? USER_SECTIONS.map((section) => ({
           section,
-          items: navItems.filter((n) => section.hrefs.includes(n.href)),
+          items: visibleNavItems.filter((n) => section.hrefs.includes(n.href)),
         })).filter((g) => g.items.length > 0)
-      : [{ section: null, items: navItems }]
+      : [{ section: null, items: visibleNavItems }]
 
   return (
     <nav

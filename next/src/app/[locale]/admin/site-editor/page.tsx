@@ -88,7 +88,7 @@ export default function AdminSiteEditorPage() {
     secondHeadline2: 'starts here.',
   })
   const [about, setAbout] = useState<AboutDraft>({
-    name: 'Dr. Rawan Othman',
+    name: 'Coach Rawan Othman',
     role: 'Clinical Nutritionist · MSc, RD',
     bio: "I help women in the Levant rebuild their relationship with food. Mediterranean-rooted, evidence-led, no shame.",
     credentials:
@@ -98,10 +98,10 @@ export default function AdminSiteEditorPage() {
     { name: 'Free',    monthlyJod: 0,  yearlyJod: 0,    tagline: 'Get started',   features: 'Limited scanner\nRead-only community' },
     { name: 'Basic',   monthlyJod: 9,  yearlyJod: 90,   tagline: 'Track your day', features: 'Unlimited scanner\nFood + water tracking\nRecipe library' },
     { name: 'Premium', monthlyJod: 19, yearlyJod: 190,  tagline: 'Personalized',   features: 'Custom meal plans\n10% store discount\nPriority AI' },
-    { name: 'VIP',     monthlyJod: 49, yearlyJod: 490,  tagline: 'Concierge',      features: 'Direct messages with Dr. Rawan\n15% store discount\nMonthly 1:1 review' },
+    { name: 'VIP',     monthlyJod: 49, yearlyJod: 490,  tagline: 'Concierge',      features: 'Direct messages with Coach Rawan\n15% store discount\nMonthly 1:1 review' },
   ])
   const [faq, setFaq] = useState<FaqRow[]>([
-    { id: 'f1', question: 'Is the meal plan customized for my body?',                  answer: 'Yes — Dr. Rawan personalizes every plan after your intake form and intro call.' },
+    { id: 'f1', question: 'Is the meal plan customized for my body?',                  answer: 'Yes — Coach Rawan personalizes every plan after your intake form and intro call.' },
     { id: 'f2', question: 'Can I switch between English and Arabic?',                  answer: 'Anytime. Your account preferences sync everything from menus to plan text.' },
     { id: 'f3', question: 'What if I need to pause my subscription?',                  answer: 'You can pause for up to 60 days from Settings → Subscription with no fee.' },
     { id: 'f4', question: 'How long until I see results?',                              answer: 'Most clients feel a difference in week 2 and see body composition shifts by week 6.' },

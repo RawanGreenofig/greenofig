@@ -23,6 +23,7 @@ import {
 } from '@/icons'
 import { Link } from '@/i18n/navigation'
 import { useSupabaseQuery } from '@/lib/hooks/useSupabaseQuery'
+import { useUser } from '@/lib/hooks/useUser'
 import type { Tier } from '@/lib/constants'
 
 type Status = 'onTrack' | 'atRisk' | 'inactive'
@@ -78,6 +79,9 @@ export default function ClientsListPage() {
   const t = useTranslations('nutritionist.clientList')
   const tStatus = useTranslations('nutritionist.clientStatus')
   const tTiers = useTranslations('tiers')
+  const { profile: meProfile } = useUser()
+  const isHeadCoach = !!meProfile?.is_head_coach
+  const myId = meProfile?.id ?? null
 
   const [query, setQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState<Status | 'all'>('all')
@@ -97,13 +101,20 @@ export default function ClientsListPage() {
       created_at: string
       last_seen_at: string | null
       weight_kg: number | null
+      assigned_coach_id: string | null
     }
-    const { data: profileRows } = await supabase
+    // Employee coaches only see clients assigned to them. The head
+    // coach sees all customers (assigned or not).
+    let q = supabase
       .from('profiles')
-      .select('id, full_name, tier, created_at, last_seen_at, weight_kg')
+      .select('id, full_name, tier, created_at, last_seen_at, weight_kg, assigned_coach_id')
       .eq('role', 'user')
       .order('last_seen_at', { ascending: false, nullsFirst: false })
       .limit(80)
+    if (!isHeadCoach && myId) {
+      q = q.eq('assigned_coach_id', myId)
+    }
+    const { data: profileRows } = await q
     const profiles = (profileRows as ProfileRow[] | null) ?? []
     if (profiles.length === 0) return []
 

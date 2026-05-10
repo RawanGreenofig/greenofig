@@ -83,14 +83,21 @@ export const heroFrames = {
   reducedMotionStill: 20,
 } as const
 
+// Head-coach metadata used by marketing pages and components that
+// need the founder's identity (about section, footer, hero credits).
+// Greenofig is rebranding from "Coach Rawan" to "Coach Rawan Othman"
+// as we hire more nutritionists onto the team. Use NUTRITIONIST.name
+// or .shortName for owner-coach copy; for generic platform copy,
+// prefer "your coach" / "coaches" so additional team members can
+// own those touchpoints without rewording.
 export const NUTRITIONIST = {
-  name: 'Dr. Rawan Othman',
-  nameAr: 'د. روان عثمان',
+  name: 'Coach Rawan Othman',
+  nameAr: 'كوتش روان عثمان',
   firstName: 'Rawan',
-  title: 'Dr.',
-  shortName: 'Dr. Rawan',
-  role: 'Certified Clinical Nutritionist',
-  roleAr: 'أخصائية التغذية الإكلينيكية',
+  title: 'Coach',
+  shortName: 'Coach Rawan',
+  role: 'Certified Clinical Nutritionist · Head Coach',
+  roleAr: 'أخصائية التغذية الإكلينيكية · المدرّبة الرئيسية',
   initials: 'RO',
   experience: '3 years',
   credentials: [
@@ -105,13 +112,13 @@ export const NUTRITIONIST = {
   ],
   bio: {
     short:
-      'Dr. Rawan Othman is a certified nutritionist dedicated to helping people achieve lasting health through science-backed, personalized nutrition.',
+      'Coach Rawan Othman is a certified clinical nutritionist and head coach of the Greenofig team, dedicated to helping people achieve lasting health through science-backed, personalized nutrition.',
     long:
-      'Dr. Rawan Othman brings a fresh, evidence-based approach to nutrition that goes beyond generic diets. In her 3 years of specialized practice, she has helped hundreds of clients transform their relationship with food — building sustainable habits that fit real life, not just theory.',
+      'Coach Rawan Othman leads the Greenofig coaching team. She brings an evidence-based approach to nutrition that goes beyond generic diets. In her 3 years of specialized practice, she — along with the coaches she trains — has helped hundreds of clients transform their relationship with food, building sustainable habits that fit real life, not just theory.',
     shortAr:
-      'د. روان عثمان أخصائية تغذية معتمدة، تكرّس جهودها لمساعدة الناس على تحقيق صحة دائمة من خلال تغذية شخصية قائمة على العلم.',
+      'كوتش روان عثمان أخصائية تغذية إكلينيكية معتمدة ومدرّبة رئيسية في فريق Greenofig، تكرّس جهودها لمساعدة الناس على تحقيق صحة دائمة من خلال تغذية شخصية قائمة على العلم.',
     longAr:
-      'تقدم د. روان عثمان نهجاً حديثاً قائماً على الأدلة العلمية في التغذية، يتجاوز الأنظمة الغذائية العامة. في سنواتها الثلاث من الممارسة المتخصصة، ساعدت مئات العملاء على تغيير علاقتهم بالطعام وبناء عادات صحية مستدامة تناسب الحياة الواقعية.',
+      'تقود كوتش روان عثمان فريق Greenofig. تقدّم نهجاً حديثاً قائماً على الأدلة العلمية في التغذية، يتجاوز الأنظمة العامة. في سنواتها الثلاث من الممارسة، ساعدت — مع المدرّبين الذين تدرّبهم — مئات العملاء على تغيير علاقتهم بالطعام وبناء عادات صحية مستدامة تناسب الحياة الواقعية.',
   },
 } as const
 

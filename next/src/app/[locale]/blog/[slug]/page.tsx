@@ -236,8 +236,8 @@ export default async function ArticlePage({ params }: RouteParams) {
           </h2>
           <p className="text-fg-2 mb-6">
             {isAr
-              ? 'احجز استشارة مجانية مع د. روان وابدأ رحلتك اليوم.'
-              : 'Book a free consultation with Dr. Rawan and start your journey today.'}
+              ? 'احجز استشارة مجانية مع كوتش روان وابدأ رحلتك اليوم.'
+              : 'Book a free consultation with Coach Rawan and start your journey today.'}
           </p>
           <Link
             href="/dashboard"
@@ -405,7 +405,7 @@ function renderBlock(block: Block, key: number, isAr: boolean) {
         >
           <p className="inline-flex items-center gap-2 text-xs uppercase tracking-eyebrow font-bold text-lime-400 mb-2">
             <Crown className="w-3.5 h-3.5" strokeWidth={2} />
-            {isAr ? 'نصيحة د. روان' : "Dr. Rawan's Tip"}
+            {isAr ? 'نصيحة كوتش روان' : "Coach Rawan's Tip"}
           </p>
           <p className="italic text-fg-1 leading-relaxed">{renderInline(block.text)}</p>
         </aside>

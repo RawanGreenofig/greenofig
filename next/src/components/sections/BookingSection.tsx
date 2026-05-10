@@ -91,7 +91,7 @@ export function BookingSection() {
           {t('bookingSub')}
         </motion.p>
 
-        {/* 4 — Dr. Rawan trust card */}
+        {/* 4 — Coach Rawan trust card */}
         <motion.div {...STAGGER(0.3)} className="mb-10 flex justify-center">
           <div className="inline-flex items-center gap-4 rounded-2xl border border-border bg-surface px-6 py-4 max-w-sm w-full text-start">
             <Image

@@ -31,7 +31,7 @@ interface ThemeOut {
 const SYSTEM = `You are a customer-feedback analyst for Greenofig, a personalized nutrition coaching platform.
 Group the supplied reviews into 4–8 distinct themes that reveal what
 clients keep talking about. A "theme" is a topic (e.g. "AI food scanner
-accuracy", "ease of meal planning", "Dr. Rawan responsiveness", "billing
+accuracy", "ease of meal planning", "Coach Rawan responsiveness", "billing
 confusion"). Each review should be tagged with 1–3 themes.
 
 Return JSON only, no prose, no markdown fences. Schema:
