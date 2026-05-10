@@ -307,6 +307,19 @@ export default function MealPlanBuilderPage() {
       // The builder is "draft" until assigned to a client. We persist as
       // a not-active plan owned by this nutritionist; the assign-to-client
       // flow flips is_active=true.
+      //
+      // A client should only ever have ONE active plan at a time — the
+      // dashboard reads `client_id=X AND is_active=true` and expects a
+      // single row. Before activating a new one for an assigned client,
+      // soft-deactivate any prior actives for that client so we don't
+      // end up with competing plans on the customer dashboard.
+      if (assignedClient?.id) {
+        await supabase
+          .from('meal_plans')
+          .update({ is_active: false } as never)
+          .eq('client_id', assignedClient.id)
+          .eq('is_active', true)
+      }
       const { data: planRow } = await supabase
         .from('meal_plans')
         .insert({

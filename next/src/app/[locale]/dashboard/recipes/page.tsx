@@ -133,32 +133,47 @@ function Library({ t }: { t: ReturnType<typeof useTranslations> }) {
     }
   }, [])
 
+  // Schema drift: the recipes table uses `title` (not `name`),
+  // `is_published` (not `status='published'`), `prep_time_minutes` +
+  // `cook_time_minutes` (combined into `minutes`),
+  // `calories_per_serving` / `protein_g`, and `dietary_tags` (not
+  // `tags`). There's no `dr_pick` column — that's a UI-only flag for
+  // the nutritionist tab. Translate everything at the boundary.
   const live = useSupabaseQuery<Recipe[]>(async (supabase) => {
     const { data } = await supabase
       .from('recipes')
-      .select('id, name, category, calories, protein, minutes, servings, tags, dr_pick, hue')
-      .eq('status', 'published')
+      .select(
+        'id, title, category, calories_per_serving, protein_g, prep_time_minutes, cook_time_minutes, servings, dietary_tags, hue',
+      )
+      .eq('is_published', true)
       .order('created_at', { ascending: false })
       .limit(60)
     type Row = {
-      id: string; name: string; category: string
-      calories: number | null; protein: number | null
-      minutes: number | null; servings: number | null
-      tags: string[] | null; dr_pick: boolean | null; hue: string | null
+      id: string
+      title: string
+      category: string | null
+      calories_per_serving: number | null
+      protein_g: number | null
+      prep_time_minutes: number | null
+      cook_time_minutes: number | null
+      servings: number | null
+      dietary_tags: string[] | null
+      hue: string | null
     }
     return ((data as Row[] | null) ?? []).map((r) => ({
       id: r.id,
-      name: r.name,
-      category: (['breakfast','lunch','dinner','snack','drink'].includes(r.category)
-        ? r.category : 'lunch') as Recipe['category'],
-      calories: r.calories ?? 0,
-      protein: r.protein ?? 0,
-      minutes: r.minutes ?? 0,
+      name: r.title,
+      category: (['breakfast', 'lunch', 'dinner', 'snack', 'drink'].includes(r.category ?? '')
+        ? (r.category as Recipe['category'])
+        : 'lunch'),
+      calories: Math.round(r.calories_per_serving ?? 0),
+      protein: Math.round(r.protein_g ?? 0),
+      minutes: (r.prep_time_minutes ?? 0) + (r.cook_time_minutes ?? 0),
       servings: r.servings ?? 1,
-      tags: ((r.tags ?? []).filter((t): t is DietaryTag =>
+      tags: ((r.dietary_tags ?? []).filter((t): t is DietaryTag =>
         ['vegan','vegetarian','glutenFree','dairyFree','keto','halal','highProtein','quick'].includes(t)
       )),
-      drPick: !!r.dr_pick,
+      drPick: false,
       hue: r.hue ?? 'rgb(132 204 22 / 0.16)',
     }))
   }, [])

@@ -331,6 +331,19 @@ export default function RecipeBuilderPage() {
     const supabase = getBrowserSupabase()
     if (!supabase || !profile?.id) return
     const isExisting = /^[0-9a-f-]{32,}$/i.test(final.id)
+    // Compute per-serving macros from the ingredient list so the
+    // customer-side recipe library shows real numbers. Sum across
+    // ingredients, divide by servings (guard /0).
+    const totals = final.ingredients.reduce(
+      (acc, ing) => ({
+        cal: acc.cal + (ing.calories ?? 0),
+        prot: acc.prot + (ing.protein ?? 0),
+        carbs: acc.carbs + (ing.carbs ?? 0),
+        fat: acc.fat + (ing.fat ?? 0),
+      }),
+      { cal: 0, prot: 0, carbs: 0, fat: 0 },
+    )
+    const servingsDiv = Math.max(1, final.servings)
     // Translate UI fields → DB columns. status maps to is_published,
     // drNote into description.
     const row = {
@@ -347,6 +360,10 @@ export default function RecipeBuilderPage() {
       description: final.drNote || null,
       is_published: status === 'published',
       image_url: final.imageUrl ?? null,
+      calories_per_serving: Math.round(totals.cal / servingsDiv),
+      protein_g: +(totals.prot / servingsDiv).toFixed(1),
+      carbs_g: +(totals.carbs / servingsDiv).toFixed(1),
+      fat_g: +(totals.fat / servingsDiv).toFixed(1),
     }
     if (isExisting) {
       void supabase.from('recipes').update(row as never).eq('id', final.id)
