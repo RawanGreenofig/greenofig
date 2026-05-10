@@ -13,8 +13,6 @@ import { getBrowserSupabase } from '@/lib/supabase/client'
 // Use CSS vars so the topbar follows the dashboard theme toggle.
 const TOPBAR_BG = 'var(--gf-surface)'
 const TOPBAR_BORDER = 'var(--gf-border)'
-const FIELD_BG = 'var(--gf-surface-raised)'
-const FIELD_BORDER = 'var(--gf-border)'
 
 export function Topbar({ onOpenMenu }: { onOpenMenu: () => void }) {
   const t = useTranslations('dashboard')

@@ -32,7 +32,6 @@ import { getStripe, isStripeConfigured } from '@/lib/stripe'
  */
 
 type Tier = 'basic' | 'premium' | 'vip'
-type Cycle = 'monthly' | 'yearly'
 
 const TIER_PRODUCT: Record<Tier, string> = {
   basic:   'prod_USVFuSTxxELhPL',
