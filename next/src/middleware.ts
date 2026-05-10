@@ -103,14 +103,32 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(url)
   }
 
-  // Role check
+  // Role check + lazy country capture. We pull `country` alongside
+  // `role` so we can fill it on the first authenticated request after
+  // the column was added (migration 015). Vercel exposes the visitor
+  // country via the `x-vercel-ip-country` header on every edge request;
+  // it's a 2-letter ISO code or absent.
   const { data: profile } = await supabase
     .from('profiles')
-    .select('role')
+    .select('role, country')
     .eq('id', user.id)
     .maybeSingle()
 
-  const role = ((profile as { role?: string } | null)?.role ?? 'user') as Allowed
+  const profileRow = profile as
+    | { role?: string; country?: string | null }
+    | null
+  const role = (profileRow?.role ?? 'user') as Allowed
+
+  if (!profileRow?.country) {
+    const headerCountry = request.headers.get('x-vercel-ip-country')
+    if (headerCountry && /^[A-Z]{2}$/.test(headerCountry)) {
+      // Fire-and-forget; we don't want to block the request on this.
+      void supabase
+        .from('profiles')
+        .update({ country: headerCountry } as never)
+        .eq('id', user.id)
+    }
+  }
   if (!(protectedRoute.allowed as readonly string[]).includes(role)) {
     // Send each role to its own home, not a generic /dashboard. A
     // nutritionist who hits /admin should land on /nutritionist (their

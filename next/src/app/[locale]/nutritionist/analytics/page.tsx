@@ -114,6 +114,7 @@ export default function AnalyticsPage() {
     growth: { date: string; clients: number }[]
     sessions: { date: string; sessions: number }[]
     topPosts: { title: string; views: number; likes: number; comments: number }[]
+    adherence: { label: string; value: number }[]
   }
   const seriesRes = useSupabaseQuery<SeriesRes>(async (supabase) => {
     const days = PERIOD_DAYS[period]
@@ -121,7 +122,9 @@ export default function AnalyticsPage() {
     since.setDate(since.getDate() - days)
     const sinceISO = since.toISOString()
 
-    const [profileRes, bookingRes, postRes] = await Promise.all([
+    const adherenceWindow = new Date()
+    adherenceWindow.setDate(adherenceWindow.getDate() - 28)
+    const [profileRes, bookingRes, postRes, logRes] = await Promise.all([
       supabase
         .from('profiles')
         .select('created_at')
@@ -137,6 +140,10 @@ export default function AnalyticsPage() {
         .eq('is_published', true)
         .order('views', { ascending: false })
         .limit(4),
+      supabase
+        .from('nutrition_logs')
+        .select('user_id, logged_at')
+        .gte('logged_at', adherenceWindow.toISOString()),
     ])
 
     const weeks = Math.max(2, Math.ceil(days / 7))
@@ -173,10 +180,42 @@ export default function AnalyticsPage() {
       comments: r.reactions?.comments ?? 0,
     }))
 
+    // Adherence — for the last 4 weeks, compute % of expected log days
+    // hit by the active client base. A client is "adherent" on a day
+    // if they logged at least one nutrition_log row that day. Per-week
+    // adherence% = (sum of adherent client-days in the week) /
+    // (active clients × 7). Falls back to ADHERENCE seed when no logs
+    // exist yet.
+    type LogPair = { user_id: string; logged_at: string }
+    const logRows = (logRes.data as LogPair[] | null) ?? []
+    const activeClientIds = new Set(logRows.map((r) => r.user_id))
+    const activeClientCount = Math.max(1, activeClientIds.size)
+    const adherence: { label: string; value: number }[] = []
+    for (let w = 3; w >= 0; w--) {
+      const weekStart = new Date()
+      weekStart.setDate(weekStart.getDate() - (w + 1) * 7)
+      const weekEnd = new Date()
+      weekEnd.setDate(weekEnd.getDate() - w * 7)
+      // Count distinct (user_id, day) pairs in this week.
+      const seen = new Set<string>()
+      for (const r of logRows) {
+        const ts = new Date(r.logged_at).getTime()
+        if (ts < weekStart.getTime() || ts >= weekEnd.getTime()) continue
+        seen.add(`${r.user_id}|${r.logged_at.slice(0, 10)}`)
+      }
+      const possible = activeClientCount * 7
+      const pct = possible > 0 ? Math.round((seen.size / possible) * 100) : 0
+      adherence.push({
+        label: w === 0 ? 'This' : `Wk -${w}`,
+        value: Math.min(100, pct),
+      })
+    }
+
     return {
       growth: buckets.map(({ date, clients }) => ({ date, clients })),
       sessions: buckets.map(({ date, sessions }) => ({ date, sessions })),
       topPosts,
+      adherence,
     }
   }, [period])
 
@@ -196,6 +235,10 @@ export default function AnalyticsPage() {
     seriesRes.data && seriesRes.data.topPosts.length > 0
       ? seriesRes.data.topPosts
       : TOP_POSTS
+  const adherence =
+    seriesRes.data && seriesRes.data.adherence.some((d) => d.value > 0)
+      ? seriesRes.data.adherence
+      : ADHERENCE
 
   // Live aggregates: total clients + new-this-period from profiles, tier breakdown
   interface AggregatesRes {
@@ -371,7 +414,7 @@ export default function AnalyticsPage() {
             <p className="text-xs text-fg-3 mt-0.5">{t('adherenceBody')}</p>
           </header>
           <div className="grid grid-cols-4 gap-3 items-end h-40">
-            {ADHERENCE.map((d) => (
+            {adherence.map((d) => (
               <div key={d.label} className="flex flex-col items-center gap-2 h-full">
                 <span className="font-mono text-sm text-fg-1" dir="ltr">
                   {d.value}%

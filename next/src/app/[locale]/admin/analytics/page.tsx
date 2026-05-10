@@ -105,6 +105,12 @@ export default function AdminAnalyticsPage() {
   const [liveRevenue, setLiveRevenue] = useState<
     { month: string; subs: number; sessions: number; store: number }[] | null
   >(null)
+  const [liveFunnel, setLiveFunnel] = useState<
+    { key: string; count: number; tint: string }[] | null
+  >(null)
+  const [liveCountries, setLiveCountries] = useState<
+    { code: string; name: string; users: number }[] | null
+  >(null)
 
   useEffect(() => {
     const supabase = getBrowserSupabase()
@@ -225,6 +231,60 @@ export default function AdminAnalyticsPage() {
       }))
       if (cancelled) return
       setLiveRevenue(revenue)
+
+      // Funnel — using existing data only (no anonymous tracking).
+      // Stage 1 'visitors' = total profiles ever created
+      // Stage 2 'signups'  = profiles with last_seen_at set (returned at least once)
+      // Stage 3 'trials'   = subscriptions in 'trialing' status
+      // Stage 4 'paid'     = active paid subs (basic/premium/vip)
+      type ProfileSeen = { last_seen_at: string | null }
+      const seenList = list as unknown as ProfileSeen[]
+      const visitors = list.length
+      const signups = seenList.filter((p) => !!p.last_seen_at).length
+      const trials = ((subs as SubRow[] | null) ?? []).filter(
+        (s) => s.status === 'trialing',
+      ).length
+      const paid = activeSubs.filter((s) => s.status === 'active').length
+      const funnel = [
+        { key: 'visitors', count: visitors, tint: '#9baf9f' },
+        { key: 'signups',  count: signups,  tint: '#06b6d4' },
+        { key: 'trials',   count: trials,   tint: '#e8912a' },
+        { key: 'paid',     count: paid,     tint: '#a3e635' },
+      ]
+      setLiveFunnel(funnel)
+
+      // Countries — group profiles by ISO code captured by middleware.
+      // Map known codes to display names; everything else falls under
+      // "Other". Top 7 countries by user count.
+      const COUNTRY_NAMES: Record<string, string> = {
+        JO: 'Jordan', PS: 'Palestine', LB: 'Lebanon', AE: 'UAE',
+        SA: 'Saudi Arabia', EG: 'Egypt', CA: 'Canada', US: 'United States',
+        GB: 'United Kingdom', DE: 'Germany', FR: 'France', ES: 'Spain',
+        IT: 'Italy', NL: 'Netherlands', SE: 'Sweden', AU: 'Australia',
+        TR: 'Turkey', IQ: 'Iraq', SY: 'Syria', YE: 'Yemen', QA: 'Qatar',
+        KW: 'Kuwait', BH: 'Bahrain', OM: 'Oman', MA: 'Morocco', DZ: 'Algeria',
+        TN: 'Tunisia',
+      }
+      type ProfileCountry = { country: string | null }
+      const { data: countryRows } = await supabase
+        .from('profiles')
+        .select('country')
+      const countryCounts: Record<string, number> = {}
+      for (const r of (countryRows as ProfileCountry[] | null) ?? []) {
+        const c = r.country?.trim().toUpperCase()
+        if (!c) continue
+        countryCounts[c] = (countryCounts[c] ?? 0) + 1
+      }
+      const countries = Object.entries(countryCounts)
+        .map(([code, users]) => ({
+          code,
+          name: COUNTRY_NAMES[code] ?? code,
+          users: users as number,
+        }))
+        .sort((a, b) => b.users - a.users)
+        .slice(0, 7)
+      if (cancelled) return
+      setLiveCountries(countries)
     })()
     return () => {
       cancelled = true
@@ -233,7 +293,11 @@ export default function AdminAnalyticsPage() {
 
   const tierData = liveTiers && liveTiers.some((r) => r.count > 0) ? liveTiers : TIER_MIX
   const totalActive = tierData.reduce((acc, r) => acc + r.count, 0)
-  const totalCountryUsers = COUNTRIES.reduce((acc, c) => acc + c.users, 0)
+  const funnelData =
+    liveFunnel && liveFunnel.some((f) => f.count > 0) ? liveFunnel : FUNNEL
+  const countriesData =
+    liveCountries && liveCountries.length > 0 ? liveCountries : COUNTRIES
+  const totalCountryUsers = countriesData.reduce((acc, c) => acc + c.users, 0)
 
   const kpis: KpiSpec[] = [
     {
@@ -371,10 +435,11 @@ export default function AdminAnalyticsPage() {
             <p className="text-xs text-fg-3 mt-0.5">{tA('conversionBody')}</p>
           </header>
           <ul className="space-y-2.5">
-            {FUNNEL.map((f, i) => {
-              const max = FUNNEL[0].count
+            {funnelData.map((f, i) => {
+              const max = funnelData[0]?.count || 1
               const pct = (f.count / max) * 100
-              const fromPrev = i === 0 ? 100 : (f.count / FUNNEL[i - 1].count) * 100
+              const prev = funnelData[i - 1]?.count
+              const fromPrev = i === 0 ? 100 : prev ? (f.count / prev) * 100 : 0
               return (
                 <li key={f.key}>
                   <div className="flex items-baseline justify-between mb-1.5">
@@ -465,8 +530,8 @@ export default function AdminAnalyticsPage() {
           </div>
         </header>
         <ul className="divide-y divide-border">
-          {COUNTRIES.map((c) => {
-            const pct = (c.users / totalCountryUsers) * 100
+          {countriesData.map((c) => {
+            const pct = totalCountryUsers > 0 ? (c.users / totalCountryUsers) * 100 : 0
             return (
               <li
                 key={c.code}
