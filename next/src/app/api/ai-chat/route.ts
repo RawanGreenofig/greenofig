@@ -125,12 +125,40 @@ export const POST = withAuth(async (req: NextRequest, ctx: AuthedContext) => {
       SYSTEM_PROMPT,
     )) as AsyncIterable<{ text?: string }>
   } catch (error) {
+    const msg = error instanceof Error ? error.message : String(error)
     console.error(
       '[ai-chat] streamChat failed for model',
       GEMINI_TEXT_MODEL,
       'error:',
-      error instanceof Error ? error.message : error,
+      msg,
     )
+    // Detect Gemini-side rate limit / quota errors and surface a
+    // distinct response so the client can show a useful message
+    // (instead of the generic "I can't respond right now"). Gemini
+    // returns HTTP 429 with status RESOURCE_EXHAUSTED for these.
+    if (
+      msg.includes('"code": 429') ||
+      msg.includes('RESOURCE_EXHAUSTED') ||
+      msg.toLowerCase().includes('quota')
+    ) {
+      // Try to parse Gemini's retryDelay if present (e.g. "33s").
+      let retryAfterSec: number | null = null
+      const retryMatch = msg.match(/"retryDelay"\s*:\s*"(\d+(?:\.\d+)?)s"/)
+      if (retryMatch?.[1]) {
+        retryAfterSec = Math.ceil(Number(retryMatch[1]))
+      }
+      return json(
+        {
+          error: {
+            code: 'provider_quota_exceeded',
+            message:
+              "AI is temporarily over its limit. Try again shortly.",
+            retryAfterSec,
+          },
+        },
+        429,
+      )
+    }
     return internalError()
   }
 

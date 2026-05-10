@@ -186,17 +186,37 @@ export function FigyChat() {
       })
       if (!res.ok) {
         const errBody = await res.text().catch(() => '')
+        // Parse structured errors so we can distinguish:
+        //   - 403 tier_gate                — needs upgrade
+        //   - 429 quota_exceeded           — your daily limit
+        //   - 429 provider_quota_exceeded  — Google's rate limit (retry soon)
+        // The route returns JSON with { error: { code, message, retryAfterSec? } }
+        // for everything but the 503 'Gemini unavailable' path.
+        let friendly = "I can't respond right now — please try again later."
+        try {
+          const parsed = JSON.parse(errBody) as {
+            error?: { code?: string; message?: string; retryAfterSec?: number | null }
+          }
+          const code = parsed.error?.code
+          const retryAfterSec = parsed.error?.retryAfterSec
+          if (code === 'provider_quota_exceeded') {
+            friendly = retryAfterSec
+              ? `AI is over its rate limit — try again in ~${retryAfterSec}s.`
+              : 'AI is over its rate limit — try again shortly.'
+          } else if (code === 'quota_exceeded') {
+            friendly =
+              "You've reached today's AI chat limit. Resets at midnight."
+          } else if (res.status === 403) {
+            friendly = 'AI chat is available on Premium and VIP plans.'
+          } else if (res.status === 503) {
+            friendly = 'AI service is temporarily unavailable.'
+          }
+        } catch {
+          /* non-JSON body — fall through to the default */
+        }
         setMessages((curr) =>
           curr.map((m) =>
-            m.id === assistantMsgId
-              ? {
-                  ...m,
-                  body:
-                    errBody && errBody.startsWith('{')
-                      ? "I can't respond right now — please try again later."
-                      : "I can't respond right now — please try again later.",
-                }
-              : m,
+            m.id === assistantMsgId ? { ...m, body: friendly } : m,
           ),
         )
         return
