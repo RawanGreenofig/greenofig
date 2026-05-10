@@ -14,6 +14,6 @@ interface LayoutProps {
  */
 export default async function NutritionistLayout({ children, params }: LayoutProps) {
   setRequestLocale(params.locale)
-  await requireRole(['nutritionist', 'admin'], params.locale)
+  await requireRole(['nutritionist'], params.locale)
   return <DashboardShell role="nutritionist">{children}</DashboardShell>
 }

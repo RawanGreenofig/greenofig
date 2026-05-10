@@ -14,6 +14,6 @@ interface LayoutProps {
  */
 export default async function DashboardLayout({ children, params }: LayoutProps) {
   setRequestLocale(params.locale)
-  await requireRole(['user', 'nutritionist', 'admin'], params.locale)
+  await requireRole(['user'], params.locale)
   return <DashboardShell>{children}</DashboardShell>
 }

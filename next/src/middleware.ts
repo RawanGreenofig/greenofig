@@ -14,9 +14,14 @@ import { getMiddlewareSupabase } from '@/lib/supabase/middleware'
  */
 const intlMiddleware = createIntlMiddleware(routing)
 
+// Each role gets exactly one workspace — no cross-role access. A
+// nutritionist who navigates to /dashboard (the user-side personal
+// tracker) is bounced to /nutritionist; an admin to /admin. Avoids
+// the "why am I seeing a VIP user dashboard while signed in as a
+// nutritionist" confusion.
 const PROTECTED = [
-  { prefix: '/dashboard',     allowed: ['user', 'nutritionist', 'admin'] },
-  { prefix: '/nutritionist',  allowed: ['nutritionist', 'admin'] },
+  { prefix: '/dashboard',     allowed: ['user'] },
+  { prefix: '/nutritionist',  allowed: ['nutritionist'] },
   { prefix: '/admin',         allowed: ['admin'] },
   { prefix: '/onboarding',    allowed: ['user', 'nutritionist', 'admin'] },
 ] as const
