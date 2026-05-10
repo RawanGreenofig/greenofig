@@ -366,13 +366,42 @@ function ProfilePane({
     preferredLocale: profile.preferredLocale,
   })
   const [saved, setSaved] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const update = <K extends keyof typeof form>(k: K, v: (typeof form)[K]) => {
     setForm((c) => ({ ...c, [k]: v }))
     setSaved(false)
+    setError(null)
   }
-  const save = () => {
-    setSaved(true)
-    window.setTimeout(() => setSaved(false), 1400)
+  const save = async () => {
+    if (saving) return
+    setSaving(true)
+    setError(null)
+    try {
+      const res = await fetch('/api/admin/users/update', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: profile.id,
+          full_name: form.fullName,
+          phone: form.phone,
+          role: form.role,
+          // Only send tier when role is 'user'; staff accounts ignore it.
+          tier: form.role === 'user' ? form.tier : undefined,
+          preferred_locale: form.preferredLocale,
+        }),
+      })
+      if (!res.ok) {
+        const data = (await res.json().catch(() => ({}))) as { error?: string }
+        throw new Error(data.error ?? `Save failed (${res.status}).`)
+      }
+      setSaved(true)
+      window.setTimeout(() => setSaved(false), 1400)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Save failed.')
+    } finally {
+      setSaving(false)
+    }
   }
   return (
     <article className="rounded-xl border border-border bg-surface p-5 md:p-6 space-y-5">
@@ -440,17 +469,28 @@ function ProfilePane({
           />
         </Field>
       </div>
-      <div className="pt-3 border-t border-border flex items-center justify-end gap-2">
+      <div className="pt-3 border-t border-border flex items-center justify-end gap-3">
+        {error && (
+          <span className="text-xs text-rose-400">{error}</span>
+        )}
         <button
           type="button"
           onClick={save}
+          disabled={saving}
           className={`inline-flex items-center gap-1.5 rounded-pill h-10 px-4 text-xs font-semibold transition-all ${
-            saved
-              ? 'bg-primary/20 text-lime-400'
-              : 'bg-gradient-to-b from-lime-400 to-lime-600 text-bg shadow-lime-glow border border-lime-600/60 hover:-translate-y-px'
+            saving
+              ? 'bg-surface-raised text-fg-3 cursor-wait'
+              : saved
+                ? 'bg-primary/20 text-lime-400'
+                : 'bg-gradient-to-b from-lime-400 to-lime-600 text-bg shadow-lime-glow border border-lime-600/60 hover:-translate-y-px'
           }`}
         >
-          {saved ? (
+          {saving ? (
+            <>
+              <Save className="w-3.5 h-3.5 animate-pulse" strokeWidth={2} />
+              Saving…
+            </>
+          ) : saved ? (
             <>
               <Check className="w-3.5 h-3.5" strokeWidth={2.25} />
               {t('profile.saved')}
