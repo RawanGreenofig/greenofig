@@ -75,6 +75,20 @@ export default function AdminStorePage() {
   const [communityEnabled, setCommunityEnabled] = useState(true)
   const [researchEnabled, setResearchEnabled] = useState(true)
   const [announcement, setAnnouncement] = useState('')
+  // Tier visibility for the marketing-page store section. Empty array =
+  // visible to everyone. Non-empty array = only those tiers see the store.
+  const [storeTiers, setStoreTiers] = useState<string[]>([])
+  // Single-knob throttle for the scanner free-tier daily cap.
+  const [freeScannerLimit, setFreeScannerLimit] = useState<number>(3)
+  // Per-type booking prices, in cents. Customer-side checkout reads
+  // these via the Stripe route. introCall=0 means free.
+  const [bookingPrices, setBookingPrices] = useState<{
+    introCall: number
+    followUp: number
+    deepDive: number
+  }>({ introCall: 0, followUp: 2500, deepDive: 5000 })
+  // Percentage off store orders for paying tiers (0 = disabled).
+  const [memberDiscount, setMemberDiscount] = useState<number>(0)
   const [confirm, setConfirm] = useState<null | 'go-live' | 'go-offline'>(null)
   const [featured, setFeatured] = useState<string[]>(
     ['p1', 'p2', 'p4', 'p7'],
@@ -120,6 +134,10 @@ export default function AdminStorePage() {
           'community_enabled',
           'research_desk_enabled',
           'site_announcement',
+          'store_enabled_tiers',
+          'free_tier_scanner_limit',
+          'booking_price_cents',
+          'member_discount_percent',
         ])
       if (!cancelled) {
         for (const s of (settingsRows as SettingRow[] | null) ?? []) {
@@ -136,6 +154,25 @@ export default function AdminStorePage() {
           if (s.key === 'research_desk_enabled') setResearchEnabled(!explicitFalse)
           if (s.key === 'site_announcement')
             setAnnouncement(typeof s.value === 'string' ? s.value : '')
+          if (s.key === 'store_enabled_tiers' && Array.isArray(s.value)) {
+            setStoreTiers((s.value as string[]).filter((x) => typeof x === 'string'))
+          }
+          if (s.key === 'free_tier_scanner_limit') {
+            const n = typeof s.value === 'number' ? s.value : Number(s.value)
+            if (Number.isFinite(n) && n >= 0) setFreeScannerLimit(n)
+          }
+          if (s.key === 'booking_price_cents' && s.value && typeof s.value === 'object') {
+            const v = s.value as Record<string, unknown>
+            setBookingPrices((prev) => ({
+              introCall: Number(v.introCall ?? prev.introCall) || 0,
+              followUp:  Number(v.followUp  ?? prev.followUp ) || 0,
+              deepDive:  Number(v.deepDive  ?? prev.deepDive ) || 0,
+            }))
+          }
+          if (s.key === 'member_discount_percent') {
+            const n = typeof s.value === 'number' ? s.value : Number(s.value)
+            if (Number.isFinite(n) && n >= 0 && n <= 100) setMemberDiscount(n)
+          }
         }
       }
     })()
@@ -184,6 +221,10 @@ export default function AdminStorePage() {
   usePersistSetting('scanner_enabled',       scannerEnabled)
   usePersistSetting('community_enabled',     communityEnabled)
   usePersistSetting('research_desk_enabled', researchEnabled)
+  usePersistSetting('store_enabled_tiers',   storeTiers)
+  usePersistSetting('free_tier_scanner_limit', freeScannerLimit)
+  usePersistSetting('booking_price_cents',   bookingPrices)
+  usePersistSetting('member_discount_percent', memberDiscount)
 
   // Announcement is a free-text field — debounce the write so we don't
   // POST on every keystroke. 600ms after the user stops typing is enough.
@@ -345,6 +386,162 @@ export default function AdminStorePage() {
                 border: '1px solid var(--gf-border)',
               }}
             />
+          </label>
+        </div>
+
+        {/* Store visibility per tier */}
+        <div className="pt-3 border-t border-border">
+          <p className="text-sm font-medium text-fg-1">
+            Store visible to tiers
+          </p>
+          <p className="text-xs text-fg-3 mt-0.5 mb-2">
+            Pick which signed-in tiers see the store on the marketing
+            page. Leave all unchecked to show it to everyone.
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {(['free', 'basic', 'premium', 'vip'] as const).map((t) => {
+              const on = storeTiers.includes(t)
+              return (
+                <button
+                  key={t}
+                  type="button"
+                  onClick={() =>
+                    setStoreTiers((curr) =>
+                      curr.includes(t)
+                        ? curr.filter((x) => x !== t)
+                        : [...curr, t],
+                    )
+                  }
+                  className="inline-flex items-center gap-1.5 h-8 px-3 rounded-pill text-xs font-semibold uppercase tracking-eyebrow transition-colors"
+                  style={{
+                    background: on ? 'rgba(132,217,61,0.18)' : 'var(--gf-input-bg)',
+                    color: on ? '#a3e635' : 'var(--gf-fg-3)',
+                    border: `1px solid ${on ? 'rgba(132,217,61,0.35)' : 'var(--gf-border)'}`,
+                  }}
+                >
+                  {t}
+                </button>
+              )
+            })}
+          </div>
+        </div>
+
+        {/* Scanner free-tier daily cap */}
+        <div className="pt-3 border-t border-border">
+          <label className="block">
+            <span className="text-sm font-medium text-fg-1">
+              Free-tier scanner daily limit
+            </span>
+            <span className="block text-xs text-fg-3 mt-0.5 mb-2">
+              Number of food scans a free user can run per day. Set to 0
+              to disable scanning for free users entirely.
+            </span>
+            <input
+              type="number"
+              min={0}
+              step={1}
+              value={freeScannerLimit}
+              onChange={(e) => {
+                const n = Number(e.target.value)
+                if (Number.isFinite(n) && n >= 0) setFreeScannerLimit(n)
+              }}
+              className="w-32 h-10 rounded-lg text-sm text-fg-1 focus:outline-none px-3"
+              style={{
+                background: 'var(--gf-input-bg)',
+                border: '1px solid var(--gf-border)',
+              }}
+            />
+          </label>
+        </div>
+
+        {/* Booking prices */}
+        <div className="pt-3 border-t border-border">
+          <p className="text-sm font-medium text-fg-1">Booking prices (USD)</p>
+          <p className="text-xs text-fg-3 mt-0.5 mb-2">
+            Per-session price for paying tiers. VIP always books free.
+            Set to 0 to make a session type free for everyone.
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            {(
+              [
+                ['introCall', 'Intro call'],
+                ['followUp', 'Follow-up'],
+                ['deepDive', 'Deep dive'],
+              ] as const
+            ).map(([key, label]) => (
+              <label key={key} className="block">
+                <span className="block text-xs text-fg-3 mb-1">{label}</span>
+                <div className="relative">
+                  <span
+                    className="absolute top-1/2 -translate-y-1/2 text-fg-3 text-sm"
+                    style={{ insetInlineStart: '12px' }}
+                  >
+                    $
+                  </span>
+                  <input
+                    type="number"
+                    min={0}
+                    step="0.01"
+                    value={(bookingPrices[key] / 100).toFixed(2)}
+                    onChange={(e) => {
+                      const dollars = Number(e.target.value)
+                      if (Number.isFinite(dollars) && dollars >= 0) {
+                        setBookingPrices((prev) => ({
+                          ...prev,
+                          [key]: Math.round(dollars * 100),
+                        }))
+                      }
+                    }}
+                    className="w-full h-10 rounded-lg text-sm text-fg-1 focus:outline-none"
+                    style={{
+                      background: 'var(--gf-input-bg)',
+                      border: '1px solid var(--gf-border)',
+                      paddingInlineStart: '24px',
+                      paddingInlineEnd: '12px',
+                    }}
+                  />
+                </div>
+              </label>
+            ))}
+          </div>
+        </div>
+
+        {/* Member discount */}
+        <div className="pt-3 border-t border-border">
+          <label className="block">
+            <span className="text-sm font-medium text-fg-1">
+              Member discount on store orders
+            </span>
+            <span className="block text-xs text-fg-3 mt-0.5 mb-2">
+              Percentage off store orders for paying tiers (basic /
+              premium / vip). Set to 0 to disable.
+            </span>
+            <div className="relative w-32">
+              <input
+                type="number"
+                min={0}
+                max={100}
+                step={1}
+                value={memberDiscount}
+                onChange={(e) => {
+                  const n = Number(e.target.value)
+                  if (Number.isFinite(n) && n >= 0 && n <= 100) setMemberDiscount(n)
+                }}
+                className="w-full h-10 rounded-lg text-sm text-fg-1 focus:outline-none"
+                style={{
+                  background: 'var(--gf-input-bg)',
+                  border: '1px solid var(--gf-border)',
+                  paddingInlineStart: '12px',
+                  paddingInlineEnd: '32px',
+                }}
+              />
+              <span
+                className="absolute top-1/2 -translate-y-1/2 text-fg-3 text-sm"
+                style={{ insetInlineEnd: '12px' }}
+              >
+                %
+              </span>
+            </div>
           </label>
         </div>
       </section>

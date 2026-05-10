@@ -128,6 +128,24 @@ export const POST = withAuth(async (req: NextRequest, ctx: AuthedContext) => {
       const rows = (products as ProductRow[] | null) ?? []
       if (rows.length !== items.length) return badRequest('Product not found.')
 
+      // Member discount — paying tiers (basic/premium/vip) get a
+      // percentage off store orders. Setting is a 0–100 integer; missing
+      // or out-of-range values disable the discount. Free tier never
+      // gets the member rate.
+      let memberPct = 0
+      if (ctx.profile.tier !== 'free') {
+        const { data: discRow } = await supabase
+          .from('platform_settings')
+          .select('value')
+          .eq('key', 'member_discount_percent')
+          .maybeSingle()
+        const raw = (discRow as { value?: unknown } | null)?.value
+        const n = typeof raw === 'number' ? raw : typeof raw === 'string' ? Number(raw) : 0
+        memberPct = Number.isFinite(n) && n > 0 && n <= 100 ? Math.floor(n) : 0
+      }
+      const applyDiscount = (cents: number): number =>
+        memberPct > 0 ? Math.round((cents * (100 - memberPct)) / 100) : cents
+
       const lineItems: Array<{
         price_data: {
           currency: string
@@ -140,8 +158,13 @@ export const POST = withAuth(async (req: NextRequest, ctx: AuthedContext) => {
         return {
           price_data: {
             currency: 'usd',
-            unit_amount: p?.price_cents ?? 0, // USD minor unit = cents (already stored as cents)
-            product_data: { name: p?.name ?? 'Product' },
+            unit_amount: applyDiscount(p?.price_cents ?? 0),
+            product_data: {
+              name:
+                memberPct > 0 && p
+                  ? `${p.name} (${memberPct}% member discount)`
+                  : p?.name ?? 'Product',
+            },
           },
           quantity: Math.max(1, it.qty),
         }
@@ -196,12 +219,33 @@ export const POST = withAuth(async (req: NextRequest, ctx: AuthedContext) => {
         return json({ free: true, url: null })
       }
 
-      // Per-type pricing in USD; in production this comes from platform_settings
-      const priceUsd =
-        booking.type === 'introCall' ? 0 :
-        booking.type === 'followUp'  ? 25 :
-        booking.type === 'deepDive'  ? 50 : 0
-      if (priceUsd === 0) {
+      // Per-type pricing pulled from platform_settings.booking_price_cents
+      // (JSON map { introCall, followUp, deepDive } in cents). Falls back
+      // to the original USD defaults if the setting is missing or the
+      // requested key isn't present, so the path stays safe even before
+      // the admin has set the row.
+      const DEFAULT_BOOKING_CENTS: Record<string, number> = {
+        introCall: 0,
+        followUp: 2500,
+        deepDive: 5000,
+      }
+      const { data: bookPriceRow } = await supabase
+        .from('platform_settings')
+        .select('value')
+        .eq('key', 'booking_price_cents')
+        .maybeSingle()
+      const bookPriceMap =
+        ((bookPriceRow as { value?: Record<string, unknown> } | null)?.value
+          ?? null)
+      const fromSetting =
+        bookPriceMap && typeof bookPriceMap === 'object'
+          ? Number((bookPriceMap as Record<string, unknown>)[booking.type])
+          : NaN
+      const cents =
+        Number.isFinite(fromSetting) && fromSetting >= 0
+          ? fromSetting
+          : DEFAULT_BOOKING_CENTS[booking.type] ?? 0
+      if (cents === 0) {
         return badRequest('This session is free — no payment required.')
       }
 
@@ -212,7 +256,7 @@ export const POST = withAuth(async (req: NextRequest, ctx: AuthedContext) => {
           {
             price_data: {
               currency: 'usd',
-              unit_amount: priceUsd * 100, // USD minor unit = cents
+              unit_amount: cents, // already in minor units
               product_data: { name: `${booking.type} session (${booking.duration_min} min)` },
             },
             quantity: 1,

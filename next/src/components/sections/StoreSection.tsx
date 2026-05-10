@@ -16,6 +16,7 @@ import {
 import { Link } from '@/i18n/navigation'
 import { ease } from '@/lib/tokens'
 import { usePlatformSetting } from '@/lib/hooks/usePlatformSetting'
+import { useUser } from '@/lib/hooks/useUser'
 
 const EASE_OUT: [number, number, number, number] = [...ease.out]
 
@@ -43,9 +44,20 @@ export function StoreSection() {
   const { value: enabled, isLoading } = usePlatformSetting<boolean>(
     'store_enabled',
   )
+  // Per-tier visibility — admin can restrict the store to specific
+  // tiers (e.g. ['premium','vip'] hides it from free/basic). Empty
+  // array or null/missing → visible to everyone, including signed-out
+  // visitors on the marketing page.
+  const { value: allowedTiers } = usePlatformSetting<string[]>(
+    'store_enabled_tiers',
+  )
+  const { tier: userTier } = useUser()
   const scrollerRef = useRef<HTMLDivElement>(null)
 
   const isOff = !isLoading && enabled === false
+  const tierBlocked =
+    Array.isArray(allowedTiers) && allowedTiers.length > 0 &&
+    !allowedTiers.includes(userTier ?? 'free')
 
   // Auto-advance the carousel every 3.5s, pause on hover/focus, and loop
   // back to the start when reaching the end. Direction flips for RTL so the
@@ -106,6 +118,10 @@ export function StoreSection() {
       </section>
     )
   }
+  // Admin restricted the store to specific tiers and the current user
+  // (or guest) isn't in the list — render nothing rather than a noisy
+  // gate so the marketing page just doesn't include the section.
+  if (tierBlocked) return null
 
   const scrollBy = (delta: number) => {
     scrollerRef.current?.scrollBy({ left: delta, behavior: 'smooth' })

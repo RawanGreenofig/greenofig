@@ -25,13 +25,31 @@ interface CheckResult {
   remaining: number
 }
 
-/** Read the per-tier limit JSON from platform_settings (or fallback). */
+/** Read the per-tier limit JSON from platform_settings (or fallback).
+ *
+ * Special case: scanner+free has a dedicated `free_tier_scanner_limit`
+ * setting (single integer) that overrides the JSON object's free key
+ * when set. Lets the admin tune the most common throttle without
+ * editing JSON. */
 async function getLimitForTier(
   feature: AIFeature,
   tier: UsageTier,
 ): Promise<number> {
   const supabase = getServerSupabase()
   if (!supabase) return FALLBACK_LIMITS[feature][tier]
+
+  // Single-knob override for the scanner free-tier cap.
+  if (feature === 'scanner' && tier === 'free') {
+    const { data: override } = await supabase
+      .from('platform_settings')
+      .select('value')
+      .eq('key', 'free_tier_scanner_limit')
+      .maybeSingle()
+    const raw = (override as { value?: unknown } | null)?.value
+    const n = typeof raw === 'number' ? raw : typeof raw === 'string' ? Number(raw) : NaN
+    if (Number.isFinite(n) && n >= 0) return n
+  }
+
   const { data } = await supabase
     .from('platform_settings')
     .select('value')
