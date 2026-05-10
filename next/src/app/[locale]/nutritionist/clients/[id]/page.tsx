@@ -374,7 +374,33 @@ function OverviewPane({
   t: ReturnType<typeof useTranslations>
   profile: ClientProfile
 }) {
-  const series = useMemo(() => buildWeightSeries(profile.startWeight), [profile.startWeight])
+  // Real weight curve from progress_entries; falls back to the
+  // synthetic builder when the client has no logged entries yet.
+  const liveSeries = useSupabaseQuery<{ date: string; weight: number }[]>(
+    async (supabase) => {
+      const { data } = await supabase
+        .from('progress_entries')
+        .select('logged_at, weight_kg')
+        .eq('user_id', profile.id)
+        .not('weight_kg', 'is', null)
+        .order('logged_at', { ascending: true })
+        .limit(60)
+      type Row = { logged_at: string; weight_kg: number | null }
+      const rows = (data as Row[] | null) ?? []
+      if (rows.length === 0) return []
+      return rows.map((r) => ({
+        date: r.logged_at.slice(5, 10),
+        weight: +(r.weight_kg ?? 0).toFixed(1),
+      }))
+    },
+    [profile.id],
+  )
+  const fallback = useMemo(
+    () => buildWeightSeries(profile.startWeight),
+    [profile.startWeight],
+  )
+  const series =
+    liveSeries.data && liveSeries.data.length > 0 ? liveSeries.data : fallback
   const delta = +(profile.currentWeight - profile.startWeight).toFixed(1)
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -668,22 +694,59 @@ function LogsPane({
   t: ReturnType<typeof useTranslations>
   profile: ClientProfile
 }) {
-  const days = useMemo(
-    () =>
-      Array.from({ length: 7 }).map((_, i) => {
-        const d = new Date()
-        d.setDate(d.getDate() - i)
+  // Aggregate the client's last 7 days of nutrition_logs into per-day
+  // kcal/water/meals counters. Days with no entries render zeros so
+  // the row is visible but obviously empty (rather than fabricated).
+  const live = useSupabaseQuery<
+    { iso: string; label: string; dayNum: number; kcal: number; water: number; meals: number }[]
+  >(async (supabase) => {
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    const sevenAgo = new Date(today)
+    sevenAgo.setDate(today.getDate() - 6)
+
+    type LogRow = {
+      logged_at: string
+      meal_type: string | null
+      calories: number | null
+      water_glasses: number | null
+    }
+    const { data } = await supabase
+      .from('nutrition_logs')
+      .select('logged_at, meal_type, calories, water_glasses')
+      .eq('user_id', profile.id)
+      .gte('logged_at', sevenAgo.toISOString())
+    const rows = (data as LogRow[] | null) ?? []
+
+    const buckets: Record<string, { kcal: number; water: number; meals: number }> = {}
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(today)
+      d.setDate(today.getDate() - (6 - i))
+      buckets[d.toISOString().slice(0, 10)] = { kcal: 0, water: 0, meals: 0 }
+    }
+    for (const r of rows) {
+      const k = r.logged_at.slice(0, 10)
+      if (!buckets[k]) continue
+      buckets[k].kcal += r.calories ?? 0
+      buckets[k].water = Math.max(buckets[k].water, r.water_glasses ?? 0)
+      if (r.meal_type) buckets[k].meals += 1
+    }
+    return Object.entries(buckets)
+      .sort((a, b) => (a[0] < b[0] ? 1 : -1))
+      .map(([iso, v]) => {
+        const d = new Date(iso)
         return {
-          iso: d.toISOString().slice(0, 10),
+          iso,
           label: d.toLocaleDateString(undefined, { weekday: 'short' }),
           dayNum: d.getDate(),
-          kcal: Math.round(1500 + Math.random() * 400),
-          water: Math.round(5 + Math.random() * 4),
-          meals: 3 + Math.round(Math.random()),
+          kcal: v.kcal,
+          water: v.water,
+          meals: v.meals,
         }
-      }),
-    [],
-  )
+      })
+  }, [profile.id])
+
+  const days = live.data ?? []
 
   return (
     <div className="space-y-4">
@@ -746,7 +809,34 @@ function ProgressPane({
   t: ReturnType<typeof useTranslations>
   profile: ClientProfile
 }) {
-  const series = useMemo(() => buildWeightSeries(profile.startWeight, 60), [profile.startWeight])
+  // 60-day weight curve from progress_entries; falls back to synthetic.
+  const liveSeries = useSupabaseQuery<{ date: string; weight: number }[]>(
+    async (supabase) => {
+      const since = new Date()
+      since.setDate(since.getDate() - 60)
+      const { data } = await supabase
+        .from('progress_entries')
+        .select('logged_at, weight_kg')
+        .eq('user_id', profile.id)
+        .gte('logged_at', since.toISOString())
+        .not('weight_kg', 'is', null)
+        .order('logged_at', { ascending: true })
+      type Row = { logged_at: string; weight_kg: number | null }
+      const rows = (data as Row[] | null) ?? []
+      if (rows.length === 0) return []
+      return rows.map((r) => ({
+        date: r.logged_at.slice(5, 10),
+        weight: +(r.weight_kg ?? 0).toFixed(1),
+      }))
+    },
+    [profile.id],
+  )
+  const fallback = useMemo(
+    () => buildWeightSeries(profile.startWeight, 60),
+    [profile.startWeight],
+  )
+  const series =
+    liveSeries.data && liveSeries.data.length > 0 ? liveSeries.data : fallback
   return (
     <div className="space-y-6">
       <p className="text-sm text-fg-2">{t('progress.subtitle')}</p>
