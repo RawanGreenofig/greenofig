@@ -227,28 +227,52 @@ export default function AdminUserDetailPage() {
               <p className="mt-1 text-sm text-fg-3 font-mono truncate" dir="ltr">
                 {profile.email} · {profile.phone}
               </p>
-              <div className="mt-3 flex flex-wrap items-center gap-1.5">
+              <div className="mt-3 flex flex-wrap items-center gap-2">
                 <span
-                  className="rounded-pill h-6 px-2.5 inline-flex items-center text-[10px] uppercase tracking-eyebrow font-bold"
+                  className="inline-flex items-center"
                   style={{
-                    background: `${ROLE_TINT[profile.role]}1a`,
+                    height: 18,
+                    padding: '0 8px',
+                    borderRadius: 999,
+                    fontSize: 9.5,
+                    fontWeight: 800,
+                    letterSpacing: '0.08em',
+                    textTransform: 'uppercase',
+                    lineHeight: 1,
+                    background: `${ROLE_TINT[profile.role]}1f`,
                     color: ROLE_TINT[profile.role],
                   }}
                 >
                   {tStatus(`roles.${profile.role}` as 'roles.user')}
                 </span>
                 <span
-                  className="rounded-pill h-6 px-2.5 inline-flex items-center text-[10px] uppercase tracking-eyebrow font-bold"
+                  className="inline-flex items-center"
                   style={{
-                    background: `${TIER_TINT[profile.tier]}1a`,
+                    height: 18,
+                    padding: '0 8px',
+                    borderRadius: 999,
+                    fontSize: 9.5,
+                    fontWeight: 800,
+                    letterSpacing: '0.08em',
+                    textTransform: 'uppercase',
+                    lineHeight: 1,
+                    background: `${TIER_TINT[profile.tier]}1f`,
                     color: TIER_TINT[profile.tier],
                   }}
                 >
                   {tTiers(`${profile.tier}.name`)}
                 </span>
                 <span
-                  className="rounded-pill h-6 px-2.5 inline-flex items-center text-[10px] uppercase tracking-eyebrow font-bold"
+                  className="inline-flex items-center"
                   style={{
+                    height: 18,
+                    padding: '0 8px',
+                    borderRadius: 999,
+                    fontSize: 9.5,
+                    fontWeight: 800,
+                    letterSpacing: '0.08em',
+                    textTransform: 'uppercase',
+                    lineHeight: 1,
                     background: STATUS_META[profile.status].bg,
                     color: STATUS_META[profile.status].tint,
                   }}

@@ -186,9 +186,18 @@ export default function AdminAuditLogPage() {
         </div>
         <button
           type="button"
-          className="inline-flex items-center gap-1.5 rounded-pill bg-surface-raised border border-border h-10 px-4 text-xs font-semibold text-fg-1 hover:border-primary/40"
+          className="inline-flex items-center gap-1.5 h-9 px-3 text-xs font-semibold text-fg-1 transition-colors"
+          style={{
+            background: 'var(--gf-input-bg)',
+            border: '1px solid var(--gf-border)',
+            borderRadius: 8,
+          }}
         >
-          <Download className="w-3.5 h-3.5" strokeWidth={1.75} />
+          <Download
+            className="w-3.5 h-3.5"
+            strokeWidth={1.75}
+            color="var(--gf-fg-3)"
+          />
           {tA('exportCsv')}
         </button>
       </header>
@@ -202,17 +211,25 @@ export default function AdminAuditLogPage() {
 
       {/* Filters */}
       <div className="flex flex-wrap items-center gap-3">
-        <div className="relative flex-1 min-w-[240px]">
+        <div className="relative w-full sm:w-[280px]">
           <Search
-            className="absolute start-4 top-1/2 -translate-y-1/2 w-4 h-4 text-fg-3"
+            className="absolute top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none"
+            style={{ insetInlineStart: '12px' }}
             strokeWidth={1.75}
+            color="var(--gf-fg-3)"
           />
           <input
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder={tA('search')}
-            className="w-full h-11 rounded-pill bg-surface border border-border ps-11 pe-4 text-sm text-fg-1 placeholder-fg-3 focus:outline-none focus:border-primary"
+            className="w-full h-10 rounded-lg text-sm text-fg-1 placeholder-fg-3 focus:outline-none"
+            style={{
+              background: 'var(--gf-input-bg)',
+              border: '1px solid var(--gf-border)',
+              paddingInlineStart: '36px',
+              paddingInlineEnd: '12px',
+            }}
           />
         </div>
         <FilterGroup
@@ -267,7 +284,16 @@ export default function AdminAuditLogPage() {
 function Row({ tA, event }: { tA: ReturnType<typeof useTranslations>; event: AuditEvent }) {
   const sev = SEVERITY_META[event.severity]
   return (
-    <li className="md:grid md:grid-cols-[120px_1.5fr_2fr_1.5fr_120px_90px] gap-3 items-center px-5 py-3 hover:bg-surface-raised transition-colors">
+    <li
+      className="md:grid md:grid-cols-[120px_1.5fr_2fr_1.5fr_120px_90px] gap-3 items-center px-5 py-3 transition-colors"
+      style={{ background: 'transparent' }}
+      onMouseEnter={(e) =>
+        (e.currentTarget.style.background = 'var(--gf-card-hover)')
+      }
+      onMouseLeave={(e) =>
+        (e.currentTarget.style.background = 'transparent')
+      }
+    >
       <div className="flex md:block items-center justify-between gap-2 mb-1.5 md:mb-0 text-xs text-fg-2 font-mono" dir="ltr">
         <span className="md:hidden text-[10px] uppercase tracking-eyebrow text-fg-3 font-semibold">
           {tA('col.when')}
@@ -317,10 +343,20 @@ function Row({ tA, event }: { tA: ReturnType<typeof useTranslations>; event: Aud
           {tA('col.severity')}
         </span>
         <span
-          className="rounded-pill h-5 px-2 inline-flex items-center gap-1 text-[10px] uppercase tracking-eyebrow font-bold"
-          style={{ background: sev.bg, color: sev.tint }}
+          className="inline-flex items-center"
+          style={{
+            height: 18,
+            padding: '0 8px',
+            borderRadius: 999,
+            fontSize: 9.5,
+            fontWeight: 800,
+            letterSpacing: '0.08em',
+            textTransform: 'uppercase',
+            lineHeight: 1,
+            background: sev.bg,
+            color: sev.tint,
+          }}
         >
-          <sev.Icon className="w-2.5 h-2.5" strokeWidth={2} />
           {tA(`severity.${event.severity}` as 'severity.info')}
         </span>
       </div>
@@ -340,19 +376,25 @@ function Stat({
   value: number
 }) {
   return (
-    <article className="rounded-xl border border-border bg-surface p-4">
-      <div className="flex items-center gap-2 mb-2">
-        <span
-          className="w-8 h-8 rounded-md flex items-center justify-center"
-          style={{ background: `${tint}1a`, color: tint }}
-        >
-          <Icon className="w-3.5 h-3.5" strokeWidth={1.75} />
-        </span>
-        <span className="text-[11px] uppercase tracking-eyebrow text-fg-3 font-medium">
+    <article
+      className="rounded-xl border border-border bg-surface p-4"
+      style={{ boxShadow: `inset 4px 0 0 ${tint}` }}
+    >
+      <div className="flex items-center gap-2">
+        <Icon
+          className="w-4 h-4 flex-shrink-0"
+          strokeWidth={1.75}
+          color={tint}
+        />
+        <p className="text-[11px] uppercase tracking-eyebrow text-fg-3 font-semibold">
           {label}
-        </span>
+        </p>
       </div>
-      <p className="font-mono text-xl font-bold text-fg-1" dir="ltr">
+      <p
+        className="mt-2 font-display text-2xl font-bold"
+        style={{ color: tint }}
+        dir="ltr"
+      >
         {value}
       </p>
     </article>
@@ -369,21 +411,34 @@ function FilterGroup({
   onChange: (v: string) => void
 }) {
   return (
-    <div className="inline-flex items-center gap-0.5 rounded-pill bg-bg-deeper border border-border p-0.5">
-      {options.map(([v, lbl]) => (
-        <button
-          key={v}
-          type="button"
-          onClick={() => onChange(v)}
-          className={`px-3 h-8 rounded-pill text-[11px] font-semibold transition-colors ${
-            value === v
-              ? 'bg-primary/20 text-lime-400'
-              : 'text-fg-3 hover:text-fg-1'
-          }`}
-        >
-          {lbl}
-        </button>
-      ))}
+    <div
+      className="inline-flex items-center"
+      style={{
+        background: 'var(--gf-input-bg)',
+        border: '1px solid var(--gf-border)',
+        borderRadius: 8,
+        padding: 2,
+        gap: 2,
+      }}
+    >
+      {options.map(([v, lbl]) => {
+        const active = value === v
+        return (
+          <button
+            key={v}
+            type="button"
+            onClick={() => onChange(v)}
+            className="inline-flex items-center justify-center h-8 px-3 text-xs font-semibold transition-colors whitespace-nowrap"
+            style={{
+              borderRadius: 6,
+              background: active ? 'rgba(132,217,61,0.12)' : 'transparent',
+              color: active ? '#a3e635' : 'var(--gf-fg-2)',
+            }}
+          >
+            {lbl}
+          </button>
+        )
+      })}
     </div>
   )
 }

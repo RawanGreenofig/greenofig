@@ -212,9 +212,18 @@ export default function AdminAnalyticsPage() {
           <PeriodToggle period={period} onChange={setPeriod} tA={tA} />
           <button
             type="button"
-            className="inline-flex items-center gap-1.5 rounded-pill bg-surface-raised border border-border h-9 px-4 text-xs font-semibold text-fg-1 hover:border-primary/40"
+            className="inline-flex items-center gap-1.5 h-9 px-3 text-xs font-semibold text-fg-1 transition-colors"
+            style={{
+              background: 'var(--gf-input-bg)',
+              border: '1px solid var(--gf-border)',
+              borderRadius: 8,
+            }}
           >
-            <Download className="w-3.5 h-3.5" strokeWidth={1.75} />
+            <Download
+              className="w-3.5 h-3.5"
+              strokeWidth={1.75}
+              color="var(--gf-fg-3)"
+            />
             {tA('exportCsv')}
           </button>
         </div>
@@ -253,16 +262,31 @@ export default function AdminAnalyticsPage() {
         <ChartCard title={tA('revenue')} body={tA('revenueBody')}>
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={REVENUE} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
-              <CartesianGrid stroke="rgb(255 255 255 / 0.06)" strokeDasharray="3 3" vertical={false} />
-              <XAxis dataKey="month" stroke="#5c7262" tickLine={false} axisLine={false} tick={{ fontSize: 11 }} />
+              <defs>
+                <linearGradient id="revSubs" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%"   stopColor="#a3e635" stopOpacity={1} />
+                  <stop offset="100%" stopColor="#a3e635" stopOpacity={0.55} />
+                </linearGradient>
+                <linearGradient id="revSessions" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%"   stopColor="#06b6d4" stopOpacity={1} />
+                  <stop offset="100%" stopColor="#06b6d4" stopOpacity={0.55} />
+                </linearGradient>
+                <linearGradient id="revStore" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%"   stopColor="#a855f7" stopOpacity={1} />
+                  <stop offset="100%" stopColor="#a855f7" stopOpacity={0.55} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid stroke="rgb(255 255 255 / 0.05)" strokeDasharray="3 3" vertical={false} />
+              <XAxis dataKey="month" stroke="#5c7262" tickLine={false} axisLine={false} tick={{ fontSize: 11 }} dy={4} />
               <YAxis stroke="#5c7262" tickLine={false} axisLine={false} tick={{ fontSize: 11 }} width={36} />
               <Tooltip
+                cursor={{ fill: 'rgba(163, 230, 53, 0.05)', radius: 6 }}
                 contentStyle={{ background: 'var(--gf-card-hover)', border: '1px solid rgb(255 255 255 / 0.08)', borderRadius: 8, fontSize: 12, color: 'var(--gf-fg-1)' }}
                 labelStyle={{ color: '#9baf9f' }}
               />
-              <Bar dataKey="subs"     stackId="rev" fill="#a3e635" />
-              <Bar dataKey="sessions" stackId="rev" fill="#06b6d4" />
-              <Bar dataKey="store"    stackId="rev" fill="#a855f7" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="subs"     stackId="rev" fill="url(#revSubs)" />
+              <Bar dataKey="sessions" stackId="rev" fill="url(#revSessions)" />
+              <Bar dataKey="store"    stackId="rev" fill="url(#revStore)" radius={[6, 6, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </ChartCard>
@@ -295,10 +319,17 @@ export default function AdminAnalyticsPage() {
                       )}
                     </span>
                   </div>
-                  <div className="h-2 rounded-pill bg-bg-deeper overflow-hidden">
+                  <div
+                    className="h-2 rounded-full overflow-hidden"
+                    style={{ background: 'var(--gf-input-bg)' }}
+                  >
                     <div
-                      className="h-full rounded-pill transition-all"
-                      style={{ width: `${pct}%`, background: f.tint }}
+                      className="h-full rounded-full transition-all"
+                      style={{
+                        width: `${pct}%`,
+                        background: `linear-gradient(90deg, ${f.tint}, ${f.tint}cc)`,
+                        boxShadow: `0 0 8px ${f.tint}55`,
+                      }}
                     />
                   </div>
                 </li>
@@ -315,12 +346,13 @@ export default function AdminAnalyticsPage() {
           <ul className="space-y-3">
             {tierData.map((row) => {
               const pct = (row.count / totalActive) * 100
+              const tint = TIER_TINT[row.tier]
               return (
                 <li key={row.tier}>
                   <div className="flex items-baseline justify-between mb-1.5">
                     <span
                       className="text-xs uppercase tracking-eyebrow font-semibold"
-                      style={{ color: TIER_TINT[row.tier] }}
+                      style={{ color: tint }}
                     >
                       {tTiers(`${row.tier}.name`)}
                     </span>
@@ -328,10 +360,17 @@ export default function AdminAnalyticsPage() {
                       {row.count} · {pct.toFixed(0)}%
                     </span>
                   </div>
-                  <div className="h-1.5 rounded-pill bg-bg-deeper overflow-hidden">
+                  <div
+                    className="h-1.5 rounded-full overflow-hidden"
+                    style={{ background: 'var(--gf-input-bg)' }}
+                  >
                     <div
-                      className="h-full rounded-pill transition-all"
-                      style={{ width: `${pct}%`, background: TIER_TINT[row.tier] }}
+                      className="h-full rounded-full transition-all"
+                      style={{
+                        width: `${pct}%`,
+                        background: `linear-gradient(90deg, ${tint}, ${tint}cc)`,
+                        boxShadow: `0 0 8px ${tint}55`,
+                      }}
                     />
                   </div>
                 </li>
@@ -344,7 +383,11 @@ export default function AdminAnalyticsPage() {
       {/* Geography */}
       <article className="rounded-xl border border-border bg-surface overflow-hidden">
         <header className="px-5 py-4 border-b border-border flex items-center gap-2">
-          <Globe className="w-4 h-4 text-lime-400" strokeWidth={1.75} />
+          <Globe
+            className="w-4 h-4 flex-shrink-0"
+            strokeWidth={1.75}
+            color="#a3e635"
+          />
           <div>
             <h2 className="text-base font-semibold text-fg-1">{tA('geography')}</h2>
             <p className="text-xs text-fg-3 mt-0.5">{tA('geographyBody')}</p>
@@ -368,10 +411,18 @@ export default function AdminAnalyticsPage() {
                       {pct.toFixed(1)}%
                     </p>
                   </div>
-                  <div className="h-1.5 rounded-pill bg-bg-deeper overflow-hidden">
+                  <div
+                    className="h-1.5 rounded-full overflow-hidden"
+                    style={{ background: 'var(--gf-input-bg)' }}
+                  >
                     <div
-                      className="h-full rounded-pill bg-lime-400/80 transition-all"
-                      style={{ width: `${pct * 2}%` }}
+                      className="h-full rounded-full transition-all"
+                      style={{
+                        width: `${pct * 2}%`,
+                        background:
+                          'linear-gradient(90deg, #a3e635, #a3e635cc)',
+                        boxShadow: '0 0 8px rgba(163,230,53,0.35)',
+                      }}
                     />
                   </div>
                 </div>
@@ -397,30 +448,40 @@ function Kpi({
   tA: ReturnType<typeof useTranslations>
 }) {
   const DeltaIcon = kpi.delta > 0 ? TrendingUp : TrendingDown
-  const tint = kpi.delta > 0 ? '#a3e635' : '#f43f5e'
+  const deltaTint = kpi.delta > 0 ? '#a3e635' : '#f43f5e'
   return (
-    <article className="rounded-xl border border-border bg-surface p-5">
-      <div className="flex items-center gap-2.5 mb-3">
-        <span
-          className="w-9 h-9 rounded-lg flex items-center justify-center"
-          style={{ background: `${kpi.tint}1a`, color: kpi.tint }}
-        >
-          <kpi.Icon className="w-4 h-4" strokeWidth={1.75} />
-        </span>
-        <span className="text-xs uppercase tracking-eyebrow text-fg-3 font-medium">
+    <article
+      className="rounded-xl border border-border bg-surface p-4"
+      style={{ boxShadow: `inset 4px 0 0 ${kpi.tint}` }}
+    >
+      <div className="flex items-center gap-2">
+        <kpi.Icon
+          className="w-4 h-4 flex-shrink-0"
+          strokeWidth={1.75}
+          color={kpi.tint}
+        />
+        <p className="text-[11px] uppercase tracking-eyebrow text-fg-3 font-semibold">
           {tA(`kpis.${kpi.labelKey}` as 'kpis.mrr')}
-        </span>
+        </p>
       </div>
-      <div className="flex items-baseline gap-2">
-        <p className="font-mono text-2xl font-bold text-fg-1" dir="ltr">
+      <div className="mt-2 flex items-baseline gap-2">
+        <p
+          className="font-display text-2xl font-bold"
+          style={{ color: kpi.tint }}
+          dir="ltr"
+        >
           {kpi.value}
         </p>
         <span
           className="inline-flex items-center gap-0.5 text-xs font-semibold font-mono"
-          style={{ color: tint }}
+          style={{ color: deltaTint }}
           dir="ltr"
         >
-          <DeltaIcon className="w-3 h-3" strokeWidth={2.25} />
+          <DeltaIcon
+            className="w-3 h-3"
+            strokeWidth={2.25}
+            color="currentColor"
+          />
           {Math.abs(kpi.delta)}%
         </span>
       </div>
@@ -459,19 +520,34 @@ function PeriodToggle({
 }) {
   const items: Period[] = ['30d', '90d', '1y', 'all']
   return (
-    <div className="inline-flex items-center gap-0.5 rounded-pill bg-bg-deeper border border-border p-1">
-      {items.map((p) => (
-        <button
-          key={p}
-          type="button"
-          onClick={() => onChange(p)}
-          className={`px-3 h-8 rounded-pill text-xs font-semibold transition-colors ${
-            period === p ? 'bg-primary/20 text-lime-400' : 'text-fg-3 hover:text-fg-1'
-          }`}
-        >
-          {tA(p === 'all' ? 'period_all' : (`period${p}` as 'period30d'))}
-        </button>
-      ))}
+    <div
+      className="inline-flex items-center"
+      style={{
+        background: 'var(--gf-input-bg)',
+        border: '1px solid var(--gf-border)',
+        borderRadius: 8,
+        padding: 2,
+        gap: 2,
+      }}
+    >
+      {items.map((p) => {
+        const active = period === p
+        return (
+          <button
+            key={p}
+            type="button"
+            onClick={() => onChange(p)}
+            className="inline-flex items-center justify-center h-8 px-3 text-xs font-semibold transition-colors whitespace-nowrap"
+            style={{
+              borderRadius: 6,
+              background: active ? 'rgba(132,217,61,0.12)' : 'transparent',
+              color: active ? '#a3e635' : 'var(--gf-fg-2)',
+            }}
+          >
+            {tA(p === 'all' ? 'period_all' : (`period${p}` as 'period30d'))}
+          </button>
+        )
+      })}
     </div>
   )
 }

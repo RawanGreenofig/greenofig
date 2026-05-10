@@ -4,8 +4,6 @@ import { useEffect, useRef, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { getBrowserSupabase } from '@/lib/supabase/client'
 import {
-  ToggleRight,
-  ToggleLeft,
   AlertTriangle,
   Sparkles,
   ShoppingBag,
@@ -151,7 +149,9 @@ export default function AdminStorePage() {
         <p className="mt-2 text-sm md:text-base text-fg-2">{tS('subtitle')}</p>
       </header>
 
-      {/* Master toggle */}
+      {/* Master toggle — the Switch is the interactive control. Clicking
+       * it opens the confirm dialog (taking the store offline is too
+       * destructive to do on a single click without verification). */}
       <article
         className={`rounded-xl border p-5 md:p-6 ${
           live
@@ -159,42 +159,26 @@ export default function AdminStorePage() {
             : 'border-rose-500/30 bg-rose-500/5'
         }`}
       >
-        <div className="flex flex-wrap items-start justify-between gap-4">
-          <div className="flex items-start gap-3 min-w-0">
-            {live ? (
-              <ToggleRight
-                className="w-7 h-7 text-primary flex-shrink-0"
-                strokeWidth={1.75}
-              />
-            ) : (
-              <ToggleLeft
-                className="w-7 h-7 text-rose-500 flex-shrink-0"
-                strokeWidth={1.75}
-              />
-            )}
-            <div className="min-w-0">
-              <p className="text-xs uppercase tracking-eyebrow text-fg-3 font-semibold">
-                {tS('masterToggle')}
-              </p>
-              <h2 className="mt-1 font-display text-2xl md:text-3xl font-bold text-fg-1 tracking-tight">
-                {live ? tS('masterLive') : tS('masterOffline')}
-              </h2>
-              <p className="mt-1.5 text-sm text-fg-2 max-w-md leading-relaxed">
-                {live ? tS('masterDescLive') : tS('masterDescOffline')}
-              </p>
-            </div>
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div className="min-w-0 flex-1">
+            <p className="text-[11px] uppercase tracking-eyebrow text-fg-3 font-semibold">
+              {tS('masterToggle')}
+            </p>
+            <h2
+              className="mt-2 font-display text-2xl md:text-3xl font-bold tracking-tight"
+              style={{ color: live ? '#a3e635' : '#f43f5e' }}
+            >
+              {live ? tS('masterLive') : tS('masterOffline')}
+            </h2>
+            <p className="mt-1.5 text-sm text-fg-2 max-w-md leading-relaxed">
+              {live ? tS('masterDescLive') : tS('masterDescOffline')}
+            </p>
           </div>
-          <button
-            type="button"
-            onClick={requestToggle}
-            className={`inline-flex items-center gap-1.5 rounded-pill h-11 px-5 text-sm font-semibold transition-all ${
-              live
-                ? 'bg-rose-500/15 text-rose-400 hover:bg-rose-500/25'
-                : 'bg-gradient-to-b from-lime-400 to-lime-600 text-bg shadow-lime-glow border border-lime-600/60 hover:-translate-y-px'
-            }`}
-          >
-            {live ? tS('yesGoOffline') : tS('yesGoLive')}
-          </button>
+          <Switch
+            on={live}
+            onChange={requestToggle}
+            ariaLabel={tS('masterToggle')}
+          />
         </div>
       </article>
 
@@ -282,22 +266,11 @@ export default function AdminStorePage() {
                       (e.currentTarget.style.background = 'transparent')
                     }
                   >
-                    <span
-                      className="shrink-0 inline-flex items-center justify-center"
-                      style={{
-                        width: 36,
-                        height: 36,
-                        borderRadius: 10,
-                        background: tone.tile,
-                        border: `1px solid ${tone.text}33`,
-                      }}
-                    >
-                      <ShoppingBag
-                        className="w-4 h-4"
-                        strokeWidth={1.75}
-                        style={{ color: tone.text }}
-                      />
-                    </span>
+                    <ShoppingBag
+                      className="w-5 h-5 shrink-0"
+                      strokeWidth={1.75}
+                      color={tone.text}
+                    />
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium text-fg-1 truncate">
                         {p.name}
@@ -309,12 +282,12 @@ export default function AdminStorePage() {
                     <span
                       className="inline-flex items-center justify-center"
                       style={{
-                        height: 22,
-                        padding: '0 10px',
+                        height: 18,
+                        padding: '0 8px',
                         borderRadius: 999,
                         background: tone.tile,
                         color: tone.text,
-                        fontSize: 10.5,
+                        fontSize: 9.5,
                         fontWeight: 800,
                         letterSpacing: '0.08em',
                         textTransform: 'uppercase',
@@ -370,10 +343,10 @@ export default function AdminStorePage() {
                   <span
                     className="shrink-0 inline-flex items-center justify-center font-mono font-bold"
                     style={{
-                      width: 24,
-                      height: 24,
+                      width: 22,
+                      height: 22,
                       borderRadius: 999,
-                      background: 'rgba(132,217,61,0.12)',
+                      background: 'rgba(163,230,53,0.12)',
                       color: '#a3e635',
                       fontSize: 11,
                       letterSpacing: '0.02em',
@@ -382,22 +355,11 @@ export default function AdminStorePage() {
                   >
                     {i + 1}
                   </span>
-                  <span
-                    className="shrink-0 inline-flex items-center justify-center"
-                    style={{
-                      width: 36,
-                      height: 36,
-                      borderRadius: 10,
-                      background: 'var(--gf-card-hover)',
-                      border: '1px solid var(--gf-border)',
-                    }}
-                  >
-                    <ShoppingBag
-                      className="w-4 h-4"
-                      strokeWidth={1.75}
-                      style={{ color: 'var(--gf-fg-2)' }}
-                    />
-                  </span>
+                  <ShoppingBag
+                    className="w-5 h-5 shrink-0"
+                    strokeWidth={1.75}
+                    color="var(--gf-fg-3)"
+                  />
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-fg-1 truncate">
                       {p.name}
@@ -408,13 +370,7 @@ export default function AdminStorePage() {
                   </div>
                   <div
                     className="shrink-0 inline-flex items-center"
-                    style={{
-                      background: 'var(--gf-card-hover)',
-                      border: '1px solid var(--gf-border)',
-                      borderRadius: 8,
-                      padding: 2,
-                      gap: 2,
-                    }}
+                    style={{ gap: 2 }}
                   >
                     <button
                       type="button"
@@ -423,20 +379,20 @@ export default function AdminStorePage() {
                       disabled={i === 0}
                       className="inline-flex items-center justify-center rounded-md transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
                       style={{
-                        width: 26,
-                        height: 26,
+                        width: 28,
+                        height: 28,
                         background: 'transparent',
-                        color: 'var(--gf-fg-2)',
+                        color: 'var(--gf-fg-3)',
                       }}
                       onMouseEnter={(e) => {
                         if (i !== 0) {
-                          e.currentTarget.style.background = 'var(--gf-card)'
+                          e.currentTarget.style.background = 'var(--gf-input-bg)'
                           e.currentTarget.style.color = 'var(--gf-fg-1)'
                         }
                       }}
                       onMouseLeave={(e) => {
                         e.currentTarget.style.background = 'transparent'
-                        e.currentTarget.style.color = 'var(--gf-fg-2)'
+                        e.currentTarget.style.color = 'var(--gf-fg-3)'
                       }}
                     >
                       <ChevronUp className="w-3.5 h-3.5" strokeWidth={2} />
@@ -448,20 +404,20 @@ export default function AdminStorePage() {
                       disabled={i === featured.length - 1}
                       className="inline-flex items-center justify-center rounded-md transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
                       style={{
-                        width: 26,
-                        height: 26,
+                        width: 28,
+                        height: 28,
                         background: 'transparent',
-                        color: 'var(--gf-fg-2)',
+                        color: 'var(--gf-fg-3)',
                       }}
                       onMouseEnter={(e) => {
                         if (i !== featured.length - 1) {
-                          e.currentTarget.style.background = 'var(--gf-card)'
+                          e.currentTarget.style.background = 'var(--gf-input-bg)'
                           e.currentTarget.style.color = 'var(--gf-fg-1)'
                         }
                       }}
                       onMouseLeave={(e) => {
                         e.currentTarget.style.background = 'transparent'
-                        e.currentTarget.style.color = 'var(--gf-fg-2)'
+                        e.currentTarget.style.color = 'var(--gf-fg-3)'
                       }}
                     >
                       <ChevronDown className="w-3.5 h-3.5" strokeWidth={2} />

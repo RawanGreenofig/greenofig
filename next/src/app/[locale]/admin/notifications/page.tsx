@@ -182,7 +182,11 @@ export default function AdminNotificationsPage() {
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   placeholder={tN('titlePh')}
-                  className="w-full h-11 rounded-md bg-bg-deeper border border-border px-3 text-base font-display font-semibold text-fg-1 placeholder-fg-3 focus:outline-none focus:border-primary"
+                  className="w-full h-11 rounded-lg px-3 text-base font-display font-semibold text-fg-1 placeholder-fg-3 focus:outline-none"
+                  style={{
+                    background: 'var(--gf-input-bg)',
+                    border: '1px solid var(--gf-border)',
+                  }}
                 />
               </Field>
 
@@ -193,7 +197,11 @@ export default function AdminNotificationsPage() {
                   rows={4}
                   maxLength={280}
                   placeholder={tN('bodyPh')}
-                  className="w-full resize-none rounded-md bg-bg-deeper border border-border px-3 py-2.5 text-sm text-fg-1 placeholder-fg-3 focus:outline-none focus:border-primary leading-relaxed"
+                  className="w-full resize-none rounded-lg px-3 py-2.5 text-sm text-fg-1 placeholder-fg-3 focus:outline-none leading-relaxed"
+                  style={{
+                    background: 'var(--gf-input-bg)',
+                    border: '1px solid var(--gf-border)',
+                  }}
                 />
               </Field>
 
@@ -202,7 +210,11 @@ export default function AdminNotificationsPage() {
                   <select
                     value={audience}
                     onChange={(e) => setAudience(e.target.value as Audience)}
-                    className="w-full h-10 rounded-md bg-bg-deeper border border-border px-3 text-sm text-fg-1 focus:outline-none focus:border-primary appearance-none"
+                    className="w-full h-10 rounded-lg px-3 text-sm text-fg-1 focus:outline-none appearance-none"
+                    style={{
+                      background: 'var(--gf-input-bg)',
+                      border: '1px solid var(--gf-border)',
+                    }}
                   >
                     <option value="all"           className="bg-surface">{tN('audienceAll')}</option>
                     <option value="basic"         className="bg-surface">{tN('audienceTier', { tier: 'Basic' })}</option>
@@ -216,7 +228,11 @@ export default function AdminNotificationsPage() {
                     type="datetime-local"
                     value={scheduleAt}
                     onChange={(e) => setScheduleAt(e.target.value)}
-                    className="w-full h-10 rounded-md bg-bg-deeper border border-border px-3 text-sm font-mono text-fg-1 focus:outline-none focus:border-primary"
+                    className="w-full h-10 rounded-lg px-3 text-sm font-mono text-fg-1 focus:outline-none"
+                    style={{
+                      background: 'var(--gf-input-bg)',
+                      border: '1px solid var(--gf-border)',
+                    }}
                     dir="ltr"
                   />
                   <p className="mt-1 text-[11px] text-fg-3">
@@ -272,8 +288,19 @@ export default function AdminNotificationsPage() {
               <p className="text-xs uppercase tracking-eyebrow text-fg-3 font-semibold mb-3">
                 {tN('previewLabel')}
               </p>
-              <div className="rounded-lg bg-bg-deeper/40 border border-border p-4 flex items-start gap-3">
-                <Bell className="w-6 h-6 flex-shrink-0" strokeWidth={1.75} style={{ color: 'var(--gf-lime-400)' }} />
+              <div
+                className="p-4 flex items-start gap-3"
+                style={{
+                  background: 'var(--gf-input-bg)',
+                  border: '1px solid var(--gf-border)',
+                  borderRadius: 8,
+                }}
+              >
+                <Bell
+                  className="w-5 h-5 mt-0.5 flex-shrink-0"
+                  strokeWidth={1.75}
+                  color="#a3e635"
+                />
                 <div className="min-w-0">
                   <p className="text-sm font-semibold text-fg-1">
                     {title || '— title —'}
@@ -300,7 +327,12 @@ export default function AdminNotificationsPage() {
                   <button
                     type="button"
                     onClick={() => insertTemplate(k)}
-                    className="w-full text-start rounded-md px-3 py-2 text-xs text-fg-1 bg-bg-deeper/40 border border-border hover:border-primary/40 hover:bg-bg-deeper transition-colors"
+                    className="w-full text-start px-3 py-2 text-xs text-fg-1 transition-colors"
+                    style={{
+                      background: 'var(--gf-input-bg)',
+                      border: '1px solid var(--gf-border)',
+                      borderRadius: 8,
+                    }}
                   >
                     {tN(`templateOptions.${k}` as 'templateOptions.newFeature')}
                   </button>
@@ -320,16 +352,29 @@ export default function AdminNotificationsPage() {
                 {history.slice(0, 5).map((h) => (
                   <li
                     key={h.id}
-                    className="rounded-md bg-bg-deeper/40 border border-border px-3 py-2.5"
+                    className="px-3 py-2.5"
+                    style={{
+                      background: 'var(--gf-input-bg)',
+                      border: '1px solid var(--gf-border)',
+                      borderRadius: 8,
+                    }}
                   >
                     <p className="text-xs font-semibold text-fg-1 line-clamp-2">
                       {h.title}
                     </p>
-                    <div className="mt-1.5 flex flex-wrap items-center gap-1.5 text-[10px] text-fg-3 font-mono" dir="ltr">
+                    <div className="mt-2 flex flex-wrap items-center gap-1.5 text-[10px] text-fg-3 font-mono" dir="ltr">
                       <span
-                        className="rounded-pill h-4 px-1.5 inline-flex items-center text-[9px] uppercase tracking-eyebrow font-bold"
+                        className="inline-flex items-center"
                         style={{
-                          background: `${AUDIENCE_TINT[h.audience]}1a`,
+                          height: 18,
+                          padding: '0 8px',
+                          borderRadius: 999,
+                          fontSize: 9.5,
+                          fontWeight: 800,
+                          letterSpacing: '0.08em',
+                          textTransform: 'uppercase',
+                          lineHeight: 1,
+                          background: `${AUDIENCE_TINT[h.audience]}1f`,
                           color: AUDIENCE_TINT[h.audience],
                         }}
                       >
@@ -387,14 +432,26 @@ function ChannelChip({
     <button
       type="button"
       onClick={onClick}
-      className={`inline-flex items-center gap-1.5 rounded-pill h-9 px-4 text-xs font-semibold transition-colors ${
-        on
-          ? 'bg-primary/20 text-lime-400 border border-primary/40'
-          : 'bg-bg-deeper border border-border text-fg-3 hover:text-fg-1'
-      }`}
+      className="inline-flex items-center gap-1.5 h-9 px-3 text-xs font-semibold transition-colors"
+      style={{
+        background: on ? 'rgba(132,217,61,0.12)' : 'var(--gf-input-bg)',
+        border: `1px solid ${on ? 'rgba(132,217,61,0.4)' : 'var(--gf-border)'}`,
+        borderRadius: 8,
+        color: on ? '#a3e635' : 'var(--gf-fg-2)',
+      }}
     >
-      {on && <Check className="w-3 h-3" strokeWidth={2.5} />}
-      <Icon className="w-3.5 h-3.5" strokeWidth={1.75} />
+      {on && (
+        <Check
+          className="w-3 h-3"
+          strokeWidth={2.5}
+          color="currentColor"
+        />
+      )}
+      <Icon
+        className="w-3.5 h-3.5"
+        strokeWidth={1.75}
+        color="currentColor"
+      />
       {label}
     </button>
   )

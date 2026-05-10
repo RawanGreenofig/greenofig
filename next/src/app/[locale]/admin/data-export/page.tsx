@@ -163,7 +163,9 @@ export default function AdminDataExportPage() {
           <form onSubmit={triggerPerUser} className="flex flex-wrap items-center gap-2">
             <div className="relative flex-1 min-w-0 basis-full sm:basis-auto sm:min-w-[200px]">
               <Search
-                className="absolute start-4 top-1/2 -translate-y-1/2 w-4 h-4 text-fg-3"
+                color="var(--gf-fg-3)"
+                style={{ insetInlineStart: '12px' }}
+                className="absolute top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none"
                 strokeWidth={1.75}
               />
               <input
@@ -171,7 +173,13 @@ export default function AdminDataExportPage() {
                 value={perUserQuery}
                 onChange={(e) => setPerUserQuery(e.target.value)}
                 placeholder={tD('perUserPh')}
-                className="w-full h-11 rounded-pill bg-bg-deeper border border-border ps-11 pe-4 text-sm text-fg-1 placeholder-fg-3 focus:outline-none focus:border-primary"
+                className="w-full h-10 rounded-lg text-sm text-fg-1 placeholder-fg-3 focus:outline-none"
+                style={{
+                  background: 'var(--gf-input-bg)',
+                  border: '1px solid var(--gf-border)',
+                  paddingInlineStart: '36px',
+                  paddingInlineEnd: '12px',
+                }}
                 dir="ltr"
               />
             </div>
@@ -199,17 +207,17 @@ export default function AdminDataExportPage() {
               <button
                 type="button"
                 onClick={() => triggerBulk(kind)}
-                className={`w-full text-start rounded-xl border bg-surface p-4 hover:border-primary/40 transition-colors ${
+                className={`w-full text-start rounded-xl border bg-surface p-4 transition-colors ${
                   recentTrigger === kind
                     ? 'border-primary/60 bg-primary/10'
-                    : 'border-border'
+                    : 'border-border hover:border-primary/30'
                 }`}
               >
                 <div className="flex items-center gap-3">
                   <FileSpreadsheet
-                    className="w-6 h-6 flex-shrink-0"
+                    className="w-5 h-5 flex-shrink-0"
                     strokeWidth={1.75}
-                    style={{ color: BULK_TINT[kind] }}
+                    color={BULK_TINT[kind]}
                   />
                   <div className="min-w-0 flex-1">
                     <p className="text-sm font-semibold text-fg-1">
@@ -220,8 +228,9 @@ export default function AdminDataExportPage() {
                     </p>
                   </div>
                   <Download
-                    className="w-4 h-4 text-fg-3 shrink-0"
+                    className="w-3.5 h-3.5 shrink-0"
                     strokeWidth={1.75}
+                    color="var(--gf-fg-3)"
                   />
                 </div>
               </button>
@@ -239,9 +248,19 @@ export default function AdminDataExportPage() {
           <button
             type="button"
             onClick={() => setAdding(true)}
-            className="inline-flex items-center gap-1.5 rounded-pill bg-primary/15 text-lime-400 h-9 px-4 text-xs font-semibold hover:bg-primary/25"
+            className="inline-flex items-center gap-1.5 h-9 px-3 text-xs font-semibold transition-colors"
+            style={{
+              background: 'rgba(132,217,61,0.12)',
+              border: '1px solid rgba(132,217,61,0.4)',
+              borderRadius: 8,
+              color: '#a3e635',
+            }}
           >
-            <Plus className="w-3.5 h-3.5" strokeWidth={2} />
+            <Plus
+              className="w-3.5 h-3.5"
+              strokeWidth={2}
+              color="currentColor"
+            />
             {tD('addSchedule')}
           </button>
         </header>
@@ -249,15 +268,33 @@ export default function AdminDataExportPage() {
           {tD('scheduledBody', { email: 'admin@greenofig.com' })}
         </p>
         {scheduled.length === 0 ? (
-          <div className="rounded-xl border border-dashed border-border bg-surface/50 p-8 text-center text-sm text-fg-3">
-            <Clock className="w-7 h-7 mx-auto mb-2 text-fg-3" strokeWidth={1.5} />
-            {tD('noHistory')}
+          <div className="rounded-xl border border-dashed border-border bg-surface/50 p-8 text-center">
+            <Clock
+              className="w-7 h-7 mx-auto mb-2"
+              strokeWidth={1.5}
+              color="var(--gf-fg-3)"
+            />
+            <p className="text-sm text-fg-3">{tD('noHistory')}</p>
           </div>
         ) : (
           <ul className="rounded-xl border border-border bg-surface divide-y divide-border overflow-hidden">
             {scheduled.map((s) => (
-              <li key={s.id} className="flex flex-wrap items-center gap-3 px-5 py-3">
-                <Clock className="w-6 h-6 flex-shrink-0" strokeWidth={1.75} style={{ color: BULK_TINT[s.kind] }} />
+              <li
+                key={s.id}
+                className="flex flex-wrap items-center gap-3 px-5 py-3 transition-colors"
+                style={{ background: 'transparent' }}
+                onMouseEnter={(e) =>
+                  (e.currentTarget.style.background = 'var(--gf-card-hover)')
+                }
+                onMouseLeave={(e) =>
+                  (e.currentTarget.style.background = 'transparent')
+                }
+              >
+                <Clock
+                  className="w-5 h-5 flex-shrink-0"
+                  strokeWidth={1.75}
+                  color={BULK_TINT[s.kind]}
+                />
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-semibold text-fg-1">
                     {tD(`bulkExports.${s.kind}` as 'bulkExports.users')}{' '}
@@ -266,7 +303,11 @@ export default function AdminDataExportPage() {
                     </span>
                   </p>
                   <p className="mt-0.5 text-xs text-fg-3 inline-flex items-center gap-1.5 font-mono" dir="ltr">
-                    <Mail className="w-3 h-3" strokeWidth={1.75} />
+                    <Mail
+                      className="w-3 h-3"
+                      strokeWidth={1.75}
+                      color="currentColor"
+                    />
                     {s.email}
                     <span className="ms-1 uppercase tracking-eyebrow text-[10px]">
                       {s.format}
@@ -277,9 +318,21 @@ export default function AdminDataExportPage() {
                   type="button"
                   onClick={() => removeSchedule(s.id)}
                   aria-label="Remove"
-                  className="w-8 h-8 rounded-md inline-flex items-center justify-center text-fg-3 hover:text-rose-400 hover:bg-surface-raised"
+                  title="Remove"
+                  className="w-8 h-8 rounded-md inline-flex items-center justify-center transition-colors"
+                  style={{ background: 'transparent', color: '#f43f5e' }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = 'rgba(244,63,94,0.14)'
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = 'transparent'
+                  }}
                 >
-                  <Trash2 className="w-3.5 h-3.5" strokeWidth={1.75} />
+                  <Trash2
+                    className="w-3.5 h-3.5"
+                    strokeWidth={1.75}
+                    color="currentColor"
+                  />
                 </button>
               </li>
             ))}
@@ -294,26 +347,40 @@ export default function AdminDataExportPage() {
         </h2>
         {history.length === 0 ? (
           <div className="rounded-xl border border-dashed border-border bg-surface/50 p-12 text-center">
-            <Database className="w-9 h-9 mx-auto mb-3 text-fg-3" strokeWidth={1.5} />
+            <Database
+              className="w-9 h-9 mx-auto mb-3"
+              strokeWidth={1.5}
+              color="var(--gf-fg-3)"
+            />
             <p className="text-base font-semibold text-fg-1">{tD('noHistory')}</p>
           </div>
         ) : (
           <ul className="rounded-xl border border-border bg-surface divide-y divide-border overflow-hidden">
             {history.map((h) => (
-              <li key={h.id} className="flex flex-wrap items-center gap-3 px-5 py-3">
-                <span
-                  className="shrink-0 w-9 h-9 rounded-lg inline-flex items-center justify-center"
-                  style={{
-                    background: 'var(--gf-bg-deeper)',
-                    color: h.format === 'json' ? '#06b6d4' : '#a3e635',
-                  }}
-                >
-                  {h.format === 'json' ? (
-                    <FileJson className="w-4 h-4" strokeWidth={1.75} />
-                  ) : (
-                    <FileSpreadsheet className="w-4 h-4" strokeWidth={1.75} />
-                  )}
-                </span>
+              <li
+                key={h.id}
+                className="flex flex-wrap items-center gap-3 px-5 py-3 transition-colors"
+                style={{ background: 'transparent' }}
+                onMouseEnter={(e) =>
+                  (e.currentTarget.style.background = 'var(--gf-card-hover)')
+                }
+                onMouseLeave={(e) =>
+                  (e.currentTarget.style.background = 'transparent')
+                }
+              >
+                {h.format === 'json' ? (
+                  <FileJson
+                    className="w-5 h-5 shrink-0"
+                    strokeWidth={1.75}
+                    color="#06b6d4"
+                  />
+                ) : (
+                  <FileSpreadsheet
+                    className="w-5 h-5 shrink-0"
+                    strokeWidth={1.75}
+                    color="#a3e635"
+                  />
+                )}
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-semibold text-fg-1 truncate">
                     {h.label}
@@ -329,9 +396,18 @@ export default function AdminDataExportPage() {
                 <button
                   type="button"
                   disabled={h.expiresInDays <= 0}
-                  className="inline-flex items-center gap-1.5 rounded-pill bg-surface-raised border border-border h-9 px-4 text-xs font-semibold text-fg-1 hover:border-primary/40 disabled:opacity-40 disabled:hover:border-border"
+                  className="inline-flex items-center gap-1.5 h-9 px-3 text-xs font-semibold text-fg-1 transition-colors disabled:opacity-40"
+                  style={{
+                    background: 'var(--gf-input-bg)',
+                    border: '1px solid var(--gf-border)',
+                    borderRadius: 8,
+                  }}
                 >
-                  <Download className="w-3.5 h-3.5" strokeWidth={1.75} />
+                  <Download
+                    className="w-3.5 h-3.5"
+                    strokeWidth={1.75}
+                    color="var(--gf-fg-3)"
+                  />
                   {tD('downloadAgain')}
                 </button>
               </li>
@@ -394,9 +470,22 @@ function ScheduleDialog({
             type="button"
             onClick={onCancel}
             aria-label="Close"
-            className="w-9 h-9 rounded-md bg-surface-raised text-fg-2 hover:text-fg-1 inline-flex items-center justify-center"
+            className="w-8 h-8 rounded-md inline-flex items-center justify-center transition-colors"
+            style={{ background: 'transparent', color: 'var(--gf-fg-3)' }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = 'var(--gf-input-bg)'
+              e.currentTarget.style.color = 'var(--gf-fg-1)'
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = 'transparent'
+              e.currentTarget.style.color = 'var(--gf-fg-3)'
+            }}
           >
-            <X className="w-4 h-4" strokeWidth={1.75} />
+            <X
+              className="w-4 h-4"
+              strokeWidth={1.75}
+              color="currentColor"
+            />
           </button>
         </header>
 
@@ -404,7 +493,11 @@ function ScheduleDialog({
           <select
             value={kind}
             onChange={(e) => setKind(e.target.value as BulkKind)}
-            className="w-full h-10 rounded-md bg-bg-deeper border border-border px-3 text-sm text-fg-1 focus:outline-none focus:border-primary appearance-none"
+            className="w-full h-10 rounded-lg px-3 text-sm text-fg-1 focus:outline-none appearance-none"
+            style={{
+              background: 'var(--gf-input-bg)',
+              border: '1px solid var(--gf-border)',
+            }}
           >
             {BULK_KINDS.map((k) => (
               <option key={k} value={k} className="bg-surface">
@@ -419,7 +512,11 @@ function ScheduleDialog({
             <select
               value={format}
               onChange={(e) => setFormat(e.target.value as Format)}
-              className="w-full h-10 rounded-md bg-bg-deeper border border-border px-3 text-sm text-fg-1 focus:outline-none focus:border-primary appearance-none"
+              className="w-full h-10 rounded-lg px-3 text-sm text-fg-1 focus:outline-none appearance-none"
+            style={{
+              background: 'var(--gf-input-bg)',
+              border: '1px solid var(--gf-border)',
+            }}
             >
               <option value="csv"  className="bg-surface">{tD('formatCsv')}</option>
               <option value="json" className="bg-surface">{tD('formatJson')}</option>
@@ -430,7 +527,11 @@ function ScheduleDialog({
             <select
               value={frequency}
               onChange={(e) => setFrequency(e.target.value as Frequency)}
-              className="w-full h-10 rounded-md bg-bg-deeper border border-border px-3 text-sm text-fg-1 focus:outline-none focus:border-primary appearance-none"
+              className="w-full h-10 rounded-lg px-3 text-sm text-fg-1 focus:outline-none appearance-none"
+            style={{
+              background: 'var(--gf-input-bg)',
+              border: '1px solid var(--gf-border)',
+            }}
             >
               <option value="daily"   className="bg-surface">{tD('frequency.daily')}</option>
               <option value="weekly"  className="bg-surface">{tD('frequency.weekly')}</option>
@@ -444,7 +545,11 @@ function ScheduleDialog({
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="w-full h-10 rounded-md bg-bg-deeper border border-border px-3 text-sm text-fg-1 focus:outline-none focus:border-primary"
+            className="w-full h-10 rounded-lg px-3 text-sm text-fg-1 focus:outline-none"
+            style={{
+              background: 'var(--gf-input-bg)',
+              border: '1px solid var(--gf-border)',
+            }}
             dir="ltr"
           />
         </Field>
@@ -453,7 +558,12 @@ function ScheduleDialog({
           <button
             type="button"
             onClick={onCancel}
-            className="inline-flex items-center gap-1.5 rounded-pill bg-surface-raised border border-border h-10 px-4 text-sm font-medium text-fg-1 hover:border-primary/40"
+            className="inline-flex items-center gap-1.5 h-10 px-4 text-sm font-medium text-fg-1 transition-colors"
+            style={{
+              background: 'var(--gf-input-bg)',
+              border: '1px solid var(--gf-border)',
+              borderRadius: 8,
+            }}
           >
             Cancel
           </button>

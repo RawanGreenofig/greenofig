@@ -83,6 +83,48 @@ function clearCachedTier(): void {
   }
 }
 
+/* ── DEV-ONLY: localhost admin shim ────────────────────────────────
+ * Mirrors the middleware + requireRole bypass so the chrome (sidebar
+ * avatar / topbar plan badge / role pill) reads as "Admin" instead of
+ * the "Guest FREE" fallback that appears with no session.
+ * Hard-gated on:
+ *   • NODE_ENV !== 'production'
+ *   • hostname: localhost / 127.0.0.1
+ * Cannot leak into deployed environments.
+ * TODO(role-bypass): revisit once admin-styling pass is complete.
+ */
+function isLocalDev(): boolean {
+  if (typeof window === 'undefined') return false
+  if (process.env.NODE_ENV === 'production') return false
+  const h = window.location.hostname
+  return h === 'localhost' || h === '127.0.0.1'
+}
+
+const DEV_ADMIN_PROFILE: Profile = {
+  id: 'dev-admin',
+  role: 'admin',
+  tier: 'vip',
+  full_name: 'Greenofig Admin',
+  avatar_url: null,
+  phone: null,
+  date_of_birth: null,
+  gender: null,
+  height_cm: null,
+  weight_kg: null,
+  target_weight_kg: null,
+  dietary_preferences: null,
+  allergies: null,
+  health_conditions: null,
+  activity_level: null,
+  primary_goal: null,
+  medical_notes: null,
+  preferred_locale: 'en',
+  is_active: true,
+  last_seen_at: null,
+  created_at: new Date().toISOString(),
+  updated_at: new Date().toISOString(),
+}
+
 /**
  * AuthProvider — tier-flicker hardened
  *
@@ -233,19 +275,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [supabase])
 
   const value = useMemo<AuthContextValue>(
-    () => ({
-      user: session?.user ?? null,
-      session,
-      profile,
-      role: profile?.role ?? null,
-      // Prefer the dedicated tier state (which is seeded from cache
-      // and rank-guarded). Fall back to whatever the profile carries
-      // for the brief window between fetch and the applyTier write.
-      tier: tier ?? profile?.tier ?? null,
-      isLoading,
-      signOut,
-      refresh,
-    }),
+    () => {
+      // Localhost dev with no real session → return a fake admin
+      // profile so the chrome reads as Admin/VIP instead of Guest/FREE.
+      if (!session && !isLoading && isLocalDev()) {
+        return {
+          user: null,
+          session: null,
+          profile: DEV_ADMIN_PROFILE,
+          role: DEV_ADMIN_PROFILE.role,
+          tier: DEV_ADMIN_PROFILE.tier,
+          isLoading: false,
+          signOut,
+          refresh,
+        }
+      }
+      return {
+        user: session?.user ?? null,
+        session,
+        profile,
+        role: profile?.role ?? null,
+        // Prefer the dedicated tier state (which is seeded from cache
+        // and rank-guarded). Fall back to whatever the profile carries
+        // for the brief window between fetch and the applyTier write.
+        tier: tier ?? profile?.tier ?? null,
+        isLoading,
+        signOut,
+        refresh,
+      }
+    },
     [session, profile, tier, isLoading, signOut, refresh],
   )
 

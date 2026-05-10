@@ -174,20 +174,39 @@ export default function AdminAvailabilityPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <header>
-        <h1 className="text-2xl font-bold text-fg-1 flex items-center gap-2">
-          <Calendar className="w-6 h-6" strokeWidth={1.75} style={{ color: '#a3e635' }} />
-          Nutritionist availability
-        </h1>
-        <p className="text-sm text-fg-3 mt-1">
-          Edit working hours, timezone, and time-off windows for any nutritionist.
-        </p>
+    <div className="px-4 md:px-8 py-6 md:py-8 max-w-screen-xl mx-auto space-y-6">
+      <header className="flex items-start gap-3">
+        <Calendar
+          className="w-6 h-6 mt-1 flex-shrink-0"
+          strokeWidth={1.75}
+          color="#a3e635"
+        />
+        <div className="min-w-0">
+          <h1
+            className="font-display font-bold text-fg-1 tracking-tight"
+            style={{ fontSize: 'clamp(28px, 4vw, 40px)', lineHeight: 1.1 }}
+          >
+            Nutritionist availability
+          </h1>
+          <p className="mt-2 text-sm md:text-base text-fg-2 max-w-2xl">
+            Edit working hours, timezone, and time-off windows for any nutritionist.
+          </p>
+        </div>
       </header>
 
       {nutritionists.length === 0 && (
-        <div className="rounded-xl border border-dashed border-border bg-surface/50 p-10 text-center text-sm text-fg-3">
-          No nutritionists onboarded yet.
+        <div className="rounded-xl border border-dashed border-border bg-surface/50 p-12 text-center">
+          <Calendar
+            className="w-9 h-9 mx-auto mb-3"
+            strokeWidth={1.5}
+            color="var(--gf-fg-3)"
+          />
+          <p className="text-sm font-semibold text-fg-1">
+            No nutritionists onboarded yet.
+          </p>
+          <p className="mt-1 text-xs text-fg-3">
+            Once a nutritionist completes onboarding, their schedule will appear here.
+          </p>
         </div>
       )}
 
@@ -206,13 +225,21 @@ export default function AdminAvailabilityPage() {
                     <button
                       type="button"
                       onClick={() => setSelectedId(n.id)}
-                      className={`w-full flex items-center gap-2 rounded-md h-10 px-3 text-sm transition-colors ${
-                        active
-                          ? 'bg-primary/15 text-lime-400 border border-primary/40'
-                          : 'bg-surface text-fg-2 border border-border hover:text-fg-1'
-                      }`}
+                      className="w-full flex items-center gap-2 h-10 px-3 text-sm transition-colors"
+                      style={{
+                        background: active
+                          ? 'rgba(132,217,61,0.12)'
+                          : 'transparent',
+                        border: `1px solid ${active ? 'rgba(132,217,61,0.4)' : 'var(--gf-border)'}`,
+                        borderRadius: 8,
+                        color: active ? '#a3e635' : 'var(--gf-fg-2)',
+                      }}
                     >
-                      <User className="w-4 h-4" strokeWidth={1.75} />
+                      <User
+                        className="w-4 h-4"
+                        strokeWidth={1.75}
+                        color="currentColor"
+                      />
                       <span className="truncate text-start">{n.full_name}</span>
                     </button>
                   </li>
@@ -236,7 +263,11 @@ export default function AdminAvailabilityPage() {
                   setDirty(true)
                   if (saveState === 'saved') setSaveState('idle')
                 }}
-                className="w-full md:w-72 h-10 rounded-md bg-bg-deeper border border-border px-3 text-sm text-fg-1 focus:outline-none focus:border-primary"
+                className="w-full md:w-72 h-10 rounded-lg px-3 text-sm text-fg-1 focus:outline-none"
+                style={{
+                  background: 'var(--gf-input-bg)',
+                  border: '1px solid var(--gf-border)',
+                }}
               >
                 {Array.from(new Set([timezone, ...COMMON_TIMEZONES])).map((tz) => (
                   <option key={tz} value={tz} className="bg-surface">
@@ -283,7 +314,11 @@ export default function AdminAvailabilityPage() {
                         type="time"
                         value={cfg.from}
                         onChange={(e) => updateDay(d, { from: e.target.value })}
-                        className="h-9 rounded-md bg-bg-deeper border border-border px-2 text-sm font-mono text-fg-1 focus:outline-none focus:border-primary"
+                        className="h-9 rounded-lg px-2 text-sm font-mono text-fg-1 focus:outline-none"
+                        style={{
+                          background: 'var(--gf-input-bg)',
+                          border: '1px solid var(--gf-border)',
+                        }}
                         dir="ltr"
                       />
                       <span className="text-xs text-fg-3">—</span>
@@ -291,7 +326,11 @@ export default function AdminAvailabilityPage() {
                         type="time"
                         value={cfg.to}
                         onChange={(e) => updateDay(d, { to: e.target.value })}
-                        className="h-9 rounded-md bg-bg-deeper border border-border px-2 text-sm font-mono text-fg-1 focus:outline-none focus:border-primary"
+                        className="h-9 rounded-lg px-2 text-sm font-mono text-fg-1 focus:outline-none"
+                        style={{
+                          background: 'var(--gf-input-bg)',
+                          border: '1px solid var(--gf-border)',
+                        }}
                         dir="ltr"
                       />
                     </div>

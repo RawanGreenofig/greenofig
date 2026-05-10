@@ -269,25 +269,38 @@ export default function AdminModerationPage() {
       </section>
 
       {/* Filter */}
-      <div className="inline-flex items-center gap-0.5 rounded-pill bg-bg-deeper border border-border p-0.5">
-        {(['pending', 'resolved', 'all'] as const).map((f) => (
-          <button
-            key={f}
-            type="button"
-            onClick={() => setFilter(f)}
-            className={`px-3 h-8 rounded-pill text-[11px] font-semibold transition-colors ${
-              filter === f
-                ? 'bg-primary/20 text-lime-400'
-                : 'text-fg-3 hover:text-fg-1'
-            }`}
-          >
-            {f === 'pending'
-              ? tM('filterPending')
-              : f === 'resolved'
-                ? tM('filterResolved')
-                : tM('filterAll')}
-          </button>
-        ))}
+      <div
+        className="inline-flex items-center"
+        style={{
+          background: 'var(--gf-input-bg)',
+          border: '1px solid var(--gf-border)',
+          borderRadius: 8,
+          padding: 2,
+          gap: 2,
+        }}
+      >
+        {(['pending', 'resolved', 'all'] as const).map((f) => {
+          const active = filter === f
+          return (
+            <button
+              key={f}
+              type="button"
+              onClick={() => setFilter(f)}
+              className="inline-flex items-center justify-center h-8 px-3 text-xs font-semibold transition-colors whitespace-nowrap"
+              style={{
+                borderRadius: 6,
+                background: active ? 'rgba(132,217,61,0.12)' : 'transparent',
+                color: active ? '#a3e635' : 'var(--gf-fg-2)',
+              }}
+            >
+              {f === 'pending'
+                ? tM('filterPending')
+                : f === 'resolved'
+                  ? tM('filterResolved')
+                  : tM('filterAll')}
+            </button>
+          )
+        })}
       </div>
 
       {/* List */}
@@ -335,16 +348,34 @@ function FlagCard({
       <header className="flex items-start justify-between gap-3 flex-wrap">
         <div className="flex items-center gap-2 flex-wrap">
           <span
-            className="rounded-pill h-6 px-2.5 inline-flex items-center gap-1 text-[10px] uppercase tracking-eyebrow font-bold"
-            style={{ background: sev.bg, color: sev.tint }}
+            className="inline-flex items-center"
+            style={{
+              height: 18,
+              padding: '0 8px',
+              borderRadius: 999,
+              fontSize: 9.5,
+              fontWeight: 800,
+              letterSpacing: '0.08em',
+              textTransform: 'uppercase',
+              lineHeight: 1,
+              background: sev.bg,
+              color: sev.tint,
+            }}
           >
-            <sev.Icon className="w-3 h-3" strokeWidth={2} />
             {tM(`severity.${item.severity}` as 'severity.low')}
           </span>
           <span
-            className="rounded-pill h-6 px-2.5 inline-flex items-center text-[10px] uppercase tracking-eyebrow font-bold"
+            className="inline-flex items-center"
             style={{
-              background: `${reasonTint}1a`,
+              height: 18,
+              padding: '0 8px',
+              borderRadius: 999,
+              fontSize: 9.5,
+              fontWeight: 800,
+              letterSpacing: '0.08em',
+              textTransform: 'uppercase',
+              lineHeight: 1,
+              background: `${reasonTint}1f`,
               color: reasonTint,
             }}
           >
@@ -357,12 +388,20 @@ function FlagCard({
         </div>
         {!isPending && (
           <span
-            className="rounded-pill h-6 px-2.5 inline-flex items-center text-[10px] uppercase tracking-eyebrow font-bold"
-            style={
-              item.resolution === 'kept'
-                ? { background: 'rgb(155 175 159 / 0.14)', color: '#9baf9f' }
-                : { background: 'rgb(244 63 94 / 0.14)', color: '#f43f5e' }
-            }
+            className="inline-flex items-center"
+            style={{
+              height: 18,
+              padding: '0 8px',
+              borderRadius: 999,
+              fontSize: 9.5,
+              fontWeight: 800,
+              letterSpacing: '0.08em',
+              textTransform: 'uppercase',
+              lineHeight: 1,
+              ...(item.resolution === 'kept'
+                ? { background: 'rgba(155, 175, 159, 0.14)', color: '#9baf9f' }
+                : { background: 'rgba(244, 63, 94, 0.14)', color: '#f43f5e' }),
+            }}
           >
             {item.resolution === 'kept'
               ? tM('actionApproved')
@@ -388,38 +427,29 @@ function FlagCard({
           {tM('openContext')}
         </button>
         {isPending ? (
-          <div className="flex items-center gap-2 flex-wrap">
-            <button
-              type="button"
+          <div className="flex items-center gap-1 flex-wrap">
+            <ActionButton
+              tone="lime"
+              Icon={CheckCircle2}
+              label={tM('approve')}
               onClick={() => onResolve('kept')}
-              className="inline-flex items-center gap-1.5 rounded-pill bg-surface-raised border border-border h-9 px-4 text-xs font-semibold text-fg-1 hover:border-primary/40"
-            >
-              <CheckCircle2 className="w-3.5 h-3.5" strokeWidth={1.75} />
-              {tM('approve')}
-            </button>
-            <button
-              type="button"
-              className="inline-flex items-center gap-1.5 rounded-pill bg-amber-500/15 h-9 px-4 text-xs font-semibold hover:bg-amber-500/25"
-              style={{ color: '#e8912a' }}
-            >
-              <AlertTriangle className="w-3.5 h-3.5" strokeWidth={1.75} />
-              {tM('warnUser')}
-            </button>
-            <button
-              type="button"
+            />
+            <ActionButton
+              tone="amber"
+              Icon={AlertTriangle}
+              label={tM('warnUser')}
+            />
+            <ActionButton
+              tone="rose"
+              Icon={Trash2}
+              label={tM('remove')}
               onClick={() => onResolve('removed')}
-              className="inline-flex items-center gap-1.5 rounded-pill bg-rose-500/15 text-rose-400 h-9 px-4 text-xs font-semibold hover:bg-rose-500/25"
-            >
-              <Trash2 className="w-3.5 h-3.5" strokeWidth={1.75} />
-              {tM('remove')}
-            </button>
-            <button
-              type="button"
-              className="inline-flex items-center gap-1.5 rounded-pill bg-rose-500/20 text-rose-400 h-9 px-4 text-xs font-semibold hover:bg-rose-500/30"
-            >
-              <Ban className="w-3.5 h-3.5" strokeWidth={1.75} />
-              {tM('banUser')}
-            </button>
+            />
+            <ActionButton
+              tone="rose"
+              Icon={Ban}
+              label={tM('banUser')}
+            />
           </div>
         ) : (
           <p className="text-xs text-fg-3 font-mono" dir="ltr">
@@ -444,19 +474,25 @@ function Stat({
   value: string | number
 }) {
   return (
-    <article className="rounded-xl border border-border bg-surface p-4">
-      <div className="flex items-center gap-2 mb-2">
-        <span
-          className="w-8 h-8 rounded-md flex items-center justify-center"
-          style={{ background: `${tint}1a`, color: tint }}
-        >
-          <Icon className="w-3.5 h-3.5" strokeWidth={1.75} />
-        </span>
-        <span className="text-[11px] uppercase tracking-eyebrow text-fg-3 font-medium">
+    <article
+      className="rounded-xl border border-border bg-surface p-4"
+      style={{ boxShadow: `inset 4px 0 0 ${tint}` }}
+    >
+      <div className="flex items-center gap-2">
+        <Icon
+          className="w-4 h-4 flex-shrink-0"
+          strokeWidth={1.75}
+          color={tint}
+        />
+        <p className="text-[11px] uppercase tracking-eyebrow text-fg-3 font-semibold">
           {label}
-        </span>
+        </p>
       </div>
-      <p className="font-mono text-xl font-bold text-fg-1" dir="ltr">
+      <p
+        className="mt-2 font-display text-2xl font-bold"
+        style={{ color: tint }}
+        dir="ltr"
+      >
         {value}
       </p>
     </article>
@@ -467,4 +503,55 @@ function formatHours(h: number): string {
   if (h < 1) return 'now'
   if (h < 24) return `${Math.round(h)}h`
   return `${Math.round(h / 24)}d`
+}
+
+/**
+ * Ghost row-action button used in the moderation footer. Same chrome
+ * (h-8 px-3 8px-radius dashboard input shell) for every action; the
+ * tone prop only colors the icon + label so the buttons read as a
+ * uniform group with semantic accents instead of four chunky CTAs.
+ */
+function ActionButton({
+  tone,
+  Icon,
+  label,
+  onClick,
+}: {
+  tone: 'lime' | 'amber' | 'rose'
+  Icon: LucideIcon
+  label: string
+  onClick?: () => void
+}) {
+  const TONE: Record<typeof tone, { color: string; hover: string }> = {
+    lime:  { color: '#a3e635', hover: 'rgba(163,230,53,0.12)' },
+    amber: { color: '#e8912a', hover: 'rgba(232,145,42,0.14)' },
+    rose:  { color: '#f43f5e', hover: 'rgba(244,63,94,0.14)' },
+  }
+  const t = TONE[tone]
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="inline-flex items-center gap-1.5 h-8 px-3 text-xs font-semibold transition-colors"
+      style={{
+        background: 'transparent',
+        border: '1px solid var(--gf-border)',
+        borderRadius: 8,
+        color: t.color,
+      }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.background = t.hover
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.background = 'transparent'
+      }}
+    >
+      <Icon
+        className="w-3.5 h-3.5"
+        strokeWidth={1.75}
+        color="currentColor"
+      />
+      {label}
+    </button>
+  )
 }

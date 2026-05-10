@@ -2,43 +2,67 @@
 
 import { useEffect, useState } from 'react'
 import { useLocale } from 'next-intl'
+import {
+  Zap,
+  Camera,
+  Bot,
+  Microscope,
+  Save,
+  Check,
+  Lightbulb,
+  type LucideIcon,
+} from '@/icons'
 import { getBrowserSupabase } from '@/lib/supabase/client'
 
 const TIERS = ['free', 'basic', 'premium', 'vip'] as const
 type Tier = (typeof TIERS)[number]
 
-const TIER_COLORS: Record<Tier, string> = {
-  free: '#5c7262',
-  basic: '#84cc16',
-  premium: '#3d7a4a',
-  vip: '#c9a84c',
+const TIER_TINT: Record<Tier, string> = {
+  free:    '#9baf9f',
+  basic:   '#06b6d4',
+  premium: '#a3e635',
+  vip:     '#a855f7',
 }
 
-const FEATURES = [
+interface FeatureCfg {
+  key: 'scanner' | 'ai_chat' | 'research'
+  settingKey: string
+  label: string
+  labelAr: string
+  Icon: LucideIcon
+  tint: string
+  desc: string
+  descAr: string
+}
+
+const FEATURES: readonly FeatureCfg[] = [
   {
-    key: 'scanner' as const,
+    key: 'scanner',
     settingKey: 'ai_limits_scanner',
     label: 'Food Scanner',
     labelAr: 'الماسح الغذائي',
-    icon: '📸',
+    Icon: Camera,
+    tint: '#a3e635',
     desc: 'Photo scans per day',
     descAr: 'مسح صور يومياً',
   },
   {
-    key: 'ai_chat' as const,
+    key: 'ai_chat',
     settingKey: 'ai_limits_chat',
     label: 'AI Chat',
     labelAr: 'محادثة الذكاء الاصطناعي',
-    icon: '🤖',
+    Icon: Bot,
+    tint: '#06b6d4',
     desc: 'Messages per day',
     descAr: 'رسائل يومياً',
   },
   {
-    key: 'research' as const,
+    key: 'research',
     settingKey: 'ai_limits_research',
     label: 'Research Desk',
     labelAr: 'مكتب البحث',
-    icon: '🔬',
+    Icon: Microscope,
+    tint: '#a855f7',
     desc: 'Research queries per day',
     descAr: 'استفسارات بحثية يومياً',
   },
@@ -51,8 +75,8 @@ export default function AILimitsPage() {
   const isAr = locale === 'ar'
 
   const [limits, setLimits] = useState<Record<FeatureKey, Record<Tier, number>>>({
-    scanner: { free: 3, basic: 999, premium: 999, vip: 999 },
-    ai_chat: { free: 0, basic: 0, premium: 50, vip: 999 },
+    scanner:  { free: 3, basic: 999, premium: 999, vip: 999 },
+    ai_chat:  { free: 0, basic: 0, premium: 50, vip: 999 },
     research: { free: 0, basic: 0, premium: 20, vip: 999 },
   })
   const [globalCap, setGlobalCap] = useState(1000)
@@ -66,7 +90,6 @@ export default function AILimitsPage() {
     let cancelled = false
 
     ;(async () => {
-      // Load all 4 settings rows at once
       const keys: string[] = [
         ...FEATURES.map((f) => f.settingKey),
         'ai_daily_global_cap',
@@ -98,7 +121,7 @@ export default function AILimitsPage() {
       }
       setLimits(next)
 
-      // Today's total usage across all features (for the global progress bar)
+      // Today's total usage across all features (drives the global progress bar).
       const today = new Date().toISOString().slice(0, 10)
       const { data: usageRows } = await supabase
         .from('ai_usage')
@@ -155,328 +178,168 @@ export default function AILimitsPage() {
     }
   }
 
+  const usagePct = Math.min((todayUsage / Math.max(globalCap, 1)) * 100, 100)
+  const usageHot = todayUsage > globalCap * 0.8
+
   return (
     <div
-      style={{
-        maxWidth: '900px',
-        margin: '0 auto',
-        padding: '32px 24px',
-        direction: isAr ? 'rtl' : 'ltr',
-      }}
+      className="px-4 md:px-8 py-6 md:py-8 max-w-screen-xl mx-auto space-y-6"
+      dir={isAr ? 'rtl' : 'ltr'}
     >
-      {/* Header */}
-      <div style={{ marginBottom: '32px' }}>
-        <h1
-          style={{
-            fontFamily: 'Fraunces, serif',
-            fontWeight: 700,
-            fontSize: '2rem',
-            color: '#f0ede6',
-            margin: '0 0 8px',
-          }}
-        >
-          {isAr ? 'حدود استخدام الذكاء الاصطناعي' : 'AI Usage Limits'}
-        </h1>
-        <p
-          style={{
-            fontFamily: 'Inter, sans-serif',
-            fontSize: '0.9rem',
-            color: '#9baf9f',
-            margin: 0,
-          }}
-        >
-          {isAr
-            ? 'تحكم في عدد طلبات الذكاء الاصطناعي لكل خطة يومياً. 999 = غير محدود، 0 = معطّل.'
-            : 'Control daily AI requests per tier. Set 999 for unlimited, 0 to disable.'}
-        </p>
-      </div>
-
-      {/* Global cap */}
-      <div
-        style={{
-          background: 'var(--gf-card)',
-          border: '1px solid var(--gf-border)',
-          borderRadius: '12px',
-          padding: '24px',
-          marginBottom: '24px',
-        }}
-      >
-        <div style={{ marginBottom: '16px' }}>
-          <h3
-            style={{
-              fontFamily: 'Inter, sans-serif',
-              fontWeight: 600,
-              fontSize: '1rem',
-              color: '#f0ede6',
-              margin: '0 0 4px',
-            }}
+      <header className="flex items-start gap-3">
+        <Zap
+          className="w-6 h-6 mt-1 flex-shrink-0"
+          strokeWidth={1.75}
+          color="#a3e635"
+        />
+        <div className="min-w-0">
+          <h1
+            className="font-display font-bold text-fg-1 tracking-tight"
+            style={{ fontSize: 'clamp(28px, 4vw, 40px)', lineHeight: 1.1 }}
           >
-            ⚡ {isAr ? 'الحد اليومي العالمي' : 'Global Daily Cap'}
-          </h3>
-          <p
-            style={{
-              fontFamily: 'Inter, sans-serif',
-              fontSize: '0.8rem',
-              color: '#9baf9f',
-              margin: 0,
-            }}
-          >
+            {isAr ? 'حدود استخدام الذكاء الاصطناعي' : 'AI Usage Limits'}
+          </h1>
+          <p className="mt-2 text-sm md:text-base text-fg-2 max-w-2xl">
             {isAr
-              ? 'حد صارم لجميع المستخدمين مجتمعين للتحكم في التكاليف'
-              : 'Hard limit across all users combined to control costs'}
+              ? 'تحكم في عدد طلبات الذكاء الاصطناعي لكل خطة يومياً. 999 = غير محدود، 0 = معطّل.'
+              : 'Control daily AI requests per tier. Set 999 for unlimited, 0 to disable.'}
           </p>
         </div>
+      </header>
 
-        {/* Today usage bar */}
-        <div style={{ marginBottom: '16px' }}>
-          <div
-            style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              marginBottom: '6px',
-            }}
-          >
-            <span
-              style={{
-                fontSize: '12px',
-                color: '#9baf9f',
-                fontFamily: 'Inter, sans-serif',
-              }}
-            >
+      {/* Global cap */}
+      <article className="rounded-xl border border-border bg-surface p-5 md:p-6">
+        <header className="flex items-start gap-3 mb-4">
+          <Zap
+            className="w-5 h-5 mt-0.5 flex-shrink-0"
+            strokeWidth={1.75}
+            color="#fbbf24"
+          />
+          <div className="min-w-0">
+            <h2 className="text-base font-semibold text-fg-1">
+              {isAr ? 'الحد اليومي العالمي' : 'Global Daily Cap'}
+            </h2>
+            <p className="mt-0.5 text-xs text-fg-3">
+              {isAr
+                ? 'حد صارم لجميع المستخدمين مجتمعين للتحكم في التكاليف'
+                : 'Hard limit across all users combined to control costs'}
+            </p>
+          </div>
+        </header>
+
+        {/* Today usage bar — same recipe as funnel/tier bars on /admin/analytics */}
+        <div className="mb-5">
+          <div className="flex items-baseline justify-between mb-2">
+            <span className="text-xs text-fg-3">
               {isAr ? 'الاستخدام اليوم' : 'Used today'}
             </span>
-            <span
-              style={{
-                fontSize: '12px',
-                color: '#f0ede6',
-                fontFamily: 'JetBrains Mono, monospace',
-              }}
-              dir="ltr"
-            >
-              {todayUsage} / {globalCap}
+            <span className="text-xs font-mono text-fg-1" dir="ltr">
+              {todayUsage.toLocaleString()} / {globalCap.toLocaleString()}
             </span>
           </div>
           <div
-            style={{
-              height: '6px',
-              background: 'var(--gf-card-hover)',
-              borderRadius: '3px',
-            }}
+            className="h-2 rounded-full overflow-hidden"
+            style={{ background: 'var(--gf-input-bg)' }}
           >
             <div
+              className="h-full rounded-full transition-all"
               style={{
-                width: `${Math.min((todayUsage / Math.max(globalCap, 1)) * 100, 100)}%`,
-                height: '100%',
-                background: todayUsage > globalCap * 0.8 ? '#c0392b' : '#84cc16',
-                borderRadius: '3px',
-                transition: 'width 0.3s ease',
+                width: `${usagePct}%`,
+                background: usageHot
+                  ? 'linear-gradient(90deg, #f43f5e, #f43f5ecc)'
+                  : 'linear-gradient(90deg, #a3e635, #a3e635cc)',
+                boxShadow: usageHot
+                  ? '0 0 8px rgba(244,63,94,0.5)'
+                  : '0 0 8px rgba(163,230,53,0.45)',
               }}
             />
           </div>
         </div>
 
-        <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
-          <input
-            type="number"
+        <div className="flex flex-wrap items-center gap-3">
+          <NumberField
             value={globalCap}
-            onChange={(e) => setGlobalCap(Number(e.target.value))}
+            onChange={setGlobalCap}
             min={100}
             max={10000}
-            style={{
-              width: '120px',
-              padding: '10px 14px',
-              background: 'rgba(255,255,255,0.05)',
-              border: '1px solid rgba(255,255,255,0.1)',
-              borderRadius: '8px',
-              color: '#f0ede6',
-              fontFamily: 'JetBrains Mono, monospace',
-              fontSize: '15px',
-            }}
-            dir="ltr"
+            width={120}
+            tint="#fbbf24"
           />
-          <span
-            style={{
-              fontSize: '13px',
-              color: '#9baf9f',
-              fontFamily: 'Inter, sans-serif',
-            }}
-          >
+          <span className="text-xs text-fg-3">
             {isAr ? 'طلب / يوم' : 'requests / day'}
           </span>
-          <button
-            type="button"
+          <SaveButton
+            isAr={isAr}
+            saving={saving === 'global'}
+            saved={saved === 'global'}
             onClick={saveGlobalCap}
-            disabled={saving === 'global'}
-            style={{
-              background:
-                saving === 'global'
-                  ? 'rgba(61,122,74,0.5)'
-                  : saved === 'global'
-                    ? '#4caf72'
-                    : '#3d7a4a',
-              color: '#f0ede6',
-              border: 'none',
-              borderRadius: '8px',
-              padding: '10px 20px',
-              fontFamily: 'Inter, sans-serif',
-              fontWeight: 600,
-              fontSize: '13px',
-              cursor: saving === 'global' ? 'not-allowed' : 'pointer',
-            }}
-          >
-            {saved === 'global'
-              ? isAr
-                ? '✓ تم الحفظ'
-                : '✓ Saved'
-              : isAr
-                ? 'حفظ'
-                : 'Save'}
-          </button>
+          />
         </div>
-      </div>
+      </article>
 
-      {/* Feature cards */}
+      {/* Per-feature cards */}
       {FEATURES.map((feature) => (
-        <div
+        <article
           key={feature.key}
-          style={{
-            background: 'var(--gf-card)',
-            border: '0.5px solid #243d2a',
-            borderRadius: '12px',
-            padding: '24px',
-            marginBottom: '16px',
-          }}
+          className="rounded-xl border border-border bg-surface p-5 md:p-6"
         >
-          <div
-            style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'flex-start',
-              marginBottom: '20px',
-              gap: '12px',
-              flexWrap: 'wrap',
-            }}
-          >
-            <div>
-              <h3
-                style={{
-                  fontFamily: 'Inter, sans-serif',
-                  fontWeight: 600,
-                  fontSize: '1rem',
-                  color: '#f0ede6',
-                  margin: '0 0 4px',
-                }}
-              >
-                {feature.icon} {isAr ? feature.labelAr : feature.label}
-              </h3>
-              <p
-                style={{
-                  fontFamily: 'Inter, sans-serif',
-                  fontSize: '0.8rem',
-                  color: '#9baf9f',
-                  margin: 0,
-                }}
-              >
-                {isAr ? feature.descAr : feature.desc}
-              </p>
+          <header className="flex items-start justify-between gap-3 mb-5 flex-wrap">
+            <div className="flex items-start gap-3 min-w-0">
+              <feature.Icon
+                className="w-5 h-5 mt-0.5 flex-shrink-0"
+                strokeWidth={1.75}
+                color={feature.tint}
+              />
+              <div className="min-w-0">
+                <h3 className="text-base font-semibold text-fg-1">
+                  {isAr ? feature.labelAr : feature.label}
+                </h3>
+                <p className="mt-0.5 text-xs text-fg-3">
+                  {isAr ? feature.descAr : feature.desc}
+                </p>
+              </div>
             </div>
-            <button
-              type="button"
+            <SaveButton
+              isAr={isAr}
+              saving={saving === feature.key}
+              saved={saved === feature.key}
               onClick={() => saveFeature(feature.key, feature.settingKey)}
-              disabled={saving === feature.key}
-              style={{
-                background:
-                  saving === feature.key
-                    ? 'rgba(61,122,74,0.5)'
-                    : saved === feature.key
-                      ? '#4caf72'
-                      : '#3d7a4a',
-                color: '#f0ede6',
-                border: 'none',
-                borderRadius: '8px',
-                padding: '10px 20px',
-                fontFamily: 'Inter, sans-serif',
-                fontWeight: 600,
-                fontSize: '13px',
-                cursor: saving === feature.key ? 'not-allowed' : 'pointer',
-              }}
-            >
-              {saved === feature.key
-                ? isAr
-                  ? '✓ تم الحفظ'
-                  : '✓ Saved'
-                : isAr
-                  ? 'حفظ'
-                  : 'Save'}
-            </button>
-          </div>
+            />
+          </header>
 
-          <div
-            className="grid grid-cols-2 sm:grid-cols-4 gap-3"
-          >
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             {TIERS.map((tier) => {
               const v = limits[feature.key]?.[tier] ?? 0
+              const tint = TIER_TINT[tier]
               return (
                 <div key={tier}>
-                  <div
+                  <span
+                    className="inline-flex items-center mb-2"
                     style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '6px',
-                      marginBottom: '8px',
+                      height: 18,
+                      padding: '0 8px',
+                      borderRadius: 999,
+                      fontSize: 9.5,
+                      fontWeight: 800,
+                      letterSpacing: '0.08em',
+                      textTransform: 'uppercase',
+                      lineHeight: 1,
+                      background: `${tint}1f`,
+                      color: tint,
                     }}
                   >
-                    <div
-                      style={{
-                        width: '8px',
-                        height: '8px',
-                        borderRadius: '50%',
-                        background: TIER_COLORS[tier],
-                      }}
-                    />
-                    <span
-                      style={{
-                        fontFamily: 'Inter, sans-serif',
-                        fontWeight: 600,
-                        fontSize: '12px',
-                        textTransform: 'uppercase',
-                        letterSpacing: '0.06em',
-                        color: TIER_COLORS[tier],
-                      }}
-                    >
-                      {tier}
-                    </span>
-                  </div>
-                  <input
-                    type="number"
+                    {tier}
+                  </span>
+                  <NumberField
                     value={v}
-                    onChange={(e) =>
-                      updateLimit(feature.key, tier, Number(e.target.value))
-                    }
+                    onChange={(n) => updateLimit(feature.key, tier, n)}
                     min={0}
                     max={999}
-                    style={{
-                      width: '100%',
-                      padding: '10px 12px',
-                      background: 'rgba(255,255,255,0.05)',
-                      border: `1px solid ${TIER_COLORS[tier]}40`,
-                      borderRadius: '8px',
-                      color: '#f0ede6',
-                      fontFamily: 'JetBrains Mono, monospace',
-                      fontSize: '16px',
-                      textAlign: 'center',
-                    }}
-                    dir="ltr"
+                    width="100%"
+                    tint={tint}
+                    centered
                   />
-                  <p
-                    style={{
-                      fontFamily: 'Inter, sans-serif',
-                      fontSize: '10px',
-                      color: '#5c7262',
-                      margin: '4px 0 0',
-                      textAlign: 'center',
-                    }}
-                  >
+                  <p className="mt-1.5 text-[10px] text-fg-3 text-center">
                     {v === 0
                       ? isAr
                         ? 'معطّل'
@@ -493,32 +356,27 @@ export default function AILimitsPage() {
               )
             })}
           </div>
-        </div>
+        </article>
       ))}
 
       {/* Quick guide */}
-      <div
+      <article
+        className="rounded-xl p-5"
         style={{
-          background: 'rgba(61,122,74,0.08)',
-          border: '0.5px solid rgba(61,122,74,0.3)',
-          borderRadius: '12px',
-          padding: '20px',
+          background: 'rgba(163,230,53,0.06)',
+          border: '1px solid rgba(163,230,53,0.2)',
         }}
       >
-        <h4
-          style={{
-            fontFamily: 'Inter, sans-serif',
-            fontWeight: 600,
-            fontSize: '0.85rem',
-            color: '#84cc16',
-            margin: '0 0 12px',
-          }}
-        >
-          {isAr ? '💡 دليل الاستخدام' : '💡 Quick Guide'}
+        <h4 className="text-xs uppercase tracking-eyebrow font-semibold mb-3 inline-flex items-center gap-1.5"
+            style={{ color: '#a3e635' }}>
+          <Lightbulb
+            className="w-3.5 h-3.5"
+            strokeWidth={1.75}
+            color="currentColor"
+          />
+          {isAr ? 'دليل الاستخدام' : 'Quick Guide'}
         </h4>
-        <div
-          style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}
-        >
+        <ul className="space-y-2">
           {(
             isAr
               ? [
@@ -532,41 +390,111 @@ export default function AILimitsPage() {
                   ['999', 'Unlimited (no restrictions)'],
                 ]
           ).map(([val, desc]) => (
-            <div
-              key={val}
-              style={{
-                display: 'flex',
-                gap: '12px',
-                alignItems: 'center',
-              }}
-            >
+            <li key={val} className="flex items-center gap-3">
               <code
+                className="font-mono text-xs inline-flex items-center justify-center"
                 style={{
-                  fontFamily: 'JetBrains Mono, monospace',
-                  fontSize: '13px',
-                  color: '#84cc16',
-                  background: 'rgba(132,204,22,0.1)',
-                  padding: '2px 8px',
-                  borderRadius: '4px',
-                  minWidth: '40px',
-                  textAlign: 'center',
+                  height: 22,
+                  minWidth: 48,
+                  padding: '0 8px',
+                  borderRadius: 6,
+                  background: 'rgba(163,230,53,0.12)',
+                  color: '#a3e635',
+                  fontWeight: 600,
                 }}
               >
                 {val}
               </code>
-              <span
-                style={{
-                  fontFamily: 'Inter, sans-serif',
-                  fontSize: '13px',
-                  color: '#9baf9f',
-                }}
-              >
-                {desc}
-              </span>
-            </div>
+              <span className="text-xs text-fg-2">{desc}</span>
+            </li>
           ))}
-        </div>
-      </div>
+        </ul>
+      </article>
     </div>
+  )
+}
+
+/* ── Components ──────────────────────────────────────────────────── */
+
+/**
+ * Dashboard input recipe (var(--gf-input-bg) + var(--gf-border) + 8px
+ * radius). Accepts a tint prop that applies a subtle accent to the
+ * border so per-tier cells stay color-coded without going candy.
+ */
+function NumberField({
+  value,
+  onChange,
+  min,
+  max,
+  width,
+  tint,
+  centered,
+}: {
+  value: number
+  onChange: (n: number) => void
+  min?: number
+  max?: number
+  width: number | string
+  tint?: string
+  centered?: boolean
+}) {
+  return (
+    <input
+      type="number"
+      value={Number.isNaN(value) ? '' : value}
+      onChange={(e) => onChange(Number(e.target.value))}
+      min={min}
+      max={max}
+      dir="ltr"
+      className="h-10 px-3 rounded-lg text-sm font-mono text-fg-1 focus:outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+      style={{
+        width,
+        background: 'var(--gf-input-bg)',
+        border: `1px solid ${tint ? `${tint}40` : 'var(--gf-border)'}`,
+        textAlign: centered ? 'center' : 'start',
+      }}
+    />
+  )
+}
+
+/**
+ * Save button used by both the global cap and each per-feature card.
+ * Uses the lime primary CTA shape that ships across the rest of the
+ * dashboard, with a "saved" success state that flashes green then
+ * fades away.
+ */
+function SaveButton({
+  isAr,
+  saving,
+  saved,
+  onClick,
+}: {
+  isAr: boolean
+  saving: boolean
+  saved: boolean
+  onClick: () => void
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={saving}
+      className="inline-flex items-center gap-1.5 rounded-pill bg-gradient-to-b from-lime-400 to-lime-600 text-bg font-semibold h-9 px-4 text-xs shadow-lime-glow border border-lime-600/60 hover:-translate-y-px transition-transform disabled:opacity-50 disabled:cursor-wait disabled:hover:translate-y-0"
+    >
+      {saved ? (
+        <Check
+          className="w-3.5 h-3.5"
+          strokeWidth={2.5}
+          color="currentColor"
+        />
+      ) : (
+        <Save
+          className="w-3.5 h-3.5"
+          strokeWidth={2}
+          color="currentColor"
+        />
+      )}
+      {saved ? (isAr ? 'تم الحفظ' : 'Saved') : isAr ? 'حفظ' : 'Save'}
+    </button>
   )
 }
