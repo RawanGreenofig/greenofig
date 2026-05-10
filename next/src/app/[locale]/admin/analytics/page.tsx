@@ -14,6 +14,7 @@ import {
 } from '@/icons'
 import { getBrowserSupabase } from '@/lib/supabase/client'
 import { AIUsageTodaySection } from '@/components/admin/AIUsageTodaySection'
+import { LiveTrafficSection } from '@/components/admin/LiveTrafficSection'
 import {
   AreaChart,
   Area,
@@ -363,6 +364,9 @@ export default function AdminAnalyticsPage() {
           <Kpi key={k.labelKey} kpi={k} tA={tA} />
         ))}
       </section>
+
+      {/* Live website traffic — GA4 Data API */}
+      <LiveTrafficSection />
 
       {/* Growth + Revenue */}
       <section className="grid grid-cols-1 lg:grid-cols-2 gap-6">
