@@ -202,6 +202,81 @@ export default function AdminUserDetailPage() {
 
   const profile: UserProfile = live.data ?? { ...SEED_PROFILE, id: params.id ?? SEED_PROFILE.id }
 
+  // Activity feed: prefer real audit_log + nutrition_logs + bookings rows
+  // for the user. Falls back to the SEED list when nothing's persisted
+  // yet so the empty state isn't blank.
+  const liveActivity = useSupabaseQuery<ActivityEvent[]>(async (supabase) => {
+    if (!params.id) return ACTIVITY
+    const id = params.id
+    const now = Date.now()
+    const hours = (iso: string | null) =>
+      iso ? Math.max(0, Math.round((now - new Date(iso).getTime()) / 3_600_000)) : 0
+
+    type AuditRow = {
+      id: string
+      action: string
+      created_at: string
+      new_value: { tier?: string; role?: string } | null
+    }
+    const { data: auditRows } = await supabase
+      .from('audit_log')
+      .select('id, action, created_at, new_value')
+      .eq('resource_type', 'user')
+      .eq('resource_id', id)
+      .order('created_at', { ascending: false })
+      .limit(20)
+
+    type LogRow = { id: string; logged_at: string }
+    const { data: mealRows } = await supabase
+      .from('nutrition_logs')
+      .select('id, logged_at')
+      .eq('user_id', id)
+      .order('logged_at', { ascending: false })
+      .limit(10)
+
+    type WeightRow = { id: string; logged_at: string }
+    const { data: weightRows } = await supabase
+      .from('progress_entries')
+      .select('id, logged_at')
+      .eq('user_id', id)
+      .order('logged_at', { ascending: false })
+      .limit(5)
+
+    type BookingRow = { id: string; created_at: string }
+    const { data: bookingRows } = await supabase
+      .from('bookings')
+      .select('id, created_at')
+      .eq('client_id', id)
+      .order('created_at', { ascending: false })
+      .limit(5)
+
+    const audit = ((auditRows as AuditRow[] | null) ?? []).map((r): ActivityEvent => ({
+      id: `au-${r.id}`,
+      hoursAgo: hours(r.created_at),
+      kind: r.action.includes('role') ? 'role_changed'
+        : r.action.includes('tier') ? 'tier_changed'
+        : 'signed_in',
+      payload: r.new_value
+        ? { tier: r.new_value.tier, role: r.new_value.role }
+        : undefined,
+    }))
+    const meals = ((mealRows as LogRow[] | null) ?? []).map((r): ActivityEvent => ({
+      id: `m-${r.id}`, hoursAgo: hours(r.logged_at), kind: 'logged_meal',
+    }))
+    const weights = ((weightRows as WeightRow[] | null) ?? []).map((r): ActivityEvent => ({
+      id: `w-${r.id}`, hoursAgo: hours(r.logged_at), kind: 'weight_logged',
+    }))
+    const bookings = ((bookingRows as BookingRow[] | null) ?? []).map((r): ActivityEvent => ({
+      id: `b-${r.id}`, hoursAgo: hours(r.created_at), kind: 'booked_session',
+    }))
+
+    const merged = [...audit, ...meals, ...weights, ...bookings].sort(
+      (a, b) => a.hoursAgo - b.hoursAgo,
+    ).slice(0, 30)
+    return merged.length > 0 ? merged : ACTIVITY
+  }, [params.id])
+  const activityEvents = liveActivity.data ?? ACTIVITY
+
   return (
     <div className="px-4 md:px-8 py-6 md:py-8 max-w-screen-xl mx-auto space-y-6">
       <Link
@@ -343,7 +418,7 @@ export default function AdminUserDetailPage() {
 
       {tab === 'profile'      && <ProfilePane t={t} profile={profile} />}
       {tab === 'subscription' && profile.role === 'user' && <SubPane     t={t} profile={profile} tTiers={tTiers} />}
-      {tab === 'activity'     && <ActivityPane t={t} events={ACTIVITY} />}
+      {tab === 'activity'     && <ActivityPane t={t} events={activityEvents} />}
       {tab === 'danger'       && <DangerPane  t={t} status={profile.status} />}
     </div>
   )

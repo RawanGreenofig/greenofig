@@ -107,8 +107,95 @@ export default function AnalyticsPage() {
   const tTiers = useTranslations('tiers')
   const [period, setPeriod] = useState<Period>('30d')
 
-  const growth = useMemo(() => buildGrowthSeries(PERIOD_DAYS[period]), [period])
-  const sessions = useMemo(() => buildSessionsSeries(PERIOD_DAYS[period]), [period])
+  // Real growth (new users per week) and sessions (bookings per week)
+  // for the active period. Falls back to the synthetic builder when
+  // the DB has nothing yet so the chart isn't blank.
+  interface SeriesRes {
+    growth: { date: string; clients: number }[]
+    sessions: { date: string; sessions: number }[]
+    topPosts: { title: string; views: number; likes: number; comments: number }[]
+  }
+  const seriesRes = useSupabaseQuery<SeriesRes>(async (supabase) => {
+    const days = PERIOD_DAYS[period]
+    const since = new Date()
+    since.setDate(since.getDate() - days)
+    const sinceISO = since.toISOString()
+
+    const [profileRes, bookingRes, postRes] = await Promise.all([
+      supabase
+        .from('profiles')
+        .select('created_at')
+        .eq('role', 'user')
+        .gte('created_at', sinceISO),
+      supabase
+        .from('bookings')
+        .select('scheduled_at')
+        .gte('scheduled_at', sinceISO),
+      supabase
+        .from('posts')
+        .select('title, views, reactions')
+        .eq('is_published', true)
+        .order('views', { ascending: false })
+        .limit(4),
+    ])
+
+    const weeks = Math.max(2, Math.ceil(days / 7))
+    const buckets: { date: string; clients: number; sessions: number }[] = []
+    const today = new Date()
+    for (let i = weeks - 1; i >= 0; i--) {
+      const d = new Date(today)
+      d.setDate(today.getDate() - i * 7)
+      buckets.push({ date: d.toISOString().slice(5, 10), clients: 0, sessions: 0 })
+    }
+    const bucketIndex = (iso: string): number => {
+      const ms = new Date(iso).getTime()
+      const ageDays = Math.max(0, (today.getTime() - ms) / 86_400_000)
+      const idx = weeks - 1 - Math.floor(ageDays / 7)
+      return Math.max(0, Math.min(weeks - 1, idx))
+    }
+    type DatedRow = { created_at?: string; scheduled_at?: string }
+    for (const p of (profileRes.data as DatedRow[] | null) ?? []) {
+      if (p.created_at) buckets[bucketIndex(p.created_at)]!.clients += 1
+    }
+    for (const b of (bookingRes.data as DatedRow[] | null) ?? []) {
+      if (b.scheduled_at) buckets[bucketIndex(b.scheduled_at)]!.sessions += 1
+    }
+
+    type PostRow = {
+      title: string
+      views: number | null
+      reactions: { likes?: number; comments?: number } | null
+    }
+    const topPosts = ((postRes.data as PostRow[] | null) ?? []).map((r) => ({
+      title: r.title,
+      views: r.views ?? 0,
+      likes: r.reactions?.likes ?? 0,
+      comments: r.reactions?.comments ?? 0,
+    }))
+
+    return {
+      growth: buckets.map(({ date, clients }) => ({ date, clients })),
+      sessions: buckets.map(({ date, sessions }) => ({ date, sessions })),
+      topPosts,
+    }
+  }, [period])
+
+  const growth = useMemo(() => {
+    if (seriesRes.data && seriesRes.data.growth.some((r) => r.clients > 0)) {
+      return seriesRes.data.growth
+    }
+    return buildGrowthSeries(PERIOD_DAYS[period])
+  }, [period, seriesRes.data])
+  const sessions = useMemo(() => {
+    if (seriesRes.data && seriesRes.data.sessions.some((r) => r.sessions > 0)) {
+      return seriesRes.data.sessions
+    }
+    return buildSessionsSeries(PERIOD_DAYS[period])
+  }, [period, seriesRes.data])
+  const topPosts =
+    seriesRes.data && seriesRes.data.topPosts.length > 0
+      ? seriesRes.data.topPosts
+      : TOP_POSTS
 
   // Live aggregates: total clients + new-this-period from profiles, tier breakdown
   interface AggregatesRes {
@@ -311,7 +398,7 @@ export default function AnalyticsPage() {
           <p className="text-xs text-fg-3 mt-0.5">{t('topContentBody')}</p>
         </header>
         <ul className="divide-y divide-border">
-          {TOP_POSTS.map((p, i) => (
+          {topPosts.map((p, i) => (
             <li
               key={p.title}
               className="grid grid-cols-[36px_1fr_auto] gap-3 items-center px-5 py-3"

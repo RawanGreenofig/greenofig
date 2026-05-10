@@ -102,6 +102,9 @@ export default function AdminAnalyticsPage() {
     newUsers: number
     activeUsers: number
   } | null>(null)
+  const [liveRevenue, setLiveRevenue] = useState<
+    { month: string; subs: number; sessions: number; store: number }[] | null
+  >(null)
 
   useEffect(() => {
     const supabase = getBrowserSupabase()
@@ -161,6 +164,67 @@ export default function AdminAnalyticsPage() {
         newUsers,
         activeUsers: counts.basic + counts.premium + counts.vip,
       })
+
+      // Revenue chart — group last 6 months of orders + bookings
+      // (using paid_at / created_at) into per-month buckets and stack
+      // them by source so the bar chart shows sub vs sessions vs store
+      // contribution. Subs revenue is computed from the active-subs
+      // count (best-effort), since subscriptions don't store paid_at.
+      const sixAgo = new Date()
+      sixAgo.setMonth(sixAgo.getMonth() - 5)
+      sixAgo.setDate(1)
+      sixAgo.setHours(0, 0, 0, 0)
+      const sinceISO = sixAgo.toISOString()
+
+      type DatedAmount = { created_at: string; amount: number }
+      const [ordersRev, bookingsRev] = await Promise.all([
+        supabase
+          .from('orders')
+          .select('created_at, total_jod')
+          .gte('created_at', sinceISO)
+          .in('status', ['processing', 'shipped', 'delivered']),
+        supabase
+          .from('bookings')
+          .select('created_at, paid_amount_cents')
+          .gte('created_at', sinceISO)
+          .not('paid_amount_cents', 'is', null),
+      ])
+
+      const buckets: Record<string, { subs: number; sessions: number; store: number }> = {}
+      const monthKey = (d: Date) =>
+        d.toLocaleString('en-US', { month: 'short' })
+      for (let i = 0; i < 6; i++) {
+        const d = new Date(sixAgo)
+        d.setMonth(sixAgo.getMonth() + i)
+        buckets[monthKey(d)] = { subs: 0, sessions: 0, store: 0 }
+      }
+
+      for (const o of (ordersRev.data as DatedAmount[] | null) ?? []) {
+        const k = monthKey(new Date(o.created_at))
+        const amt = ((o as unknown as { total_jod?: number }).total_jod ?? 0)
+        if (buckets[k]) buckets[k].store += amt
+      }
+      type BookingPaid = { created_at: string; paid_amount_cents: number | null }
+      for (const b of (bookingsRev.data as BookingPaid[] | null) ?? []) {
+        const k = monthKey(new Date(b.created_at))
+        const cents = b.paid_amount_cents ?? 0
+        if (buckets[k]) buckets[k].sessions += Math.round(cents / 100)
+      }
+      // Subs MRR is a current snapshot — split it equally across the
+      // 6 months as a smoothed estimate. Better than nothing until
+      // the subscriptions table grows a paid_at history.
+      const monthlySubs = Math.round(mrr)
+      for (const k of Object.keys(buckets)) {
+        buckets[k]!.subs = monthlySubs
+      }
+      const revenue = Object.entries(buckets).map(([month, v]) => ({
+        month,
+        subs: v.subs,
+        sessions: v.sessions,
+        store: v.store,
+      }))
+      if (cancelled) return
+      setLiveRevenue(revenue)
     })()
     return () => {
       cancelled = true
@@ -261,7 +325,14 @@ export default function AdminAnalyticsPage() {
 
         <ChartCard title={tA('revenue')} body={tA('revenueBody')}>
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={REVENUE} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
+            <BarChart
+              data={
+                liveRevenue && liveRevenue.some((r) => r.subs + r.sessions + r.store > 0)
+                  ? liveRevenue
+                  : REVENUE
+              }
+              margin={{ top: 8, right: 8, left: 0, bottom: 0 }}
+            >
               <defs>
                 <linearGradient id="revSubs" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="0%"   stopColor="#a3e635" stopOpacity={1} />
