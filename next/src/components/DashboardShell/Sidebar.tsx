@@ -120,9 +120,18 @@ export function Sidebar({
     | 'premium'
     | 'vip'
   // Admin/nutritionist chrome shows the role; only customer accounts
-  // show their tier on the pill.
+  // show their tier on the pill. While role is still loading we
+  // render empty rather than falling back to a cached tier value —
+  // otherwise an admin signing in right after a VIP user briefly
+  // sees 'vip' from the prior session's localStorage cache.
   const pillLabel =
-    role === 'admin' ? 'admin' : role === 'nutritionist' ? 'nutritionist' : tier
+    role === 'admin'
+      ? 'admin'
+      : role === 'nutritionist'
+        ? 'nutritionist'
+        : role === 'user'
+          ? tier
+          : ''
   const initials =
     displayName
       .split(/\s+/)

@@ -21,9 +21,17 @@ export function Topbar({ onOpenMenu }: { onOpenMenu: () => void }) {
   const userTier = (tier ?? 'free') as 'free' | 'basic' | 'premium' | 'vip'
   // Admin and nutritionist chrome shows their role (in role-tinted
   // pill) instead of their tier — the user's tier is irrelevant for
-  // staff accounts.
+  // staff accounts. While role is still loading we render an empty
+  // pill rather than falling back to the cached tier — otherwise an
+  // admin signing in right after a VIP user briefly sees 'vip plan'.
   const pillLabel =
-    role === 'admin' ? 'admin' : role === 'nutritionist' ? 'nutritionist' : `${userTier} plan`
+    role === 'admin'
+      ? 'admin'
+      : role === 'nutritionist'
+        ? 'nutritionist'
+        : role === 'user'
+          ? `${userTier} plan`
+          : ''
   const displayName = resolveDisplayName(profile, user, 'Guest')
   const initials =
     displayName

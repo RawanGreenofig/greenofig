@@ -175,7 +175,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           clearCachedTier()
           return
         }
-        if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+        if (event === 'SIGNED_IN') {
+          // New sign-in → drop any cached tier from a prior user
+          // before fetching the new profile. Otherwise the
+          // never-downgrade rule in applyTier holds onto the
+          // previous account's tier (e.g. previous user was VIP
+          // → admin signs in but UI still reads 'vip' from cache).
+          setTier(null)
+          clearCachedTier()
+          await fetchAndApplyProfile(nextSession.user.id)
+        }
+        if (event === 'TOKEN_REFRESHED') {
           await fetchAndApplyProfile(nextSession.user.id)
         }
       },
