@@ -68,9 +68,9 @@ export function FooterSection() {
       </motion.div>
 
       <div className="relative z-10 max-w-screen-xl mx-auto px-6 py-16">
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-x-8 gap-y-10">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-12 gap-x-8 gap-y-10">
           {/* Col 1 — brand */}
-          <div className="col-span-1 sm:col-span-2 md:col-span-1 max-w-xs">
+          <div className="col-span-1 sm:col-span-2 md:col-span-3 max-w-xs">
             <Link href="/" aria-label="Greenofig">
               <Wordmark size="lg" />
             </Link>
@@ -108,34 +108,47 @@ export function FooterSection() {
             </div>
           </div>
 
-          {/* Col 2 — Navigate */}
-          <FooterCol title={tRoot('footerNavigate')}>
-            <FooterLink href="/" label={tNav('home')} />
-            <FooterLink href="/about" label={tNav('about')} />
-            <FooterLink href="/#services" label={tNav('services')} />
-            <FooterLink href="/pricing" label={tNav('pricing')} />
-            <FooterLink href="/#community" label={tNav('community')} />
-            <FooterLink href="/#store" label={tNav('store')} />
-            <FooterLink href="/blog" label={tNav('blog')} />
-            <FooterLink href="/reviews" label={tNav('reviews')} />
-            <FooterLink href="/careers" label={tNav('careers')} />
-          </FooterCol>
+          {/* Col 2 — Navigate (single heading, two sub-columns: 5 + 4) */}
+          <div className="md:col-span-5">
+            <p className="text-xs font-semibold uppercase tracking-eyebrow text-fg-3 mb-4">
+              {tRoot('footerNavigate')}
+            </p>
+            <div className="grid grid-cols-2 gap-x-6">
+              <ul className="space-y-2.5">
+                <FooterLink href="/" label={tNav('home')} />
+                <FooterLink href="/about" label={tNav('about')} />
+                <FooterLink href="/#services" label={tNav('services')} />
+                <FooterLink href="/pricing" label={tNav('pricing')} />
+                <FooterLink href="/#community" label={tNav('community')} />
+              </ul>
+              <ul className="space-y-2.5">
+                <FooterLink href="/#store" label={tNav('store')} />
+                <FooterLink href="/blog" label={tNav('blog')} />
+                <FooterLink href="/reviews" label={tNav('reviews')} />
+                <FooterLink href="/careers" label={tNav('careers')} />
+              </ul>
+            </div>
+          </div>
 
           {/* Col 3 — Account */}
-          <FooterCol title={tRoot('footerAccount')}>
-            <FooterLink href="/sign-in" label={tNav('signIn')} />
-            <FooterLink href="/sign-up" label={tNav('createAccount')} />
-            <FooterLink href="/dashboard" label={tNav('dashboard')} />
-            <FooterLink href="/dashboard/settings" label={tNav('settings')} />
-          </FooterCol>
+          <div className="md:col-span-2">
+            <FooterCol title={tRoot('footerAccount')}>
+              <FooterLink href="/sign-in" label={tNav('signIn')} />
+              <FooterLink href="/sign-up" label={tNav('createAccount')} />
+              <FooterLink href="/dashboard" label={tNav('dashboard')} />
+              <FooterLink href="/dashboard/settings" label={tNav('settings')} />
+            </FooterCol>
+          </div>
 
           {/* Col 4 — Legal */}
-          <FooterCol title={tRoot('footerLegal')}>
-            <FooterLink href="/privacy" label={tLegal('privacy')} />
-            <FooterLink href="/terms" label={tLegal('terms')} />
-            <FooterLink href="/cookies" label={tLegal('cookies')} />
-            <FooterLink href="/accessibility" label={tLegal('accessibility')} />
-          </FooterCol>
+          <div className="md:col-span-2">
+            <FooterCol title={tRoot('footerLegal')}>
+              <FooterLink href="/privacy" label={tLegal('privacy')} />
+              <FooterLink href="/terms" label={tLegal('terms')} />
+              <FooterLink href="/cookies" label={tLegal('cookies')} />
+              <FooterLink href="/accessibility" label={tLegal('accessibility')} />
+            </FooterCol>
+          </div>
         </div>
 
         {/* Bottom bar */}
