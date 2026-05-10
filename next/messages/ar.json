@@ -1,4 +1,7 @@
 {
+  "maintenanceBanner": {
+    "message": "نقوم ببعض التحديثات. قد لا تتوفّر بعض الميزات لفترة وجيزة."
+  },
   "common": {
     "verified": "موثّق",
     "verifiedNutritionist": "أخصائية تغذية موثّقة",

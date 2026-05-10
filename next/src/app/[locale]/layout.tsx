@@ -13,6 +13,7 @@ import { GSAPProvider } from '@/providers/GSAPProvider'
 import { AuthProvider } from '@/context/AuthContext'
 import { ToastHost } from '@/components/ToastHost'
 import { FilmGrain } from '@/components/FilmGrain'
+import { MaintenanceBanner } from '@/components/MaintenanceBanner'
 import { routing } from '@/i18n/routing'
 
 // ── Fonts ────────────────────────────────────────────────────────────
@@ -145,6 +146,7 @@ export default async function LocaleLayout({ children, params }: LayoutProps) {
           <AuthProvider>
             <LenisProvider>
               <GSAPProvider>
+                <MaintenanceBanner />
                 {children}
                 <FilmGrain />
                 <ToastHost />

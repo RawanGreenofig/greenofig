@@ -1,4 +1,7 @@
 {
+  "maintenanceBanner": {
+    "message": "We're making updates. Some features may be briefly unavailable."
+  },
   "common": {
     "verified": "Verified",
     "verifiedNutritionist": "Verified Nutritionist",
