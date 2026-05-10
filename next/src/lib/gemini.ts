@@ -26,13 +26,18 @@ export function getGemini(): GoogleGenAI | null {
   return cached
 }
 
-// Model names. Hardcoded to gemini-2.0-flash because the older
-// @google/generative-ai SDK was archived and 1.5 models were
-// flaky on the new client. 2.0-flash supports text + vision +
-// long-context streaming in a single endpoint.
-export const GEMINI_VISION_MODEL = 'gemini-2.0-flash'
-export const GEMINI_TEXT_MODEL = 'gemini-2.0-flash'
-export const GEMINI_RESEARCH_MODEL = 'gemini-2.0-flash'
+// Model names. Switched from gemini-2.0-flash to gemini-2.5-flash
+// because Google reduced the 2.0-flash free-tier quota to 0
+// (the model is on its deprecation path). 2.5-flash supports the
+// same text + vision + streaming API and has an active free tier.
+// Override via GEMINI_TEXT_MODEL / _VISION_MODEL / _RESEARCH_MODEL
+// env vars without redeploying if Google moves models again.
+export const GEMINI_VISION_MODEL =
+  process.env.GEMINI_VISION_MODEL ?? 'gemini-2.5-flash'
+export const GEMINI_TEXT_MODEL =
+  process.env.GEMINI_TEXT_MODEL ?? 'gemini-2.5-flash'
+export const GEMINI_RESEARCH_MODEL =
+  process.env.GEMINI_RESEARCH_MODEL ?? 'gemini-2.5-flash'
 
 /** True when the Gemini integration is configured for this environment. */
 export const isGeminiConfigured = () => !!apiKey()
