@@ -89,8 +89,18 @@ export async function middleware(request: NextRequest) {
 
   const role = ((profile as { role?: string } | null)?.role ?? 'user') as Allowed
   if (!(protectedRoute.allowed as readonly string[]).includes(role)) {
+    // Send each role to its own home, not a generic /dashboard. A
+    // nutritionist who hits /admin should land on /nutritionist (their
+    // actual workspace), not on the user-side dashboard which is for
+    // their personal nutrition tracking.
+    const home: Record<Allowed, string> =
+      {
+        admin: '/admin',
+        nutritionist: '/nutritionist',
+        user: '/dashboard',
+      }
     return NextResponse.redirect(
-      new URL(localePath(locale, '/dashboard'), request.url),
+      new URL(localePath(locale, home[role] ?? '/dashboard'), request.url),
     )
   }
 

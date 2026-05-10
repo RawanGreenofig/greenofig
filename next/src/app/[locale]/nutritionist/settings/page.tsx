@@ -623,30 +623,42 @@ function SessionRow({
   onFree?: (v: boolean) => void
 }) {
   return (
-    <div className="flex flex-wrap items-center gap-4">
-      <Video
-        className="w-5 h-5 flex-shrink-0"
-        strokeWidth={1.75}
-        color={tint}
-      />
-      <p className="text-sm font-semibold text-fg-1 flex-1 min-w-0">{name}</p>
-      <div className="flex items-center gap-2 ms-auto">
-        <Field label={t('sessions.duration')} compact>
-          <NumInput
-            value={duration}
-            onChange={onDuration}
-            suffix={t('sessions.minutes')}
+    <div className="space-y-4">
+      {/*
+        Layout:
+        - Phone: title row (icon + name) on top, inputs row below.
+        - sm+: single row with title on the left, inputs on the right.
+        Using `items-end` on the desktop row keeps the input labels and
+        the title baseline-aligned even though the labels add height
+        above the input.
+      */}
+      <div className="flex flex-col sm:flex-row sm:items-end sm:gap-4 gap-3">
+        <div className="flex items-center gap-3 sm:flex-1 min-w-0 sm:pb-1">
+          <Video
+            className="w-5 h-5 flex-shrink-0"
+            strokeWidth={1.75}
+            color={tint}
           />
-        </Field>
-        <Field label={t('sessions.price')} compact>
-          <div className={free ? 'opacity-40 pointer-events-none' : ''}>
-            <NumInput value={price} onChange={onPrice} suffix="USD" />
-          </div>
-        </Field>
+          <p className="text-sm font-semibold text-fg-1 truncate">{name}</p>
+        </div>
+        <div className="flex items-end gap-3 sm:ms-auto">
+          <Field label={t('sessions.duration')} compact>
+            <NumInput
+              value={duration}
+              onChange={onDuration}
+              suffix={t('sessions.minutes')}
+            />
+          </Field>
+          <Field label={t('sessions.price')} compact>
+            <div className={free ? 'opacity-40 pointer-events-none' : ''}>
+              <NumInput value={price} onChange={onPrice} suffix="USD" />
+            </div>
+          </Field>
+        </div>
       </div>
       {showFreeToggle && onFree && (
         <div
-          className="w-full flex items-center gap-3 mt-2 pt-3"
+          className="flex items-center gap-3 pt-3"
           style={{ borderTop: '1px solid var(--gf-border)' }}
         >
           <Switch on={!!free} onChange={onFree} />
@@ -766,11 +778,7 @@ function Field({
 }) {
   return (
     <div className={compact ? 'inline-block' : ''}>
-      <label
-        className={`block text-[10px] uppercase tracking-eyebrow text-fg-3 font-semibold mb-1.5 ${
-          compact ? 'text-end' : ''
-        }`}
-      >
+      <label className="block text-[10px] uppercase tracking-eyebrow text-fg-3 font-semibold mb-1.5">
         {label}
       </label>
       {children}
@@ -814,14 +822,14 @@ function NumInput({
   suffix?: string
 }) {
   return (
-    <div className="relative">
+    <div className="relative inline-block w-24">
       <input
         type="number"
         min={0}
         value={Number.isNaN(value) ? '' : value}
         onChange={(e) => onChange(e.target.value === '' ? 0 : Number(e.target.value))}
-        className={`w-24 h-10 rounded-lg px-3 text-sm font-mono text-fg-1 focus:outline-none ${
-          suffix ? 'pe-12' : ''
+        className={`w-full h-10 rounded-lg px-3 text-sm font-mono text-fg-1 focus:outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none ${
+          suffix ? 'pe-11' : ''
         }`}
         style={{
           background: 'var(--gf-input-bg)',
@@ -830,7 +838,11 @@ function NumInput({
         dir="ltr"
       />
       {suffix && (
-        <span className="absolute end-2.5 top-1/2 -translate-y-1/2 text-[11px] text-fg-3 font-mono" aria-hidden>
+        <span
+          className="absolute top-1/2 -translate-y-1/2 text-[11px] text-fg-3 font-mono pointer-events-none"
+          style={{ insetInlineEnd: '10px' }}
+          aria-hidden
+        >
           {suffix}
         </span>
       )}

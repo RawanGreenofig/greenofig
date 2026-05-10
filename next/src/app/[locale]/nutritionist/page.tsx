@@ -280,17 +280,33 @@ function Kpi({
   unit?: string
 }) {
   return (
-    <article className="rounded-xl border border-border bg-surface p-5">
-      <div className="flex items-center gap-2.5 mb-3">
-        <Icon className="w-6 h-6 flex-shrink-0" strokeWidth={1.75} style={{ color: accent }} />
-        <span className="text-xs uppercase tracking-eyebrow text-fg-3 font-medium">
+    <article
+      className="rounded-xl border border-border bg-surface p-4"
+      style={{ boxShadow: `inset 4px 0 0 ${accent}` }}
+    >
+      <div className="flex items-center gap-2">
+        <Icon
+          className="w-4 h-4 flex-shrink-0"
+          strokeWidth={1.75}
+          color={accent}
+        />
+        <p className="text-[11px] uppercase tracking-eyebrow text-fg-3 font-semibold">
           {label}
-        </span>
+        </p>
       </div>
-      <p className="font-mono text-2xl font-bold text-fg-1" dir="ltr">
+      <p
+        className="mt-2 font-display text-2xl font-bold"
+        style={{ color: accent }}
+        dir="ltr"
+      >
         {value.toLocaleString()}
         {unit && (
-          <span className="ms-1.5 text-sm font-normal text-fg-3">{unit}</span>
+          <span
+            className="ms-1.5 text-sm font-normal"
+            style={{ color: 'var(--gf-fg-3)' }}
+          >
+            {unit}
+          </span>
         )}
       </p>
     </article>
@@ -312,7 +328,7 @@ function ScheduleCard({
         </h2>
         <Link
           href="/nutritionist/calendar"
-          className="text-xs text-lime-400 hover:underline inline-flex items-center gap-1"
+          className="text-xs text-lime-400 hover:underline inline-flex items-center gap-1 whitespace-nowrap shrink-0"
         >
           {t('urgent.viewAll')}
           <ArrowRight className="w-3 h-3 rtl:rotate-180" strokeWidth={2} />
@@ -373,11 +389,21 @@ function SessionItem({
       </div>
       <div className="shrink-0 flex items-center gap-2">
         <span
-          className={`hidden sm:inline-flex items-center rounded-pill h-7 px-2.5 text-[11px] font-semibold uppercase tracking-eyebrow ${
-            isNow
-              ? 'bg-primary/20 text-lime-400'
-              : 'bg-bg-deeper border border-border text-fg-3'
-          }`}
+          className="hidden sm:inline-flex items-center font-mono"
+          style={{
+            height: 18,
+            padding: '0 8px',
+            borderRadius: 999,
+            fontSize: 9.5,
+            fontWeight: 800,
+            letterSpacing: '0.08em',
+            textTransform: 'uppercase',
+            lineHeight: 1,
+            background: isNow
+              ? 'rgba(163, 230, 53, 0.12)'
+              : 'var(--gf-input-bg)',
+            color: isNow ? '#a3e635' : 'var(--gf-fg-3)',
+          }}
         >
           {isNow ? t('schedule.now') : t('schedule.in', { time: inLabel })}
         </span>
@@ -432,7 +458,7 @@ function UrgentCard({
         </div>
         <Link
           href="/nutritionist/clients?filter=at_risk"
-          className="text-xs text-lime-400 hover:underline inline-flex items-center gap-1"
+          className="text-xs text-lime-400 hover:underline inline-flex items-center gap-1 whitespace-nowrap shrink-0"
         >
           {t('urgent.viewAll')}
           <ArrowRight className="w-3 h-3 rtl:rotate-180" strokeWidth={2} />
@@ -537,12 +563,13 @@ function OpenClawWidget() {
       className="rounded-xl border border-border bg-surface p-5"
     >
       <header className="flex items-center justify-between gap-3 mb-4 flex-wrap">
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 min-w-0">
           <Bot
-            className="w-6 h-6 text-primary flex-shrink-0"
+            className="w-5 h-5 flex-shrink-0"
             strokeWidth={1.75}
+            color="#a78bfa"
           />
-          <div>
+          <div className="min-w-0">
             <h2 className="text-base font-semibold text-fg-1">
               Quick actions via WhatsApp
             </h2>
@@ -553,7 +580,7 @@ function OpenClawWidget() {
         </div>
         <Link
           href="/admin/openclaw"
-          className="text-xs text-lime-400 hover:underline"
+          className="text-xs text-lime-400 hover:underline whitespace-nowrap shrink-0"
         >
           Set up OpenClaw →
         </Link>
@@ -564,12 +591,25 @@ function OpenClawWidget() {
             <button
               type="button"
               onClick={() => copy(s)}
-              className="inline-flex items-center gap-1.5 rounded-pill bg-bg-deeper border border-border h-9 ps-3 pe-3 text-xs font-medium text-fg-1 hover:border-primary/40"
+              className="inline-flex items-center gap-1.5 h-8 px-3 text-xs font-medium text-fg-1 transition-colors"
+              style={{
+                background: 'var(--gf-input-bg)',
+                border: '1px solid var(--gf-border)',
+                borderRadius: 8,
+              }}
             >
               {copied === s ? (
-                <Check className="w-3 h-3 text-lime-400" strokeWidth={2.5} />
+                <Check
+                  className="w-3 h-3"
+                  strokeWidth={2.5}
+                  color="#a3e635"
+                />
               ) : (
-                <Copy className="w-3 h-3 text-fg-3" strokeWidth={1.75} />
+                <Copy
+                  className="w-3 h-3"
+                  strokeWidth={1.75}
+                  color="var(--gf-fg-3)"
+                />
               )}
               {s}
             </button>
