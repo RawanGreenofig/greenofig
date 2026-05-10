@@ -316,6 +316,71 @@ export default function NutritionistMessagesPage() {
     return () => { cancelled = true }
   }, [userId])
 
+  // Realtime: subscribe to every message insert on conversations the
+  // nutritionist owns and append to the matching thread. Without this,
+  // an incoming client message wouldn't appear until the page reloads.
+  useEffect(() => {
+    if (!userId) return
+    const supabase = getBrowserSupabase()
+    if (!supabase) return
+    const channel = supabase
+      .channel(`nutri-messages:${userId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'messages',
+        },
+        (payload) => {
+          const r = payload.new as {
+            id: string
+            conversation_id: string
+            sender_id: string
+            content: string
+            read_at: string | null
+            created_at: string
+          }
+          // Ignore our own messages (already added optimistically) and
+          // any insert for a conversation we don't own.
+          if (r.sender_id === userId) return
+          const now = Date.now()
+          setThreads((curr) => {
+            const idx = curr.findIndex((t) => t.id === r.conversation_id)
+            if (idx < 0) return curr
+            const existing = curr[idx]!
+            if (existing.messages.some((m) => m.id === r.id)) return curr
+            const updated: ThreadRow = {
+              ...existing,
+              preview: r.content.slice(0, 100),
+              lastAgoMin: 0,
+              unread: existing.unread + 1,
+              messages: [
+                ...existing.messages,
+                {
+                  id: r.id,
+                  fromMe: false,
+                  body: r.content,
+                  ago: Math.max(
+                    0,
+                    Math.floor((now - new Date(r.created_at).getTime()) / 60_000),
+                  ),
+                  read: !!r.read_at,
+                },
+              ],
+            }
+            const next = [...curr]
+            next[idx] = updated
+            return next
+          })
+        },
+      )
+      .subscribe()
+    return () => {
+      void supabase.removeChannel(channel)
+    }
+  }, [userId])
+
   const visible = useMemo(() => {
     const q = query.trim().toLowerCase()
     return threads
@@ -422,11 +487,9 @@ export default function NutritionistMessagesPage() {
             ),
           )
         }
-        // Bump conversation timestamp
-        void supabase
-          .from('conversations')
-          .update({ last_message_at: new Date().toISOString() } as never)
-          .eq('id', active.id)
+        // last_message_at + unread counters are now bumped by the
+        // trg_bump_conversation_on_message trigger on insert; no
+        // manual update needed.
       }
       setSending(false)
     })()

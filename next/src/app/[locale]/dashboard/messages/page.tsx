@@ -537,6 +537,64 @@ function Thread() {
     }
   }, [userId])
 
+  // Realtime: subscribe to new messages on the active conversation so
+  // a reply from Dr. Rawan appears without a refresh. Re-runs whenever
+  // conversationId changes (i.e. after the very first message creates
+  // the conversation row).
+  useEffect(() => {
+    if (!conversationId || !userId) return
+    const supabase = getBrowserSupabase()
+    if (!supabase) return
+    const channel = supabase
+      .channel(`messages:${conversationId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'messages',
+          filter: `conversation_id=eq.${conversationId}`,
+        },
+        (payload) => {
+          const r = payload.new as {
+            id: string
+            sender_id: string
+            content: string
+            read_at: string | null
+            created_at: string
+          }
+          // Skip our own messages (already added optimistically).
+          if (r.sender_id === userId) return
+          const now = Date.now()
+          setMessages((curr) => {
+            if (curr.some((m) => m.id === r.id)) return curr
+            return [
+              ...curr,
+              {
+                id: r.id,
+                fromMe: false,
+                body: r.content,
+                ago: Math.max(
+                  0,
+                  Math.floor((now - new Date(r.created_at).getTime()) / 60_000),
+                ),
+                read: !!r.read_at,
+              },
+            ]
+          })
+          // Mark the just-arrived message as read since the user is here.
+          void supabase
+            .from('messages')
+            .update({ read_at: new Date().toISOString() } as never)
+            .eq('id', r.id)
+        },
+      )
+      .subscribe()
+    return () => {
+      void supabase.removeChannel(channel)
+    }
+  }, [conversationId, userId])
+
   const send = (e: React.FormEvent) => {
     e.preventDefault()
     if (!draft.trim() || sending || !userId) return
