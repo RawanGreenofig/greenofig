@@ -32,6 +32,16 @@ export function Topbar({ onOpenMenu }: { onOpenMenu: () => void }) {
       .toUpperCase() || '?'
 
   const [open, setOpen] = useState(false)
+  // The Topbar is a client component, but the dashboard layout is
+  // still server-rendered. On the server `useAuth()` has no session
+  // (tier === null → "free"), then the client-side hydration flips
+  // it to the real tier ("vip"). React flagged that as a hydration
+  // text mismatch. Gate the tier badge behind a mount flag so the
+  // server render is empty and the real value lands after mount.
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => {
+    setMounted(true)
+  }, [])
   const wrapRef = useRef<HTMLDivElement>(null)
   useEffect(() => {
     const onClick = (e: MouseEvent) => {
@@ -43,7 +53,7 @@ export function Topbar({ onOpenMenu }: { onOpenMenu: () => void }) {
 
   return (
     <header
-      className="flex items-center gap-3 px-4 md:px-6 shrink-0"
+      className="flex items-center gap-2 md:gap-3 px-3 md:px-6 shrink-0"
       style={{
         background: TOPBAR_BG,
         borderBottom: `1px solid ${TOPBAR_BORDER}`,
@@ -105,34 +115,31 @@ export function Topbar({ onOpenMenu }: { onOpenMenu: () => void }) {
         />
       </div>
 
-      {/* Tier pill — subtle reminder of the user's plan, only on desktop */}
+      {/* Tier pill — subtle reminder of the user's plan, only on desktop.
+       * Hidden until client mount to avoid an SSR/CSR text mismatch
+       * (server has no session → "free"; client hydrates → "vip"). */}
       <span
-        className="hidden md:inline-flex items-center"
+        className="tier-pill hidden md:inline-flex"
         style={{
-          fontSize: 10,
-          fontWeight: 700,
-          textTransform: 'uppercase',
-          letterSpacing: '0.1em',
-          color: 'var(--tier-badge-text)',
-          background: 'var(--tier-badge-bg)',
-          padding: '3px 10px',
-          borderRadius: 999,
-          border: '1px solid var(--tier-color)',
-          opacity: 0.85,
-          whiteSpace: 'nowrap',
+          opacity: mounted ? 1 : 0,
+          minWidth: 64,
         }}
+        suppressHydrationWarning
       >
-        {userTier} plan
+        {mounted ? `${userTier} plan` : ''}
       </span>
 
       <div className="sm:hidden flex-1" />
 
-      {/* Back to site */}
+      {/* Back to site — hidden on phones to free up topbar real
+       * estate (the hamburger drawer already exposes this link).
+       * Reappears at sm: where there's room beside the language
+       * switcher + bell + avatar without the avatar getting cropped. */}
       <Link
         href="/"
         aria-label={tNav('backToHome')}
         title={tNav('backToHome')}
-        className="inline-flex items-center justify-center p-2 transition-colors hover:opacity-80"
+        className="hidden sm:inline-flex items-center justify-center p-2 transition-colors hover:opacity-80"
       >
         <Home className="w-5 h-5 text-muted-foreground" strokeWidth={1.75} />
       </Link>
@@ -142,18 +149,14 @@ export function Topbar({ onOpenMenu }: { onOpenMenu: () => void }) {
       <NotificationBell label={t('notifications')} />
 
 
-      {/* Avatar dropdown */}
-      <div className="relative" ref={wrapRef}>
+      {/* Avatar dropdown — bare circle on phones (no surrounding pill
+       * chrome since the chevron is hidden anyway), full pill on
+       * md+ where there's room for the chevron + border. */}
+      <div className="relative shrink-0" ref={wrapRef}>
         <button
           type="button"
           onClick={() => setOpen((o) => !o)}
-          className="inline-flex items-center gap-2 pe-2 ps-0.5 h-10 rounded-full transition-colors"
-          style={{
-            background: FIELD_BG,
-            border: `1px solid ${FIELD_BORDER}`,
-          }}
-          onMouseEnter={(e) => (e.currentTarget.style.background = '#222')}
-          onMouseLeave={(e) => (e.currentTarget.style.background = FIELD_BG)}
+          className="topbar-avatar-btn inline-flex items-center transition-colors"
           aria-haspopup="menu"
           aria-expanded={open}
         >
@@ -173,8 +176,9 @@ export function Topbar({ onOpenMenu }: { onOpenMenu: () => void }) {
               alignItems: 'center',
               justifyContent: 'center',
             }}
+            suppressHydrationWarning
           >
-            {initials.slice(0, 2).toUpperCase()}
+            {mounted ? initials.slice(0, 2).toUpperCase() : ''}
           </span>
           <ChevronDown
             className={cn(

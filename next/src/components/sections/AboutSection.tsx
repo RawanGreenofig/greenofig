@@ -140,8 +140,13 @@ export function AboutSection() {
             ))}
           </div>
 
+          {/* Lead-capture: a "Book a consultation" click should land the
+           * visitor on the homepage assessment quiz so we collect their
+           * email + answers, not on /dashboard (which would redirect
+           * unauthenticated visitors to sign-in). The hash scrolls to
+           * the ConsultationQuiz section (#booking). */}
           <Link
-            href="/dashboard"
+            href="/#booking"
             className="btn-primary"
             style={{ width: 'fit-content', marginTop: 4 }}
           >

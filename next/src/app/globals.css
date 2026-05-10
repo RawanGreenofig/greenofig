@@ -413,6 +413,136 @@ html[dir='rtl'] .lucide-arrow-right {
  * sidebar — replaced with an inline tier pill in the topbar (cleaner
  * visual, no smudgy 3px line at the top of the chrome). */
 
+/* ── Unified tier pill ──────────────────────────────────────────
+ * Single source of truth for the FREE / BASIC / PREMIUM / VIP
+ * indicator that ships in the topbar, sidebar bottom card, and
+ * the settings header. Tints come from --tier-badge-bg /
+ * --tier-badge-text / --tier-color which are flipped per
+ * [data-tier="..."] above. Putting the geometry in CSS (instead
+ * of inline styles) keeps the look identical everywhere and
+ * easy to retune from one place.
+ *
+ * Sizing chosen to read as a dense Linear/Notion-style tag, not
+ * a chunky button: 18px tall, 8px horizontal pad, 10px caps with
+ * letter-spacing, no border by default — the bg + text colour
+ * combo carries the tier identity. The size variant `.tier-pill-md`
+ * is a touch larger for hero placements (settings header). */
+.tier-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 18px;
+  padding: 0 8px;
+  border-radius: 999px;
+  background: var(--tier-badge-bg);
+  color: var(--tier-badge-text);
+  font-size: 9.5px;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  user-select: none;
+  vertical-align: middle;
+  transition: opacity 150ms ease, background-color 150ms ease, color 150ms ease;
+}
+.tier-pill-md {
+  height: 22px;
+  padding: 0 10px;
+  font-size: 10.5px;
+}
+
+/* ── Chip input field ───────────────────────────────────────────
+ * Wraps the typeable input + any chips already added. Geometry
+ * matches a regular dashboard <input> exactly (40px tall, 10px
+ * radius, --gf-input-bg, --gf-border) so the field reads as the
+ * same control type as TARGET WEIGHT, FULL NAME, etc. — not a
+ * nested "input inside a darker box" pattern. */
+.chip-input-field {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  min-height: 40px;
+  padding: 0 12px;
+  border-radius: 8px;
+  background: var(--gf-input-bg);
+  border: 1px solid var(--gf-border);
+  transition: border-color 150ms ease, box-shadow 150ms ease;
+}
+.chip-input-field:focus-within {
+  border-color: var(--gf-primary);
+  box-shadow: 0 0 0 3px rgba(132, 217, 61, 0.15);
+}
+/* ── Topbar avatar dropdown trigger ─────────────────────────────
+ * On phones we render just the avatar circle (no surrounding pill /
+ * border) so the topbar isn't overstuffed and the avatar doesn't
+ * get cropped at the right edge. On md+ the pill chrome reappears
+ * with bg + 1px border + chevron room. */
+.topbar-avatar-btn {
+  background: transparent;
+  border: none;
+  border-radius: 9999px;
+  padding: 0;
+  height: 32px;
+}
+@media (min-width: 768px) {
+  .topbar-avatar-btn {
+    background: var(--gf-surface-raised);
+    border: 1px solid var(--gf-border);
+    padding: 0 8px 0 2px;
+    height: 40px;
+    gap: 8px;
+  }
+  .topbar-avatar-btn:hover {
+    background: #222;
+  }
+}
+
+/* ── Bare-input helper ──────────────────────────────────────────
+ * Defeats the dashboard-scope `input { ... !important }` block
+ * (further down at line ~1152) so an input rendered INSIDE a
+ * styled wrapper reads as just text — no second border, no own
+ * background, no radius, no focus ring (the parent wrapper carries
+ * the field chrome and the focus-within ring).
+ *
+ * Why the long :not() chain: the dashboard rule has five
+ * `:not([type='X'])` pseudo-classes that each add class-level
+ * specificity weight. The override has to mirror that chain, OR
+ * the dashboard rule wins at (0,6,1) vs our (0,2,1) — and
+ * !important alone doesn't break the tie when both rules use
+ * !important.
+ *
+ * Apply via `<input className="bare-input" ... />` for any input
+ * that lives inside a wrapper providing its own border + bg
+ * (chip composers, icon-prefixed search bars, suffix-bearing
+ * money inputs, etc.). The `.chip-input-field input` pair below
+ * is a convenience for the chip composer specifically. */
+[data-theme='dashboard']
+  input.bare-input:not([type='checkbox']):not([type='radio']):not([type='range']):not([type='color']):not([type='file']),
+[data-theme='dashboard']
+  input.bare-input:not([type='checkbox']):not([type='radio']):not([type='range']):not([type='color']):not([type='file']):focus,
+[data-theme='dashboard']
+  input.bare-input:not([type='checkbox']):not([type='radio']):not([type='range']):not([type='color']):not([type='file']):focus-visible,
+[data-theme='dashboard']
+  .chip-input-field
+  input:not([type='checkbox']):not([type='radio']):not([type='range']):not([type='color']):not([type='file']),
+[data-theme='dashboard']
+  .chip-input-field
+  input:not([type='checkbox']):not([type='radio']):not([type='range']):not([type='color']):not([type='file']):focus,
+[data-theme='dashboard']
+  .chip-input-field
+  input:not([type='checkbox']):not([type='radio']):not([type='range']):not([type='color']):not([type='file']):focus-visible {
+  background: transparent !important;
+  border: none !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  outline: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
 /* ── Dashboard light mode ────────────────────────────────────────
  * Set inside <ThemeProvider> via a wrapping `data-dash-theme` div.
  * Only the dashboard scope responds — the marketing site keeps its

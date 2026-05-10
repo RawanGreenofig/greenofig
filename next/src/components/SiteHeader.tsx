@@ -180,10 +180,11 @@ export function SiteHeader() {
                       width: 32,
                       height: 32,
                       borderRadius: '50%',
-                      background: '#1a2e1f',
-                      color: '#4ade80',
+                      background:
+                        'linear-gradient(135deg, #a3e635 0%, #65a30d 100%)',
+                      color: '#0d1a12',
                       fontSize: 11,
-                      fontWeight: 700,
+                      fontWeight: 800,
                       lineHeight: 1,
                       textAlign: 'center',
                       flexShrink: 0,
@@ -192,6 +193,8 @@ export function SiteHeader() {
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
+                      boxShadow:
+                        '0 0 0 1px rgba(163,230,53,0.35), 0 0 12px rgba(163,230,53,0.25)',
                     }}
                   >
                     {initials.slice(0, 2).toUpperCase()}
@@ -227,10 +230,11 @@ export function SiteHeader() {
                             width: 40,
                             height: 40,
                             borderRadius: '50%',
-                            background: '#1a2e1f',
-                            color: '#4ade80',
-                            fontSize: 12,
-                            fontWeight: 700,
+                            background:
+                              'linear-gradient(135deg, #a3e635 0%, #65a30d 100%)',
+                            color: '#0d1a12',
+                            fontSize: 13,
+                            fontWeight: 800,
                             lineHeight: 1,
                             textAlign: 'center',
                             flexShrink: 0,
@@ -239,6 +243,8 @@ export function SiteHeader() {
                             display: 'inline-flex',
                             alignItems: 'center',
                             justifyContent: 'center',
+                            boxShadow:
+                              '0 0 0 1px rgba(163,230,53,0.35), 0 0 14px rgba(163,230,53,0.25)',
                           }}
                         >
                           {initials.slice(0, 2).toUpperCase()}

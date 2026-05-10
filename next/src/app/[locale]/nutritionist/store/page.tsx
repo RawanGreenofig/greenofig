@@ -4,6 +4,9 @@ import { useEffect, useMemo, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { getBrowserSupabase } from '@/lib/supabase/client'
 import { SendDiscountSection } from '@/components/nutritionist/SendDiscountSection'
+// Brand-colored icon module — Sparkles ships in amber, ShoppingBag /
+// Camera ship in lime, etc. Anything not enumerated in src/icons.tsx
+// re-exports raw from lucide-react via `export *`.
 import {
   Plus,
   Search,
@@ -16,7 +19,34 @@ import {
   Save,
   Camera,
   ShoppingBag,
-} from 'lucide-react'
+  Pill,
+  Apple,
+  ChefHat,
+  BookOpen,
+  Flame,
+} from '@/icons'
+import type { LucideIcon } from 'lucide-react'
+
+// Per-category icon map. Each row's tile picks a category-appropriate
+// icon instead of every product looking like a generic shopping bag.
+// Brand colours come from @/icons but get overridden by the status
+// tint when the product is low/out of stock.
+const CATEGORY_ICON: Record<Category, LucideIcon> = {
+  supplements: Pill,
+  superfoods:  Flame,
+  snacks:      Apple,
+  kitchen:     ChefHat,
+  books:       BookOpen,
+}
+// Per-category brand colour (used when stock is in good shape so the
+// row doesn't lose category cue). Status colours win when low/out.
+const CATEGORY_TINT: Record<Category, string> = {
+  supplements: '#a78bfa', // purple
+  superfoods:  '#a3e635', // lime
+  snacks:      '#fb923c', // orange
+  kitchen:     '#a3e635', // lime
+  books:       '#60a5fa', // blue
+}
 
 type Category = 'supplements' | 'superfoods' | 'snacks' | 'kitchen' | 'books'
 
@@ -234,40 +264,75 @@ export default function StoreCurationPage() {
       </header>
 
       <div className="flex flex-wrap items-center gap-3">
-        <div className="relative flex-1 min-w-[240px]">
+        {/* Search input — full width on phones, flexes alongside the
+         * filter strip on tablet+. min-w-0 lets it actually shrink
+         * without forcing a horizontal scroll on narrow viewports. */}
+        <div className="relative flex-1 min-w-0 basis-full sm:basis-auto sm:min-w-[200px]">
           <Search
-            className="absolute start-4 top-1/2 -translate-y-1/2 w-4 h-4 text-fg-3"
+            className="absolute start-3.5 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none"
             strokeWidth={1.75}
+            style={{ color: 'var(--gf-fg-3)' }}
           />
           <input
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder={t('search')}
-            className="w-full h-11 rounded-pill bg-surface border border-border ps-11 pe-4 text-sm text-fg-1 placeholder-fg-3 focus:outline-none focus:border-primary"
+            className="w-full h-10 ps-10 pe-3 text-sm text-fg-1 placeholder-fg-3"
           />
         </div>
-        <div className="inline-flex items-center gap-0.5 rounded-pill bg-bg-deeper border border-border p-0.5">
-          {(['all', 'visible', 'hidden', 'pick'] as const).map((f) => (
-            <button
-              key={f}
-              type="button"
-              onClick={() => setFilter(f)}
-              className={`px-3 h-8 rounded-pill text-[11px] font-semibold transition-colors ${
-                filter === f
-                  ? 'bg-primary/20 text-lime-400'
-                  : 'text-fg-3 hover:text-fg-1'
-              }`}
-            >
-              {f === 'all'
-                ? t('filterAll')
-                : f === 'visible'
-                  ? t('filterVisible')
-                  : f === 'hidden'
-                    ? t('filterHidden')
-                    : t('filterPick')}
-            </button>
-          ))}
+
+        {/* Filter segmented control — wraps across two rows on tiny
+         * phones if needed, single row otherwise. */}
+        <div
+          className="inline-flex items-center flex-wrap"
+          style={{
+            minHeight: 40,
+            background: 'var(--gf-input-bg)',
+            border: '1px solid var(--gf-border)',
+            borderRadius: 8,
+            padding: 3,
+            gap: 2,
+          }}
+        >
+          {(['all', 'visible', 'hidden', 'pick'] as const).map((f) => {
+            const active = filter === f
+            return (
+              <button
+                key={f}
+                type="button"
+                onClick={() => setFilter(f)}
+                className="inline-flex items-center justify-center px-3 text-[12px] font-semibold transition-colors"
+                style={{
+                  height: 32,
+                  borderRadius: 6,
+                  background: active ? 'rgba(132,217,61,0.12)' : 'transparent',
+                  color: active ? '#a3e635' : 'var(--gf-fg-2)',
+                  letterSpacing: '-0.005em',
+                }}
+                onMouseEnter={(e) => {
+                  if (!active) {
+                    e.currentTarget.style.background = 'var(--gf-card-hover)'
+                    e.currentTarget.style.color = 'var(--gf-fg-1)'
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (!active) {
+                    e.currentTarget.style.background = 'transparent'
+                    e.currentTarget.style.color = 'var(--gf-fg-2)'
+                  }
+                }}
+              >
+                {f === 'all'
+                  ? t('filterAll')
+                  : f === 'visible'
+                    ? t('filterVisible')
+                    : f === 'hidden'
+                      ? t('filterHidden')
+                      : t('filterPick')}
+              </button>
+            )
+          })}
         </div>
       </div>
 
@@ -284,17 +349,30 @@ export default function StoreCurationPage() {
         </div>
       ) : (
         <div className="rounded-xl border border-border bg-surface overflow-hidden">
-          {/* Desktop header */}
-          <div className="hidden md:grid grid-cols-[2fr_1fr_100px_100px_70px_70px_auto] gap-3 px-5 py-3 bg-bg-deeper/40 border-b border-border text-[10px] uppercase tracking-eyebrow text-fg-3 font-semibold">
+          {/* Desktop header — column widths tuned to match the row's
+           * grid-cols template so the labels line up with the values
+           * underneath. Uses the standard dashboard eyebrow style. */}
+          {/* Header — collapsed CATEGORY into the PRODUCT cell so the
+           * product name + description have proper room. The 1fr
+           * category column was getting crushed under the fixed-pixel
+           * columns at typical viewport widths. */}
+          <div
+            className="hidden md:grid grid-cols-[1fr_84px_92px_56px_56px_auto] gap-3 px-5 py-3 text-[10px] uppercase font-semibold"
+            style={{
+              background: 'var(--gf-bg-deeper)',
+              borderBottom: '1px solid var(--gf-border)',
+              color: 'var(--gf-fg-3)',
+              letterSpacing: '0.1em',
+            }}
+          >
             <div>{t('row.name')}</div>
-            <div>{t('row.category')}</div>
             <div className="text-end">{t('row.price')}</div>
             <div className="text-end">{t('row.stock')}</div>
             <div className="text-center">{t('row.drPick')}</div>
             <div className="text-center">{t('row.visible')}</div>
             <div className="sr-only">{t('row.actions')}</div>
           </div>
-          <ul className="divide-y divide-border">
+          <ul className="divide-y" style={{ borderColor: 'var(--gf-border)' }}>
             {visible.map((p) => (
               <ProductRow
                 key={p.id}
@@ -331,109 +409,277 @@ function ProductRow({
 }) {
   const out = product.stock <= 0
   const low = product.stock > 0 && product.stock <= 5
+  // Just the colour — the icon now renders bare like a sidebar nav
+  // item, no tile/border chrome. Status colour wins over category
+  // when stock is bad, so urgency reads first.
+  const catTint = CATEGORY_TINT[product.category]
+  const Icon = CATEGORY_ICON[product.category]
+  const iconColor = out ? '#f43f5e' : low ? '#fbbf24' : catTint
+
+  // Stock pill (Low / Out) extracted so we can drop it in either the
+  // dedicated mobile row or the desktop stock cell.
+  const stockBadge = out ? (
+    <span
+      className="inline-flex items-center justify-center"
+      style={{
+        height: 18,
+        padding: '0 8px',
+        borderRadius: 999,
+        background: 'rgba(244,63,94,0.14)',
+        color: '#f43f5e',
+        fontSize: 9.5,
+        fontWeight: 800,
+        letterSpacing: '0.08em',
+        textTransform: 'uppercase',
+        lineHeight: 1,
+      }}
+    >
+      {t('outBadge')}
+    </span>
+  ) : low ? (
+    <span
+      className="inline-flex items-center justify-center"
+      style={{
+        height: 18,
+        padding: '0 8px',
+        borderRadius: 999,
+        background: 'rgba(232,145,42,0.14)',
+        color: '#fbbf24',
+        fontSize: 9.5,
+        fontWeight: 800,
+        letterSpacing: '0.08em',
+        textTransform: 'uppercase',
+        lineHeight: 1,
+      }}
+    >
+      {t('lowStockBadge')}
+    </span>
+  ) : null
+
   return (
-    <li className="md:grid md:grid-cols-[2fr_1fr_100px_100px_70px_70px_auto] gap-3 items-center px-5 py-3 hover:bg-surface-raised transition-colors">
-      {/* Product */}
-      <div className="flex items-center gap-3 min-w-0 mb-3 md:mb-0">
-        <span
-          className="shrink-0 w-10 h-10 rounded-md flex items-center justify-center"
-          style={{ background: product.hue }}
-        >
-          <ShoppingBag className="w-4 h-4 text-fg-1/50" strokeWidth={1.25} />
-        </span>
+    <li
+      className="md:grid md:grid-cols-[1fr_84px_92px_56px_56px_auto] gap-3 md:items-center px-4 md:px-5 py-3 transition-colors"
+      onMouseEnter={(e) =>
+        (e.currentTarget.style.background = 'var(--gf-card-hover)')
+      }
+      onMouseLeave={(e) =>
+        (e.currentTarget.style.background = 'transparent')
+      }
+    >
+      {/* Product — bare brand icon (sidebar-style) + name + category
+       * eyebrow + description. No tile / border around the icon. */}
+      <div className="flex items-center gap-3 min-w-0 mb-2 md:mb-0">
+        <Icon
+          className="w-5 h-5 shrink-0"
+          strokeWidth={1.75}
+          color={iconColor}
+        />
         <div className="min-w-0 flex-1">
           <p className="text-sm font-medium text-fg-1 truncate">
             {product.name || '— Untitled —'}
           </p>
-          <p className="text-xs text-fg-3 truncate">
+          <p className="text-xs text-fg-3 truncate mt-0.5">
+            <span
+              className="font-semibold uppercase me-2"
+              style={{ letterSpacing: '0.08em', color: 'var(--gf-fg-2)' }}
+            >
+              {t(`categories.${product.category}` as 'categories.supplements')}
+            </span>
             {product.description}
           </p>
         </div>
       </div>
 
-      {/* Category */}
-      <p className="text-xs text-fg-2 mb-1.5 md:mb-0">
-        {t(`categories.${product.category}` as 'categories.supplements')}
-      </p>
-
-      {/* Price */}
-      <div className="md:text-end mb-1.5 md:mb-0">
-        <p className="font-mono text-sm font-semibold text-fg-1" dir="ltr">
-          {product.price} <span className="text-xs text-fg-3 font-normal">USD</span>
-        </p>
+      {/*
+        Mobile-only single-line summary row. Holds price · stock+badge
+        on the start, the three icon controls on the end. This replaces
+        the previous "every cell on its own line" stack that left huge
+        vertical gaps and felt empty. Hidden on md+ where the desktop
+        grid takes over.
+      */}
+      <div className="flex items-center justify-between gap-3 md:hidden">
+        <div className="flex items-center gap-3 min-w-0">
+          <span className="font-mono text-sm font-semibold text-fg-1" dir="ltr">
+            {product.price}{' '}
+            <span className="text-xs text-fg-3 font-normal">USD</span>
+          </span>
+          <span className="text-fg-3">·</span>
+          <span className="font-mono text-sm text-fg-1" dir="ltr">
+            {product.stock}
+          </span>
+          {stockBadge}
+        </div>
+        <div className="flex items-center gap-1 shrink-0">
+          <ToggleIconButton
+            active={product.drPick}
+            onClick={onTogglePick}
+            ariaLabel={t('togglePick')}
+            activeColor="#fbbf24"
+          >
+            <Sparkles
+              className="w-[18px] h-[18px]"
+              strokeWidth={1.75}
+              color="currentColor"
+              fill={product.drPick ? 'currentColor' : 'none'}
+            />
+          </ToggleIconButton>
+          <ToggleIconButton
+            active={product.visible}
+            onClick={onToggleVisible}
+            ariaLabel={t('toggleVisible')}
+          >
+            {product.visible ? (
+              <Eye className="w-[18px] h-[18px]" strokeWidth={1.75} color="currentColor" />
+            ) : (
+              <EyeOff className="w-[18px] h-[18px]" strokeWidth={1.75} color="currentColor" />
+            )}
+          </ToggleIconButton>
+          <button
+            type="button"
+            onClick={onEdit}
+            aria-label="Edit product"
+            className="inline-flex items-center justify-center transition-colors"
+            style={{
+              width: 30,
+              height: 30,
+              borderRadius: 8,
+              background: 'transparent',
+              border: 'none',
+              color: 'var(--gf-fg-3)',
+            }}
+          >
+            <Edit3
+              className="w-[18px] h-[18px]"
+              strokeWidth={1.75}
+              color="currentColor"
+            />
+          </button>
+        </div>
       </div>
 
-      {/* Stock */}
-      <div className="md:text-end mb-1.5 md:mb-0">
+      {/* Desktop-only cells (each becomes its own grid column). */}
+      <div className="hidden md:block md:text-end">
+        <p className="font-mono text-sm font-semibold text-fg-1" dir="ltr">
+          {product.price}{' '}
+          <span className="text-xs text-fg-3 font-normal">USD</span>
+        </p>
+      </div>
+      <div className="hidden md:block md:text-end">
         <p className="font-mono text-sm text-fg-1" dir="ltr">
           {product.stock}
         </p>
-        {low && !out && (
-          <span className="rounded-pill h-4 px-1.5 inline-flex items-center text-[9px] uppercase tracking-eyebrow font-bold mt-0.5"
-            style={{ background: 'rgb(232 145 42 / 0.16)', color: '#e8912a' }}>
-            {t('lowStockBadge')}
-          </span>
-        )}
-        {out && (
-          <span className="rounded-pill h-4 px-1.5 inline-flex items-center text-[9px] uppercase tracking-eyebrow font-bold mt-0.5"
-            style={{ background: 'rgb(244 63 94 / 0.14)', color: '#f43f5e' }}>
-            {t('outBadge')}
-          </span>
-        )}
+        {stockBadge && <div className="mt-1">{stockBadge}</div>}
       </div>
-
-      {/* Dr. pick */}
-      <div className="flex md:justify-center mb-1.5 md:mb-0">
-        <button
-          type="button"
+      <div className="hidden md:flex md:justify-center">
+        <ToggleIconButton
+          active={product.drPick}
           onClick={onTogglePick}
-          aria-label={t('togglePick')}
-          className={`w-9 h-9 rounded-md inline-flex items-center justify-center transition-colors ${
-            product.drPick
-              ? 'bg-primary/15 text-lime-400'
-              : 'bg-surface-raised text-fg-3 hover:text-fg-1'
-          }`}
+          ariaLabel={t('togglePick')}
+          activeColor="#fbbf24"
         >
           <Sparkles
-            className="w-4 h-4"
-            strokeWidth={2}
+            className="w-[18px] h-[18px]"
+            strokeWidth={1.75}
+            color="currentColor"
             fill={product.drPick ? 'currentColor' : 'none'}
           />
-        </button>
+        </ToggleIconButton>
       </div>
-
-      {/* Visible */}
-      <div className="flex md:justify-center mb-3 md:mb-0">
-        <button
-          type="button"
+      <div className="hidden md:flex md:justify-center">
+        <ToggleIconButton
+          active={product.visible}
           onClick={onToggleVisible}
-          aria-label={t('toggleVisible')}
-          className={`w-9 h-9 rounded-md inline-flex items-center justify-center transition-colors ${
-            product.visible
-              ? 'bg-primary/15 text-lime-400'
-              : 'bg-surface-raised text-fg-3 hover:text-fg-1'
-          }`}
+          ariaLabel={t('toggleVisible')}
         >
           {product.visible ? (
-            <Eye className="w-4 h-4" strokeWidth={1.75} />
+            <Eye className="w-[18px] h-[18px]" strokeWidth={1.75} color="currentColor" />
           ) : (
-            <EyeOff className="w-4 h-4" strokeWidth={1.75} />
+            <EyeOff className="w-[18px] h-[18px]" strokeWidth={1.75} color="currentColor" />
           )}
-        </button>
+        </ToggleIconButton>
       </div>
-
-      {/* Edit */}
-      <div className="md:justify-self-end">
+      <div className="hidden md:block md:justify-self-end">
         <button
           type="button"
           onClick={onEdit}
-          className="inline-flex items-center gap-1.5 rounded-pill bg-surface-raised border border-border h-9 px-4 text-xs font-semibold text-fg-1 hover:border-primary/40"
+          aria-label="Edit product"
+          className="inline-flex items-center justify-center transition-colors"
+          style={{
+            width: 30,
+            height: 30,
+            borderRadius: 8,
+            background: 'transparent',
+            border: 'none',
+            color: 'var(--gf-fg-3)',
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = 'var(--gf-card-hover)'
+            e.currentTarget.style.color = 'var(--gf-fg-1)'
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = 'transparent'
+            e.currentTarget.style.color = 'var(--gf-fg-3)'
+          }}
         >
-          <Edit3 className="w-3 h-3" strokeWidth={1.75} />
-          edit
+          <Edit3
+            className="w-[18px] h-[18px]"
+            strokeWidth={1.75}
+            color="currentColor"
+          />
         </button>
       </div>
     </li>
+  )
+}
+
+/**
+ * Ghost icon toggle for Dr. pick / Visible columns. No tile chrome —
+ * just the icon. State is communicated by colour: brand-tinted when
+ * active, muted when not. A subtle bg appears on hover so the click
+ * affordance stays. Reads the same as Linear / Stripe row actions
+ * rather than chunky button tiles. The `activeColor` lets the Dr.
+ * pick toggle be amber (matching the brand Sparkles palette) while
+ * Visible stays lime.
+ */
+function ToggleIconButton({
+  active,
+  onClick,
+  ariaLabel,
+  activeColor = '#a3e635',
+  children,
+}: {
+  active: boolean
+  onClick: () => void
+  ariaLabel: string
+  activeColor?: string
+  children: React.ReactNode
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-label={ariaLabel}
+      aria-pressed={active}
+      className="inline-flex items-center justify-center transition-colors"
+      style={{
+        width: 30,
+        height: 30,
+        borderRadius: 8,
+        background: 'transparent',
+        border: 'none',
+        color: active ? activeColor : 'var(--gf-fg-3)',
+      }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.background = 'var(--gf-card-hover)'
+        if (!active) e.currentTarget.style.color = 'var(--gf-fg-1)'
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.background = 'transparent'
+        if (!active) e.currentTarget.style.color = 'var(--gf-fg-3)'
+      }}
+    >
+      {children}
+    </button>
   )
 }
 

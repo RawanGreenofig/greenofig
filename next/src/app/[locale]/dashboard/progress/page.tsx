@@ -378,16 +378,24 @@ function MeasurementsCard({
       <h2 className="text-base font-semibold text-fg-1 mb-4">
         {t('measurements')}
       </h2>
-      <ul className="space-y-2.5">
+      {/* Clean row stack — no per-row sub-card, just a thin divider
+       * between fields. The label hugs the start, the input + unit
+       * pair hugs the end on a single baseline. Removes the prior
+       * "outer card → inner pill → input box" three-layer nesting. */}
+      <ul className="divide-y" style={{ borderColor: 'var(--gf-border)' }}>
         {fields.map(({ key, label }) => (
           <li
             key={key}
-            className="flex items-center justify-between gap-3 rounded-lg bg-bg-deeper/50 border border-border px-3 py-2"
+            className="flex items-center justify-between gap-4 py-2.5 first:pt-0 last:pb-0"
+            style={{ borderColor: 'var(--gf-border)' }}
           >
-            <label className="text-sm text-fg-1" htmlFor={`m-${key}`}>
+            <label
+              className="text-sm font-medium text-fg-1"
+              htmlFor={`m-${key}`}
+            >
               {label}
             </label>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5">
               <input
                 id={`m-${key}`}
                 type="number"
@@ -401,10 +409,10 @@ function MeasurementsCard({
                   })
                 }
                 placeholder="—"
-                className="w-20 h-9 rounded-md bg-bg border border-border px-2 text-sm font-mono text-fg-1 text-end focus:outline-none focus:border-primary"
+                className="w-20 h-8 rounded-md bg-bg-deeper border border-transparent hover:border-border px-2 text-sm font-mono text-fg-1 text-end focus:outline-none focus:border-primary focus:bg-bg transition-colors"
                 dir="ltr"
               />
-              <span className="text-xs text-fg-3 font-medium w-6">
+              <span className="text-xs text-fg-3 font-medium w-5 text-start">
                 {t('cm')}
               </span>
             </div>

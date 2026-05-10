@@ -256,39 +256,76 @@ export default function AdminStorePage() {
               {tS('noLowStock')}
             </div>
           ) : (
-            <ul className="divide-y divide-border">
-              {[...outOfStock, ...lowStock].map((p) => (
-                <li
-                  key={p.id}
-                  className="flex items-center gap-3 py-3 first:pt-0 last:pb-0"
-                >
-                  <span
-                    className="shrink-0 w-9 h-9 rounded-md flex items-center justify-center"
-                    style={{ background: p.hue }}
+            <ul className="divide-y" style={{ borderColor: 'var(--gf-border)' }}>
+              {[...outOfStock, ...lowStock].map((p) => {
+                const out = p.stock <= 0
+                // Status-tinted icon tile + matching pill — switching from
+                // per-category bright hues to a status-driven palette makes
+                // the row read as a hierarchy of urgency (red > amber)
+                // instead of an unrelated rainbow.
+                const tone = out
+                  ? { tile: 'rgba(244,63,94,0.12)', text: '#f43f5e', label: 'OUT' }
+                  : {
+                      tile: 'rgba(232,145,42,0.12)',
+                      text: '#fbbf24',
+                      label: `${p.stock} LEFT`,
+                    }
+                return (
+                  <li
+                    key={p.id}
+                    className="flex items-center gap-3 py-3 first:pt-0 last:pb-0 -mx-2 px-2 rounded-lg transition-colors"
+                    onMouseEnter={(e) =>
+                      (e.currentTarget.style.background = 'var(--gf-card-hover)')
+                    }
+                    onMouseLeave={(e) =>
+                      (e.currentTarget.style.background = 'transparent')
+                    }
                   >
-                    <ShoppingBag className="w-4 h-4 text-fg-1/50" strokeWidth={1.25} />
-                  </span>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm text-fg-1 truncate">{p.name}</p>
-                    <p className="text-xs text-fg-3 truncate">{p.category}</p>
-                  </div>
-                  {p.stock <= 0 ? (
                     <span
-                      className="rounded-pill h-5 px-2 inline-flex items-center text-[10px] uppercase tracking-eyebrow font-bold"
-                      style={{ background: 'rgb(244 63 94 / 0.14)', color: '#f43f5e' }}
+                      className="shrink-0 inline-flex items-center justify-center"
+                      style={{
+                        width: 36,
+                        height: 36,
+                        borderRadius: 10,
+                        background: tone.tile,
+                        border: `1px solid ${tone.text}33`,
+                      }}
                     >
-                      out
+                      <ShoppingBag
+                        className="w-4 h-4"
+                        strokeWidth={1.75}
+                        style={{ color: tone.text }}
+                      />
                     </span>
-                  ) : (
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-fg-1 truncate">
+                        {p.name}
+                      </p>
+                      <p className="text-xs text-fg-3 truncate mt-0.5">
+                        {p.category}
+                      </p>
+                    </div>
                     <span
-                      className="rounded-pill h-5 px-2 inline-flex items-center text-[10px] uppercase tracking-eyebrow font-bold"
-                      style={{ background: 'rgb(232 145 42 / 0.14)', color: '#e8912a' }}
+                      className="inline-flex items-center justify-center"
+                      style={{
+                        height: 22,
+                        padding: '0 10px',
+                        borderRadius: 999,
+                        background: tone.tile,
+                        color: tone.text,
+                        fontSize: 10.5,
+                        fontWeight: 800,
+                        letterSpacing: '0.08em',
+                        textTransform: 'uppercase',
+                        lineHeight: 1,
+                        whiteSpace: 'nowrap',
+                      }}
                     >
-                      {p.stock} left
+                      {tone.label}
                     </span>
-                  )}
-                </li>
-              ))}
+                  </li>
+                )
+              })}
             </ul>
           )}
         </article>
@@ -307,48 +344,128 @@ export default function AdminStorePage() {
               <ArrowRight className="w-3 h-3 rtl:rotate-180" strokeWidth={2} />
             </Link>
           </header>
-          <ol className="space-y-2">
+          {/* Featured-order list. Switched from per-row sub-cards to a
+           * dividing-line stack so the article reads as ONE card with
+           * clean rows — no "card inside a card inside a card". The
+           * rank circle uses the lime tier-accent treatment, and the
+           * product icon tile is now a neutral surface so categories
+           * don't introduce a rainbow per row. Move buttons sit in a
+           * subtle pill group at the row end. */}
+          <ol className="divide-y" style={{ borderColor: 'var(--gf-border)' }}>
             {featured.map((id, i) => {
               const p = products.find((x) => x.id === id)
               if (!p) return null
               return (
                 <li
                   key={id}
-                  className="flex items-center gap-3 rounded-md bg-bg-deeper/40 border border-border px-3 py-2"
+                  className="flex items-center gap-3 py-3 first:pt-0 last:pb-0 -mx-2 px-2 rounded-lg transition-colors"
+                  onMouseEnter={(e) =>
+                    (e.currentTarget.style.background = 'var(--gf-card-hover)')
+                  }
+                  onMouseLeave={(e) =>
+                    (e.currentTarget.style.background = 'transparent')
+                  }
                 >
                   <span
-                    className="shrink-0 w-6 h-6 rounded-full inline-flex items-center justify-center bg-primary/15 text-lime-400 font-mono font-bold text-[11px]"
+                    className="shrink-0 inline-flex items-center justify-center font-mono font-bold"
+                    style={{
+                      width: 24,
+                      height: 24,
+                      borderRadius: 999,
+                      background: 'rgba(132,217,61,0.12)',
+                      color: '#a3e635',
+                      fontSize: 11,
+                      letterSpacing: '0.02em',
+                    }}
                     dir="ltr"
                   >
                     {i + 1}
                   </span>
                   <span
-                    className="shrink-0 w-9 h-9 rounded-md flex items-center justify-center"
-                    style={{ background: p.hue }}
+                    className="shrink-0 inline-flex items-center justify-center"
+                    style={{
+                      width: 36,
+                      height: 36,
+                      borderRadius: 10,
+                      background: 'var(--gf-card-hover)',
+                      border: '1px solid var(--gf-border)',
+                    }}
                   >
-                    <ShoppingBag className="w-4 h-4 text-fg-1/50" strokeWidth={1.25} />
+                    <ShoppingBag
+                      className="w-4 h-4"
+                      strokeWidth={1.75}
+                      style={{ color: 'var(--gf-fg-2)' }}
+                    />
                   </span>
-                  <p className="flex-1 min-w-0 text-sm text-fg-1 truncate">
-                    {p.name}
-                  </p>
-                  <button
-                    type="button"
-                    onClick={() => move(id, -1)}
-                    aria-label={tS('moveUp')}
-                    disabled={i === 0}
-                    className="w-7 h-7 rounded-md inline-flex items-center justify-center text-fg-3 hover:text-fg-1 hover:bg-surface-raised disabled:opacity-30"
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-fg-1 truncate">
+                      {p.name}
+                    </p>
+                    <p className="text-xs text-fg-3 truncate mt-0.5">
+                      {p.category}
+                    </p>
+                  </div>
+                  <div
+                    className="shrink-0 inline-flex items-center"
+                    style={{
+                      background: 'var(--gf-card-hover)',
+                      border: '1px solid var(--gf-border)',
+                      borderRadius: 8,
+                      padding: 2,
+                      gap: 2,
+                    }}
                   >
-                    <ChevronUp className="w-3.5 h-3.5" strokeWidth={1.75} />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => move(id, 1)}
-                    aria-label={tS('moveDown')}
-                    disabled={i === featured.length - 1}
-                    className="w-7 h-7 rounded-md inline-flex items-center justify-center text-fg-3 hover:text-fg-1 hover:bg-surface-raised disabled:opacity-30"
-                  >
-                    <ChevronDown className="w-3.5 h-3.5" strokeWidth={1.75} />
-                  </button>
+                    <button
+                      type="button"
+                      onClick={() => move(id, -1)}
+                      aria-label={tS('moveUp')}
+                      disabled={i === 0}
+                      className="inline-flex items-center justify-center rounded-md transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                      style={{
+                        width: 26,
+                        height: 26,
+                        background: 'transparent',
+                        color: 'var(--gf-fg-2)',
+                      }}
+                      onMouseEnter={(e) => {
+                        if (i !== 0) {
+                          e.currentTarget.style.background = 'var(--gf-card)'
+                          e.currentTarget.style.color = 'var(--gf-fg-1)'
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = 'transparent'
+                        e.currentTarget.style.color = 'var(--gf-fg-2)'
+                      }}
+                    >
+                      <ChevronUp className="w-3.5 h-3.5" strokeWidth={2} />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => move(id, 1)}
+                      aria-label={tS('moveDown')}
+                      disabled={i === featured.length - 1}
+                      className="inline-flex items-center justify-center rounded-md transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                      style={{
+                        width: 26,
+                        height: 26,
+                        background: 'transparent',
+                        color: 'var(--gf-fg-2)',
+                      }}
+                      onMouseEnter={(e) => {
+                        if (i !== featured.length - 1) {
+                          e.currentTarget.style.background = 'var(--gf-card)'
+                          e.currentTarget.style.color = 'var(--gf-fg-1)'
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = 'transparent'
+                        e.currentTarget.style.color = 'var(--gf-fg-2)'
+                      }}
+                    >
+                      <ChevronDown className="w-3.5 h-3.5" strokeWidth={2} />
+                    </button>
+                  </div>
                 </li>
               )
             })}

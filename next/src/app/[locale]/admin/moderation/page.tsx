@@ -261,7 +261,7 @@ export default function AdminModerationPage() {
       </header>
 
       {/* Stats */}
-      <section className="grid grid-cols-3 gap-4">
+      <section className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <Stat Icon={AlertOctagon} tint="#f43f5e" label={tM('stats.open')}            value={open} />
         <Stat Icon={CheckCircle2} tint="#a3e635" label={tM('stats.resolvedToday')}   value={resolvedToday} />
         <Stat Icon={Clock}        tint="#06b6d4" label={tM('stats.avgResolutionH')}  value={avgResolution} />
