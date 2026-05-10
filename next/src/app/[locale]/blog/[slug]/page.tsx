@@ -181,40 +181,61 @@ export default async function ArticlePage({ params }: RouteParams) {
 
         {/* Author card */}
         <aside
-          className="blog-card-lift max-w-3xl mx-auto mt-16 p-6 flex flex-col sm:flex-row items-start sm:items-center gap-5"
+          className="blog-card-lift max-w-3xl mx-auto mt-16 p-6 md:p-8"
           style={{
-            background: 'var(--gf-surface)',
+            background:
+              'linear-gradient(135deg, rgba(132,217,61,0.05) 0%, var(--gf-surface) 55%)',
             border: '1px solid var(--gf-border)',
-            borderRadius: 16,
+            borderRadius: 20,
+            boxShadow:
+              '0 1px 0 rgba(255,255,255,0.04) inset, 0 18px 40px rgba(0,0,0,0.28)',
           }}
         >
-          <div className="w-20 h-20 rounded-full overflow-hidden bg-surface-raised shrink-0">
-            <Image
-              src="/images/dr-rawan-othman.jpg"
-              alt={isAr ? NUTRITIONIST.nameAr : NUTRITIONIST.name}
-              width={80}
-              height={80}
-              className="w-full h-full object-cover object-top"
-            />
+          <div className="flex flex-col md:flex-row md:items-start gap-5 md:gap-6">
+            <div
+              className="w-20 h-20 md:w-24 md:h-24 rounded-full overflow-hidden bg-surface-raised shrink-0"
+              style={{ boxShadow: '0 0 0 1px var(--gf-border), 0 0 0 4px rgba(132,217,61,0.12)' }}
+            >
+              <Image
+                src="/images/dr-rawan-othman.jpg"
+                alt={isAr ? NUTRITIONIST.nameAr : NUTRITIONIST.name}
+                width={96}
+                height={96}
+                className="w-full h-full object-cover object-top"
+              />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="inline-flex items-center gap-1.5 font-display font-bold text-fg-1 text-lg md:text-xl">
+                {isAr ? NUTRITIONIST.nameAr : NUTRITIONIST.name}
+                <BadgeCheck className="w-4 h-4 text-lime-400" strokeWidth={2} />
+              </p>
+              <p className="mt-0.5 text-[11px] uppercase tracking-eyebrow font-semibold text-lime-400">
+                {isAr ? NUTRITIONIST.roleAr : NUTRITIONIST.role}
+              </p>
+              <p className="mt-3 text-sm md:text-base text-fg-2 leading-relaxed">
+                {isAr ? NUTRITIONIST.bio.shortAr : NUTRITIONIST.bio.short}
+              </p>
+            </div>
           </div>
-          <div className="flex-1">
-            <p className="font-display font-bold text-fg-1 text-lg">
-              {isAr ? NUTRITIONIST.nameAr : NUTRITIONIST.name}
+          {/* CTA on its own row — never crashes into the bio text */}
+          <div className="mt-6 pt-5 border-t border-border flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <p className="text-xs text-fg-3">
+              {isAr
+                ? '٣٠ دقيقة. ١-١. مجاناً للعملاء الجدد.'
+                : '30 minutes · 1-on-1 · Free for new clients.'}
             </p>
-            <p className="text-sm text-lime-400 font-semibold mb-2">
-              {isAr ? NUTRITIONIST.roleAr : NUTRITIONIST.role}
-            </p>
-            <p className="text-sm text-fg-2 leading-relaxed">
-              {isAr ? NUTRITIONIST.bio.shortAr : NUTRITIONIST.bio.short}
-            </p>
+            <Link
+              href="/#booking"
+              className="inline-flex items-center justify-center gap-1.5 rounded-pill bg-gradient-to-b from-lime-400 to-lime-600 text-bg font-semibold h-11 px-6 text-sm border border-lime-600/60 transition-all hover:brightness-110"
+              style={{ boxShadow: '0 6px 22px rgba(132,217,61,0.28)' }}
+            >
+              {isAr ? 'احجز استشارة' : 'Book a consultation'}
+              <ArrowRight
+                className={`w-4 h-4 ${isAr ? 'rotate-180' : ''}`}
+                strokeWidth={2}
+              />
+            </Link>
           </div>
-          <Link
-            href="/dashboard"
-            className="shrink-0 inline-flex items-center gap-2 rounded-full bg-gradient-to-b from-lime-400 to-lime-600 text-bg font-semibold h-11 px-5 text-sm shadow-lime-glow border border-lime-600/60 hover:-translate-y-px transition-transform"
-          >
-            {isAr ? 'احجز استشارة' : 'Book a consultation'}
-            <ArrowRight className={`w-4 h-4 ${isAr ? 'rotate-180' : ''}`} strokeWidth={2} />
-          </Link>
         </aside>
 
         {/* Related articles */}
@@ -230,18 +251,28 @@ export default async function ArticlePage({ params }: RouteParams) {
         </section>
 
         {/* CTA banner */}
-        <section className="max-w-3xl mx-auto mt-16 rounded-2xl bg-surface border border-primary/40 p-10 text-center">
-          <h2 className="font-display font-bold text-2xl text-fg-1 mb-3">
+        <section
+          className="max-w-3xl mx-auto mt-16 rounded-2xl p-8 md:p-10 text-center"
+          style={{
+            background:
+              'radial-gradient(circle at 50% 0%, rgba(132,217,61,0.08) 0%, var(--gf-surface) 60%)',
+            border: '1px solid rgba(132,217,61,0.35)',
+            boxShadow:
+              '0 1px 0 rgba(255,255,255,0.04) inset, 0 20px 50px rgba(0,0,0,0.32)',
+          }}
+        >
+          <h2 className="font-display font-bold text-2xl md:text-3xl text-fg-1 mb-3 tracking-tight">
             {isAr ? 'جاهز لتغيير تغذيتك؟' : 'Ready to transform your nutrition?'}
           </h2>
-          <p className="text-fg-2 mb-6">
+          <p className="text-fg-2 mb-6 max-w-md mx-auto">
             {isAr
               ? 'احجز استشارة مجانية مع كوتش روان وابدأ رحلتك اليوم.'
               : 'Book a free consultation with Coach Rawan and start your journey today.'}
           </p>
           <Link
-            href="/dashboard"
-            className="inline-flex items-center gap-2 rounded-full bg-gradient-to-b from-lime-400 to-lime-600 text-bg font-semibold h-12 px-7 text-base shadow-lime-glow border border-lime-600/60 hover:-translate-y-px transition-transform"
+            href="/#booking"
+            className="inline-flex items-center gap-2 rounded-pill bg-gradient-to-b from-lime-400 to-lime-600 text-bg font-semibold h-12 px-7 text-base border border-lime-600/60 transition-all hover:brightness-110"
+            style={{ boxShadow: '0 8px 28px rgba(132,217,61,0.32)' }}
           >
             {isAr ? 'احجز استشارة' : 'Book a consultation'}
             <ArrowRight className={`w-4 h-4 ${isAr ? 'rotate-180' : ''}`} strokeWidth={2} />
