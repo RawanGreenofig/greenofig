@@ -9,7 +9,6 @@ import {
   Download,
   CalendarClock,
   ShoppingBag,
-  Sparkles,
   CreditCard,
   TrendingUp,
   type LucideIcon,
@@ -17,6 +16,7 @@ import {
 import {
   BarChart,
   Bar,
+  Cell,
   XAxis,
   YAxis,
   Tooltip,
@@ -25,7 +25,7 @@ import {
 } from 'recharts'
 
 interface RevenueSource {
-  key: 'subscriptions' | 'sessionsRev' | 'storeRev' | 'tipsRev'
+  key: 'subscriptions' | 'sessionsRev' | 'storeRev'
   amount: number
   Icon: LucideIcon
   tint: string
@@ -42,7 +42,6 @@ const SOURCES: RevenueSource[] = [
   { key: 'subscriptions', amount: 720, Icon: CreditCard,    tint: '#a3e635' },
   { key: 'sessionsRev',   amount: 380, Icon: CalendarClock, tint: '#06b6d4' },
   { key: 'storeRev',      amount: 110, Icon: ShoppingBag,   tint: '#e8912a' },
-  { key: 'tipsRev',       amount: 30,  Icon: Sparkles,      tint: '#a855f7' },
 ]
 
 const MONTHLY = [
@@ -104,6 +103,13 @@ export default function EarningsPage() {
     ? live.data!.sessionsThisMonth
     : PAYOUTS.reduce((a, p) => a + p.sessionsCount, 0)
 
+  const firstMonthRevenue = MONTHLY[0]?.revenue ?? 0
+  const lastMonthRevenue = MONTHLY[MONTHLY.length - 1]?.revenue ?? 0
+  const monthDelta = firstMonthRevenue > 0
+    ? ((lastMonthRevenue - firstMonthRevenue) / firstMonthRevenue) * 100
+    : null
+  const peakRevenue = MONTHLY.reduce((max, m) => Math.max(max, m.revenue), 0)
+
   return (
     <div className="px-4 md:px-8 py-6 md:py-8 max-w-screen-xl mx-auto space-y-6">
       <header className="flex flex-wrap items-end justify-between gap-4">
@@ -148,40 +154,48 @@ export default function EarningsPage() {
             </button>
           </div>
 
-          <div className="md:col-span-2 space-y-2.5">
+          <div className="md:col-span-2 space-y-4">
             <p className="text-xs uppercase tracking-eyebrow text-fg-3 font-semibold">
               {t('breakdown')}
             </p>
-            {SOURCES.map((src) => {
-              const pct = thisMonth > 0 ? (src.amount / thisMonth) * 100 : 0
-              return (
-                <div key={src.key} className="flex items-center gap-3">
-                  <span
-                    className="shrink-0 w-9 h-9 rounded-lg inline-flex items-center justify-center"
-                    style={{ background: `${src.tint}1a`, color: src.tint }}
-                  >
-                    <src.Icon className="w-3.5 h-3.5" strokeWidth={1.75} />
-                  </span>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-baseline justify-between mb-1">
-                      <span className="text-sm text-fg-1">
-                        {t(src.key)}
-                      </span>
-                      <span className="font-mono text-xs text-fg-1" dir="ltr">
-                        {src.amount} USD
-                        <span className="text-fg-3 ms-1">· {pct.toFixed(0)}%</span>
-                      </span>
-                    </div>
-                    <div className="h-1 rounded-pill bg-bg-deeper overflow-hidden">
+            <div className="space-y-4">
+              {SOURCES.map((src) => {
+                const pct = thisMonth > 0 ? (src.amount / thisMonth) * 100 : 0
+                return (
+                  <div key={src.key} className="flex items-center gap-4">
+                    <src.Icon
+                      className="shrink-0 w-5 h-5"
+                      strokeWidth={1.75}
+                      color={src.tint}
+                    />
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-baseline justify-between mb-2">
+                        <span className="text-sm text-fg-1">
+                          {t(src.key)}
+                        </span>
+                        <span className="font-mono text-xs text-fg-1" dir="ltr">
+                          {src.amount} USD
+                          <span className="text-fg-3 ms-1">· {pct.toFixed(0)}%</span>
+                        </span>
+                      </div>
                       <div
-                        className="h-full rounded-pill transition-all"
-                        style={{ width: `${pct}%`, background: src.tint }}
-                      />
+                        className="h-2 rounded-full overflow-hidden"
+                        style={{ background: 'var(--gf-input-bg)' }}
+                      >
+                        <div
+                          className="h-full rounded-full transition-all"
+                          style={{
+                            width: `${pct}%`,
+                            background: `linear-gradient(90deg, ${src.tint}, ${src.tint}cc)`,
+                            boxShadow: `0 0 8px ${src.tint}55`,
+                          }}
+                        />
+                      </div>
                     </div>
                   </div>
-                </div>
-              )
-            })}
+                )
+              })}
+            </div>
           </div>
         </div>
       </article>
@@ -210,24 +224,105 @@ export default function EarningsPage() {
 
       {/* Monthly chart */}
       <article className="rounded-xl border border-border bg-surface p-5 md:p-6">
-        <header className="mb-4">
-          <h2 className="text-base font-semibold text-fg-1">
-            {t('monthlyRevenue')}
-          </h2>
-          <p className="text-xs text-fg-3 mt-0.5">{t('monthlyRevenueBody')}</p>
+        <header className="mb-5 flex flex-wrap items-start justify-between gap-3">
+          <div className="flex items-start gap-2.5">
+            <TrendingUp
+              className="w-5 h-5 mt-0.5 shrink-0"
+              strokeWidth={1.75}
+              color="#a3e635"
+            />
+            <div>
+              <h2 className="text-base font-semibold text-fg-1">
+                {t('monthlyRevenue')}
+              </h2>
+              <p className="text-xs text-fg-3 mt-0.5">{t('monthlyRevenueBody')}</p>
+            </div>
+          </div>
+          {monthDelta !== null && (
+            <span
+              className="inline-flex items-center gap-1 font-mono"
+              style={{
+                height: 18,
+                padding: '0 8px',
+                borderRadius: 999,
+                fontSize: 9.5,
+                fontWeight: 800,
+                letterSpacing: '0.08em',
+                textTransform: 'uppercase',
+                lineHeight: 1,
+                background:
+                  monthDelta >= 0
+                    ? 'rgba(163, 230, 53, 0.12)'
+                    : 'rgba(239, 68, 68, 0.12)',
+                color: monthDelta >= 0 ? '#a3e635' : '#ef4444',
+              }}
+            >
+              <ArrowUpRight
+                className="w-2.5 h-2.5"
+                strokeWidth={2.5}
+                color="currentColor"
+                style={{
+                  transform: monthDelta >= 0 ? 'none' : 'rotate(90deg)',
+                }}
+              />
+              {monthDelta >= 0 ? '+' : ''}
+              {monthDelta.toFixed(0)}%
+            </span>
+          )}
         </header>
         <div className="w-full h-[260px]" dir="ltr">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={MONTHLY} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
-              <CartesianGrid stroke="rgb(255 255 255 / 0.06)" strokeDasharray="3 3" vertical={false} />
-              <XAxis dataKey="month" stroke="#5c7262" tickLine={false} axisLine={false} tick={{ fontSize: 11 }} />
-              <YAxis stroke="#5c7262" tickLine={false} axisLine={false} tick={{ fontSize: 11 }} width={36} />
+              <defs>
+                <linearGradient id="barRevenueFill" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#a3e635" stopOpacity={1} />
+                  <stop offset="100%" stopColor="#a3e635" stopOpacity={0.35} />
+                </linearGradient>
+                <linearGradient id="barRevenueDim" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#a3e635" stopOpacity={0.55} />
+                  <stop offset="100%" stopColor="#a3e635" stopOpacity={0.18} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid stroke="rgb(255 255 255 / 0.05)" strokeDasharray="3 3" vertical={false} />
+              <XAxis
+                dataKey="month"
+                stroke="#5c7262"
+                tickLine={false}
+                axisLine={false}
+                tick={{ fontSize: 11 }}
+                dy={4}
+              />
+              <YAxis
+                stroke="#5c7262"
+                tickLine={false}
+                axisLine={false}
+                tick={{ fontSize: 11 }}
+                width={36}
+              />
               <Tooltip
-                contentStyle={{ background: 'var(--gf-card-hover)', border: '1px solid rgb(255 255 255 / 0.08)', borderRadius: 8, fontSize: 12, color: 'var(--gf-fg-1)' }}
+                cursor={{ fill: 'rgba(163, 230, 53, 0.06)', radius: 6 }}
+                contentStyle={{
+                  background: 'var(--gf-card-hover)',
+                  border: '1px solid rgb(255 255 255 / 0.08)',
+                  borderRadius: 8,
+                  fontSize: 12,
+                  color: 'var(--gf-fg-1)',
+                }}
                 labelStyle={{ color: '#9baf9f' }}
                 formatter={(value) => [`${value} USD`, '']}
               />
-              <Bar dataKey="revenue" fill="#a3e635" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="revenue" radius={[6, 6, 0, 0]}>
+                {MONTHLY.map((m) => (
+                  <Cell
+                    key={m.month}
+                    fill={
+                      m.revenue === peakRevenue
+                        ? 'url(#barRevenueFill)'
+                        : 'url(#barRevenueDim)'
+                    }
+                  />
+                ))}
+              </Bar>
             </BarChart>
           </ResponsiveContainer>
         </div>

@@ -345,23 +345,37 @@ function KpiCard({
   t: ReturnType<typeof useTranslations>
   kpi: Kpi
 }) {
-  const DeltaIcon = kpi.delta > 0 ? TrendingUp : kpi.delta < 0 ? TrendingDown : Minus
-  const deltaTint = kpi.delta > 0 ? '#a3e635' : kpi.delta < 0 ? '#f43f5e' : '#9baf9f'
+  const DeltaIcon =
+    kpi.delta > 0 ? TrendingUp : kpi.delta < 0 ? TrendingDown : Minus
+  const deltaTint =
+    kpi.delta > 0 ? '#a3e635' : kpi.delta < 0 ? '#f43f5e' : '#9baf9f'
+  // Bare brand-coloured icon next to the label — same sidebar-style
+  // pattern used on Store Curation, Clients table, Research library.
+  // The kpi tile chrome (w-9 h-9 rounded-lg) was a colour mismatch:
+  // the wrapper had teal/blue/orange backgrounds but the icon
+  // inside always rendered in lime because @/icons forces its
+  // brand colour by default. Now the icon's own colour is the cue.
   return (
     <article className="rounded-xl border border-border bg-surface p-5">
-      <div className="flex items-center gap-2.5 mb-3">
+      <div className="flex items-center gap-2 mb-3">
+        <kpi.Icon
+          className="w-5 h-5 shrink-0"
+          strokeWidth={1.75}
+          color={kpi.tint}
+        />
         <span
-          className="w-9 h-9 rounded-lg flex items-center justify-center"
-          style={{ background: `${kpi.tint}1a`, color: kpi.tint }}
+          className="text-[11px] uppercase font-semibold"
+          style={{ letterSpacing: '0.1em', color: 'var(--gf-fg-3)' }}
         >
-          <kpi.Icon className="w-4 h-4" strokeWidth={1.75} />
-        </span>
-        <span className="text-xs uppercase tracking-eyebrow text-fg-3 font-medium">
           {t(`kpis.${kpi.labelKey}` as 'kpis.totalClients')}
         </span>
       </div>
       <div className="flex items-baseline gap-2">
-        <p className="font-mono text-2xl font-bold text-fg-1" dir="ltr">
+        <p
+          className="text-3xl font-bold"
+          style={{ color: 'var(--gf-fg-1)', letterSpacing: '-0.02em' }}
+          dir="ltr"
+        >
           {kpi.value}
         </p>
         <span
@@ -369,7 +383,11 @@ function KpiCard({
           style={{ color: deltaTint }}
           dir="ltr"
         >
-          <DeltaIcon className="w-3 h-3" strokeWidth={2.25} />
+          <DeltaIcon
+            className="w-3 h-3"
+            strokeWidth={2.25}
+            color="currentColor"
+          />
           {Math.abs(kpi.delta)}%
         </span>
       </div>

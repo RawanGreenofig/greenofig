@@ -625,9 +625,9 @@ function SessionRow({
   return (
     <div className="flex flex-wrap items-center gap-4">
       <Video
-        className="w-6 h-6 flex-shrink-0"
+        className="w-5 h-5 flex-shrink-0"
         strokeWidth={1.75}
-        style={{ color: tint }}
+        color={tint}
       />
       <p className="text-sm font-semibold text-fg-1 flex-1 min-w-0">{name}</p>
       <div className="flex items-center gap-2 ms-auto">
@@ -645,7 +645,10 @@ function SessionRow({
         </Field>
       </div>
       {showFreeToggle && onFree && (
-        <div className="w-full flex items-center gap-3 mt-2 pt-2 border-t border-border">
+        <div
+          className="w-full flex items-center gap-3 mt-2 pt-3"
+          style={{ borderTop: '1px solid var(--gf-border)' }}
+        >
           <Switch on={!!free} onChange={onFree} />
           <span className="text-xs text-fg-2">{t('sessions.freeIntro')}</span>
         </div>
@@ -817,9 +820,13 @@ function NumInput({
         min={0}
         value={Number.isNaN(value) ? '' : value}
         onChange={(e) => onChange(e.target.value === '' ? 0 : Number(e.target.value))}
-        className={`w-24 h-10 rounded-md bg-bg-deeper border border-border px-3 text-sm font-mono text-fg-1 focus:outline-none focus:border-primary ${
+        className={`w-24 h-10 rounded-lg px-3 text-sm font-mono text-fg-1 focus:outline-none ${
           suffix ? 'pe-12' : ''
         }`}
+        style={{
+          background: 'var(--gf-input-bg)',
+          border: '1px solid var(--gf-border)',
+        }}
         dir="ltr"
       />
       {suffix && (

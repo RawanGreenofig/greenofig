@@ -336,41 +336,76 @@ export default function ContentPage() {
         </button>
       </header>
 
+      {/* Search + filter — same dashboard chrome as the rest of the
+       * dashboard (Recipe Builder, Store Curation, Leads, etc.). */}
       <div className="flex flex-wrap items-center gap-3">
-        <div className="relative flex-1 min-w-[240px]">
+        <div className="relative flex-1 min-w-0 basis-full sm:basis-auto sm:min-w-[200px]">
           <Search
-            className="absolute start-4 top-1/2 -translate-y-1/2 w-4 h-4 text-fg-3"
+            className="absolute start-3.5 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none"
             strokeWidth={1.75}
+            color="var(--gf-fg-3)"
           />
           <input
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder={t('search')}
-            className="w-full h-11 rounded-pill bg-surface border border-border ps-11 pe-4 text-sm text-fg-1 placeholder-fg-3 focus:outline-none focus:border-primary"
+            className="w-full h-10 ps-10 pe-3 text-sm text-fg-1 placeholder-fg-3"
           />
         </div>
-        <div className="inline-flex items-center gap-0.5 rounded-pill bg-bg-deeper border border-border p-0.5">
-          {(['all', 'draft', 'scheduled', 'published'] as ('all' | Status)[]).map((f) => (
-            <button
-              key={f}
-              type="button"
-              onClick={() => setFilter(f)}
-              className={`px-3 h-8 rounded-pill text-[11px] font-semibold transition-colors ${
-                filter === f
-                  ? 'bg-primary/20 text-lime-400'
-                  : 'text-fg-3 hover:text-fg-1'
-              }`}
-            >
-              {f === 'all'
-                ? t('filterAll')
-                : f === 'draft'
-                  ? t('filterDraft')
-                  : f === 'scheduled'
-                    ? t('filterScheduled')
-                    : t('filterPublished')}
-            </button>
-          ))}
+        <div
+          className="inline-flex items-center flex-wrap"
+          style={{
+            minHeight: 40,
+            background: 'var(--gf-input-bg)',
+            border: '1px solid var(--gf-border)',
+            borderRadius: 8,
+            padding: 3,
+            gap: 2,
+          }}
+        >
+          {(['all', 'draft', 'scheduled', 'published'] as ('all' | Status)[]).map(
+            (f) => {
+              const active = filter === f
+              return (
+                <button
+                  key={f}
+                  type="button"
+                  onClick={() => setFilter(f)}
+                  className="inline-flex items-center justify-center px-3 transition-colors"
+                  style={{
+                    height: 32,
+                    borderRadius: 6,
+                    background: active ? 'rgba(132,217,61,0.12)' : 'transparent',
+                    color: active ? '#a3e635' : 'var(--gf-fg-2)',
+                    fontSize: 12,
+                    fontWeight: 600,
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!active) {
+                      e.currentTarget.style.background =
+                        'var(--gf-card-hover)'
+                      e.currentTarget.style.color = 'var(--gf-fg-1)'
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!active) {
+                      e.currentTarget.style.background = 'transparent'
+                      e.currentTarget.style.color = 'var(--gf-fg-2)'
+                    }
+                  }}
+                >
+                  {f === 'all'
+                    ? t('filterAll')
+                    : f === 'draft'
+                      ? t('filterDraft')
+                      : f === 'scheduled'
+                        ? t('filterScheduled')
+                        : t('filterPublished')}
+                </button>
+              )
+            },
+          )}
         </div>
       </div>
 

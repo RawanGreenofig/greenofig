@@ -1,13 +1,11 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import toast from 'react-hot-toast'
 import { Avatar } from '@/components/Avatar'
 import {
   Search,
-  Filter,
-  ArrowDownUp,
   ArrowRight,
   UserPlus,
   Download,
@@ -19,6 +17,8 @@ import {
   AlertTriangle,
   Moon,
   X,
+  ChevronDown,
+  Check,
   type LucideIcon,
 } from '@/icons'
 import { Link } from '@/i18n/navigation'
@@ -199,38 +199,63 @@ export default function ClientsListPage() {
 
   return (
     <div className="px-4 md:px-8 py-6 md:py-8 max-w-screen-xl mx-auto space-y-6">
-      <header className="flex flex-wrap items-end justify-between gap-4">
+      <header className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1
             className="font-display font-bold text-fg-1 tracking-tight"
-            style={{ fontSize: 'clamp(28px, 4vw, 40px)', lineHeight: 1.1 }}
+            style={{ fontSize: 'clamp(28px, 4vw, 36px)', lineHeight: 1.1 }}
           >
-            {t('subtitle').split('—')[0]?.trim() || 'My Clients'}
+            My Clients
           </h1>
           <p className="mt-2 text-sm md:text-base text-fg-2">{t('subtitle')}</p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
+          {/* Export CSV — ghost dashboard pill (same chrome as the
+           * Generate Code button on Store Curation). */}
           <button
             type="button"
             onClick={() => exportClientsCsv(visible)}
-            className="inline-flex items-center gap-1.5 rounded-pill bg-surface-raised border border-border h-10 px-4 text-xs font-semibold text-fg-1 hover:border-primary/40"
+            className="inline-flex items-center gap-1.5 transition-colors"
+            style={{
+              height: 40,
+              padding: '0 14px',
+              borderRadius: 8,
+              background: 'var(--gf-input-bg)',
+              border: '1px solid var(--gf-border)',
+              color: 'var(--gf-fg-1)',
+              fontSize: 12,
+              fontWeight: 600,
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = 'var(--gf-card-hover)'
+              e.currentTarget.style.borderColor = 'rgba(132,217,61,0.4)'
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = 'var(--gf-input-bg)'
+              e.currentTarget.style.borderColor = 'var(--gf-border)'
+            }}
           >
-            <Download className="w-3.5 h-3.5" strokeWidth={1.75} />
+            <Download
+              className="w-3.5 h-3.5"
+              strokeWidth={1.75}
+              color="currentColor"
+            />
             {t('exportCsv')}
           </button>
+          {/* New client — primary lime CTA. */}
           <button
             type="button"
             onClick={() => setInviteOpen(true)}
             className="inline-flex items-center gap-1.5 rounded-pill bg-gradient-to-b from-lime-400 to-lime-600 text-bg font-semibold h-10 px-4 text-xs shadow-lime-glow border border-lime-600/60 hover:-translate-y-px transition-transform"
           >
-            <UserPlus className="w-3.5 h-3.5" strokeWidth={2} />
+            <UserPlus className="w-3.5 h-3.5" strokeWidth={2} color="#0d1a12" />
             {t('newClient')}
           </button>
         </div>
       </header>
 
       {/* KPI strip — quick read on the entire client roster */}
-      <section className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+      <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
         <KpiCard
           Icon={Users}
           tint="#60a5fa"
@@ -257,48 +282,49 @@ export default function ClientsListPage() {
         />
       </section>
 
-      {/* Search + filters */}
-      <div className="space-y-3">
-        <div className="relative">
+      {/* Search + filters — single row at sm+ (search flex-1,
+       * dropdowns hug content), wraps cleanly on phones. */}
+      <div className="flex flex-wrap items-center gap-3">
+        <div className="relative flex-1 min-w-0 basis-full sm:basis-auto sm:min-w-[200px]">
           <Search
-            className="absolute start-4 top-1/2 -translate-y-1/2 w-4 h-4 text-fg-3"
+            className="absolute start-3.5 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none"
             strokeWidth={1.75}
+            color="var(--gf-fg-3)"
           />
           <input
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder={t('searchPlaceholder')}
-            className="w-full h-11 rounded-pill bg-surface border border-border ps-11 pe-4 text-sm text-fg-1 placeholder-fg-3 focus:outline-none focus:border-primary"
+            className="w-full h-10 ps-10 pe-3 text-sm text-fg-1 placeholder-fg-3"
           />
         </div>
-
-        <div className="flex flex-wrap items-center gap-3">
-          <FilterGroup
-            Icon={Filter}
-            label={t('filterStatus')}
-            options={STATUS_TABS.map((s) => [
-              s,
-              s === 'all' ? t('statusAll') : tStatus(s),
-            ])}
-            value={statusFilter}
-            onChange={(v) => setStatusFilter(v as Status | 'all')}
-          />
-          <FilterGroup
-            label={t('filterTier')}
-            options={TIER_TABS.map((tier) => [
-              tier,
-              tier === 'all' ? t('tierAll') : tTiers(`${tier}.name`),
-            ])}
-            value={tierFilter}
-            onChange={(v) => setTierFilter(v as Tier | 'all')}
-          />
-          <SortMenu
-            t={t}
-            value={sort}
-            onChange={setSort}
-          />
-        </div>
+        <FilterDropdown
+          label={t('filterStatus')}
+          options={STATUS_TABS.map((s) => [
+            s,
+            s === 'all' ? t('statusAll') : tStatus(s),
+          ])}
+          value={statusFilter}
+          onChange={(v) => setStatusFilter(v as Status | 'all')}
+        />
+        <FilterDropdown
+          label={t('filterTier')}
+          options={TIER_TABS.map((tier) => [
+            tier,
+            tier === 'all' ? t('tierAll') : tTiers(`${tier}.name`),
+          ])}
+          value={tierFilter}
+          onChange={(v) => setTierFilter(v as Tier | 'all')}
+        />
+        <FilterDropdown
+          label={t('sortBy')}
+          options={(['lastActivity', 'name', 'weightDelta', 'joinDate'] as SortKey[]).map(
+            (o) => [o, t(`sortOptions.${o}` as 'sortOptions.lastActivity')],
+          )}
+          value={sort}
+          onChange={(v) => setSort(v as SortKey)}
+        />
       </div>
 
       {/* Results */}
@@ -521,76 +547,143 @@ function InviteClientModal({
 
 /* ── Components ──────────────────────────────────────────────────── */
 
-function FilterGroup({
-  Icon,
+/**
+ * Single-select dropdown matching the dashboard input chrome.
+ * Same component shape as the one on /admin/users so the filter
+ * row reads as one cohesive control strip alongside the search input.
+ */
+function FilterDropdown({
   label,
   options,
   value,
   onChange,
 }: {
-  Icon?: LucideIcon
   label: string
   options: [string, string][]
   value: string
   onChange: (v: string) => void
 }) {
-  return (
-    <div className="inline-flex items-center gap-1.5 flex-wrap">
-      <span className="inline-flex items-center gap-1 text-[11px] uppercase tracking-eyebrow text-fg-3 font-semibold">
-        {Icon && <Icon className="w-3 h-3" strokeWidth={2} />}
-        {label}
-      </span>
-      <div className="inline-flex items-center gap-0.5 rounded-pill bg-bg-deeper border border-border p-0.5">
-        {options.map(([v, lbl]) => (
-          <button
-            key={v}
-            type="button"
-            onClick={() => onChange(v)}
-            className={`px-3 h-7 rounded-pill text-[11px] font-semibold transition-colors ${
-              value === v
-                ? 'bg-primary/20 text-lime-400'
-                : 'text-fg-3 hover:text-fg-1'
-            }`}
-          >
-            {lbl}
-          </button>
-        ))}
-      </div>
-    </div>
-  )
-}
+  const [open, setOpen] = useState(false)
+  const wrapRef = useRef<HTMLDivElement>(null)
+  const selected =
+    options.find(([v]) => v === value)?.[1] ?? options[0]?.[1] ?? ''
 
-function SortMenu({
-  t,
-  value,
-  onChange,
-}: {
-  t: ReturnType<typeof useTranslations>
-  value: SortKey
-  onChange: (v: SortKey) => void
-}) {
-  const opts: SortKey[] = ['lastActivity', 'name', 'weightDelta', 'joinDate']
+  useEffect(() => {
+    if (!open) return
+    const onClick = (e: MouseEvent) => {
+      if (!wrapRef.current?.contains(e.target as Node)) setOpen(false)
+    }
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setOpen(false)
+    }
+    document.addEventListener('mousedown', onClick)
+    document.addEventListener('keydown', onKey)
+    return () => {
+      document.removeEventListener('mousedown', onClick)
+      document.removeEventListener('keydown', onKey)
+    }
+  }, [open])
+
   return (
-    <div className="inline-flex items-center gap-1.5">
-      <span className="inline-flex items-center gap-1 text-[11px] uppercase tracking-eyebrow text-fg-3 font-semibold">
-        <ArrowDownUp className="w-3 h-3" strokeWidth={2} />
-        {t('sortBy')}
-      </span>
-      <select
-        value={value}
-        onChange={(e) => onChange(e.target.value as SortKey)}
-        className="h-8 rounded-pill bg-bg-deeper border border-border px-3 text-[11px] font-semibold text-fg-1 focus:outline-none focus:border-primary appearance-none pe-8"
+    <div className="relative inline-flex" ref={wrapRef}>
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        className="inline-flex items-center gap-2 h-10 px-3 rounded-md text-sm transition-colors"
+        style={{
+          background: 'var(--gf-input-bg)',
+          border: '1px solid var(--gf-border)',
+          color: 'var(--gf-fg-1)',
+          minWidth: 160,
+        }}
       >
-        {opts.map((o) => (
-          <option key={o} value={o} className="bg-surface">
-            {t(`sortOptions.${o}` as 'sortOptions.lastActivity')}
-          </option>
-        ))}
-      </select>
+        <span
+          className="text-[11px] uppercase font-semibold"
+          style={{ letterSpacing: '0.08em', color: 'var(--gf-fg-3)' }}
+        >
+          {label}
+        </span>
+        <span className="font-medium truncate flex-1 text-start">
+          {selected}
+        </span>
+        <ChevronDown
+          className={`w-4 h-4 transition-transform ${open ? 'rotate-180' : ''}`}
+          strokeWidth={1.75}
+          color="var(--gf-fg-3)"
+        />
+      </button>
+
+      {open && (
+        <div
+          role="listbox"
+          className="absolute top-full mt-1 z-30 rounded-md py-1 overflow-hidden"
+          style={{
+            insetInlineStart: 0,
+            minWidth: '100%',
+            background: 'var(--gf-card)',
+            border: '1px solid var(--gf-border)',
+            boxShadow: '0 12px 32px rgba(0,0,0,0.45)',
+          }}
+        >
+          {options.map(([v, lbl]) => {
+            const active = v === value
+            return (
+              <button
+                key={v}
+                type="button"
+                role="option"
+                aria-selected={active}
+                onClick={() => {
+                  onChange(v)
+                  setOpen(false)
+                }}
+                className="w-full flex items-center gap-2 px-3 h-9 text-sm text-start transition-colors"
+                style={{
+                  background: active ? 'rgba(132,217,61,0.12)' : 'transparent',
+                  color: active ? '#a3e635' : 'var(--gf-fg-1)',
+                  fontWeight: active ? 600 : 500,
+                }}
+                onMouseEnter={(e) => {
+                  if (!active)
+                    e.currentTarget.style.background = 'var(--gf-card-hover)'
+                }}
+                onMouseLeave={(e) => {
+                  if (!active) e.currentTarget.style.background = 'transparent'
+                }}
+              >
+                <span className="flex-1 truncate">{lbl}</span>
+                {active && (
+                  <Check
+                    className="w-4 h-4 shrink-0"
+                    strokeWidth={2}
+                    color="#a3e635"
+                  />
+                )}
+              </button>
+            )
+          })}
+        </div>
+      )}
     </div>
   )
 }
 
+/**
+ * Client table — restructured into 3 wide cells instead of 7 cramped ones:
+ *
+ *   ┌──────────────────────────────┬──────────────┬──────────┐
+ *   │ AVATAR + NAME + EMAIL        │ ACTIVITY     │   →      │
+ *   │ TIER · STATUS · PLAN pills   │ last log     │          │
+ *   │                              │ Δ kg         │          │
+ *   └──────────────────────────────┴──────────────┴──────────┘
+ *
+ * The previous 7-column grid squeezed names down to "D..." on
+ * typical desktop widths. Pills now live underneath the name so
+ * they share the wider client cell instead of fighting for column
+ * space. Mobile stacks cleanly.
+ */
 function ClientTable({
   t,
   tStatus,
@@ -604,105 +697,153 @@ function ClientTable({
 }) {
   return (
     <div className="rounded-xl border border-border bg-surface overflow-hidden">
-      {/* Desktop header */}
-      <div className="hidden md:grid grid-cols-[2fr_1fr_1fr_1fr_1fr_1fr_auto] gap-3 px-5 py-3 bg-bg-deeper/40 border-b border-border text-[10px] uppercase tracking-eyebrow text-fg-3 font-semibold">
-        <div>{t('col.client')}</div>
-        <div>{t('col.tier')}</div>
-        <div>{t('col.status')}</div>
-        <div>{t('col.lastLog')}</div>
-        <div>{t('col.delta')}</div>
-        <div>{t('col.plan')}</div>
-        <div className="sr-only">{t('col.actions')}</div>
-      </div>
-      <ul className="divide-y divide-border">
+      <ul className="divide-y" style={{ borderColor: 'var(--gf-border)' }}>
         {rows.map((c) => (
-          <li key={c.id} className="hover:bg-surface-raised transition-colors">
+          <li
+            key={c.id}
+            className="transition-colors"
+            onMouseEnter={(e) =>
+              (e.currentTarget.style.background = 'var(--gf-card-hover)')
+            }
+            onMouseLeave={(e) =>
+              (e.currentTarget.style.background = 'transparent')
+            }
+          >
             <Link
-              href={`/nutritionist/clients/${c.id}` as `/nutritionist/clients/${string}`}
-              className="md:grid md:grid-cols-[2fr_1fr_1fr_1fr_1fr_1fr_auto] gap-3 items-center px-5 py-3 cursor-pointer"
+              href={
+                `/nutritionist/clients/${c.id}` as `/nutritionist/clients/${string}`
+              }
+              className="md:grid md:grid-cols-[1fr_auto_auto] gap-4 md:items-center px-4 md:px-5 py-3.5 cursor-pointer"
             >
-            {/* Client */}
-            <div className="flex items-center gap-3 min-w-0 mb-3 md:mb-0">
-              <Avatar text={c.initials} size={36} />
-              <div className="min-w-0">
-                <p className="text-sm font-medium text-fg-1 truncate">{c.name}</p>
-                <p className="text-xs text-fg-3 truncate font-mono" dir="ltr">
-                  {c.email}
-                </p>
+              {/* Client cell — avatar + identity + tier/status/plan pills.
+               * Pills stack tight under the name so the single 1fr cell
+               * carries everything the previous 4 cramped columns did. */}
+              <div className="flex items-start gap-3 min-w-0 mb-3 md:mb-0">
+                <Avatar text={c.initials} size={36} />
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-medium text-fg-1 truncate">
+                    {c.name}
+                  </p>
+                  <p className="text-xs text-fg-3 truncate font-mono mt-0.5" dir="ltr">
+                    {c.email}
+                  </p>
+                  <div className="mt-2 flex items-center gap-1.5 flex-wrap">
+                    {/* Tier */}
+                    <span
+                      className="inline-flex items-center justify-center"
+                      style={{
+                        height: 18,
+                        padding: '0 8px',
+                        borderRadius: 999,
+                        background: `${TIER_TINT[c.tier]}1f`,
+                        color: TIER_TINT[c.tier],
+                        fontSize: 9.5,
+                        fontWeight: 800,
+                        letterSpacing: '0.08em',
+                        textTransform: 'uppercase',
+                        lineHeight: 1,
+                      }}
+                    >
+                      {tTiers(`${c.tier}.name`)}
+                    </span>
+                    {/* Status */}
+                    <span
+                      className="inline-flex items-center justify-center"
+                      style={{
+                        height: 18,
+                        padding: '0 8px',
+                        borderRadius: 999,
+                        background: STATUS_META[c.status].bg,
+                        color: STATUS_META[c.status].tint,
+                        fontSize: 9.5,
+                        fontWeight: 800,
+                        letterSpacing: '0.08em',
+                        textTransform: 'uppercase',
+                        lineHeight: 1,
+                      }}
+                    >
+                      {tStatus(c.status)}
+                    </span>
+                    {/* Plan */}
+                    {c.hasPlan ? (
+                      <span
+                        className="inline-flex items-center justify-center gap-1"
+                        style={{
+                          height: 18,
+                          padding: '0 8px',
+                          borderRadius: 999,
+                          background: 'rgba(132,217,61,0.12)',
+                          color: '#a3e635',
+                          fontSize: 9.5,
+                          fontWeight: 800,
+                          letterSpacing: '0.08em',
+                          textTransform: 'uppercase',
+                          lineHeight: 1,
+                        }}
+                      >
+                        <Check
+                          className="w-3 h-3"
+                          strokeWidth={2.5}
+                          color="currentColor"
+                        />
+                        Plan
+                      </span>
+                    ) : (
+                      <span
+                        className="inline-flex items-center justify-center"
+                        style={{
+                          height: 18,
+                          padding: '0 8px',
+                          borderRadius: 999,
+                          background: 'transparent',
+                          border: '1px dashed var(--gf-border)',
+                          color: 'var(--gf-fg-3)',
+                          fontSize: 9.5,
+                          fontWeight: 700,
+                          letterSpacing: '0.08em',
+                          textTransform: 'uppercase',
+                          lineHeight: 1,
+                        }}
+                      >
+                        {t('noPlan')}
+                      </span>
+                    )}
+                  </div>
+                </div>
               </div>
-            </div>
 
-            {/* Tier */}
-            <div className="flex md:block items-center justify-between gap-2 mb-1.5 md:mb-0">
-              <span className="md:hidden text-[10px] uppercase tracking-eyebrow text-fg-3 font-semibold">
-                {t('col.tier')}
-              </span>
-              <span
-                className="rounded-pill h-6 px-2.5 inline-flex items-center text-[10px] uppercase tracking-eyebrow font-bold"
+              {/* Activity — last log time + weight delta on a 2-line stack */}
+              <div className="flex items-center justify-between md:flex-col md:items-end gap-1 mb-3 md:mb-0 min-w-[120px]">
+                <p
+                  className="text-[11px] font-mono text-fg-2"
+                  dir="ltr"
+                  style={{ whiteSpace: 'nowrap' }}
+                >
+                  {c.lastLogHours >= 24 * 14
+                    ? t('lastLogNever')
+                    : t('lastLogValue', {
+                        value: formatHours(c.lastLogHours),
+                      })}
+                </p>
+                <DeltaPill kg={c.weightDelta} />
+              </div>
+
+              {/* Action arrow */}
+              <div
+                className="md:justify-self-end inline-flex items-center justify-center transition-colors shrink-0"
                 style={{
-                  background: `${TIER_TINT[c.tier]}1a`,
-                  color: TIER_TINT[c.tier],
+                  width: 30,
+                  height: 30,
+                  borderRadius: 8,
+                  color: 'var(--gf-fg-3)',
                 }}
               >
-                {tTiers(`${c.tier}.name`)}
-              </span>
-            </div>
-
-            {/* Status */}
-            <div className="flex md:block items-center justify-between gap-2 mb-1.5 md:mb-0">
-              <span className="md:hidden text-[10px] uppercase tracking-eyebrow text-fg-3 font-semibold">
-                {t('col.status')}
-              </span>
-              <span
-                className="rounded-pill h-6 px-2.5 inline-flex items-center text-[10px] uppercase tracking-eyebrow font-bold"
-                style={{
-                  background: STATUS_META[c.status].bg,
-                  color: STATUS_META[c.status].tint,
-                }}
-              >
-                {tStatus(c.status)}
-              </span>
-            </div>
-
-            {/* Last log */}
-            <div className="flex md:block items-center justify-between gap-2 mb-1.5 md:mb-0">
-              <span className="md:hidden text-[10px] uppercase tracking-eyebrow text-fg-3 font-semibold">
-                {t('col.lastLog')}
-              </span>
-              <p className="text-xs text-fg-2 font-mono" dir="ltr">
-                {c.lastLogHours >= 24 * 14
-                  ? t('lastLogNever')
-                  : t('lastLogValue', { value: formatHours(c.lastLogHours) })}
-              </p>
-            </div>
-
-            {/* Weight delta */}
-            <div className="flex md:block items-center justify-between gap-2 mb-1.5 md:mb-0">
-              <span className="md:hidden text-[10px] uppercase tracking-eyebrow text-fg-3 font-semibold">
-                {t('col.delta')}
-              </span>
-              <DeltaPill kg={c.weightDelta} />
-            </div>
-
-            {/* Plan */}
-            <div className="flex md:block items-center justify-between gap-2 mb-3 md:mb-0">
-              <span className="md:hidden text-[10px] uppercase tracking-eyebrow text-fg-3 font-semibold">
-                {t('col.plan')}
-              </span>
-              {c.hasPlan ? (
-                <span className="rounded-pill bg-primary/15 text-lime-400 h-6 px-2.5 inline-flex items-center text-[10px] uppercase tracking-eyebrow font-bold">
-                  ✓
-                </span>
-              ) : (
-                <span className="text-[11px] text-fg-3">{t('noPlan')}</span>
-              )}
-            </div>
-
-            {/* Affordance — the row itself is the link, this is just the visual */}
-            <div className="md:justify-self-end flex items-center gap-1 text-xs text-fg-3">
-              <span className="hidden md:inline">{t('openProfile')}</span>
-              <ArrowRight className="w-3.5 h-3.5 rtl:rotate-180" strokeWidth={2} />
-            </div>
+                <ArrowRight
+                  className="w-4 h-4 rtl:rotate-180"
+                  strokeWidth={1.75}
+                  color="currentColor"
+                />
+              </div>
             </Link>
           </li>
         ))}

@@ -24,7 +24,13 @@ import {
   GripVertical,
   X,
   Users,
+  Coffee,
+  Utensils,
+  Apple,
+  Moon,
+  Droplets,
 } from '@/icons'
+import type { LucideIcon } from 'lucide-react'
 import { useUser } from '@/lib/hooks/useUser'
 import { useSupabaseQuery } from '@/lib/hooks/useSupabaseQuery'
 import { getBrowserSupabase } from '@/lib/supabase/client'
@@ -51,6 +57,27 @@ interface RecipeRef {
   fat: number
   hue: string
 }
+
+// Per-meal-category icon + brand colour. Replaces the rainbow tile
+// chrome (random `recipe.hue` purple/lime/orange + always-ChefHat
+// regardless of category) with a meaningful per-meal cue: coffee for
+// breakfast, utensils for lunch, chef-hat for dinner, apple for
+// snack, droplets for drink.
+const RECIPE_ICON: Record<RecipeRef['category'], LucideIcon> = {
+  breakfast: Coffee,
+  lunch:     Utensils,
+  dinner:    ChefHat,
+  snack:     Apple,
+  drink:     Droplets,
+}
+const RECIPE_TINT: Record<RecipeRef['category'], string> = {
+  breakfast: '#fb923c', // orange
+  lunch:     '#a3e635', // lime
+  dinner:    '#a78bfa', // purple
+  snack:     '#fb923c', // orange
+  drink:     '#60a5fa', // blue
+}
+void Moon
 
 interface PlacedRecipe {
   /** Unique id per cell occurrence so multiple of the same recipe can coexist. */
@@ -411,45 +438,137 @@ export default function MealPlanBuilderPage() {
           </div>
         </header>
 
-        {/* Week tabs */}
-        <div className="flex items-center gap-1.5 flex-wrap">
-          {Array.from({ length: weekCount }).map((_, i) => (
-            <button
-              key={i}
-              type="button"
-              onClick={() => setActiveWeek(i)}
-              className={`rounded-pill h-9 px-4 text-xs font-semibold transition-colors ${
-                activeWeek === i
-                  ? 'bg-primary/20 text-lime-400 border border-primary/40'
-                  : 'bg-surface border border-border text-fg-2 hover:border-primary/40'
-              }`}
-            >
-              {t('weekTitle', { n: i + 1 })}
-            </button>
-          ))}
-          <button
-            type="button"
-            onClick={addWeek}
-            className="rounded-pill h-9 w-9 inline-flex items-center justify-center bg-surface border border-border text-fg-2 hover:text-fg-1 hover:border-primary/40"
-            aria-label={t('addWeek')}
+        {/* Week tabs row — dashboard chrome (8px radius, --gf-input-bg
+         * surface, lime tint when active) matching the segmented
+         * controls on /admin/store and the Store Curation filter row. */}
+        <div className="flex items-center gap-2 flex-wrap">
+          <div
+            className="inline-flex items-center"
+            style={{
+              minHeight: 40,
+              background: 'var(--gf-input-bg)',
+              border: '1px solid var(--gf-border)',
+              borderRadius: 8,
+              padding: 3,
+              gap: 2,
+              flexWrap: 'wrap',
+            }}
           >
-            <Plus className="w-3.5 h-3.5" strokeWidth={2} />
-          </button>
+            {Array.from({ length: weekCount }).map((_, i) => {
+              const active = activeWeek === i
+              return (
+                <button
+                  key={i}
+                  type="button"
+                  onClick={() => setActiveWeek(i)}
+                  className="inline-flex items-center justify-center px-3 text-xs font-semibold transition-colors"
+                  style={{
+                    height: 32,
+                    borderRadius: 6,
+                    background: active
+                      ? 'rgba(132,217,61,0.12)'
+                      : 'transparent',
+                    color: active ? '#a3e635' : 'var(--gf-fg-2)',
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!active) {
+                      e.currentTarget.style.background =
+                        'var(--gf-card-hover)'
+                      e.currentTarget.style.color = 'var(--gf-fg-1)'
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!active) {
+                      e.currentTarget.style.background = 'transparent'
+                      e.currentTarget.style.color = 'var(--gf-fg-2)'
+                    }
+                  }}
+                >
+                  {t('weekTitle', { n: i + 1 })}
+                </button>
+              )
+            })}
+            <button
+              type="button"
+              onClick={addWeek}
+              className="inline-flex items-center justify-center transition-colors"
+              style={{
+                width: 32,
+                height: 32,
+                borderRadius: 6,
+                background: 'transparent',
+                color: 'var(--gf-fg-2)',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = 'var(--gf-card-hover)'
+                e.currentTarget.style.color = '#a3e635'
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = 'transparent'
+                e.currentTarget.style.color = 'var(--gf-fg-2)'
+              }}
+              aria-label={t('addWeek')}
+            >
+              <Plus className="w-3.5 h-3.5" strokeWidth={2} color="currentColor" />
+            </button>
+          </div>
+
+          {/* Action pills sit beside the segmented control. */}
           <button
             type="button"
             onClick={duplicateWeek}
-            className="ms-2 inline-flex items-center gap-1.5 rounded-pill h-9 px-3 text-[11px] font-semibold bg-surface border border-border text-fg-2 hover:text-fg-1 hover:border-primary/40"
+            className="inline-flex items-center gap-1.5 transition-colors"
+            style={{
+              height: 40,
+              padding: '0 12px',
+              borderRadius: 8,
+              background: 'var(--gf-input-bg)',
+              border: '1px solid var(--gf-border)',
+              color: 'var(--gf-fg-2)',
+              fontSize: 11,
+              fontWeight: 600,
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = 'var(--gf-card-hover)'
+              e.currentTarget.style.color = 'var(--gf-fg-1)'
+              e.currentTarget.style.borderColor = 'rgba(132,217,61,0.4)'
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = 'var(--gf-input-bg)'
+              e.currentTarget.style.color = 'var(--gf-fg-2)'
+              e.currentTarget.style.borderColor = 'var(--gf-border)'
+            }}
           >
-            <Copy className="w-3 h-3" strokeWidth={2} />
+            <Copy className="w-3 h-3" strokeWidth={2} color="currentColor" />
             {t('duplicateWeek')}
           </button>
           {weekCount > 1 && (
             <button
               type="button"
               onClick={removeWeek}
-              className="inline-flex items-center gap-1.5 rounded-pill h-9 px-3 text-[11px] font-semibold bg-surface border border-border text-fg-2 hover:text-rose-400"
+              className="inline-flex items-center gap-1.5 transition-colors"
+              style={{
+                height: 40,
+                padding: '0 12px',
+                borderRadius: 8,
+                background: 'var(--gf-input-bg)',
+                border: '1px solid var(--gf-border)',
+                color: 'var(--gf-fg-2)',
+                fontSize: 11,
+                fontWeight: 600,
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = 'rgba(244,63,94,0.08)'
+                e.currentTarget.style.color = '#f43f5e'
+                e.currentTarget.style.borderColor = 'rgba(244,63,94,0.32)'
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = 'var(--gf-input-bg)'
+                e.currentTarget.style.color = 'var(--gf-fg-2)'
+                e.currentTarget.style.borderColor = 'var(--gf-border)'
+              }}
             >
-              <Trash2 className="w-3 h-3" strokeWidth={2} />
+              <Trash2 className="w-3 h-3" strokeWidth={2} color="currentColor" />
               {t('removeWeek')}
             </button>
           )}
@@ -656,32 +775,66 @@ function Library({
       </div>
       <div className="relative mb-3">
         <Search
-          className="absolute start-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-fg-3"
+          className="absolute start-3.5 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none"
           strokeWidth={1.75}
+          color="var(--gf-fg-3)"
         />
         <input
           type="text"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder={t('librarySearch')}
-          className="w-full h-9 rounded-pill bg-bg-deeper border border-border ps-9 pe-3 text-sm text-fg-1 placeholder-fg-3 focus:outline-none focus:border-primary"
+          className="w-full h-10 ps-10 pe-3 text-sm text-fg-1 placeholder-fg-3"
         />
       </div>
-      <div className="flex items-center gap-1 flex-wrap mb-3">
-        {CATEGORY_FILTERS.map((c) => (
-          <button
-            key={c}
-            type="button"
-            onClick={() => setFilter(c)}
-            className={`rounded-pill h-7 px-3 text-[10px] uppercase tracking-eyebrow font-semibold transition-colors ${
-              filter === c
-                ? 'bg-primary/20 text-lime-400 border border-primary/40'
-                : 'bg-bg-deeper border border-border text-fg-3 hover:text-fg-1'
-            }`}
-          >
-            {c === 'all' ? t('filterAll') : c}
-          </button>
-        ))}
+      {/* Category filter — segmented control matching the rest of the
+       * dashboard (8px outer radius on --gf-input-bg surface, lime
+       * tint when active). */}
+      <div
+        className="flex items-center mb-3 flex-wrap"
+        style={{
+          background: 'var(--gf-input-bg)',
+          border: '1px solid var(--gf-border)',
+          borderRadius: 8,
+          padding: 3,
+          gap: 2,
+        }}
+      >
+        {CATEGORY_FILTERS.map((c) => {
+          const active = filter === c
+          return (
+            <button
+              key={c}
+              type="button"
+              onClick={() => setFilter(c)}
+              className="inline-flex items-center justify-center px-2.5 transition-colors"
+              style={{
+                height: 26,
+                borderRadius: 6,
+                background: active ? 'rgba(132,217,61,0.12)' : 'transparent',
+                color: active ? '#a3e635' : 'var(--gf-fg-3)',
+                fontSize: 10,
+                fontWeight: 700,
+                letterSpacing: '0.08em',
+                textTransform: 'uppercase',
+              }}
+              onMouseEnter={(e) => {
+                if (!active) {
+                  e.currentTarget.style.background = 'var(--gf-card-hover)'
+                  e.currentTarget.style.color = 'var(--gf-fg-1)'
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (!active) {
+                  e.currentTarget.style.background = 'transparent'
+                  e.currentTarget.style.color = 'var(--gf-fg-3)'
+                }
+              }}
+            >
+              {c === 'all' ? t('filterAll') : c}
+            </button>
+          )
+        })}
       </div>
       <ul className="space-y-2">
         {recipes.length === 0 ? (
@@ -725,6 +878,11 @@ function RecipeCard({
   recipe: RecipeRef
   dragging?: boolean
 }) {
+  // Per-meal-category bare icon (no tile chrome) — same sidebar-style
+  // pattern used on Store Curation product rows. Colour carries the
+  // category cue.
+  const Icon = RECIPE_ICON[recipe.category]
+  const tint = RECIPE_TINT[recipe.category]
   return (
     <div
       className={`flex items-center gap-3 rounded-lg border bg-surface-raised p-2.5 transition-shadow ${
@@ -733,13 +891,11 @@ function RecipeCard({
           : 'border-border hover:border-primary/40'
       }`}
     >
-      <span
-        className="shrink-0 w-9 h-9 rounded-md flex items-center justify-center"
-        style={{ background: recipe.hue }}
-        aria-hidden
-      >
-        <ChefHat className="w-4 h-4 text-fg-1/60" strokeWidth={1.5} />
-      </span>
+      <Icon
+        className="w-5 h-5 shrink-0"
+        strokeWidth={1.75}
+        color={tint}
+      />
       <div className="flex-1 min-w-0">
         <p className="text-xs font-semibold text-fg-1 leading-tight truncate">
           {recipe.name}
@@ -751,6 +907,7 @@ function RecipeCard({
       <GripVertical
         className="w-3.5 h-3.5 text-fg-3 shrink-0"
         strokeWidth={1.75}
+        color="currentColor"
       />
     </div>
   )
@@ -895,7 +1052,9 @@ function Cell({
             <li
               key={p.uid}
               className="group relative rounded-md border border-border bg-surface-raised px-2 py-1.5"
-              style={{ borderInlineStart: `3px solid ${p.recipe.hue.replace('0.18)', '0.7)').replace('0.16)', '0.7)').replace('0.22)', '0.7)')}` }}
+              style={{
+                borderInlineStart: `3px solid ${RECIPE_TINT[p.recipe.category]}`,
+              }}
             >
               <p className="text-[11px] font-medium text-fg-1 leading-tight pe-5">
                 {p.recipe.name}

@@ -225,79 +225,123 @@ export function LeadsPanel() {
   }
 
   return (
-    <div className="space-y-6">
-      <header>
-        <h1 className="text-2xl font-bold text-fg-1 flex items-center gap-2">
-          <Mail className="w-6 h-6" strokeWidth={1.75} style={{ color: '#a3e635' }} />
-          Leads
-        </h1>
-        <p className="text-sm text-fg-3 mt-1">
-          People who completed the homepage health assessment. Reply directly,
-          track progress through the funnel, or hand off to admin.
-        </p>
+    <div className="px-4 md:px-8 py-6 md:py-8 max-w-screen-xl mx-auto space-y-6">
+      <header className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h1
+            className="font-display font-bold text-fg-1 tracking-tight inline-flex items-center gap-2.5"
+            style={{ fontSize: 'clamp(28px, 4vw, 36px)', lineHeight: 1.1 }}
+          >
+            <Mail
+              className="w-7 h-7"
+              strokeWidth={1.75}
+              color="#a3e635"
+            />
+            Leads
+          </h1>
+          <p className="mt-2 text-sm md:text-base text-fg-2 max-w-2xl">
+            People who completed the homepage health assessment. Reply
+            directly, track progress through the funnel, or hand off to admin.
+          </p>
+        </div>
+        {/* Export CSV — dashboard ghost pill, same as the Export CSV
+         * on /clients and the Generate Code button on Store Curation. */}
+        <button
+          onClick={exportCsv}
+          className="inline-flex items-center gap-1.5 transition-colors"
+          style={{
+            height: 40,
+            padding: '0 14px',
+            borderRadius: 8,
+            background: 'var(--gf-input-bg)',
+            border: '1px solid var(--gf-border)',
+            color: 'var(--gf-fg-1)',
+            fontSize: 12,
+            fontWeight: 600,
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = 'var(--gf-card-hover)'
+            e.currentTarget.style.borderColor = 'rgba(132,217,61,0.4)'
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = 'var(--gf-input-bg)'
+            e.currentTarget.style.borderColor = 'var(--gf-border)'
+          }}
+        >
+          <Download className="w-3.5 h-3.5" strokeWidth={1.75} color="currentColor" />
+          Export CSV
+        </button>
       </header>
 
-      <section className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <section className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <KpiCard label="Total leads" value={counts.total} tint="#60a5fa" />
         <KpiCard label="New / waiting" value={counts.new} tint="#a3e635" />
         <KpiCard label="Converted" value={counts.converted} tint="#4ade80" />
       </section>
 
       <section className="flex flex-wrap items-center gap-3">
-        <div className="relative flex-1 min-w-[240px]">
+        {/* Search input — dashboard input chrome (the global rule
+         * paints var(--gf-input-bg) + var(--gf-border) + 8px radius). */}
+        <div className="relative flex-1 min-w-0 basis-full sm:basis-auto sm:min-w-[200px]">
           <Search
-            className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-fg-3"
+            className="absolute start-3.5 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none"
             strokeWidth={1.75}
+            color="var(--gf-fg-3)"
           />
           <input
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search name, email, phone, goal…"
-            className="w-full h-10 rounded-lg ps-9 pe-3 text-sm"
-            style={{
-              background: 'rgba(8, 20, 10, 0.55)',
-              border: '1px solid rgba(255,255,255,0.14)',
-              color: '#f3f4f6',
-            }}
+            className="w-full h-10 ps-10 pe-3 text-sm text-fg-1 placeholder-fg-3"
           />
         </div>
-        <div className="flex gap-1.5 flex-wrap">
-          {STATUS_FILTERS.map((f) => (
-            <button
-              key={f.value}
-              onClick={() => setStatusFilter(f.value)}
-              className="text-xs rounded-full px-3 py-1.5 transition-colors"
-              style={{
-                background:
-                  statusFilter === f.value
-                    ? 'rgba(163,230,53,0.15)'
-                    : 'rgba(255,255,255,0.04)',
-                color:
-                  statusFilter === f.value ? '#a3e635' : 'var(--gf-fg-2)',
-                border: `1px solid ${
-                  statusFilter === f.value
-                    ? 'rgba(163,230,53,0.4)'
-                    : 'var(--gf-border)'
-                }`,
-              }}
-            >
-              {f.label}
-            </button>
-          ))}
-        </div>
-        <button
-          onClick={exportCsv}
-          className="inline-flex items-center gap-1.5 text-xs rounded-full px-3 py-1.5"
+        {/* Status filter — segmented control matching the other
+         * dashboard pages (8px outer radius, lime-tinted active). */}
+        <div
+          className="inline-flex items-center flex-wrap"
           style={{
-            background: 'rgba(96,165,250,0.10)',
-            color: '#60a5fa',
-            border: '1px solid rgba(96,165,250,0.35)',
+            minHeight: 40,
+            background: 'var(--gf-input-bg)',
+            border: '1px solid var(--gf-border)',
+            borderRadius: 8,
+            padding: 3,
+            gap: 2,
           }}
         >
-          <Download className="w-3.5 h-3.5" strokeWidth={2} />
-          Export CSV
-        </button>
+          {STATUS_FILTERS.map((f) => {
+            const active = statusFilter === f.value
+            return (
+              <button
+                key={f.value}
+                onClick={() => setStatusFilter(f.value)}
+                className="inline-flex items-center justify-center px-3 transition-colors"
+                style={{
+                  height: 32,
+                  borderRadius: 6,
+                  background: active ? 'rgba(132,217,61,0.12)' : 'transparent',
+                  color: active ? '#a3e635' : 'var(--gf-fg-2)',
+                  fontSize: 12,
+                  fontWeight: 600,
+                }}
+                onMouseEnter={(e) => {
+                  if (!active) {
+                    e.currentTarget.style.background = 'var(--gf-card-hover)'
+                    e.currentTarget.style.color = 'var(--gf-fg-1)'
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (!active) {
+                    e.currentTarget.style.background = 'transparent'
+                    e.currentTarget.style.color = 'var(--gf-fg-2)'
+                  }
+                }}
+              >
+                {f.label}
+              </button>
+            )
+          })}
+        </div>
       </section>
 
       {loading && <p className="text-sm text-fg-3">Loading…</p>}
@@ -340,11 +384,19 @@ export function LeadsPanel() {
                 className="w-full text-start p-4 flex items-start gap-3 hover:bg-bg-deeper/30 rounded-xl transition-colors"
               >
                 <span
-                  className="mt-1 inline-flex items-center text-[10px] font-bold uppercase tracking-wide rounded-full px-2 py-0.5"
+                  className="mt-1 inline-flex items-center justify-center"
                   style={{
+                    height: 18,
+                    padding: '0 8px',
+                    borderRadius: 999,
                     background: tint.bg,
                     color: tint.fg,
-                    border: `1px solid ${tint.border}`,
+                    fontSize: 9.5,
+                    fontWeight: 800,
+                    letterSpacing: '0.08em',
+                    textTransform: 'uppercase',
+                    lineHeight: 1,
+                    whiteSpace: 'nowrap',
                   }}
                 >
                   {r.status}
@@ -357,11 +409,19 @@ export function LeadsPanel() {
                     <p className="text-xs text-fg-3 truncate">{r.email}</p>
                     {r.primary_goal && (
                       <span
-                        className="text-[10px] uppercase tracking-wide rounded-full px-1.5 py-0.5"
+                        className="inline-flex items-center justify-center"
                         style={{
-                          background: 'rgba(163,230,53,0.10)',
+                          height: 18,
+                          padding: '0 8px',
+                          borderRadius: 999,
+                          background: 'rgba(163,230,53,0.14)',
                           color: '#a3e635',
-                          border: '1px solid rgba(163,230,53,0.35)',
+                          fontSize: 9.5,
+                          fontWeight: 800,
+                          letterSpacing: '0.08em',
+                          textTransform: 'uppercase',
+                          lineHeight: 1,
+                          whiteSpace: 'nowrap',
                         }}
                       >
                         {valueLabel(r.primary_goal)}
@@ -369,11 +429,19 @@ export function LeadsPanel() {
                     )}
                     {r.ebook_sent && (
                       <span
-                        className="text-[10px] uppercase tracking-wide rounded-full px-1.5 py-0.5"
+                        className="inline-flex items-center justify-center"
                         style={{
-                          background: 'rgba(96,165,250,0.10)',
+                          height: 18,
+                          padding: '0 8px',
+                          borderRadius: 999,
+                          background: 'rgba(96,165,250,0.14)',
                           color: '#60a5fa',
-                          border: '1px solid rgba(96,165,250,0.35)',
+                          fontSize: 9.5,
+                          fontWeight: 800,
+                          letterSpacing: '0.08em',
+                          textTransform: 'uppercase',
+                          lineHeight: 1,
+                          whiteSpace: 'nowrap',
                         }}
                       >
                         Ebook sent
@@ -528,17 +596,32 @@ export function LeadsPanel() {
   )
 }
 
-function KpiCard({ label, value, tint }: { label: string; value: number; tint: string }) {
+function KpiCard({
+  label,
+  value,
+  tint,
+}: {
+  label: string
+  value: number
+  tint: string
+}) {
+  // Same shape as the /clients KPI cards — inset coloured stripe on
+  // the leading edge, tier-coloured value, uppercase eyebrow label.
   return (
-    <div
-      className="rounded-xl p-4"
-      style={{ background: 'var(--gf-surface)', border: '1px solid var(--gf-border)' }}
+    <article
+      className="rounded-xl border border-border bg-surface p-4"
+      style={{ boxShadow: `inset 4px 0 0 ${tint}` }}
     >
-      <p className="text-xs uppercase tracking-eyebrow text-fg-3">{label}</p>
-      <p className="mt-1.5 font-mono text-2xl font-bold" style={{ color: tint }}>
+      <p className="text-[11px] uppercase tracking-eyebrow text-fg-3 font-semibold">
+        {label}
+      </p>
+      <p
+        className="mt-2 font-display text-2xl font-bold"
+        style={{ color: tint }}
+      >
         {value.toLocaleString()}
       </p>
-    </div>
+    </article>
   )
 }
 

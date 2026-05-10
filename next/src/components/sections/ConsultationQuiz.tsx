@@ -332,15 +332,16 @@ export function ConsultationQuiz() {
           </p>
         </header>
 
-        {/* Card — styled to match the dashboard surface tokens
-         * (#1b1f26 surface on #393e47 border) so the form reads as
-         * the same product as the signed-in app rather than a
-         * one-off marketing form. */}
+        {/* Card — uses the marketing palette tokens
+         * (#132218 surface on #243d2a border) so it sits flush
+         * with the rest of the homepage cards (Stats, About,
+         * Services, Reviews, etc.) instead of looking like a
+         * dashboard panel dropped onto the page. */}
         <div
           className="rounded-2xl font-sans"
           style={{
-            background: '#1b1f26',
-            border: '1px solid #393e47',
+            background: '#132218',
+            border: '1px solid #243d2a',
             boxShadow:
               '0 24px 60px rgba(0,0,0,0.55), 0 0 0 1px rgba(163,230,53,0.04)',
             overflow: 'hidden',
@@ -350,7 +351,7 @@ export function ConsultationQuiz() {
           <div
             style={{
               height: 4,
-              background: '#21252e',
+              background: '#0d1a12',
               overflow: 'hidden',
             }}
           >
@@ -526,8 +527,8 @@ function QuizStep({
               className="text-start rounded-xl text-sm transition-all"
               style={{
                 padding: '14px 16px',
-                background: selected ? 'rgba(132,217,61,0.10)' : '#21252e',
-                border: `1px solid ${selected ? '#80d93d' : '#393e47'}`,
+                background: selected ? 'rgba(132,217,61,0.10)' : '#1a3320',
+                border: `1px solid ${selected ? '#80d93d' : '#243d2a'}`,
                 color: selected ? '#a3e635' : '#e8eaef',
                 fontWeight: selected ? 600 : 500,
                 letterSpacing: '-0.005em',
@@ -537,14 +538,14 @@ function QuizStep({
               }}
               onMouseEnter={(e) => {
                 if (!selected) {
-                  e.currentTarget.style.background = '#2e333a'
-                  e.currentTarget.style.borderColor = '#4a4f59'
+                  e.currentTarget.style.background = '#234a2c'
+                  e.currentTarget.style.borderColor = '#3a6e44'
                 }
               }}
               onMouseLeave={(e) => {
                 if (!selected) {
-                  e.currentTarget.style.background = '#21252e'
-                  e.currentTarget.style.borderColor = '#393e47'
+                  e.currentTarget.style.background = '#1a3320'
+                  e.currentTarget.style.borderColor = '#243d2a'
                 }
               }}
             >
@@ -561,17 +562,17 @@ function QuizStep({
           className="text-xs inline-flex items-center gap-1.5 rounded-full transition-colors"
           style={{
             padding: '8px 14px',
-            background: '#21252e',
+            background: '#1a3320',
             color: '#abafba',
-            border: '1px solid #393e47',
+            border: '1px solid #243d2a',
             fontWeight: 500,
           }}
           onMouseEnter={(e) => {
-            e.currentTarget.style.background = '#2e333a'
+            e.currentTarget.style.background = '#234a2c'
             e.currentTarget.style.color = '#f8f9fa'
           }}
           onMouseLeave={(e) => {
-            e.currentTarget.style.background = '#21252e'
+            e.currentTarget.style.background = '#1a3320'
             e.currentTarget.style.color = '#abafba'
           }}
         >
@@ -723,9 +724,9 @@ function ContactStep({
           className="text-xs inline-flex items-center gap-1.5 rounded-full transition-colors disabled:opacity-40"
           style={{
             padding: '8px 14px',
-            background: '#21252e',
+            background: '#1a3320',
             color: '#abafba',
-            border: '1px solid #393e47',
+            border: '1px solid #243d2a',
             fontWeight: 500,
           }}
         >
@@ -824,9 +825,9 @@ function Input({
   onChange: (v: string) => void
   maxLength?: number
 }) {
-  // Match dashboard input tokens: --gf-input-bg #292d34, border #393e47,
-  // focus border #80d93d. The field-tone matches every form inside the
-  // signed-in app so the marketing quiz reads as the same product.
+  // Marketing input tokens: surface-raised #1a3320 on border #243d2a,
+  // focus border #80d93d. The field-tone matches the rest of the
+  // homepage cards so the quiz reads as one cohesive marketing surface.
   return (
     <div>
       <label
@@ -850,8 +851,8 @@ function Input({
         maxLength={maxLength}
         className="w-full h-11 rounded-lg px-3.5 text-sm transition-colors outline-none"
         style={{
-          background: '#292d34',
-          border: '1px solid #393e47',
+          background: '#1a3320',
+          border: '1px solid #243d2a',
           color: '#f8f9fa',
           fontWeight: 500,
         }}
@@ -861,7 +862,7 @@ function Input({
             '0 0 0 3px rgba(132,217,61,0.15)'
         }}
         onBlur={(e) => {
-          e.currentTarget.style.borderColor = '#393e47'
+          e.currentTarget.style.borderColor = '#243d2a'
           e.currentTarget.style.boxShadow = 'none'
         }}
       />

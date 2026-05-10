@@ -11,6 +11,8 @@ import {
   Check,
   Inbox,
   Flag,
+  Plus,
+  X,
 } from '@/icons'
 import type { Tier } from '@/lib/constants'
 import { useUser } from '@/lib/hooks/useUser'
@@ -151,6 +153,79 @@ export default function NutritionistMessagesPage() {
   const [draft, setDraft] = useState('')
   const [sending, setSending] = useState(false)
   const scrollRef = useRef<HTMLDivElement>(null)
+
+  // Compose-new-message picker. Opens a modal listing every client
+  // (role='user' profiles) with search. Picking a client either jumps
+  // to an existing thread or creates a fresh draft thread.
+  const [composeOpen, setComposeOpen] = useState(false)
+  const [allClients, setAllClients] = useState<
+    { id: string; name: string; initials: string; tier: Tier }[]
+  >([])
+
+  // Lazy-load the full client roster the first time the compose modal
+  // opens so we don't hammer Supabase on every page load.
+  useEffect(() => {
+    if (!composeOpen || !userId || allClients.length > 0) return
+    const supabase = getBrowserSupabase()
+    if (!supabase) return
+    let cancelled = false
+    void (async () => {
+      type ProfileRow = {
+        id: string
+        full_name: string | null
+        tier: Tier
+      }
+      const { data } = await supabase
+        .from('profiles')
+        .select('id, full_name, tier')
+        .eq('role', 'user')
+        .order('full_name', { ascending: true })
+        .limit(200)
+      if (cancelled) return
+      const rows = (data as ProfileRow[] | null) ?? []
+      setAllClients(
+        rows.map((r) => ({
+          id: r.id,
+          name: r.full_name ?? 'Unnamed user',
+          initials: initialsOf(r.full_name ?? '??'),
+          tier: r.tier,
+        })),
+      )
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [composeOpen, userId, allClients.length])
+
+  // Pick a recipient: jump to their existing thread if present,
+  // otherwise create a new empty thread and select it.
+  const pickRecipient = (
+    c: { id: string; name: string; initials: string; tier: Tier },
+  ) => {
+    setComposeOpen(false)
+    const existing = threads.find((th) => th.clientId === c.id)
+    if (existing) {
+      setActiveId(existing.id)
+      return
+    }
+    const newId = `t-${Date.now()}`
+    setThreads((curr) => [
+      {
+        id: newId,
+        clientId: c.id,
+        clientName: c.name,
+        clientInitials: c.initials,
+        tier: c.tier,
+        unread: 0,
+        flagged: false,
+        preview: '',
+        lastAgoMin: 0,
+        messages: [],
+      },
+      ...curr,
+    ])
+    setActiveId(newId)
+  }
 
   // Hydrate threads from conversations + messages.
   useEffect(() => {
@@ -368,40 +443,88 @@ export default function NutritionistMessagesPage() {
       {/* Thread list */}
       <aside className="hidden md:flex flex-col w-80 shrink-0 border-e border-border bg-surface/50">
         <header className="px-4 py-4 border-b border-border space-y-3">
-          <div>
-            <h1 className="font-display text-lg font-bold text-fg-1 tracking-tight">
-              {t('messages')}
-            </h1>
-            <p className="text-xs text-fg-3 mt-0.5">{tT('subtitle')}</p>
+          <div className="flex items-start justify-between gap-2">
+            <div className="min-w-0">
+              <h1 className="font-display text-lg font-bold text-fg-1 tracking-tight">
+                {t('messages')}
+              </h1>
+              <p className="text-xs text-fg-3 mt-0.5">{tT('subtitle')}</p>
+            </div>
+            {/* New message — primary lime CTA opens the recipient picker. */}
+            <button
+              type="button"
+              onClick={() => setComposeOpen(true)}
+              className="shrink-0 inline-flex items-center gap-1.5 rounded-pill bg-gradient-to-b from-lime-400 to-lime-600 text-bg font-semibold h-9 px-3 text-xs shadow-lime-glow border border-lime-600/60 hover:-translate-y-px transition-transform"
+              aria-label="New message"
+            >
+              <Plus className="w-3.5 h-3.5" strokeWidth={2.25} color="#0d1a12" />
+              New
+            </button>
           </div>
+          {/* Search input — dashboard input chrome (40px tall, the
+           * global input rule paints var(--gf-input-bg) + 8px radius). */}
           <div className="relative">
             <Search
-              className="absolute start-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-fg-3"
+              className="absolute start-3.5 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none"
               strokeWidth={1.75}
+              color="var(--gf-fg-3)"
             />
             <input
               type="text"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder={tT('search')}
-              className="w-full h-9 rounded-pill bg-bg-deeper border border-border ps-9 pe-3 text-sm text-fg-1 placeholder-fg-3 focus:outline-none focus:border-primary"
+              className="w-full h-10 ps-10 pe-3 text-sm text-fg-1 placeholder-fg-3"
             />
           </div>
-          <div className="inline-flex items-center gap-0.5 rounded-pill bg-bg-deeper border border-border p-0.5 w-full">
-            {(['all', 'unread', 'flagged'] as Filter[]).map((f) => (
-              <button
-                key={f}
-                type="button"
-                onClick={() => setFilter(f)}
-                className={`flex-1 h-7 rounded-pill text-[11px] font-semibold transition-colors ${
-                  filter === f
-                    ? 'bg-primary/20 text-lime-400'
-                    : 'text-fg-3 hover:text-fg-1'
-                }`}
-              >
-                {tT(`filter${f.charAt(0).toUpperCase()}${f.slice(1)}` as 'filterAll')}
-              </button>
-            ))}
+          {/* Filter — segmented control matching the rest of the
+           * dashboard (8px outer, 6px inner radius, lime active). */}
+          <div
+            className="flex items-center w-full"
+            style={{
+              minHeight: 40,
+              background: 'var(--gf-input-bg)',
+              border: '1px solid var(--gf-border)',
+              borderRadius: 8,
+              padding: 3,
+              gap: 2,
+            }}
+          >
+            {(['all', 'unread', 'flagged'] as Filter[]).map((f) => {
+              const active = filter === f
+              return (
+                <button
+                  key={f}
+                  type="button"
+                  onClick={() => setFilter(f)}
+                  className="flex-1 inline-flex items-center justify-center transition-colors"
+                  style={{
+                    height: 32,
+                    borderRadius: 6,
+                    background: active ? 'rgba(132,217,61,0.12)' : 'transparent',
+                    color: active ? '#a3e635' : 'var(--gf-fg-2)',
+                    fontSize: 12,
+                    fontWeight: 600,
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!active) {
+                      e.currentTarget.style.background = 'var(--gf-card-hover)'
+                      e.currentTarget.style.color = 'var(--gf-fg-1)'
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!active) {
+                      e.currentTarget.style.background = 'transparent'
+                      e.currentTarget.style.color = 'var(--gf-fg-2)'
+                    }
+                  }}
+                >
+                  {tT(
+                    `filter${f.charAt(0).toUpperCase()}${f.slice(1)}` as 'filterAll',
+                  )}
+                </button>
+              )
+            })}
           </div>
         </header>
         <ul className="flex-1 overflow-y-auto">
@@ -450,10 +573,18 @@ export default function NutritionistMessagesPage() {
                 </p>
                 <div className="mt-0.5 inline-flex items-center gap-1.5">
                   <span
-                    className="rounded-pill h-5 px-2 inline-flex items-center text-[10px] uppercase tracking-eyebrow font-bold"
+                    className="inline-flex items-center justify-center"
                     style={{
-                      background: `${TIER_TINT[active.tier]}1a`,
+                      height: 18,
+                      padding: '0 8px',
+                      borderRadius: 999,
+                      background: `${TIER_TINT[active.tier]}1f`,
                       color: TIER_TINT[active.tier],
+                      fontSize: 9.5,
+                      fontWeight: 800,
+                      letterSpacing: '0.08em',
+                      textTransform: 'uppercase',
+                      lineHeight: 1,
                     }}
                   >
                     {tTiers(`${active.tier}.name`)}
@@ -535,6 +666,169 @@ export default function NutritionistMessagesPage() {
             </form>
           </>
         )}
+      </div>
+
+      {composeOpen && (
+        <ComposeRecipientPicker
+          clients={allClients}
+          onPick={pickRecipient}
+          onClose={() => setComposeOpen(false)}
+          tierTint={TIER_TINT}
+          tTiers={tTiers}
+        />
+      )}
+    </div>
+  )
+}
+
+/**
+ * Modal shown when the nutritionist clicks "New" — lists every
+ * client (role='user' profiles) with a search filter. Picking one
+ * either jumps to the existing thread or opens a new draft.
+ */
+function ComposeRecipientPicker({
+  clients,
+  onPick,
+  onClose,
+  tierTint,
+  tTiers,
+}: {
+  clients: { id: string; name: string; initials: string; tier: Tier }[]
+  onPick: (c: {
+    id: string
+    name: string
+    initials: string
+    tier: Tier
+  }) => void
+  onClose: () => void
+  tierTint: Record<Tier, string>
+  tTiers: ReturnType<typeof useTranslations>
+}) {
+  const [q, setQ] = useState('')
+  const filtered = useMemo(() => {
+    const s = q.trim().toLowerCase()
+    if (!s) return clients
+    return clients.filter((c) => c.name.toLowerCase().includes(s))
+  }, [clients, q])
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-start justify-center p-4 pt-20"
+      style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }}
+      onClick={(e) => e.target === e.currentTarget && onClose()}
+    >
+      <div
+        className="w-full max-w-md flex flex-col"
+        style={{
+          maxHeight: 'calc(100vh - 100px)',
+          background: 'var(--gf-card)',
+          border: '1px solid var(--gf-border)',
+          borderRadius: 16,
+          boxShadow: '0 24px 60px rgba(0,0,0,0.55)',
+          overflow: 'hidden',
+        }}
+      >
+        <header
+          className="px-5 py-4 flex items-center justify-between gap-3"
+          style={{ borderBottom: '1px solid var(--gf-border)' }}
+        >
+          <div>
+            <h2 className="text-base font-semibold text-fg-1">New message</h2>
+            <p className="text-xs text-fg-3 mt-0.5">
+              Pick a client to start a conversation.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Close"
+            className="inline-flex items-center justify-center transition-colors"
+            style={{
+              width: 28,
+              height: 28,
+              borderRadius: 8,
+              background: 'transparent',
+              color: 'var(--gf-fg-3)',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = 'var(--gf-card-hover)'
+              e.currentTarget.style.color = 'var(--gf-fg-1)'
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = 'transparent'
+              e.currentTarget.style.color = 'var(--gf-fg-3)'
+            }}
+          >
+            <X className="w-4 h-4" strokeWidth={1.75} color="currentColor" />
+          </button>
+        </header>
+
+        <div className="px-5 py-3" style={{ borderBottom: '1px solid var(--gf-border)' }}>
+          <div className="relative">
+            <Search
+              className="absolute start-3.5 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none"
+              strokeWidth={1.75}
+              color="var(--gf-fg-3)"
+            />
+            <input
+              type="text"
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              autoFocus
+              placeholder="Search clients…"
+              className="w-full h-10 ps-10 pe-3 text-sm text-fg-1 placeholder-fg-3"
+            />
+          </div>
+        </div>
+
+        <ul className="flex-1 overflow-y-auto py-1">
+          {filtered.length === 0 ? (
+            <li className="px-5 py-6 text-center text-sm text-fg-3">
+              {clients.length === 0 ? 'Loading clients…' : 'No clients match.'}
+            </li>
+          ) : (
+            filtered.map((c) => (
+              <li key={c.id}>
+                <button
+                  type="button"
+                  onClick={() => onPick(c)}
+                  className="w-full flex items-center gap-3 px-5 py-2.5 text-start transition-colors"
+                  style={{ background: 'transparent' }}
+                  onMouseEnter={(e) =>
+                    (e.currentTarget.style.background = 'var(--gf-card-hover)')
+                  }
+                  onMouseLeave={(e) =>
+                    (e.currentTarget.style.background = 'transparent')
+                  }
+                >
+                  <Avatar text={c.initials} size={32} />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-fg-1 truncate">
+                      {c.name}
+                    </p>
+                  </div>
+                  <span
+                    className="inline-flex items-center justify-center"
+                    style={{
+                      height: 18,
+                      padding: '0 8px',
+                      borderRadius: 999,
+                      background: `${tierTint[c.tier]}1f`,
+                      color: tierTint[c.tier],
+                      fontSize: 9.5,
+                      fontWeight: 800,
+                      letterSpacing: '0.08em',
+                      textTransform: 'uppercase',
+                      lineHeight: 1,
+                    }}
+                  >
+                    {tTiers(`${c.tier}.name`)}
+                  </span>
+                </button>
+              </li>
+            ))
+          )}
+        </ul>
       </div>
     </div>
   )
