@@ -42,7 +42,6 @@ import {
   Star,
   Sun,
   BookOpen,
-  Check,
 } from '@/icons'
 import type { LucideIcon } from 'lucide-react'
 

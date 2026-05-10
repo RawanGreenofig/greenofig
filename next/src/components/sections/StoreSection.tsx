@@ -47,33 +47,13 @@ export function StoreSection() {
 
   const isOff = !isLoading && enabled === false
 
-  if (isOff) {
-    return (
-      <section
-        id="store"
-        className="relative z-10 w-full px-6 py-16 lg:py-24"
-      >
-        <div className="max-w-2xl mx-auto rounded-2xl border border-border bg-surface px-8 py-12 text-center">
-          <p className="text-xs uppercase tracking-eyebrow font-semibold text-lime-400">
-            {t('storeEyebrow')}
-          </p>
-          <h2 className="mt-3 font-display text-3xl font-bold text-fg-1">
-            {tStore('offlineTitle')}
-          </h2>
-          <p className="mt-3 text-sm text-fg-2">{tStore('offlineBody')}</p>
-        </div>
-      </section>
-    )
-  }
-
-  const scrollBy = (delta: number) => {
-    scrollerRef.current?.scrollBy({ left: delta, behavior: 'smooth' })
-  }
-
   // Auto-advance the carousel every 3.5s, pause on hover/focus, and loop
   // back to the start when reaching the end. Direction flips for RTL so the
   // visual progression always reads "next card" on either locale.
+  // Must run unconditionally (rules-of-hooks) — bail out internally when
+  // the store is gated off and the scroller never mounts.
   useEffect(() => {
+    if (isOff) return
     const el = scrollerRef.current
     if (!el) return
     if (typeof window !== 'undefined') {
@@ -106,7 +86,30 @@ export function StoreSection() {
       el.removeEventListener('focusout', resume)
       window.clearInterval(id)
     }
-  }, [locale])
+  }, [locale, isOff])
+
+  if (isOff) {
+    return (
+      <section
+        id="store"
+        className="relative z-10 w-full px-6 py-16 lg:py-24"
+      >
+        <div className="max-w-2xl mx-auto rounded-2xl border border-border bg-surface px-8 py-12 text-center">
+          <p className="text-xs uppercase tracking-eyebrow font-semibold text-lime-400">
+            {t('storeEyebrow')}
+          </p>
+          <h2 className="mt-3 font-display text-3xl font-bold text-fg-1">
+            {tStore('offlineTitle')}
+          </h2>
+          <p className="mt-3 text-sm text-fg-2">{tStore('offlineBody')}</p>
+        </div>
+      </section>
+    )
+  }
+
+  const scrollBy = (delta: number) => {
+    scrollerRef.current?.scrollBy({ left: delta, behavior: 'smooth' })
+  }
 
   return (
     <section id="store" className="relative z-10 w-full py-16 lg:py-24">
