@@ -31,14 +31,14 @@ const JOB_TYPE_LABEL: Record<string, string> = {
  * as the team scales beyond Coach Rawan; this page is the front door.
  */
 export default function CareersPage() {
-  const [jobs, setJobs] = useState<Job[] | null>(null)
+  // Start as empty rather than null — when there are no postings we
+  // want to show the "no openings" message immediately rather than
+  // a loading flash.
+  const [jobs, setJobs] = useState<Job[]>([])
 
   useEffect(() => {
     const supabase = getBrowserSupabase()
-    if (!supabase) {
-      setJobs([])
-      return
-    }
+    if (!supabase) return
     let cancelled = false
     void (async () => {
       const { data } = await supabase
@@ -81,9 +81,7 @@ export default function CareersPage() {
           </p>
         </header>
 
-        {jobs === null ? (
-          <div className="text-center text-sm text-fg-3 py-12">Loading…</div>
-        ) : jobs.length === 0 ? (
+        {jobs.length === 0 ? (
           <div className="rounded-2xl border border-border bg-surface px-8 py-16 text-center">
             <Briefcase
               className="w-10 h-10 mx-auto"
@@ -91,12 +89,11 @@ export default function CareersPage() {
               color="var(--gf-fg-3)"
             />
             <p className="mt-4 text-base font-semibold text-fg-1">
-              No open positions right now
+              No job postings available at the moment
             </p>
             <p className="mt-2 text-sm text-fg-2 max-w-sm mx-auto">
-              We&apos;re not actively hiring at the moment, but we&apos;re
-              always happy to hear from talented people. Send a note to
-              careers@greenofig.com.
+              We&apos;re always happy to hear from talented people — send a
+              note to careers@greenofig.com.
             </p>
           </div>
         ) : (
