@@ -67,11 +67,18 @@ export function DashboardShell({
   useEffect(() => {
     setMounted(true)
   }, [])
-  const dataTier = (mounted ? tier ?? 'free' : 'free') as
+  // Customer chrome reflects their tier; staff chrome (admin/nutritionist)
+  // is role-driven only, so force data-tier='free' for staff. Otherwise
+  // staff accounts that happen to have tier='vip' in profiles (because
+  // the column is NOT NULL) would render with vip-yellow chrome bleeding
+  // through any role override that doesn't set every token.
+  const isStaff = role === 'admin' || role === 'nutritionist'
+  const rawTier = (mounted ? tier ?? 'free' : 'free') as
     | 'free'
     | 'basic'
     | 'premium'
     | 'vip'
+  const dataTier: 'free' | 'basic' | 'premium' | 'vip' = isStaff ? 'free' : rawTier
 
   // Close drawer on route change
   useEffect(() => {
