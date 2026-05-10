@@ -2,9 +2,21 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 import Image from 'next/image'
-import { useTranslations } from 'next-intl'
+import { useLocale, useTranslations } from 'next-intl'
 import { ArrowRight } from 'lucide-react'
 import { heroFrames } from '@/lib/tokens'
+import { usePlatformSetting } from '@/lib/hooks/usePlatformSetting'
+
+interface HeroSettings {
+  headline1?: string
+  headline2?: string
+  subline1?: string
+  subline2?: string
+  subline3?: string
+  ctaLabel?: string
+  secondHeadline1?: string
+  secondHeadline2?: string
+}
 import { FrameCanvas, type FrameCanvasHandle } from './FrameCanvas'
 import { WordReveal } from './WordReveal'
 import { useScrollFrames } from './useScrollFrames'
@@ -32,6 +44,23 @@ const framePath = (i: number) =>
  */
 export function HeroSequence() {
   const t = useTranslations('marketing')
+  const isAr = useLocale() === 'ar'
+  // /admin/site-editor → site_hero. Editor is single-language so we
+  // only apply the override on the English locale; Arabic keeps its
+  // translated copy. Each field falls back to the translated default
+  // when empty so a partial save doesn't blank the rest.
+  const { value: heroOv } = usePlatformSetting<HeroSettings>('site_hero')
+  const heroEat    = (!isAr && heroOv?.headline1?.trim()) || t('heroEat')
+  const heroReal   = (!isAr && heroOv?.headline2?.trim()) || t('heroReal')
+  const heroSub    =
+    !isAr && (heroOv?.subline1 || heroOv?.subline2 || heroOv?.subline3)
+      ? [heroOv.subline1, heroOv.subline2, heroOv.subline3]
+          .filter((s) => s && s.trim().length > 0)
+          .join(' ')
+      : t('heroSub')
+  const heroSecond1 = (!isAr && heroOv?.secondHeadline1?.trim()) || t('heroSecond1')
+  const heroSecond2 = (!isAr && heroOv?.secondHeadline2?.trim()) || t('heroSecond2')
+  const heroCta     = (!isAr && heroOv?.ctaLabel?.trim()) || t('heroCta')
   const sectionRef = useRef<HTMLElement>(null)
   const canvasRef = useRef<FrameCanvasHandle>(null)
 
@@ -194,7 +223,7 @@ export function HeroSequence() {
                 }}
               >
                 <WordReveal show={showWord1} exit={exitInitial}>
-                  {t('heroEat')}
+                  {heroEat}
                 </WordReveal>{' '}
                 <WordReveal
                   show={showWord2}
@@ -202,7 +231,7 @@ export function HeroSequence() {
                   delay={120}
                   className="text-lime-400"
                 >
-                  {t('heroReal')}
+                  {heroReal}
                 </WordReveal>
               </h1>
 
@@ -233,7 +262,7 @@ export function HeroSequence() {
                   }}
                 >
                   <WordReveal show={showSub} exit={exitInitial}>
-                    {t('heroSub')}
+                    {heroSub}
                   </WordReveal>
                 </p>
               </div>
@@ -251,9 +280,9 @@ export function HeroSequence() {
                     "'opsz' 144, 'wght' 700, 'SOFT' 100, 'WONK' 1",
                 }}
               >
-                <WordReveal show={showSecond}>{t('heroSecond1')}</WordReveal>{' '}
+                <WordReveal show={showSecond}>{heroSecond1}</WordReveal>{' '}
                 <WordReveal show={showSecond} delay={120} className="text-lime-400">
-                  {t('heroSecond2')}
+                  {heroSecond2}
                 </WordReveal>
               </h2>
 
@@ -271,7 +300,7 @@ export function HeroSequence() {
                   type="button"
                   className="group inline-flex items-center gap-2 rounded-pill px-6 h-12 text-base font-semibold text-bg shadow-lime-glow transition-all duration-normal ease-out hover:-translate-y-px bg-gradient-to-b from-lime-400 to-lime-600 border border-lime-600/60"
                 >
-                  {t('heroCta')}
+                  {heroCta}
                   <ArrowRight
                     strokeWidth={2.25}
                     className="w-4 h-4 transition-transform duration-normal ease-out rtl:rotate-180 group-hover:translate-x-1 rtl:group-hover:-translate-x-1"

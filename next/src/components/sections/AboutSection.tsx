@@ -6,6 +6,14 @@ import { useLocale, useTranslations } from 'next-intl'
 import { BadgeCheck } from 'lucide-react'
 import { Link } from '@/i18n/navigation'
 import { ease, NUTRITIONIST } from '@/lib/tokens'
+import { usePlatformSetting } from '@/lib/hooks/usePlatformSetting'
+
+interface AboutSettings {
+  name?: string
+  role?: string
+  bio?: string
+  credentials?: string
+}
 
 const EASE_OUT: [number, number, number, number] = [...ease.out]
 
@@ -14,10 +22,22 @@ export function AboutSection() {
   const locale = useLocale()
   const isAr = locale === 'ar'
 
-  const name = isAr ? NUTRITIONIST.nameAr : NUTRITIONIST.name
-  const role = isAr ? NUTRITIONIST.roleAr : NUTRITIONIST.role
-  const bio = isAr ? NUTRITIONIST.bio.longAr : NUTRITIONIST.bio.long
-  const creds = isAr ? NUTRITIONIST.credentialsAr : NUTRITIONIST.credentials
+  const defaultName = isAr ? NUTRITIONIST.nameAr : NUTRITIONIST.name
+  const defaultRole = isAr ? NUTRITIONIST.roleAr : NUTRITIONIST.role
+  const defaultBio = isAr ? NUTRITIONIST.bio.longAr : NUTRITIONIST.bio.long
+  const defaultCreds = isAr ? NUTRITIONIST.credentialsAr : NUTRITIONIST.credentials
+
+  // Admin overrides via /admin/site-editor → site_about. The editor is
+  // currently single-language (English by default), so we only apply
+  // the override on the EN locale to avoid overwriting Arabic copy
+  // with English. The Arabic site keeps the translated defaults.
+  const { value: aboutOv } = usePlatformSetting<AboutSettings>('site_about')
+  const name = (!isAr && aboutOv?.name?.trim()) || defaultName
+  const role = (!isAr && aboutOv?.role?.trim()) || defaultRole
+  const bio = (!isAr && aboutOv?.bio?.trim()) || defaultBio
+  const creds = !isAr && aboutOv?.credentials?.trim()
+    ? aboutOv.credentials.split(/\n+/).filter(Boolean)
+    : defaultCreds
 
   const slideFrom = isAr ? 40 : -40
 

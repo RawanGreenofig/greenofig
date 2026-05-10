@@ -7,6 +7,17 @@ import { Link } from '@/i18n/navigation'
 import { LanguageSwitcher } from '@/components/LanguageSwitcher'
 import { Wordmark } from '@/components/Wordmark'
 import { ease } from '@/lib/tokens'
+import { usePlatformSetting } from '@/lib/hooks/usePlatformSetting'
+
+interface FooterSettings {
+  tagline?: string
+  supportEmail?: string
+  supportPhone?: string
+  address?: string
+  instagram?: string
+  youtube?: string
+  tiktok?: string
+}
 
 const EASE_OUT: [number, number, number, number] = [...ease.out]
 
@@ -18,6 +29,17 @@ export function FooterSection() {
   const tLegal = useTranslations('legal')
   const year = new Date().getFullYear()
   void useLocale
+  // Admin overrides from /admin/site-editor → site_footer. Each field
+  // falls back to the existing translation/hardcoded value when the
+  // override is empty, so a partial edit doesn't blank the rest.
+  const { value: footerOv } = usePlatformSetting<FooterSettings>('site_footer')
+  const tagline = footerOv?.tagline?.trim() || t('footerTagline')
+  const supportEmail = footerOv?.supportEmail?.trim() || 'health@greenofig.com'
+  const supportPhone = footerOv?.supportPhone?.trim() || ''
+  const address = footerOv?.address?.trim() || ''
+  const instagram = footerOv?.instagram?.trim() || 'https://instagram.com'
+  const youtube = footerOv?.youtube?.trim() || ''
+  const tiktok = footerOv?.tiktok?.trim() || ''
 
   return (
     <footer
@@ -53,28 +75,36 @@ export function FooterSection() {
               <Wordmark size="lg" />
             </Link>
             <p className="mt-3 text-sm text-fg-2 leading-relaxed">
-              {t('footerTagline')}
+              {tagline}
             </p>
-            {/* Email contacts — moved from /contact for a cleaner page */}
+            {/* Email + phone + address — overrides from site_footer */}
             <div className="mt-5 space-y-1.5 text-xs">
               <a
-                href="mailto:health@greenofig.com"
+                href={`mailto:${supportEmail}`}
                 className="block text-fg-2 hover:text-lime-400 transition-colors"
               >
-                health@greenofig.com
+                {supportEmail}
               </a>
-              <a
-                href="mailto:support@greenofig.com"
-                className="block text-fg-2 hover:text-lime-400 transition-colors"
-              >
-                support@greenofig.com
-              </a>
+              {supportPhone && (
+                <a
+                  href={`tel:${supportPhone.replace(/\s+/g, '')}`}
+                  className="block text-fg-2 hover:text-lime-400 transition-colors"
+                  dir="ltr"
+                >
+                  {supportPhone}
+                </a>
+              )}
+              {address && <p className="text-fg-3">{address}</p>}
             </div>
             <div className="mt-5 flex items-center gap-3">
-              <SocialLink href="https://instagram.com" icon={Instagram} label="Instagram" />
+              <SocialLink href={instagram} icon={Instagram} label="Instagram" />
               <SocialLink href="https://twitter.com"   icon={Twitter}   label="Twitter / X" />
               <SocialLink href="https://linkedin.com"  icon={Linkedin}  label="LinkedIn" />
               <SocialLink href="https://facebook.com"  icon={Facebook}  label="Facebook" />
+              {/* youtube/tiktok URLs are stored in settings but the icon
+                  set ships Twitter/Linkedin/Facebook — those edit fields
+                  are reserved for a future expanded social row. */}
+              {youtube || tiktok ? null : null}
             </div>
           </div>
 

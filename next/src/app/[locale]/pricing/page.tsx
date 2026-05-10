@@ -8,6 +8,13 @@ import { Check, X, Plus, Minus, Sparkles, Leaf, Star, Crown, Edit3, type LucideI
 import { NUTRITIONIST } from '@/lib/tokens'
 import { SiteHeader } from '@/components/SiteHeader'
 import { useAuth } from '@/context/AuthContext'
+import { usePlatformSetting } from '@/lib/hooks/usePlatformSetting'
+
+interface FaqRow {
+  id?: string
+  question: string
+  answer: string
+}
 
 type TierKey = 'free' | 'basic' | 'premium' | 'vip'
 const TIER_RANK: Record<TierKey, number> = {
@@ -451,8 +458,23 @@ export default function PricingPage() {
   }
 
   const plans = PLANS[locale]
-  const faqs = FAQS[locale]
   const copy = COPY[locale]
+  // Admin-edited FAQ list from /admin/site-editor → site_faq.
+  // Single-language editor, so we only override on EN; AR keeps the
+  // translated defaults. Empty array or missing → defaults.
+  const { value: faqOv } = usePlatformSetting<FaqRow[]>('site_faq')
+  const faqs =
+    locale === 'en' && Array.isArray(faqOv) && faqOv.length > 0
+      ? faqOv
+          .filter(
+            (r) =>
+              r &&
+              typeof r.question === 'string' &&
+              typeof r.answer === 'string' &&
+              r.question.trim().length > 0,
+          )
+          .map((r) => ({ q: r.question, a: r.answer }))
+      : FAQS[locale]
 
   return (
     <main className="min-h-screen" style={{ background: '#080808' }}>
