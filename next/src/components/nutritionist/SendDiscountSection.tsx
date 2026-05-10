@@ -2,6 +2,8 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { useTranslations } from 'next-intl'
+// Brand-coloured icon module — Gift / Sparkles ship in amber, Check
+// in green, etc. Anything not enumerated re-exports from lucide-react.
 import {
   Gift,
   Send,
@@ -9,7 +11,7 @@ import {
   Check,
   Trash2,
   Sparkles,
-} from 'lucide-react'
+} from '@/icons'
 import { getBrowserSupabase } from '@/lib/supabase/client'
 
 type DiscountType = 'percent' | 'fixed'
@@ -213,8 +215,11 @@ export function SendDiscountSection() {
 
   return (
     <section className="mt-10">
-      <header className="mb-4 flex items-center gap-2">
-        <Gift className="w-5 h-5 text-lime-400" strokeWidth={1.75} />
+      <header className="mb-4 flex items-center gap-2.5">
+        {/* Gift comes in lime by default from @/icons but the brand
+         * lime here matches the rest of the discount-section accents.
+         * `color="currentColor"` defeated would let CSS override. */}
+        <Gift className="w-5 h-5" strokeWidth={1.75} />
         <h2 className="font-display font-bold text-fg-1 text-xl">
           {t('sendDiscount')}
         </h2>
@@ -301,9 +306,30 @@ export function SendDiscountSection() {
             </div>
           </Field>
 
+          {/* MIN ORDER — input + inline "No minimum" toggle on a
+           * single row so the field's baseline lines up with the
+           * sibling fields in the grid. The input disables (not
+           * hides) when the toggle is on, keeping the row height
+           * stable and avoiding the column-misalignment that the
+           * old stacked layout caused. */}
           <Field label={t('minOrder')}>
-            <div className="space-y-2">
-              <label className="inline-flex items-center gap-2 text-xs text-fg-2">
+            <div className="flex items-center gap-3 flex-wrap">
+              <div className="relative flex-1 min-w-[140px]">
+                <input
+                  type="number"
+                  min={0}
+                  value={noMin ? '' : minOrder}
+                  onChange={(e) => setMinOrder(Number(e.target.value || 0))}
+                  disabled={noMin}
+                  placeholder={noMin ? '∞' : '0'}
+                  className="w-full h-10 rounded-md bg-bg-deeper border border-border px-3 pe-12 text-sm font-mono text-fg-1 focus:outline-none focus:border-primary disabled:opacity-50"
+                  dir="ltr"
+                />
+                <span className="absolute end-3 top-1/2 -translate-y-1/2 text-xs text-fg-3 font-mono pointer-events-none">
+                  USD
+                </span>
+              </div>
+              <label className="inline-flex items-center gap-1.5 text-xs text-fg-2 whitespace-nowrap cursor-pointer">
                 <input
                   type="checkbox"
                   checked={noMin}
@@ -312,21 +338,6 @@ export function SendDiscountSection() {
                 />
                 {t('noMinimum')}
               </label>
-              {!noMin && (
-                <div className="relative">
-                  <input
-                    type="number"
-                    min={0}
-                    value={minOrder}
-                    onChange={(e) => setMinOrder(Number(e.target.value || 0))}
-                    className="w-full h-10 rounded-md bg-bg-deeper border border-border px-3 text-sm font-mono text-fg-1 focus:outline-none focus:border-primary"
-                    dir="ltr"
-                  />
-                  <span className="absolute end-3 top-1/2 -translate-y-1/2 text-xs text-fg-3 font-mono">
-                    USD
-                  </span>
-                </div>
-              )}
             </div>
           </Field>
         </div>
@@ -343,9 +354,22 @@ export function SendDiscountSection() {
             />
           </Field>
 
+          {/* MAX USES — same single-row pattern as MIN ORDER. Disabled
+           * (not hidden) input keeps the field at a stable height so
+           * the EXPIRY DATE column stays vertically aligned with it. */}
           <Field label={t('maxUses')}>
-            <div className="space-y-2">
-              <label className="inline-flex items-center gap-2 text-xs text-fg-2">
+            <div className="flex items-center gap-3 flex-wrap">
+              <input
+                type="number"
+                min={1}
+                value={unlimitedUses ? '' : maxUses}
+                onChange={(e) => setMaxUses(Number(e.target.value || 1))}
+                disabled={unlimitedUses}
+                placeholder={unlimitedUses ? '∞' : '1'}
+                className="flex-1 min-w-[140px] h-10 rounded-md bg-bg-deeper border border-border px-3 text-sm font-mono text-fg-1 focus:outline-none focus:border-primary disabled:opacity-50"
+                dir="ltr"
+              />
+              <label className="inline-flex items-center gap-1.5 text-xs text-fg-2 whitespace-nowrap cursor-pointer">
                 <input
                   type="checkbox"
                   checked={unlimitedUses}
@@ -354,16 +378,6 @@ export function SendDiscountSection() {
                 />
                 {t('unlimited')}
               </label>
-              {!unlimitedUses && (
-                <input
-                  type="number"
-                  min={1}
-                  value={maxUses}
-                  onChange={(e) => setMaxUses(Number(e.target.value || 1))}
-                  className="w-full h-10 rounded-md bg-bg-deeper border border-border px-3 text-sm font-mono text-fg-1 focus:outline-none focus:border-primary"
-                  dir="ltr"
-                />
-              )}
             </div>
           </Field>
         </div>
@@ -379,20 +393,41 @@ export function SendDiscountSection() {
           />
         </Field>
 
-        {/* Generated code preview */}
+        {/* Generated code preview. On phones the input + Generate Code
+         * button stack into two rows so the button text never has to
+         * wrap. On md+ they sit side-by-side with the button hugging
+         * its content (whitespace-nowrap). */}
         <Field label="Code">
-          <div className="flex items-center gap-2">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2">
             <input
               type="text"
               value={code}
               onChange={(e) => setCode(e.target.value.toUpperCase())}
-              className="flex-1 h-10 rounded-md bg-bg-deeper border border-border px-3 text-sm font-mono text-fg-1 focus:outline-none focus:border-primary uppercase"
+              className="flex-1 min-w-0 h-10 rounded-md bg-bg-deeper border border-border px-3 text-sm font-mono text-fg-1 focus:outline-none focus:border-primary uppercase"
               dir="ltr"
             />
             <button
               type="button"
               onClick={handleGenerate}
-              className="inline-flex items-center gap-1.5 rounded-pill bg-surface-raised border border-border h-10 px-4 text-xs font-semibold text-fg-1 hover:border-primary/40"
+              className="inline-flex items-center justify-center gap-1.5 transition-colors whitespace-nowrap shrink-0"
+              style={{
+                height: 40,
+                padding: '0 14px',
+                borderRadius: 8,
+                background: 'var(--gf-input-bg)',
+                border: '1px solid var(--gf-border)',
+                color: 'var(--gf-fg-1)',
+                fontSize: 12,
+                fontWeight: 600,
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = 'var(--gf-card-hover)'
+                e.currentTarget.style.borderColor = 'rgba(132,217,61,0.4)'
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = 'var(--gf-input-bg)'
+                e.currentTarget.style.borderColor = 'var(--gf-border)'
+              }}
             >
               <Sparkles className="w-3.5 h-3.5" strokeWidth={1.75} />
               {t('generateCode')}
@@ -465,12 +500,39 @@ export function SendDiscountSection() {
                       type="button"
                       onClick={() => copyCode(c.id, c.code)}
                       aria-label="Copy"
-                      className="w-7 h-7 rounded-md inline-flex items-center justify-center text-fg-3 hover:text-lime-400 hover:bg-bg-deeper"
+                      className="inline-flex items-center justify-center transition-colors"
+                      style={{
+                        width: 28,
+                        height: 28,
+                        borderRadius: 8,
+                        background: 'transparent',
+                        border: 'none',
+                        color:
+                          copiedId === c.id ? '#a3e635' : 'var(--gf-fg-3)',
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.background = 'var(--gf-card-hover)'
+                        if (copiedId !== c.id)
+                          e.currentTarget.style.color = 'var(--gf-fg-1)'
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = 'transparent'
+                        if (copiedId !== c.id)
+                          e.currentTarget.style.color = 'var(--gf-fg-3)'
+                      }}
                     >
                       {copiedId === c.id ? (
-                        <Check className="w-3.5 h-3.5 text-lime-400" strokeWidth={2.5} />
+                        <Check
+                          className="w-3.5 h-3.5"
+                          strokeWidth={2.5}
+                          color="currentColor"
+                        />
                       ) : (
-                        <Copy className="w-3.5 h-3.5" strokeWidth={1.75} />
+                        <Copy
+                          className="w-3.5 h-3.5"
+                          strokeWidth={1.75}
+                          color="currentColor"
+                        />
                       )}
                     </button>
                   </div>
@@ -491,8 +553,19 @@ export function SendDiscountSection() {
                       : '—'}
                   </span>
                   <span
-                    className="rounded-pill h-5 px-2 inline-flex items-center text-[10px] uppercase tracking-eyebrow font-bold w-fit"
-                    style={{ background: `${status.tint}1a`, color: status.tint }}
+                    className="inline-flex items-center justify-center w-fit"
+                    style={{
+                      height: 18,
+                      padding: '0 8px',
+                      borderRadius: 999,
+                      background: `${status.tint}1f`,
+                      color: status.tint,
+                      fontSize: 9.5,
+                      fontWeight: 800,
+                      letterSpacing: '0.08em',
+                      textTransform: 'uppercase',
+                      lineHeight: 1,
+                    }}
                   >
                     {status.label}
                   </span>
@@ -502,9 +575,30 @@ export function SendDiscountSection() {
                         type="button"
                         onClick={() => handleDeactivate(c.id)}
                         aria-label={t('deactivate')}
-                        className="w-8 h-8 rounded-md inline-flex items-center justify-center text-fg-3 hover:text-rose-400 hover:bg-bg-deeper"
+                        className="inline-flex items-center justify-center transition-colors"
+                        style={{
+                          width: 28,
+                          height: 28,
+                          borderRadius: 8,
+                          background: 'transparent',
+                          border: 'none',
+                          color: 'var(--gf-fg-3)',
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.background =
+                            'rgba(244,63,94,0.08)'
+                          e.currentTarget.style.color = '#f43f5e'
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.background = 'transparent'
+                          e.currentTarget.style.color = 'var(--gf-fg-3)'
+                        }}
                       >
-                        <Trash2 className="w-3.5 h-3.5" strokeWidth={1.75} />
+                        <Trash2
+                          className="w-3.5 h-3.5"
+                          strokeWidth={1.75}
+                          color="currentColor"
+                        />
                       </button>
                     )}
                   </div>
@@ -537,6 +631,13 @@ function Field({
   )
 }
 
+/**
+ * Selectable chip — used for "Specific client / Basic / Premium / VIP"
+ * and the "Percentage / Fixed amount" toggles. Switched from
+ * rounded-pill old style to the dashboard input chrome (8px radius,
+ * --gf-input-bg, --gf-border) so the chips read as the same control
+ * family as text inputs and dropdowns elsewhere on the page.
+ */
 function Radio({
   checked,
   onChange,
@@ -550,15 +651,43 @@ function Radio({
     <button
       type="button"
       onClick={onChange}
-      className={`inline-flex items-center gap-2 rounded-pill h-9 px-4 text-xs font-semibold transition-colors ${
-        checked
-          ? 'bg-primary/20 text-lime-400 border border-primary/40'
-          : 'bg-bg-deeper border border-border text-fg-3 hover:text-fg-1'
-      }`}
+      aria-pressed={checked}
+      className="inline-flex items-center gap-2 transition-colors"
+      style={{
+        height: 36,
+        padding: '0 14px',
+        borderRadius: 8,
+        background: checked
+          ? 'rgba(132,217,61,0.12)'
+          : 'var(--gf-input-bg)',
+        border: `1px solid ${checked ? 'rgba(132,217,61,0.5)' : 'var(--gf-border)'}`,
+        color: checked ? '#a3e635' : 'var(--gf-fg-2)',
+        fontSize: 12,
+        fontWeight: 600,
+        letterSpacing: '-0.005em',
+      }}
+      onMouseEnter={(e) => {
+        if (!checked) {
+          e.currentTarget.style.background = 'var(--gf-card-hover)'
+          e.currentTarget.style.color = 'var(--gf-fg-1)'
+        }
+      }}
+      onMouseLeave={(e) => {
+        if (!checked) {
+          e.currentTarget.style.background = 'var(--gf-input-bg)'
+          e.currentTarget.style.color = 'var(--gf-fg-2)'
+        }
+      }}
     >
       <span
         aria-hidden
-        className={`w-2 h-2 rounded-full ${checked ? 'bg-lime-400' : 'bg-fg-3'}`}
+        style={{
+          width: 6,
+          height: 6,
+          borderRadius: 999,
+          background: checked ? '#a3e635' : 'var(--gf-fg-4)',
+          flexShrink: 0,
+        }}
       />
       {label}
     </button>

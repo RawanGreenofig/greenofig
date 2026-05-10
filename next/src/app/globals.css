@@ -492,6 +492,31 @@ html[dir='rtl'] .lucide-arrow-right {
   border-color: var(--gf-primary);
   box-shadow: 0 0 0 3px rgba(132, 217, 61, 0.15);
 }
+/* ── Topbar avatar dropdown trigger ─────────────────────────────
+ * On phones we render just the avatar circle (no surrounding pill /
+ * border) so the topbar isn't overstuffed and the avatar doesn't
+ * get cropped at the right edge. On md+ the pill chrome reappears
+ * with bg + 1px border + chevron room. */
+.topbar-avatar-btn {
+  background: transparent;
+  border: none;
+  border-radius: 9999px;
+  padding: 0;
+  height: 32px;
+}
+@media (min-width: 768px) {
+  .topbar-avatar-btn {
+    background: var(--gf-surface-raised);
+    border: 1px solid var(--gf-border);
+    padding: 0 8px 0 2px;
+    height: 40px;
+    gap: 8px;
+  }
+  .topbar-avatar-btn:hover {
+    background: #222;
+  }
+}
+
 /* ── Bare-input helper ──────────────────────────────────────────
  * Defeats the dashboard-scope `input { ... !important }` block
  * (further down at line ~1152) so an input rendered INSIDE a

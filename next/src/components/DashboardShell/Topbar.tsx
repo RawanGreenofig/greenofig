@@ -58,7 +58,7 @@ export function Topbar({ onOpenMenu }: { onOpenMenu: () => void }) {
 
   return (
     <header
-      className="flex items-center gap-3 px-4 md:px-6 shrink-0"
+      className="flex items-center gap-2 md:gap-3 px-3 md:px-6 shrink-0"
       style={{
         background: TOPBAR_BG,
         borderBottom: `1px solid ${TOPBAR_BORDER}`,
@@ -136,12 +136,15 @@ export function Topbar({ onOpenMenu }: { onOpenMenu: () => void }) {
 
       <div className="sm:hidden flex-1" />
 
-      {/* Back to site */}
+      {/* Back to site — hidden on phones to free up topbar real
+       * estate (the hamburger drawer already exposes this link).
+       * Reappears at sm: where there's room beside the language
+       * switcher + bell + avatar without the avatar getting cropped. */}
       <Link
         href="/"
         aria-label={tNav('backToHome')}
         title={tNav('backToHome')}
-        className="inline-flex items-center justify-center p-2 transition-colors hover:opacity-80"
+        className="hidden sm:inline-flex items-center justify-center p-2 transition-colors hover:opacity-80"
       >
         <Home className="w-5 h-5 text-muted-foreground" strokeWidth={1.75} />
       </Link>
@@ -151,18 +154,14 @@ export function Topbar({ onOpenMenu }: { onOpenMenu: () => void }) {
       <NotificationBell label={t('notifications')} />
 
 
-      {/* Avatar dropdown */}
-      <div className="relative" ref={wrapRef}>
+      {/* Avatar dropdown — bare circle on phones (no surrounding pill
+       * chrome since the chevron is hidden anyway), full pill on
+       * md+ where there's room for the chevron + border. */}
+      <div className="relative shrink-0" ref={wrapRef}>
         <button
           type="button"
           onClick={() => setOpen((o) => !o)}
-          className="inline-flex items-center gap-2 pe-2 ps-0.5 h-10 rounded-full transition-colors"
-          style={{
-            background: FIELD_BG,
-            border: `1px solid ${FIELD_BORDER}`,
-          }}
-          onMouseEnter={(e) => (e.currentTarget.style.background = '#222')}
-          onMouseLeave={(e) => (e.currentTarget.style.background = FIELD_BG)}
+          className="topbar-avatar-btn inline-flex items-center transition-colors"
           aria-haspopup="menu"
           aria-expanded={open}
         >

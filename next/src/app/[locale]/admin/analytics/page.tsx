@@ -198,7 +198,7 @@ export default function AdminAnalyticsPage() {
 
   return (
     <div className="px-4 md:px-8 py-6 md:py-8 max-w-screen-xl mx-auto space-y-6">
-      <header className="flex flex-wrap items-end justify-between gap-4">
+      <header className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1
             className="font-display font-bold text-fg-1 tracking-tight"
@@ -221,7 +221,7 @@ export default function AdminAnalyticsPage() {
       </header>
 
       {/* KPIs */}
-      <section className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {kpis.map((k) => (
           <Kpi key={k.labelKey} kpi={k} tA={tA} />
         ))}

@@ -161,7 +161,7 @@ export default function AdminDataExportPage() {
             {tD('perUserBody')}
           </p>
           <form onSubmit={triggerPerUser} className="flex flex-wrap items-center gap-2">
-            <div className="relative flex-1 min-w-[260px]">
+            <div className="relative flex-1 min-w-0 basis-full sm:basis-auto sm:min-w-[200px]">
               <Search
                 className="absolute start-4 top-1/2 -translate-y-1/2 w-4 h-4 text-fg-3"
                 strokeWidth={1.75}

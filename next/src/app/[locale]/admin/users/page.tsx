@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import toast from 'react-hot-toast'
 import { Avatar } from '@/components/Avatar'
@@ -12,6 +12,8 @@ import {
   ArrowRight,
   Users as UsersIcon,
   X,
+  ChevronDown,
+  Check,
 } from '@/icons'
 import { Link } from '@/i18n/navigation'
 import { useUser } from '@/lib/hooks/useUser'
@@ -174,52 +176,52 @@ export default function AdminUsersPage() {
         </div>
       </header>
 
-      <div className="space-y-3">
-        <div className="relative">
+      <div className="flex flex-wrap items-center gap-3">
+        {/* Search — full width on phones, flexes alongside dropdowns
+         * on tablet+. min-w-0 lets it shrink without overflow. */}
+        <div className="relative flex-1 min-w-0 basis-full sm:basis-auto sm:min-w-[200px]">
           <Search
-            className="absolute start-4 top-1/2 -translate-y-1/2 w-4 h-4 text-fg-3"
+            className="absolute start-3.5 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none"
             strokeWidth={1.75}
+            style={{ color: 'var(--gf-fg-3)' }}
           />
           <input
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder={tU('search')}
-            className="w-full h-11 rounded-pill bg-surface border border-border ps-11 pe-4 text-sm text-fg-1 placeholder-fg-3 focus:outline-none focus:border-primary"
+            className="w-full h-10 ps-10 pe-3 text-sm text-fg-1 placeholder-fg-3"
           />
         </div>
-
-        <div className="flex flex-wrap items-center gap-3">
-          <FilterGroup
-            label={tU('filterRole')}
-            options={ROLE_TABS.map((r) => [
-              r,
-              r === 'all' ? tU('roleAll') : tU(`roles.${r}` as 'roles.user'),
-            ])}
-            value={roleF}
-            onChange={(v) => setRoleF(v as 'all' | Role)}
-          />
-          <FilterGroup
-            label={tU('filterTier')}
-            options={TIER_TABS.map((tier) => [
-              tier,
-              tier === 'all' ? tU('tierAll') : tTiers(`${tier}.name`),
-            ])}
-            value={tierF}
-            onChange={(v) => setTierF(v as 'all' | Tier)}
-          />
-          <FilterGroup
-            label={tU('filterStatus')}
-            options={STATUS_TABS.map((s) => [
-              s,
-              s === 'all'
-                ? tU('statusAll')
-                : tU(`status${s.charAt(0).toUpperCase()}${s.slice(1)}` as 'statusActive'),
-            ])}
-            value={statusF}
-            onChange={(v) => setStatusF(v as 'all' | Status)}
-          />
-        </div>
+        <FilterDropdown
+          label={tU('filterRole')}
+          options={ROLE_TABS.map((r) => [
+            r,
+            r === 'all' ? tU('roleAll') : tU(`roles.${r}` as 'roles.user'),
+          ])}
+          value={roleF}
+          onChange={(v) => setRoleF(v as 'all' | Role)}
+        />
+        <FilterDropdown
+          label={tU('filterTier')}
+          options={TIER_TABS.map((tier) => [
+            tier,
+            tier === 'all' ? tU('tierAll') : tTiers(`${tier}.name`),
+          ])}
+          value={tierF}
+          onChange={(v) => setTierF(v as 'all' | Tier)}
+        />
+        <FilterDropdown
+          label={tU('filterStatus')}
+          options={STATUS_TABS.map((s) => [
+            s,
+            s === 'all'
+              ? tU('statusAll')
+              : tU(`status${s.charAt(0).toUpperCase()}${s.slice(1)}` as 'statusActive'),
+          ])}
+          value={statusF}
+          onChange={(v) => setStatusF(v as 'all' | Status)}
+        />
       </div>
 
       {visible.length === 0 ? (
@@ -283,7 +285,18 @@ function exportUsersCsv(rows: AdminUser[]): void {
 
 /* ── Components ──────────────────────────────────────────────────── */
 
-function FilterGroup({
+/**
+ * Single-select dropdown matching the dashboard input chrome.
+ *
+ * Trigger: a 40px-tall pill that reads "<LABEL>: <Selected>" with a
+ * chevron — same surface tone as the search input next to it so the
+ * filter row reads as one cohesive control strip.
+ *
+ * Popup: a small floating menu, click-outside dismisses, the active
+ * option gets a check and lime tint. Replaces the prior segmented
+ * pill row which was getting wide and noisy with three groups.
+ */
+function FilterDropdown({
   label,
   options,
   value,
@@ -294,27 +307,111 @@ function FilterGroup({
   value: string
   onChange: (v: string) => void
 }) {
+  const [open, setOpen] = useState(false)
+  const wrapRef = useRef<HTMLDivElement>(null)
+  const selected = options.find(([v]) => v === value)?.[1] ?? options[0]?.[1] ?? ''
+
+  useEffect(() => {
+    if (!open) return
+    const onClick = (e: MouseEvent) => {
+      if (!wrapRef.current?.contains(e.target as Node)) setOpen(false)
+    }
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setOpen(false)
+    }
+    document.addEventListener('mousedown', onClick)
+    document.addEventListener('keydown', onKey)
+    return () => {
+      document.removeEventListener('mousedown', onClick)
+      document.removeEventListener('keydown', onKey)
+    }
+  }, [open])
+
   return (
-    <div className="inline-flex items-center gap-1.5">
-      <span className="text-[11px] uppercase tracking-eyebrow text-fg-3 font-semibold">
-        {label}
-      </span>
-      <div className="inline-flex items-center gap-0.5 rounded-pill bg-bg-deeper border border-border p-0.5">
-        {options.map(([v, lbl]) => (
-          <button
-            key={v}
-            type="button"
-            onClick={() => onChange(v)}
-            className={`px-3 h-7 rounded-pill text-[11px] font-semibold transition-colors ${
-              value === v
-                ? 'bg-primary/20 text-lime-400'
-                : 'text-fg-3 hover:text-fg-1'
-            }`}
-          >
-            {lbl}
-          </button>
-        ))}
-      </div>
+    <div className="relative inline-flex" ref={wrapRef}>
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        className="inline-flex items-center gap-2 h-10 px-3 rounded-md text-sm transition-colors"
+        style={{
+          background: 'var(--gf-input-bg)',
+          border: '1px solid var(--gf-border)',
+          color: 'var(--gf-fg-1)',
+          minWidth: 160,
+        }}
+      >
+        <span
+          className="text-[11px] uppercase font-semibold"
+          style={{ letterSpacing: '0.08em', color: 'var(--gf-fg-3)' }}
+        >
+          {label}
+        </span>
+        <span className="font-medium truncate flex-1 text-start">
+          {selected}
+        </span>
+        <ChevronDown
+          className={`w-4 h-4 transition-transform ${open ? 'rotate-180' : ''}`}
+          strokeWidth={1.75}
+          style={{ color: 'var(--gf-fg-3)' }}
+        />
+      </button>
+
+      {open && (
+        <div
+          role="listbox"
+          className="absolute top-full mt-1 z-30 rounded-md py-1 overflow-hidden"
+          style={{
+            insetInlineStart: 0,
+            minWidth: '100%',
+            background: 'var(--gf-card)',
+            border: '1px solid var(--gf-border)',
+            boxShadow: '0 12px 32px rgba(0,0,0,0.45)',
+          }}
+        >
+          {options.map(([v, lbl]) => {
+            const active = v === value
+            return (
+              <button
+                key={v}
+                type="button"
+                role="option"
+                aria-selected={active}
+                onClick={() => {
+                  onChange(v)
+                  setOpen(false)
+                }}
+                className="w-full flex items-center gap-2 px-3 h-9 text-sm text-start transition-colors"
+                style={{
+                  background: active
+                    ? 'rgba(132,217,61,0.12)'
+                    : 'transparent',
+                  color: active ? '#a3e635' : 'var(--gf-fg-1)',
+                  fontWeight: active ? 600 : 500,
+                }}
+                onMouseEnter={(e) => {
+                  if (!active)
+                    e.currentTarget.style.background = 'var(--gf-card-hover)'
+                }}
+                onMouseLeave={(e) => {
+                  if (!active)
+                    e.currentTarget.style.background = 'transparent'
+                }}
+              >
+                <span className="flex-1 truncate">{lbl}</span>
+                {active && (
+                  <Check
+                    className="w-4 h-4 shrink-0"
+                    strokeWidth={2}
+                    style={{ color: '#a3e635' }}
+                  />
+                )}
+              </button>
+            )
+          })}
+        </div>
+      )}
     </div>
   )
 }

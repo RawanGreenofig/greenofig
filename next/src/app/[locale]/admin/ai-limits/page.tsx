@@ -412,11 +412,7 @@ export default function AILimitsPage() {
           </div>
 
           <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(4, minmax(0, 1fr))',
-              gap: '12px',
-            }}
+            className="grid grid-cols-2 sm:grid-cols-4 gap-3"
           >
             {TIERS.map((tier) => {
               const v = limits[feature.key]?.[tier] ?? 0
