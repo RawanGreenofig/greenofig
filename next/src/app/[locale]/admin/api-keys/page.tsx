@@ -77,34 +77,33 @@ export default function AdminApiKeysPage() {
     ;(async () => {
       type Row = {
         id: string
-        name: string
+        name: string | null
         provider: string
-        key_encrypted: string
-        active: boolean | null
-        last_used_at: string | null
+        key_preview: string | null
+        is_active: boolean | null
+        last_tested_at: string | null
         created_at: string
       }
       const { data: rows } = await supabase
         .from('api_keys')
-        .select('id, name, provider, key_encrypted, active, last_used_at, created_at')
+        .select('id, name, provider, key_preview, is_active, last_tested_at, created_at')
         .order('created_at', { ascending: false })
       const list = (rows as Row[] | null) ?? []
       if (cancelled || list.length === 0) return
 
       const allowed: Provider[] = PROVIDERS
-      const tail = (s: string) => (s.length >= 4 ? s.slice(-4) : s)
       const now = Date.now()
       const hoursSince = (iso: string | null) =>
         iso ? Math.max(0, Math.round((now - new Date(iso).getTime()) / 3_600_000)) : null
 
       const mapped: ApiKey[] = list.map((r) => ({
         id: r.id,
-        name: r.name,
+        name: r.name ?? '(unnamed)',
         provider: (allowed as string[]).includes(r.provider) ? (r.provider as Provider) : 'stripe',
-        masked: `••••••••••••••••••••••${tail(r.key_encrypted ?? 'xxxx')}`,
-        active: r.active ?? true,
+        masked: `••••••••••••••••••••••${(r.key_preview ?? 'xxxx').slice(-4)}`,
+        active: r.is_active ?? true,
         addedISO: r.created_at?.slice(0, 10) ?? new Date().toISOString().slice(0, 10),
-        lastUsedHoursAgo: hoursSince(r.last_used_at),
+        lastUsedHoursAgo: hoursSince(r.last_tested_at),
       }))
       if (!cancelled) setKeys(mapped)
     })()
@@ -170,7 +169,7 @@ export default function AdminApiKeysPage() {
       setKeys((curr) => curr.filter((k) => k.id !== id))
       const supabase = getBrowserSupabase()
       if (supabase && /^[0-9a-f-]{32,}$/i.test(id)) {
-        void supabase.from('api_keys').update({ active: false } as never).eq('id', id)
+        void supabase.from('api_keys').update({ is_active: false } as never).eq('id', id)
       }
     }
     setConfirm(null)
@@ -297,15 +296,27 @@ export default function AdminApiKeysPage() {
         <AddKeyDialog
           tA={tA}
           onCancel={() => setAdding(false)}
-          onSave={(name, provider) => {
+          onSave={async (name, provider, value) => {
+            const res = await fetch('/api/admin/api-keys', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ name, provider, key: value }),
+            })
+            if (!res.ok) {
+              const data = (await res.json().catch(() => ({}))) as { error?: string }
+              throw new Error(data.error ?? `Save failed (${res.status}).`)
+            }
+            const data = (await res.json()) as {
+              key: { id: string; created_at: string; key_preview: string }
+            }
             setKeys((curr) => [
               {
-                id: `k-${Date.now()}`,
+                id: data.key.id,
                 name,
                 provider,
-                masked: '•••••••••••••••••••••••••new',
+                masked: `••••••••••••••••••••••${data.key.key_preview}`,
                 active: true,
-                addedISO: new Date().toISOString().slice(0, 10),
+                addedISO: data.key.created_at.slice(0, 10),
                 lastUsedHoursAgo: null,
               },
               ...curr,
@@ -586,16 +597,26 @@ function AddKeyDialog({
 }: {
   tA: ReturnType<typeof useTranslations>
   onCancel: () => void
-  onSave: (name: string, provider: Provider) => void
+  onSave: (name: string, provider: Provider, value: string) => Promise<void>
 }) {
   const [name, setName] = useState('')
   const [provider, setProvider] = useState<Provider>('stripe')
   const [value, setValue] = useState('')
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
-  const submit = (e: React.FormEvent) => {
+  const submit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!name.trim() || !value.trim()) return
-    onSave(name.trim(), provider)
+    if (!name.trim() || !value.trim() || saving) return
+    setSaving(true)
+    setError(null)
+    try {
+      await onSave(name.trim(), provider, value.trim())
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Save failed.')
+    } finally {
+      setSaving(false)
+    }
   }
 
   return (
@@ -680,11 +701,15 @@ function AddKeyDialog({
             dir="ltr"
           />
         </Field>
+        {error && (
+          <p className="text-xs text-rose-400">{error}</p>
+        )}
         <div className="pt-2 flex items-center justify-end gap-2">
           <button
             type="button"
             onClick={onCancel}
-            className="inline-flex items-center gap-1.5 h-10 px-4 text-sm font-medium text-fg-1 transition-colors"
+            disabled={saving}
+            className="inline-flex items-center gap-1.5 h-10 px-4 text-sm font-medium text-fg-1 transition-colors disabled:opacity-50"
             style={{
               background: 'var(--gf-input-bg)',
               border: '1px solid var(--gf-border)',
@@ -695,10 +720,10 @@ function AddKeyDialog({
           </button>
           <button
             type="submit"
-            disabled={!name.trim() || !value.trim()}
+            disabled={!name.trim() || !value.trim() || saving}
             className="inline-flex items-center gap-1.5 rounded-pill bg-gradient-to-b from-lime-400 to-lime-600 text-bg font-semibold h-10 px-5 text-sm shadow-lime-glow border border-lime-600/60 hover:-translate-y-px transition-transform disabled:opacity-40"
           >
-            {tA('addForm.save')}
+            {saving ? 'Saving…' : tA('addForm.save')}
           </button>
         </div>
       </form>

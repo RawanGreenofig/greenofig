@@ -2,8 +2,9 @@
 
 
 import { motion } from 'framer-motion'
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useTranslations } from 'next-intl'
+import { getBrowserSupabase } from '@/lib/supabase/client'
 import {
   Search,
   Clock,
@@ -112,6 +113,26 @@ function Library({ t }: { t: ReturnType<typeof useTranslations> }) {
   const [saved, setSaved] = useState<Set<string>>(new Set())
   const [active, setActive] = useState<Recipe | null>(null)
 
+  // Hydrate the customer's saved-recipes set on mount; RLS gates this
+  // to the signed-in user's own rows. The toggleSave handler below
+  // does optimistic state + persist to keep the heart icon snappy.
+  useEffect(() => {
+    const supabase = getBrowserSupabase()
+    if (!supabase) return
+    let cancelled = false
+    void (async () => {
+      const { data } = await supabase
+        .from('saved_recipes')
+        .select('recipe_id')
+      if (cancelled) return
+      const rows = (data as { recipe_id: string }[] | null) ?? []
+      setSaved(new Set(rows.map((r) => r.recipe_id)))
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
   const live = useSupabaseQuery<Recipe[]>(async (supabase) => {
     const { data } = await supabase
       .from('recipes')
@@ -166,13 +187,49 @@ function Library({ t }: { t: ReturnType<typeof useTranslations> }) {
     })
   }
 
-  const toggleSave = (id: string) =>
+  const { user } = useUser()
+  const toggleSave = (id: string) => {
+    if (!user) return
+    // Optimistic flip. Persist to saved_recipes via direct supabase call
+    // (RLS gates it per user). On error we revert; the heart-icon UI
+    // re-syncs to the DB on next mount via the hydrate effect above.
+    const supabase = getBrowserSupabase()
+    let willAdd = false
     setSaved((prev) => {
       const next = new Set(prev)
-      if (next.has(id)) next.delete(id)
-      else next.add(id)
+      if (next.has(id)) {
+        next.delete(id)
+      } else {
+        next.add(id)
+        willAdd = true
+      }
       return next
     })
+    if (!supabase) return
+    void (async () => {
+      const result = willAdd
+        ? await supabase
+            .from('saved_recipes')
+            .upsert(
+              { user_id: user.id, recipe_id: id } as never,
+              { onConflict: 'user_id,recipe_id' },
+            )
+        : await supabase
+            .from('saved_recipes')
+            .delete()
+            .eq('user_id', user.id)
+            .eq('recipe_id', id)
+      if (result.error) {
+        // Revert on failure.
+        setSaved((prev) => {
+          const next = new Set(prev)
+          if (willAdd) next.delete(id)
+          else next.add(id)
+          return next
+        })
+      }
+    })()
+  }
 
   return (
     <div className="px-4 md:px-8 py-6 md:py-8 max-w-screen-xl mx-auto space-y-6">

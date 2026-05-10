@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import {
   Database,
@@ -66,10 +66,54 @@ export default function AdminDataExportPage() {
   const tD = useTranslations('admin.dataExportPage')
 
   const [perUserQuery, setPerUserQuery] = useState('')
-  const [scheduled, setScheduled] = useState<ScheduledJob[]>(SEED_SCHEDULED)
+  const [scheduled, setScheduled] = useState<ScheduledJob[]>([])
   const [history, setHistory] = useState<ExportHistory[]>(SEED_HISTORY)
   const [adding, setAdding] = useState(false)
   const [recentTrigger, setRecentTrigger] = useState<string | null>(null)
+
+  // Hydrate persisted schedules from /api/admin/exports/schedule. The
+  // SEED above stays around as a visual fallback when the backend is
+  // unreachable in dev — but in normal operation we replace it with
+  // the real list.
+  useEffect(() => {
+    let cancelled = false
+    void (async () => {
+      try {
+        const res = await fetch('/api/admin/exports/schedule')
+        if (!res.ok) return
+        const data = (await res.json()) as {
+          jobs?: Array<{
+            id: string
+            kind: string
+            format: string
+            frequency: string
+            email: string
+          }>
+        }
+        const jobs = data.jobs ?? []
+        if (cancelled) return
+        const allowedKinds = BULK_KINDS as readonly string[]
+        setScheduled(
+          jobs
+            .filter((j) => allowedKinds.includes(j.kind))
+            .map((j) => ({
+              id: j.id,
+              kind: j.kind as BulkKind,
+              format: j.format as Format,
+              frequency: j.frequency as Frequency,
+              email: j.email,
+            })),
+        )
+      } catch {
+        // Network error — leave scheduled empty so a stale SEED doesn't
+        // mislead the admin into thinking there's a real schedule.
+      }
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [])
+  void SEED_SCHEDULED
 
   const KIND_TO_TABLE: Record<BulkKind, string | null> = {
     users: 'profiles',
@@ -136,8 +180,22 @@ export default function AdminDataExportPage() {
     setPerUserQuery('')
   }
 
-  const removeSchedule = (id: string) =>
+  const removeSchedule = (id: string) => {
+    // Optimistic remove + soft-delete on the server. On error we
+    // re-fetch via the mount effect would be ideal but keeping it
+    // simple: revert by re-adding the row. (The seed-id case from
+    // older sessions just removes locally.)
+    const removed = scheduled.find((s) => s.id === id)
     setScheduled((curr) => curr.filter((s) => s.id !== id))
+    if (!/^[0-9a-f-]{32,}$/i.test(id)) return
+    void fetch(`/api/admin/exports/schedule?id=${encodeURIComponent(id)}`, {
+      method: 'DELETE',
+    }).then((res) => {
+      if (!res.ok && removed) {
+        setScheduled((curr) => [...curr, removed])
+      }
+    })
+  }
 
   return (
     <div className="px-4 md:px-8 py-6 md:py-8 max-w-screen-xl mx-auto space-y-6">
@@ -420,8 +478,35 @@ export default function AdminDataExportPage() {
         <ScheduleDialog
           tD={tD}
           onCancel={() => setAdding(false)}
-          onSave={(job) => {
-            setScheduled((curr) => [...curr, { ...job, id: `s-${Date.now()}` }])
+          onSave={async (job) => {
+            const res = await fetch('/api/admin/exports/schedule', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(job),
+            })
+            if (!res.ok) {
+              const data = (await res.json().catch(() => ({}))) as { error?: string }
+              throw new Error(data.error ?? `Save failed (${res.status}).`)
+            }
+            const data = (await res.json()) as {
+              job: {
+                id: string
+                kind: string
+                format: string
+                frequency: string
+                email: string
+              }
+            }
+            setScheduled((curr) => [
+              ...curr,
+              {
+                id: data.job.id,
+                kind: data.job.kind as BulkKind,
+                format: data.job.format as Format,
+                frequency: data.job.frequency as Frequency,
+                email: data.job.email,
+              },
+            ])
             setAdding(false)
           }}
         />
@@ -437,12 +522,14 @@ function ScheduleDialog({
 }: {
   tD: ReturnType<typeof useTranslations>
   onCancel: () => void
-  onSave: (job: Omit<ScheduledJob, 'id'>) => void
+  onSave: (job: Omit<ScheduledJob, 'id'>) => Promise<void>
 }) {
   const [kind, setKind] = useState<BulkKind>('subscriptions')
   const [format, setFormat] = useState<Format>('csv')
   const [frequency, setFrequency] = useState<Frequency>('weekly')
   const [email, setEmail] = useState('admin@greenofig.com')
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   return (
     <div
@@ -458,9 +545,18 @@ function ScheduleDialog({
         className="absolute inset-0 bg-bg-deeper/70 backdrop-blur-sm"
       />
       <form
-        onSubmit={(e) => {
+        onSubmit={async (e) => {
           e.preventDefault()
-          onSave({ kind, format, frequency, email })
+          if (saving) return
+          setSaving(true)
+          setError(null)
+          try {
+            await onSave({ kind, format, frequency, email })
+          } catch (err) {
+            setError(err instanceof Error ? err.message : 'Save failed.')
+          } finally {
+            setSaving(false)
+          }
         }}
         className="relative w-full md:max-w-md rounded-t-2xl md:rounded-2xl bg-surface border border-border shadow-2xl p-6 space-y-4"
       >
@@ -569,11 +665,15 @@ function ScheduleDialog({
           </button>
           <button
             type="submit"
-            className="inline-flex items-center gap-1.5 rounded-pill bg-gradient-to-b from-lime-400 to-lime-600 text-bg font-semibold h-10 px-5 text-sm shadow-lime-glow border border-lime-600/60 hover:-translate-y-px transition-transform"
+            disabled={saving}
+            className="inline-flex items-center gap-1.5 rounded-pill bg-gradient-to-b from-lime-400 to-lime-600 text-bg font-semibold h-10 px-5 text-sm shadow-lime-glow border border-lime-600/60 hover:-translate-y-px transition-transform disabled:opacity-50"
           >
-            Schedule
+            {saving ? 'Scheduling…' : 'Schedule'}
           </button>
         </div>
+        {error && (
+          <p className="text-xs text-rose-400 -mt-1">{error}</p>
+        )}
       </form>
     </div>
   )
