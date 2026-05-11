@@ -5,6 +5,7 @@
   "description": "Capacitor wrapper that packages https://greenofig.com as a native Android app.",
   "scripts": {
     "sync:version": "node scripts/sync-version.mjs",
+    "assets:generate": "capacitor-assets generate --android",
     "cap:add": "cap add android",
     "cap:sync": "cap sync android",
     "open:android": "cap open android",
@@ -20,6 +21,7 @@
     "@capacitor/splash-screen": "^6.0.3"
   },
   "devDependencies": {
+    "@capacitor/assets": "^3.0.5",
     "@capacitor/cli": "^6.2.0",
     "typescript": "^6.0.3"
   }

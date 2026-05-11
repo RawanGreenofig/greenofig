@@ -68,6 +68,14 @@ jobs:
           npx cap add android
           npx cap sync android
 
+      - name: Generate launcher icons from mobile/resources/icon.png
+        run: |
+          cd mobile
+          # @capacitor/assets reads resources/icon.png (1024x1024) and
+          # produces every mipmap-* density variant Android needs.
+          # Source icon ships in the repo at mobile/resources/icon.png.
+          npm run assets:generate
+
       - name: Patch build.gradle with the synced versionName/versionCode
         run: |
           cd mobile

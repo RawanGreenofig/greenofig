@@ -1,7 +1,17 @@
 'use client'
 
+import { useState } from 'react'
 import { useTranslations } from 'next-intl'
-import { Apple, Download, Share2, Plus, AlertTriangle, Smartphone } from 'lucide-react'
+import {
+  Apple,
+  Download,
+  Share2,
+  Plus,
+  AlertTriangle,
+  Smartphone,
+  ShieldAlert,
+  ChevronDown,
+} from 'lucide-react'
 
 interface DownloadSectionProps {
   /** APK download URL — defaults to the GitHub release link but
@@ -99,6 +109,8 @@ export function DownloadSection({
               {t('androidTitle')}
             </h3>
           </header>
+
+          <SecurityWarning />
 
           <a
             href={apkUrl}
@@ -212,6 +224,152 @@ function Step({
         )}
       </p>
     </li>
+  )
+}
+
+type SecurityTab = 'samsung' | 'regular'
+
+/**
+ * Collapsible "Getting a security warning?" panel that sits above
+ * the Android download button. Two tabs: Samsung (Auto Blocker
+ * walkthrough) and Regular Android (Install unknown apps grant
+ * for Chrome). Closed by default — the section is opt-in so users
+ * who don't hit the warning aren't distracted.
+ */
+function SecurityWarning() {
+  const t = useTranslations('download')
+  const [open, setOpen] = useState(false)
+  const [tab, setTab] = useState<SecurityTab>('samsung')
+
+  const samsungSteps = [
+    t('samsungStep1'),
+    t('samsungStep2'),
+    t('samsungStep3'),
+    t('samsungStep4'),
+    t('samsungStep5'),
+    t('samsungStep6'),
+  ]
+  const regularSteps = [
+    t('regularStep1'),
+    t('regularStep2'),
+    t('regularStep3'),
+    t('regularStep4'),
+    t('regularStep5'),
+    t('regularStep6'),
+  ]
+  const steps = tab === 'samsung' ? samsungSteps : regularSteps
+
+  return (
+    <div className="mb-4">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        aria-expanded={open}
+        aria-controls="security-warning-body"
+        className="w-full flex items-center justify-between gap-3 rounded-lg px-3.5 py-2.5 text-left transition-colors hover:border-amber/60"
+        style={{
+          background: 'rgba(245,158,11,0.06)',
+          border: '1px solid rgba(245,158,11,0.3)',
+        }}
+      >
+        <span className="inline-flex items-center gap-2 text-xs font-semibold text-amber">
+          <ShieldAlert className="w-4 h-4 shrink-0" strokeWidth={1.75} />
+          {t('securityToggle')}
+        </span>
+        <ChevronDown
+          className={`w-4 h-4 text-amber transition-transform shrink-0 ${open ? 'rotate-180' : ''}`}
+          strokeWidth={2}
+        />
+      </button>
+
+      {open && (
+        <div
+          id="security-warning-body"
+          className="mt-2 rounded-lg p-4 space-y-3"
+          style={{
+            background: 'rgba(245,158,11,0.04)',
+            border: '1px solid rgba(245,158,11,0.2)',
+          }}
+        >
+          <p className="text-xs text-fg-2">{t('securityIntro')}</p>
+
+          {/* Tab bar */}
+          <div
+            role="tablist"
+            className="inline-flex rounded-pill p-1 gap-1"
+            style={{
+              background: 'var(--gf-input-bg)',
+              border: '1px solid var(--gf-border)',
+            }}
+          >
+            <SecurityTabBtn
+              active={tab === 'samsung'}
+              onClick={() => setTab('samsung')}
+              label={t('samsungTitle')}
+            />
+            <SecurityTabBtn
+              active={tab === 'regular'}
+              onClick={() => setTab('regular')}
+              label={t('regularTitle')}
+            />
+          </div>
+
+          {/* Step list */}
+          <ol className="space-y-2.5">
+            {steps.map((stepText, i) => (
+              <li key={i} className="flex items-start gap-2.5">
+                <span
+                  className="shrink-0 w-6 h-6 rounded-full inline-flex items-center justify-center text-[10px] font-bold font-mono"
+                  style={{
+                    background: 'rgba(245,158,11,0.16)',
+                    color: '#f59e0b',
+                    border: '1px solid rgba(245,158,11,0.35)',
+                  }}
+                  dir="ltr"
+                >
+                  {i + 1}
+                </span>
+                <p className="text-sm text-fg-1 leading-relaxed">{stepText}</p>
+              </li>
+            ))}
+          </ol>
+        </div>
+      )}
+    </div>
+  )
+}
+
+function SecurityTabBtn({
+  active,
+  onClick,
+  label,
+}: {
+  active: boolean
+  onClick: () => void
+  label: string
+}) {
+  return (
+    <button
+      type="button"
+      role="tab"
+      aria-selected={active}
+      onClick={onClick}
+      className="rounded-pill px-3 h-7 text-[11px] font-semibold transition-colors"
+      style={
+        active
+          ? {
+              background: 'rgba(245,158,11,0.2)',
+              color: '#f59e0b',
+              boxShadow: '0 0 0 1px rgba(245,158,11,0.4) inset',
+            }
+          : {
+              background: 'transparent',
+              color: 'var(--gf-fg-2)',
+            }
+      }
+    >
+      {label}
+    </button>
   )
 }
 
