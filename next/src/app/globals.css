@@ -1376,3 +1376,22 @@ html.in-capacitor [class*="overflow-x-scroll"],
 html.in-capacitor [data-scroll-x] {
   touch-action: pan-x;
 }
+
+/* Force the WebView's native scroll container to actually own the
+ * scroll. Without these, the inner <body> ends up scroll-locked
+ * mid-page because some ancestor briefly transitions to
+ * overflow: hidden (modal animations, framer-motion height
+ * transitions, etc.). Scoping to html.in-capacitor keeps the
+ * regular site untouched. */
+html.in-capacitor {
+  overflow-y: scroll;
+  height: 100%;
+}
+html.in-capacitor body {
+  overflow-y: scroll;
+  height: 100%;
+  position: relative;
+}
+html.in-capacitor * {
+  -webkit-overflow-scrolling: touch;
+}

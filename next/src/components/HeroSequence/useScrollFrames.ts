@@ -34,6 +34,12 @@ export function useScrollFrames({
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
     if (reduced) return
 
+    // Capacitor WebView: skip ScrollTrigger entirely. It scroll-jacks
+    // via touchmove handlers which intermittently lock up scroll on
+    // Android. The hero just renders frame 0 statically inside the
+    // app — full hero animation is desktop-only.
+    if (/GreenofigApp\//.test(navigator.userAgent)) return
+
     // Wire Lenis ↔ ScrollTrigger exactly once per session.
     const lenis = window.__lenis
     if (lenis && !lenisWired) {

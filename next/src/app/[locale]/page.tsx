@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { setRequestLocale } from 'next-intl/server'
 import { HeroSequence } from '@/components/HeroSequence'
+import { CapacitorHomeGate } from '@/components/CapacitorHomeGate'
 import { SiteHeader } from '@/components/SiteHeader'
 import { StatsSection } from '@/components/sections/StatsSection'
 import { AboutSection } from '@/components/sections/AboutSection'
@@ -30,6 +31,12 @@ export default function Home({ params }: PageProps) {
 
   return (
     <main className="bg-bg">
+      {/* Skip the marketing homepage entirely when the visitor is
+          inside the Capacitor Android app — they don't need the
+          download page, they're already in the app. Renders a
+          splash + redirects to /dashboard or /sign-in. No-op in a
+          regular browser. */}
+      <CapacitorHomeGate />
       <SiteHeader />
       <HeroSequence />
       <StatsSection />

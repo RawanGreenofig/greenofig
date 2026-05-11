@@ -3,6 +3,7 @@
 import { useEffect, type ReactNode } from 'react'
 import { usePathname } from 'next/navigation'
 import Lenis from 'lenis'
+import { isInsideCapacitor } from '@/lib/is-capacitor'
 
 /**
  * Mounts a single Lenis smooth-scroll instance for the document.
@@ -19,13 +20,6 @@ import Lenis from 'lenis'
  *     (`GreenofigApp/...`) and the `window.Capacitor` runtime global.
  */
 const APP_PATH_RX = /^\/(?:[a-z]{2}\/)?(dashboard|admin|nutritionist|onboarding|sign-in|sign-up|reset-password|forgot-password)/
-
-function isInsideCapacitor(): boolean {
-  if (typeof window === 'undefined') return false
-  if (/GreenofigApp\//.test(window.navigator.userAgent)) return true
-  const w = window as Window & { Capacitor?: { isNativePlatform?: () => boolean } }
-  return !!w.Capacitor?.isNativePlatform?.()
-}
 
 /**
  * Tag <html> with `in-capacitor` when running inside the Android

@@ -11,6 +11,7 @@ import '../globals.css'
 
 import { LenisProvider } from '@/providers/LenisProvider'
 import { GSAPProvider } from '@/providers/GSAPProvider'
+import { CapacitorMotionGate } from '@/providers/CapacitorMotionGate'
 import { AuthProvider } from '@/context/AuthContext'
 import { ToastHost } from '@/components/ToastHost'
 import { FilmGrain } from '@/components/FilmGrain'
@@ -241,10 +242,12 @@ export default async function LocaleLayout({ children, params }: LayoutProps) {
           <AuthProvider>
             <LenisProvider>
               <GSAPProvider>
-                <MaintenanceBanner />
-                {children}
-                <FilmGrain />
-                <ToastHost />
+                <CapacitorMotionGate>
+                  <MaintenanceBanner />
+                  {children}
+                  <FilmGrain />
+                  <ToastHost />
+                </CapacitorMotionGate>
               </GSAPProvider>
             </LenisProvider>
           </AuthProvider>
