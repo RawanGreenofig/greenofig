@@ -276,31 +276,31 @@ export function LiveTrafficSection() {
               {cleanPages.length === 0 ? (
                 <EmptyRow />
               ) : (
-                <ul className="space-y-2.5">
+                <ul className="space-y-3">
                   {cleanPages.map((p, i) => {
                     const max = cleanPages[0]?.views || 1
                     const pct = Math.max(2, Math.round((p.views / max) * 100))
                     return (
-                      <li key={p.path}>
-                        <div className="flex items-center justify-between gap-3 mb-1">
-                          <span className="inline-flex items-center gap-1.5 text-xs text-fg-1 truncate" title={p.path}>
-                            <span
-                              className="inline-flex items-center justify-center text-[9px] font-bold w-4 h-4 rounded text-fg-3"
-                              style={{ background: 'var(--gf-input-bg)' }}
-                            >
-                              {i + 1}
+                      <li key={p.path} className="flex items-center gap-2.5">
+                        <RowIcon Icon={FileText} tint="#a855f7" />
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center justify-between gap-2 mb-1">
+                            <span className="inline-flex items-center gap-1.5 text-xs text-fg-1 truncate" title={p.path}>
+                              <span className="font-mono text-[10px] text-fg-3 shrink-0">
+                                #{i + 1}
+                              </span>
+                              <span className="truncate">{p.path}</span>
                             </span>
-                            <span className="truncate">{p.path}</span>
-                          </span>
-                          <span className="font-mono text-[11px] text-fg-3 shrink-0" dir="ltr">
-                            {p.views.toLocaleString()}
-                          </span>
-                        </div>
-                        <div className="h-1 rounded-pill bg-bg-deeper overflow-hidden">
-                          <div
-                            className="h-full rounded-pill"
-                            style={{ width: `${pct}%`, background: '#a855f7' }}
-                          />
+                            <span className="font-mono text-[11px] text-fg-3 shrink-0" dir="ltr">
+                              {p.views.toLocaleString()}
+                            </span>
+                          </div>
+                          <div className="h-1 rounded-pill bg-bg-deeper overflow-hidden">
+                            <div
+                              className="h-full rounded-pill"
+                              style={{ width: `${pct}%`, background: '#a855f7' }}
+                            />
+                          </div>
                         </div>
                       </li>
                     )
@@ -313,26 +313,26 @@ export function LiveTrafficSection() {
               {cleanCountries.length === 0 ? (
                 <EmptyRow />
               ) : (
-                <ul className="space-y-2.5">
+                <ul className="space-y-3">
                   {cleanCountries.map((c) => {
                     const max = cleanCountries[0]?.users || 1
                     const pct = Math.max(2, Math.round((c.users / max) * 100))
                     return (
-                      <li key={c.country}>
-                        <div className="flex items-center justify-between gap-3 mb-1">
-                          <span className="inline-flex items-center gap-1.5 text-xs text-fg-1 truncate">
-                            <Globe className="w-3 h-3" strokeWidth={1.75} color="#06b6d4" />
-                            {c.country}
-                          </span>
-                          <span className="font-mono text-[11px] text-fg-3 shrink-0" dir="ltr">
-                            {c.users.toLocaleString()}
-                          </span>
-                        </div>
-                        <div className="h-1 rounded-pill bg-bg-deeper overflow-hidden">
-                          <div
-                            className="h-full rounded-pill"
-                            style={{ width: `${pct}%`, background: '#06b6d4' }}
-                          />
+                      <li key={c.country} className="flex items-center gap-2.5">
+                        <RowIcon Icon={Globe} tint="#06b6d4" />
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center justify-between gap-2 mb-1">
+                            <span className="text-xs text-fg-1 truncate">{c.country}</span>
+                            <span className="font-mono text-[11px] text-fg-3 shrink-0" dir="ltr">
+                              {c.users.toLocaleString()}
+                            </span>
+                          </div>
+                          <div className="h-1 rounded-pill bg-bg-deeper overflow-hidden">
+                            <div
+                              className="h-full rounded-pill"
+                              style={{ width: `${pct}%`, background: '#06b6d4' }}
+                            />
+                          </div>
                         </div>
                       </li>
                     )
@@ -345,27 +345,29 @@ export function LiveTrafficSection() {
               {data.usersByDevice.length === 0 ? (
                 <EmptyRow />
               ) : (
-                <ul className="space-y-2.5">
+                <ul className="space-y-3">
                   {data.usersByDevice.map((d) => {
                     const total = data.usersByDevice.reduce((a, b) => a + b.users, 0) || 1
                     const pct = Math.round((d.users / total) * 100)
                     const Icon = DEVICE_ICON[d.device.toLowerCase()] ?? Monitor
                     return (
-                      <li key={d.device}>
-                        <div className="flex items-center justify-between gap-3 mb-1">
-                          <span className="inline-flex items-center gap-1.5 text-xs text-fg-1">
-                            <Icon className="w-3 h-3" strokeWidth={1.75} color="#a3e635" />
-                            <span className="capitalize">{d.device}</span>
-                          </span>
-                          <span className="font-mono text-[11px] text-fg-3" dir="ltr">
-                            {d.users.toLocaleString()} · {pct}%
-                          </span>
-                        </div>
-                        <div className="h-1 rounded-pill bg-bg-deeper overflow-hidden">
-                          <div
-                            className="h-full rounded-pill bg-lime-400"
-                            style={{ width: `${pct}%` }}
-                          />
+                      <li key={d.device} className="flex items-center gap-2.5">
+                        <RowIcon Icon={Icon} tint="#a3e635" />
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center justify-between gap-2 mb-1">
+                            <span className="text-xs text-fg-1 capitalize">
+                              {d.device}
+                            </span>
+                            <span className="font-mono text-[11px] text-fg-3 shrink-0" dir="ltr">
+                              {d.users.toLocaleString()} · {pct}%
+                            </span>
+                          </div>
+                          <div className="h-1 rounded-pill bg-bg-deeper overflow-hidden">
+                            <div
+                              className="h-full rounded-pill bg-lime-400"
+                              style={{ width: `${pct}%` }}
+                            />
+                          </div>
                         </div>
                       </li>
                     )
@@ -487,6 +489,22 @@ function Panel({
 
 function EmptyRow() {
   return <p className="text-xs text-fg-3">No data yet.</p>
+}
+
+/** Small tinted icon square used at the start of each data row —
+ *  matches the larger ringed icon pattern from the KPI cards. */
+function RowIcon({ Icon, tint }: { Icon: LucideIcon; tint: string }) {
+  return (
+    <span
+      className="w-7 h-7 rounded-lg inline-flex items-center justify-center shrink-0"
+      style={{
+        background: `${tint}1f`,
+        boxShadow: `0 0 0 1px ${tint}33 inset`,
+      }}
+    >
+      <Icon className="w-3.5 h-3.5" strokeWidth={1.75} color={tint} />
+    </span>
+  )
 }
 
 function safeParse(s: string): unknown {
