@@ -36,3 +36,7 @@ next/.next/
 *.njsproj
 *.sln
 *.sw?
+*.jks
+*.keystore
+*.b64
+keystore.properties
