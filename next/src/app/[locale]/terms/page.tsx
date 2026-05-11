@@ -21,7 +21,7 @@ export default function TermsPage() {
 
         <H2>الخدمة</H2>
         <P>
-          غرينوفيغ منصة تغذية رقمية تقدّم خطط طعام شخصية، مساعداً ذكياً، استشارات مع كوتش روان
+          غرينوفيغ منصة تغذية رقمية تقدّم خطط طعام شخصية، مساعداً ذكياً، استشارات مع أخصائية تغذية كوتش روان
           عثمان، ومنتجات مكملات. الخدمة معلوماتية ولا تحلّ محل الاستشارة الطبية.
         </P>
 
@@ -72,7 +72,7 @@ export default function TermsPage() {
       <H2>The service</H2>
       <P>
         Greenofig is a digital nutrition platform offering personalized meal plans, an AI
-        assistant, consultations with Coach Rawan Othman, and supplement products. The service is
+        assistant, consultations with Nutritionist Coach Rawan Othman, and supplement products. The service is
         informational and not a substitute for medical advice.
       </P>
 

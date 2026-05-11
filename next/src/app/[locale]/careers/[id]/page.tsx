@@ -244,7 +244,7 @@ function ApplyForm({ jobId, jobTitle }: { jobId: string; jobTitle: string }) {
           Application received
         </h3>
         <p className="mt-2 text-sm text-fg-2 max-w-md mx-auto">
-          Thanks for applying to <strong>{jobTitle}</strong>. Coach Rawan
+          Thanks for applying to <strong>{jobTitle}</strong>. Nutritionist Coach Rawan
           personally reviews every application — you&apos;ll hear from her by
           email within a week.
         </p>
@@ -260,7 +260,7 @@ function ApplyForm({ jobId, jobTitle }: { jobId: string; jobTitle: string }) {
       <header>
         <h3 className="text-lg font-semibold text-fg-1">Apply for this role</h3>
         <p className="mt-1 text-xs text-fg-3">
-          Coach Rawan personally reads and reviews every application.
+          Nutritionist Coach Rawan personally reads and reviews every application.
         </p>
       </header>
 

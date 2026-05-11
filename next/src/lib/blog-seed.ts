@@ -1,11 +1,11 @@
 /**
- * Greenofig blog seed — 10 articles authored by Coach Rawan Othman.
+ * Greenofig blog seed — 10 articles authored by Nutritionist Coach Rawan Othman.
  *
  * Source-of-truth for both the static blog pages (/blog and /blog/[slug])
  * and the Supabase `posts` table (via `scripts/seed-blog.ts`).
  *
  * Article body is markdown. Custom syntax:
- *   :::tip ... :::    — renders a "Coach Rawan's Tip" callout box
+ *   :::tip ... :::    — renders a "Nutritionist Coach Rawan's Tip" callout box
  *   [text](/path)     — internal links (renderer auto-prefixes locale)
  */
 
@@ -31,18 +31,18 @@ const PUBLISHED = '2026-05-04T08:00:00Z'
 
 const article1: BlogArticle = {
   slug: 'how-to-start-eating-healthy-beginners-guide',
-  title: "How to Start Eating Healthy: A Complete Beginner's Guide by Coach Rawan Othman",
+  title: "How to Start Eating Healthy: A Complete Beginner's Guide by Nutritionist Coach Rawan Othman",
   titleAr: 'كيف تبدأ الأكل الصحي: دليل شامل للمبتدئين',
   metaDescription:
-    "Stop overthinking and start eating better today. Coach Rawan Othman's evidence-based beginner's guide to building healthy habits that actually last.",
+    "Stop overthinking and start eating better today. Nutritionist Coach Rawan Othman's evidence-based beginner's guide to building healthy habits that actually last.",
   metaDescriptionAr:
-    'توقّف عن التعقيد وابدأ التغذية الصحية اليوم. دليل كوتش روان عثمان المبني على الأدلة لبناء عادات صحية تدوم فعلاً.',
+    'توقّف عن التعقيد وابدأ التغذية الصحية اليوم. دليل أخصائية تغذية كوتش روان عثمان المبني على الأدلة لبناء عادات صحية تدوم فعلاً.',
   imageUrl: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=1200&q=80',
   imageAlt: 'Fresh colorful vegetables and fruits on a wooden table',
   imageAltAr: 'خضروات وفواكه طازجة ملوّنة على طاولة خشبية',
   tags: ['nutrition basics', 'healthy eating', 'beginners'],
   category: 'nutrition',
-  keywords: ['how to eat healthy', 'healthy eating guide', 'nutrition for beginners', 'Coach Rawan Othman'],
+  keywords: ['how to eat healthy', 'healthy eating guide', 'nutrition for beginners', 'Nutritionist Coach Rawan Othman'],
   readTimeMinutes: 7,
   publishedAt: PUBLISHED,
   content: `Most people don't fail at healthy eating because they lack willpower. They fail because the advice they've been given is either too vague ("eat clean") or too punishing ("never touch sugar again"). After three years of clinical practice and 500+ clients, I can tell you the truth: the people who succeed long-term aren't the strictest. They're the most consistent.
@@ -93,7 +93,7 @@ That's it. With those three components, you have lunch and dinner for three days
 The single highest-leverage change you can make this week: add 30g of protein to breakfast. Eggs, Greek yogurt, leftover chicken, even a protein shake. You will eat 200–400 fewer calories the rest of the day without trying. I've measured this with my own clients — it works almost every time.
 :::
 
-## Coach Rawan's personal tip: the "next meal" rule
+## Nutritionist Coach Rawan's personal tip: the "next meal" rule
 
 When a client tells me they "ruined" their day with a bad lunch, I ask them: what time is it now? They say 2 PM. I say: you have dinner, an evening snack, and tomorrow's breakfast. That's three chances to do something good before this day ends. One meal doesn't define your week. Your average over time defines your body.
 
@@ -154,7 +154,7 @@ Next in the series: [15 best foods for weight loss, science-backed](/blog/best-f
 أكبر تغيير يمكنك تطبيقه هذا الأسبوع: أضف 30غ بروتين إلى إفطارك. بيض، زبادي يوناني، دجاج متبقّي، حتى مشروب بروتين. ستأكل 200–400 سعرة أقل في بقية اليوم دون محاولة. قِسْت هذا مع عملائي بنفسي — ينجح في معظم الحالات.
 :::
 
-## نصيحة كوتش روان الشخصية: قاعدة "الوجبة القادمة"
+## نصيحة أخصائية تغذية كوتش روان الشخصية: قاعدة "الوجبة القادمة"
 
 عندما يخبرني عميل أنه "خرّب" يومه بغداء سيئ، أسأله: كم الساعة الآن؟ يقول الثانية ظهراً. أقول: لديك العشاء، وسناك المساء، وإفطار الغد. هذه ثلاث فرص لفعل شيء جيد قبل نهاية اليوم. وجبة واحدة لا تحدد أسبوعك. متوسطك على المدى الطويل هو ما يحدد جسمك.
 
@@ -603,7 +603,7 @@ This is the part the influencers skip. Do not start IF if you:
 
 For women specifically, IF can disrupt menstrual cycles in some — particularly if combined with hard exercise and an aggressive deficit. If your period changes, stop.
 
-[Consult Coach Rawan before starting](/bookings) if you have any chronic condition or take medication. Some medications need food.
+[Consult Nutritionist Coach Rawan before starting](/bookings) if you have any chronic condition or take medication. Some medications need food.
 
 ## How to start (the 4-week ramp)
 
@@ -709,7 +709,7 @@ Next in the series: [Gut health diet — 10 foods that heal your gut naturally](
 
 للنساء تحديداً، الصيام المتقطع قد يخلّ بالدورات الشهرية لبعضهن — خاصة إذا اقترن بتمارين قاسية وعجز قوي. إن تغيّرت دورتك، توقّفي.
 
-[استشيري كوتش روان قبل البدء](/bookings) إذا كان لديك أي حالة مزمنة أو تأخذ دواءً. بعض الأدوية تحتاج طعاماً.
+[استشيري أخصائية تغذية كوتش روان قبل البدء](/bookings) إذا كان لديك أي حالة مزمنة أو تأخذ دواءً. بعض الأدوية تحتاج طعاماً.
 
 ## كيف تبدأ (تدرّج 4 أسابيع)
 
@@ -1042,7 +1042,7 @@ This rhythm gives you 5 controlled days and 2 flexible ones. Plenty of room for 
 
 ## Make it yours
 
-If meal prep still feels overwhelming, [get a custom meal plan from Coach Rawan](/dashboard/meal-plan). I'll match your time, budget, kitchen size, and food preferences — and tell you exactly what to cook each Sunday.
+If meal prep still feels overwhelming, [get a custom meal plan from Nutritionist Coach Rawan](/dashboard/meal-plan). I'll match your time, budget, kitchen size, and food preferences — and tell you exactly what to cook each Sunday.
 
 Or [explore our recipe library](/dashboard/recipes) for over 200 prep-friendly recipes that follow the 3-2-1 framework.
 
@@ -1150,7 +1150,7 @@ Next in the series: [Sugar addiction — how to quit sugar and feel amazing](/bl
 
 ## اجعليه يخصّك
 
-إن بقي تحضير الوجبات مرهقاً، [احصلي على خطة وجبات شخصية من كوتش روان](/dashboard/meal-plan). سأطابق وقتك، ميزانيتك، حجم مطبخك، وتفضيلاتك الغذائية — وأخبرك بالضبط ماذا تطبخين كل أحد.
+إن بقي تحضير الوجبات مرهقاً، [احصلي على خطة وجبات شخصية من أخصائية تغذية كوتش روان](/dashboard/meal-plan). سأطابق وقتك، ميزانيتك، حجم مطبخك، وتفضيلاتك الغذائية — وأخبرك بالضبط ماذا تطبخين كل أحد.
 
 أو [تصفّحي مكتبة الوصفات](/dashboard/recipes) لأكثر من 200 وصفة صديقة للتحضير تتبع إطار 3-2-1.
 
@@ -1455,9 +1455,9 @@ Take in the evening for sleep benefit.
 2. **Active forms, not cheap forms.** Methylcobalamin > cyanocobalamin (B12). Magnesium glycinate > magnesium oxide. D3 > D2.
 3. **No proprietary blends.** If a label says "blend 500 mg" without breaking down each ingredient, you don't know what you're getting. Skip.
 
-We curate options at [Coach Rawan's store](/store) with these checks already done.
+We curate options at [Nutritionist Coach Rawan's store](/store) with these checks already done.
 
-## Coach Rawan's recommended daily stack
+## Nutritionist Coach Rawan's recommended daily stack
 
 For a healthy adult in the Levant/Gulf with no specific conditions:
 
@@ -1481,7 +1481,7 @@ Vitamin D is the supplement I'd take if I could only take one. It's the most com
 
 ## When you actually need clinical guidance
 
-If you have hypothyroidism, PCOS, autoimmune conditions, anemia, fatigue that won't lift, or hair loss — supplement protocols need to be personalized to your bloodwork. [Get personalized advice from Coach Rawan](/bookings) before spending hundreds on the wrong stack.
+If you have hypothyroidism, PCOS, autoimmune conditions, anemia, fatigue that won't lift, or hair loss — supplement protocols need to be personalized to your bloodwork. [Get personalized advice from Nutritionist Coach Rawan](/bookings) before spending hundreds on the wrong stack.
 
 ## The honest bottom line
 
@@ -1552,9 +1552,9 @@ Most adults need 4 supplements. Most adults are taking 12. Cut the noise, dose w
 2. **أشكال نشطة، لا أشكال رخيصة.** ميثيلكوبالامين > سيانوكوبالامين (B12). غليسينات المغنيسيوم > أكسيد المغنيسيوم. D3 > D2.
 3. **لا خلطات احتكارية.** إن قال ملصق "خلطة 500 ملغ" دون تفصيل كل مكوّن، فأنت لا تعرف ما تحصل عليه. تخطّاها.
 
-ننتقي خيارات في [متجر كوتش روان](/store) مع هذه الفحوصات منجزة.
+ننتقي خيارات في [متجر أخصائية تغذية كوتش روان](/store) مع هذه الفحوصات منجزة.
 
-## كومة كوتش روان اليومية الموصى بها
+## كومة أخصائية تغذية كوتش روان اليومية الموصى بها
 
 لبالغ صحيح في الشام/الخليج بدون حالات محددة:
 
@@ -1578,7 +1578,7 @@ Most adults need 4 supplements. Most adults are taking 12. Cut the noise, dose w
 
 ## حين تحتاج إرشاداً إكلينيكياً فعلاً
 
-إن كان لديك خمول الغدة الدرقية، PCOS، حالات مناعة ذاتية، فقر دم، تعب لا يرتفع، أو تساقط شعر — بروتوكولات المكملات تحتاج للتخصيص حسب فحوصاتك. [احصل على نصيحة شخصية من كوتش روان](/bookings) قبل صرف مئات على الكومة الخطأ.
+إن كان لديك خمول الغدة الدرقية، PCOS، حالات مناعة ذاتية، فقر دم، تعب لا يرتفع، أو تساقط شعر — بروتوكولات المكملات تحتاج للتخصيص حسب فحوصاتك. [احصل على نصيحة شخصية من أخصائية تغذية كوتش روان](/bookings) قبل صرف مئات على الكومة الخطأ.
 
 ## الخلاصة الصادقة
 

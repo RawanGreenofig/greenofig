@@ -901,7 +901,7 @@ function NotifPane({
             lineHeight: 1.6,
           }}
         >
-          Get notified on your phone when Coach Rawan sends you a message,
+          Get notified on your phone when Nutritionist Coach Rawan sends you a message,
           assigns a meal plan, or posts in the community — even when the app
           is closed.
         </p>

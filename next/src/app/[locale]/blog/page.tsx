@@ -8,15 +8,15 @@ import { BlogSearchAndFilters } from '@/components/blog/BlogSearchAndFilters'
 import { SiteHeader } from '@/components/SiteHeader'
 
 export const metadata: Metadata = {
-  title: 'Nutrition Blog | Coach Rawan Othman | Greenofig',
+  title: 'Nutrition Blog | Nutritionist Coach Rawan Othman | Greenofig',
   description:
-    'Evidence-based nutrition articles by Coach Rawan Othman, certified clinical nutritionist. Learn about healthy eating, weight loss, supplements, and more.',
+    'Evidence-based nutrition articles by Nutritionist Coach Rawan Othman, certified clinical nutritionist. Learn about healthy eating, weight loss, supplements, and more.',
   alternates: { canonical: 'https://greenofig.com/blog' },
   openGraph: {
     url: 'https://greenofig.com/blog',
-    title: 'Nutrition Blog | Coach Rawan Othman | Greenofig',
+    title: 'Nutrition Blog | Nutritionist Coach Rawan Othman | Greenofig',
     description:
-      'Evidence-based nutrition articles by Coach Rawan Othman, certified clinical nutritionist.',
+      'Evidence-based nutrition articles by Nutritionist Coach Rawan Othman, certified clinical nutritionist.',
     type: 'website',
   },
 }

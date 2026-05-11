@@ -477,7 +477,7 @@ function PlanView({ t }: { t: ReturnType<typeof useTranslations> }) {
         })}
       </section>
 
-      {/* From Coach Rawan */}
+      {/* From Nutritionist Coach Rawan */}
       <DrFootnote drName={NUTRITIONIST.name} t={t} />
     </div>
   )

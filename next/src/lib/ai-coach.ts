@@ -9,13 +9,13 @@ import { chat, isGeminiConfigured } from '@/lib/gemini'
  *   - Warmth + brevity (3–4 short sentences max).
  *   - Evidence-based nutrition advice only — no diagnoses, no
  *     prescriptions. Refers anything medical/clinical/urgent
- *     straight to Coach Rawan.
+ *     straight to Nutritionist Coach Rawan.
  *   - Always closes with a one-line reassurance that the human
  *     coach will follow up personally.
  *   - Responds in the same language as the customer's message.
  */
 
-const SYSTEM_PROMPT = `You are the Greenofig Assistant — an AI nutrition helper that works alongside Coach Rawan Othman (certified clinical nutritionist) and her coaching team.
+const SYSTEM_PROMPT = `You are the Greenofig Assistant — an AI nutrition helper that works alongside Nutritionist Coach Rawan Othman (certified clinical nutritionist) and her coaching team.
 
 A client just messaged their coach. Your job is to give them a warm, useful first reply within seconds, while the human coach is offline.
 
@@ -23,10 +23,10 @@ Rules:
 - Keep replies under 4 short sentences. Be warm but get to the point.
 - Match the client's language (English or Arabic).
 - Give evidence-based nutrition info, simple meal suggestions, and habit tips.
-- NEVER diagnose, prescribe, or give medical advice. If the client mentions symptoms, medications, pregnancy, eating disorders, or anything clinical, gently defer to Coach Rawan and say she'll follow up.
-- If you're unsure, say so honestly and tell them Coach Rawan will weigh in.
-- Always close with a one-liner like: "Coach Rawan will follow up personally soon." (or the Arabic equivalent: "كوتش روان ستتابع معك شخصياً قريباً.")
-- Never claim to be Coach Rawan or another human. If asked, say you're the Greenofig Assistant.
+- NEVER diagnose, prescribe, or give medical advice. If the client mentions symptoms, medications, pregnancy, eating disorders, or anything clinical, gently defer to Nutritionist Coach Rawan and say she'll follow up.
+- If you're unsure, say so honestly and tell them Nutritionist Coach Rawan will weigh in.
+- Always close with a one-liner like: "Nutritionist Coach Rawan will follow up personally soon." (or the Arabic equivalent: "أخصائية تغذية كوتش روان ستتابع معك شخصياً قريباً.")
+- Never claim to be Nutritionist Coach Rawan or another human. If asked, say you're the Greenofig Assistant.
 - Don't add greetings like "Hi!" if there's an ongoing conversation — just respond directly.`
 
 const URGENT_PATTERNS = [
@@ -78,14 +78,14 @@ export async function generateAiReply(input: AiReplyInput): Promise<AiReplyResul
           ? 'Client'
           : m.sender === 'ai'
           ? 'Assistant (you, earlier)'
-          : 'Coach Rawan'
+          : 'Nutritionist Coach Rawan'
       return `${tag}: ${m.content}`
     })
     .join('\n')
 
   const urgent = looksUrgent(input.customerMessage)
   const urgencyHint = urgent
-    ? '\n\nNote: The client mentioned something clinical or potentially urgent. Defer to Coach Rawan explicitly and reassure them she will follow up promptly.'
+    ? '\n\nNote: The client mentioned something clinical or potentially urgent. Defer to Nutritionist Coach Rawan explicitly and reassure them she will follow up promptly.'
     : ''
 
   const userPrompt = `${customerLine} just sent:\n"${input.customerMessage}"\n\n${
@@ -97,7 +97,7 @@ export async function generateAiReply(input: AiReplyInput): Promise<AiReplyResul
     SYSTEM_PROMPT,
   )
   return {
-    text: text.trim() || 'Thanks for reaching out — Coach Rawan will get back to you shortly.',
+    text: text.trim() || 'Thanks for reaching out — Nutritionist Coach Rawan will get back to you shortly.',
     deferToCoach: urgent,
   }
 }

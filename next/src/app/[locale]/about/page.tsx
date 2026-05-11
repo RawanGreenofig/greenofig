@@ -47,8 +47,8 @@ export default function AboutPage() {
         <section>
           <H2>فريقنا</H2>
           <P>
-            يقود فريق التغذية لدينا كوتش روان عثمان — أخصائية تغذية إكلينيكية معتمدة بثلاث
-            سنوات من الخبرة المتخصصة. تعمل كوتش روان مع فريق من الأخصائيين والمستشارين لضمان
+            يقود فريق التغذية لدينا أخصائية تغذية كوتش روان عثمان — أخصائية تغذية إكلينيكية معتمدة بثلاث
+            سنوات من الخبرة المتخصصة. تعمل أخصائية تغذية كوتش روان مع فريق من الأخصائيين والمستشارين لضمان
             أن كل خطة وكل توصية مبنية على آخر الأدلة العلمية.
           </P>
         </section>
@@ -104,8 +104,8 @@ export default function AboutPage() {
       <section>
         <H2>The team</H2>
         <P>
-          Our nutrition team is led by <strong>Coach Rawan Othman</strong> — a certified
-          clinical nutritionist with three years of specialized practice. Coach Rawan
+          Our nutrition team is led by <strong>Nutritionist Coach Rawan Othman</strong> — a certified
+          clinical nutritionist with three years of specialized practice. Nutritionist Coach Rawan
           works alongside a team of nutritionists and advisors to make sure every plan
           and every recommendation is grounded in the latest peer-reviewed evidence.
         </P>

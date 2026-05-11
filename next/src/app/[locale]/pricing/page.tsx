@@ -117,7 +117,7 @@ const PLANS: Record<'en' | 'ar', Plan[]> = {
       accentColor: '#5c7262',
       features: [
         '3 food scans per day',
-        "View Coach Rawan's posts",
+        "View Nutritionist Coach Rawan's posts",
         'Browse the store',
         'Free intro consultation call',
         'Community feed (read only)',
@@ -126,7 +126,7 @@ const PLANS: Record<'en' | 'ar', Plan[]> = {
         'Unlimited food scanning',
         'Nutrition tracking',
         'Personalized meal plans',
-        'Direct messaging with Coach Rawan',
+        'Direct messaging with Nutritionist Coach Rawan',
       ],
     },
     {
@@ -152,7 +152,7 @@ const PLANS: Record<'en' | 'ar', Plan[]> = {
       missing: [
         'Personalized meal plans',
         'AI nutrition assistant',
-        'Direct messaging with Coach Rawan',
+        'Direct messaging with Nutritionist Coach Rawan',
       ],
     },
     {
@@ -160,7 +160,7 @@ const PLANS: Record<'en' | 'ar', Plan[]> = {
       tier: 'premium',
       price: { monthly: 49.99, annual: 39.99 },
       currency: 'USD',
-      description: 'Personalized plans and direct access to Coach Rawan',
+      description: 'Personalized plans and direct access to Nutritionist Coach Rawan',
       cta: 'Start Premium',
       href: '/sign-up?plan=premium',
       featured: true,
@@ -168,12 +168,12 @@ const PLANS: Record<'en' | 'ar', Plan[]> = {
       accentColor: '#3d7a4a',
       features: [
         'Everything in Basic',
-        'Custom meal plan from Coach Rawan',
+        'Custom meal plan from Nutritionist Coach Rawan',
         'AI nutrition assistant',
         'Advanced health analytics',
         'Sleep & supplement tracking',
         'Auto shopping lists',
-        '✉️ Direct messaging with Coach Rawan',
+        '✉️ Direct messaging with Nutritionist Coach Rawan',
         'Priority booking slots',
         'Member discounts on store',
       ],
@@ -215,7 +215,7 @@ const PLANS: Record<'en' | 'ar', Plan[]> = {
       accentColor: '#5c7262',
       features: [
         '3 مسح غذائي يومياً',
-        'مشاهدة منشورات كوتش روان',
+        'مشاهدة منشورات أخصائية تغذية كوتش روان',
         'تصفح المتجر',
         'مكالمة استشارية تعريفية مجانية',
         'تصفح المجتمع (للقراءة فقط)',
@@ -224,7 +224,7 @@ const PLANS: Record<'en' | 'ar', Plan[]> = {
         'مسح غذائي غير محدود',
         'تتبع التغذية',
         'خطط وجبات مخصصة',
-        'التواصل المباشر مع كوتش روان',
+        'التواصل المباشر مع أخصائية تغذية كوتش روان',
       ],
     },
     {
@@ -250,7 +250,7 @@ const PLANS: Record<'en' | 'ar', Plan[]> = {
       missing: [
         'خطط وجبات مخصصة',
         'مساعد التغذية الذكي',
-        'التواصل المباشر مع كوتش روان',
+        'التواصل المباشر مع أخصائية تغذية كوتش روان',
       ],
     },
     {
@@ -258,7 +258,7 @@ const PLANS: Record<'en' | 'ar', Plan[]> = {
       tier: 'premium',
       price: { monthly: 49.99, annual: 39.99 },
       currency: 'USD',
-      description: 'خطط مخصصة ووصول مباشر لكوتش روان',
+      description: 'خطط مخصصة ووصول مباشر لأخصائية تغذية كوتش روان',
       cta: 'ابدأ المميز',
       href: '/sign-up?plan=premium',
       featured: true,
@@ -266,12 +266,12 @@ const PLANS: Record<'en' | 'ar', Plan[]> = {
       accentColor: '#3d7a4a',
       features: [
         'كل ما في الأساسي',
-        'خطة وجبات مخصصة من كوتش روان',
+        'خطة وجبات مخصصة من أخصائية تغذية كوتش روان',
         'مساعد التغذية الذكي',
         'تحليلات صحية متقدمة',
         'تتبع النوم والمكملات',
         'قوائم تسوق تلقائية',
-        '✉️ تواصل مباشر مع كوتش روان',
+        '✉️ تواصل مباشر مع أخصائية تغذية كوتش روان',
         'أولوية في حجز المواعيد',
         'خصومات حصرية على المتجر',
       ],
@@ -314,7 +314,7 @@ const FAQS = {
     },
     {
       q: 'What does direct messaging include?',
-      a: 'Premium and VIP members can send private messages directly to Coach Rawan and receive personal replies.',
+      a: 'Premium and VIP members can send private messages directly to Nutritionist Coach Rawan and receive personal replies.',
     },
     {
       q: 'What payment methods are accepted?',
@@ -340,7 +340,7 @@ const FAQS = {
     },
     {
       q: 'ماذا يشمل التواصل المباشر؟',
-      a: 'يمكن لأعضاء المميز وVIP إرسال رسائل خاصة مباشرة إلى كوتش روان وتلقي ردود شخصية.',
+      a: 'يمكن لأعضاء المميز وVIP إرسال رسائل خاصة مباشرة إلى أخصائية تغذية كوتش روان وتلقي ردود شخصية.',
     },
     {
       q: 'ما طرق الدفع المتاحة؟',
@@ -373,7 +373,7 @@ const COPY = {
     faqTitle: 'Frequently asked questions',
     guaranteeQuote:
       'I stand behind every plan. If you are not seeing results within 30 days, we will work together to find out why — or refund you.',
-    guaranteeAttr: '— Coach Rawan Othman',
+    guaranteeAttr: '— Nutritionist Coach Rawan Othman',
   },
   ar: {
     eyebrow: 'أسعار بسيطة',
@@ -390,7 +390,7 @@ const COPY = {
     faqTitle: 'أسئلة متكررة',
     guaranteeQuote:
       'أقف وراء كل خطة. إذا لم تلاحظ نتائج خلال 30 يوماً، سنعمل معاً لمعرفة السبب — أو نسترد لك المبلغ.',
-    guaranteeAttr: '— كوتش روان عثمان',
+    guaranteeAttr: '— أخصائية تغذية كوتش روان عثمان',
   },
 }
 
@@ -612,7 +612,7 @@ export default function PricingPage() {
             ))}
         </ul>
 
-        {/* Coach Rawan guarantee */}
+        {/* Nutritionist Coach Rawan guarantee */}
         <section
           className="max-w-xl mx-auto rounded-2xl p-10 text-center mt-16"
           style={{ background: '#122018', border: '1px solid #2a4a30' }}

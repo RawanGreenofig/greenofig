@@ -67,7 +67,7 @@ const JOB_TYPES = [
 /**
  * /admin/careers — admin creates and manages job postings. Submitted
  * applications are reviewed by the head coach at /nutritionist/careers
- * (admin can also see them but only Coach Rawan can change status).
+ * (admin can also see them but only Nutritionist Coach Rawan can change status).
  */
 export default function AdminCareersPage() {
   const [jobs, setJobs] = useState<Job[]>([])
@@ -169,7 +169,7 @@ export default function AdminCareersPage() {
             Careers
           </h1>
           <p className="mt-2 text-sm md:text-base text-fg-2">
-            Post job openings. Coach Rawan reviews applications in her
+            Post job openings. Nutritionist Coach Rawan reviews applications in her
             careers tab.
           </p>
         </div>
@@ -249,7 +249,7 @@ export default function AdminCareersPage() {
         <p>
           Applications submitted to these postings are reviewed by the
           head coach at <Link className="text-lime-400 hover:underline" href="/nutritionist/careers">/nutritionist/careers</Link>.
-          Admin can read applications but only Coach Rawan moves
+          Admin can read applications but only Nutritionist Coach Rawan moves
           candidates through the interview pipeline.
         </p>
       </div>
@@ -494,7 +494,7 @@ function EditDialog({
                 value={d.benefits.join('\n')}
                 onChange={(v) => updateList('benefits', v)}
                 rows={3}
-                placeholder={'Flexible remote work\nMentorship from Coach Rawan\nGreenofig wellness stipend'}
+                placeholder={'Flexible remote work\nMentorship from Nutritionist Coach Rawan\nGreenofig wellness stipend'}
                 mono
               />
             </FormField>

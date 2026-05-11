@@ -21,7 +21,7 @@ interface Props {
  *
  *  2. The Cite-this-article block formats a journalist-friendly
  *     citation (APA-style) the user can copy. Reduces friction when
- *     a reporter wants to reference a Coach Rawan article.
+ *     a reporter wants to reference a Nutritionist Coach Rawan article.
  */
 export function ShareAndCite({ url, title, author, publishedAt, isAr }: Props) {
   const [copied, setCopied] = useState<'link' | 'cite' | null>(null)
