@@ -4,11 +4,14 @@ import { useEffect, useState } from 'react'
 import {
   Activity,
   Eye,
+  FileText,
   Globe,
+  MapPin,
   Monitor,
   Smartphone,
   Tablet,
   RefreshCw,
+  TrendingUp,
   Wifi,
   type LucideIcon,
 } from '@/icons'
@@ -112,14 +115,24 @@ export function LiveTrafficSection() {
   }
 
   const data = resp?.data
+  // Strip empty country names (GA returns "(not set)" or "" for unknown
+  // geo — those render as blank rows in the UI).
+  const cleanCountries = (data?.usersByCountry ?? []).filter(
+    (c) => c.country && c.country !== '(not set)' && c.country !== '—',
+  )
+  const cleanPages = (data?.topPages ?? []).filter((p) => p.path)
   return (
-    <section className="space-y-4">
+    <section className="space-y-5">
       <header className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <p className="text-[10px] uppercase tracking-eyebrow font-semibold text-lime-400">
+          <p className="inline-flex items-center gap-1.5 text-[10px] uppercase tracking-eyebrow font-semibold text-lime-400">
+            <span
+              className="w-1.5 h-1.5 rounded-full bg-lime-400 animate-pulse"
+              aria-hidden
+            />
             Live · Google Analytics
           </p>
-          <h2 className="mt-1 text-base font-semibold text-fg-1">
+          <h2 className="mt-1 font-display font-bold text-fg-1 tracking-tight" style={{ fontSize: '20px', lineHeight: 1.15 }}>
             Website traffic
           </h2>
           <p className="text-xs text-fg-3 mt-0.5">
@@ -130,7 +143,7 @@ export function LiveTrafficSection() {
           type="button"
           onClick={() => void load()}
           disabled={loading}
-          className="inline-flex items-center gap-1.5 h-9 px-3 text-xs font-semibold text-fg-1 rounded-lg border border-border hover:border-lime-400/40 transition-colors disabled:opacity-50"
+          className="inline-flex items-center gap-1.5 h-9 px-3.5 text-xs font-semibold text-fg-1 rounded-pill border border-border hover:border-lime-400/40 transition-colors disabled:opacity-50"
           style={{ background: 'var(--gf-input-bg)' }}
         >
           <RefreshCw
@@ -188,37 +201,53 @@ export function LiveTrafficSection() {
             />
             <LiveKpi
               Icon={Activity}
-              label="Users (30d)"
+              label="Users · 30d"
               value={data.totals.users30d}
               tint="#06b6d4"
             />
             <LiveKpi
               Icon={Eye}
-              label="Page views (30d)"
+              label="Page views · 30d"
               value={data.totals.views30d}
               tint="#a855f7"
             />
             <LiveKpi
-              Icon={Globe}
-              label="Sessions (30d)"
+              Icon={TrendingUp}
+              label="Sessions · 30d"
               value={data.totals.sessions30d}
               tint="#e8912a"
             />
           </div>
 
           {/* Daily timeseries */}
-          <article className="rounded-xl border border-border bg-surface p-5">
-            <header className="mb-3">
-              <h3 className="text-sm font-semibold text-fg-1">
-                Users · last 30 days
-              </h3>
+          <article
+            className="rounded-2xl border border-border p-5 md:p-6"
+            style={{
+              background:
+                'linear-gradient(135deg, rgba(132,217,61,0.05) 0%, var(--gf-surface) 55%)',
+              boxShadow:
+                '0 1px 0 rgba(255,255,255,0.04) inset, 0 14px 40px rgba(0,0,0,0.28)',
+            }}
+          >
+            <header className="mb-4 flex items-center justify-between gap-3">
+              <div>
+                <h3 className="text-sm font-semibold text-fg-1">
+                  Users · last 30 days
+                </h3>
+                <p className="text-[11px] text-fg-3 mt-0.5">
+                  Daily active users on greenofig.com.
+                </p>
+              </div>
+              <span className="font-mono text-xs text-lime-400" dir="ltr">
+                {data.totals.users30d.toLocaleString()} total
+              </span>
             </header>
-            <div className="h-48">
+            <div className="h-52">
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={data.daily} margin={{ top: 6, right: 6, left: 0, bottom: 0 }}>
                   <defs>
                     <linearGradient id="liveTrafficUsers" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#a3e635" stopOpacity={0.32} />
+                      <stop offset="0%" stopColor="#a3e635" stopOpacity={0.35} />
                       <stop offset="100%" stopColor="#a3e635" stopOpacity={0} />
                     </linearGradient>
                   </defs>
@@ -226,7 +255,13 @@ export function LiveTrafficSection() {
                   <XAxis dataKey="date" stroke="#5c7262" tickLine={false} axisLine={false} tick={{ fontSize: 10 }} minTickGap={32} />
                   <YAxis stroke="#5c7262" tickLine={false} axisLine={false} tick={{ fontSize: 10 }} width={28} />
                   <Tooltip
-                    contentStyle={{ background: 'var(--gf-card-hover)', border: '1px solid rgb(255 255 255 / 0.08)', borderRadius: 8, fontSize: 11, color: 'var(--gf-fg-1)' }}
+                    contentStyle={{
+                      background: 'var(--gf-card-hover)',
+                      border: '1px solid rgb(255 255 255 / 0.08)',
+                      borderRadius: 8,
+                      fontSize: 11,
+                      color: 'var(--gf-fg-1)',
+                    }}
                     labelStyle={{ color: '#9baf9f' }}
                   />
                   <Area type="monotone" dataKey="users" stroke="#a3e635" strokeWidth={2} fill="url(#liveTrafficUsers)" dot={false} />
@@ -237,43 +272,76 @@ export function LiveTrafficSection() {
 
           {/* 3-col detail */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <Panel title="Top pages (30d)">
-              {data.topPages.length === 0 ? (
+            <Panel title="Top pages" subtitle="Most-viewed paths, last 30 days" Icon={FileText}>
+              {cleanPages.length === 0 ? (
                 <EmptyRow />
               ) : (
-                <ul className="space-y-2">
-                  {data.topPages.map((p) => (
-                    <li key={p.path} className="flex items-center justify-between gap-3">
-                      <span className="text-xs text-fg-1 truncate" title={p.path}>
-                        {p.path || '/'}
-                      </span>
-                      <span className="font-mono text-[11px] text-fg-3 shrink-0" dir="ltr">
-                        {p.views.toLocaleString()}
-                      </span>
-                    </li>
-                  ))}
+                <ul className="space-y-2.5">
+                  {cleanPages.map((p, i) => {
+                    const max = cleanPages[0]?.views || 1
+                    const pct = Math.max(2, Math.round((p.views / max) * 100))
+                    return (
+                      <li key={p.path}>
+                        <div className="flex items-center justify-between gap-3 mb-1">
+                          <span className="inline-flex items-center gap-1.5 text-xs text-fg-1 truncate" title={p.path}>
+                            <span
+                              className="inline-flex items-center justify-center text-[9px] font-bold w-4 h-4 rounded text-fg-3"
+                              style={{ background: 'var(--gf-input-bg)' }}
+                            >
+                              {i + 1}
+                            </span>
+                            <span className="truncate">{p.path}</span>
+                          </span>
+                          <span className="font-mono text-[11px] text-fg-3 shrink-0" dir="ltr">
+                            {p.views.toLocaleString()}
+                          </span>
+                        </div>
+                        <div className="h-1 rounded-pill bg-bg-deeper overflow-hidden">
+                          <div
+                            className="h-full rounded-pill"
+                            style={{ width: `${pct}%`, background: '#a855f7' }}
+                          />
+                        </div>
+                      </li>
+                    )
+                  })}
                 </ul>
               )}
             </Panel>
 
-            <Panel title="Top countries (30d)">
-              {data.usersByCountry.length === 0 ? (
+            <Panel title="Top countries" subtitle="Active users, last 30 days" Icon={MapPin}>
+              {cleanCountries.length === 0 ? (
                 <EmptyRow />
               ) : (
-                <ul className="space-y-2">
-                  {data.usersByCountry.map((c) => (
-                    <li key={c.country} className="flex items-center justify-between gap-3">
-                      <span className="text-xs text-fg-1 truncate">{c.country}</span>
-                      <span className="font-mono text-[11px] text-fg-3 shrink-0" dir="ltr">
-                        {c.users.toLocaleString()}
-                      </span>
-                    </li>
-                  ))}
+                <ul className="space-y-2.5">
+                  {cleanCountries.map((c) => {
+                    const max = cleanCountries[0]?.users || 1
+                    const pct = Math.max(2, Math.round((c.users / max) * 100))
+                    return (
+                      <li key={c.country}>
+                        <div className="flex items-center justify-between gap-3 mb-1">
+                          <span className="inline-flex items-center gap-1.5 text-xs text-fg-1 truncate">
+                            <Globe className="w-3 h-3" strokeWidth={1.75} color="#06b6d4" />
+                            {c.country}
+                          </span>
+                          <span className="font-mono text-[11px] text-fg-3 shrink-0" dir="ltr">
+                            {c.users.toLocaleString()}
+                          </span>
+                        </div>
+                        <div className="h-1 rounded-pill bg-bg-deeper overflow-hidden">
+                          <div
+                            className="h-full rounded-pill"
+                            style={{ width: `${pct}%`, background: '#06b6d4' }}
+                          />
+                        </div>
+                      </li>
+                    )
+                  })}
                 </ul>
               )}
             </Panel>
 
-            <Panel title="Devices (30d)">
+            <Panel title="Devices" subtitle="Share of users, last 30 days" Icon={Monitor}>
               {data.usersByDevice.length === 0 ? (
                 <EmptyRow />
               ) : (
@@ -286,14 +354,14 @@ export function LiveTrafficSection() {
                       <li key={d.device}>
                         <div className="flex items-center justify-between gap-3 mb-1">
                           <span className="inline-flex items-center gap-1.5 text-xs text-fg-1">
-                            <Icon className="w-3 h-3" strokeWidth={1.75} color="var(--gf-fg-2)" />
+                            <Icon className="w-3 h-3" strokeWidth={1.75} color="#a3e635" />
                             <span className="capitalize">{d.device}</span>
                           </span>
                           <span className="font-mono text-[11px] text-fg-3" dir="ltr">
                             {d.users.toLocaleString()} · {pct}%
                           </span>
                         </div>
-                        <div className="h-1.5 rounded-pill bg-bg-deeper overflow-hidden">
+                        <div className="h-1 rounded-pill bg-bg-deeper overflow-hidden">
                           <div
                             className="h-full rounded-pill bg-lime-400"
                             style={{ width: `${pct}%` }}
@@ -327,44 +395,90 @@ function LiveKpi({
 }) {
   return (
     <article
-      className="rounded-xl border border-border bg-surface p-4 relative overflow-hidden"
+      className="rounded-2xl border p-4 relative overflow-hidden transition-transform hover:-translate-y-px"
       style={{
-        boxShadow: '0 1px 0 rgba(255,255,255,0.03) inset, 0 6px 18px rgba(0,0,0,0.18)',
+        background: live
+          ? `radial-gradient(circle at 100% 0%, ${tint}1c 0%, var(--gf-surface) 65%)`
+          : `linear-gradient(135deg, ${tint}0d 0%, var(--gf-surface) 60%)`,
+        borderColor: live ? `${tint}55` : 'var(--gf-border)',
+        boxShadow: live
+          ? `0 1px 0 rgba(255,255,255,0.04) inset, 0 10px 28px ${tint}22`
+          : '0 1px 0 rgba(255,255,255,0.04) inset, 0 8px 22px rgba(0,0,0,0.22)',
       }}
     >
-      <div className="flex items-center gap-2 mb-2">
+      <div className="flex items-center gap-2 mb-3">
         <div
-          className="w-7 h-7 rounded-md flex items-center justify-center"
-          style={{ background: `${tint}22` }}
+          className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
+          style={{ background: `${tint}1f`, boxShadow: `0 0 0 1px ${tint}33 inset` }}
         >
-          <Icon className="w-3.5 h-3.5" strokeWidth={2} color={tint} />
+          <Icon className="w-4 h-4" strokeWidth={1.75} color={tint} />
         </div>
-        <p className="text-[10px] uppercase tracking-eyebrow font-semibold text-fg-3">
+        <p className="text-[10px] uppercase tracking-eyebrow font-semibold text-fg-3 truncate">
           {label}
         </p>
         {live && (
           <span
             aria-hidden
-            className="ml-auto inline-flex items-center gap-1 text-[9px] uppercase tracking-eyebrow font-bold"
-            style={{ color: tint }}
+            className="ml-auto inline-flex items-center gap-1 text-[9px] uppercase tracking-eyebrow font-bold rounded-pill px-1.5 py-0.5"
+            style={{ color: tint, background: `${tint}1a` }}
           >
-            <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: tint }} />
+            <span
+              className="w-1.5 h-1.5 rounded-full animate-pulse"
+              style={{ background: tint }}
+            />
             Live
           </span>
         )}
       </div>
-      <p className="font-mono text-2xl font-bold text-fg-1" dir="ltr">
+      <p
+        className="font-display font-bold text-fg-1 tracking-tight"
+        style={{ fontSize: '28px', lineHeight: 1.05 }}
+        dir="ltr"
+      >
         {value.toLocaleString()}
       </p>
     </article>
   )
 }
 
-function Panel({ title, children }: { title: string; children: React.ReactNode }) {
+function Panel({
+  title,
+  subtitle,
+  Icon,
+  children,
+}: {
+  title: string
+  subtitle?: string
+  Icon?: LucideIcon
+  children: React.ReactNode
+}) {
   return (
-    <article className="rounded-xl border border-border bg-surface p-5">
-      <header className="mb-3">
-        <h3 className="text-sm font-semibold text-fg-1">{title}</h3>
+    <article
+      className="rounded-2xl border border-border p-5"
+      style={{
+        background: 'var(--gf-surface)',
+        boxShadow:
+          '0 1px 0 rgba(255,255,255,0.03) inset, 0 8px 22px rgba(0,0,0,0.22)',
+      }}
+    >
+      <header className="mb-4 flex items-start gap-2.5">
+        {Icon && (
+          <div
+            className="w-7 h-7 rounded-md flex items-center justify-center shrink-0"
+            style={{
+              background: 'rgba(132,217,61,0.12)',
+              boxShadow: '0 0 0 1px rgba(132,217,61,0.2) inset',
+            }}
+          >
+            <Icon className="w-3.5 h-3.5" strokeWidth={1.75} color="var(--gf-lime-400)" />
+          </div>
+        )}
+        <div className="min-w-0">
+          <h3 className="text-sm font-semibold text-fg-1">{title}</h3>
+          {subtitle && (
+            <p className="text-[11px] text-fg-3 mt-0.5">{subtitle}</p>
+          )}
+        </div>
       </header>
       {children}
     </article>
