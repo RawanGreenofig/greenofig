@@ -60,7 +60,7 @@ export function AboutSection() {
             width={480}
             height={640}
             priority
-            className="w-full max-h-[80vh] mx-auto rounded-[var(--radius-2xl)] object-cover object-top"
+            className="block w-auto h-auto max-h-[600px] max-w-full mx-auto rounded-[var(--radius-2xl)]"
           />
           {/* Identity row — name with verified-badge icon, role */}
           <div className="mt-6 space-y-1.5">
