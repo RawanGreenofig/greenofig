@@ -11,6 +11,7 @@ import { ipFromRequest, logAudit } from '@/lib/api/audit'
 import { getServiceSupabase } from '@/lib/supabase/service'
 import { getServerSupabase } from '@/lib/supabase/server'
 import type { UserRole, UserTier } from '@/lib/supabase/types'
+import { sendFcmToTokens } from '@/lib/fcm'
 
 /**
  * POST /api/notifications/send
@@ -122,6 +123,43 @@ async function dispatchPush(
   return { sent, failed, expired }
 }
 
+/**
+ * Fan a notification out to every FCM token registered to these
+ * user ids. Mirrors dispatchPush but for the native Android app.
+ * No-op when FCM credentials aren't configured, so the web-push
+ * pipeline keeps working unchanged.
+ */
+async function dispatchFcm(
+  userIds: string[],
+  payload: { title: string; body: string; url?: string },
+): Promise<{ sent: number; failed: number; expired: number }> {
+  const service = getServiceSupabase()
+  if (!service) return { sent: 0, failed: 0, expired: 0 }
+
+  const { data: tokens } = await service
+    .from('fcm_tokens')
+    .select('token')
+    .in('user_id', userIds)
+  const tokenList = ((tokens as { token: string }[] | null) ?? []).map((r) => r.token)
+  if (tokenList.length === 0) return { sent: 0, failed: 0, expired: 0 }
+
+  const result = await sendFcmToTokens(tokenList, {
+    title: payload.title,
+    body: payload.body,
+    url: payload.url,
+  })
+
+  if (result.expiredTokens.length > 0) {
+    await service.from('fcm_tokens').delete().in('token', result.expiredTokens)
+  }
+
+  return {
+    sent: result.sent,
+    failed: result.failed,
+    expired: result.expiredTokens.length,
+  }
+}
+
 async function handleSend(
   body: Body,
   audit: {
@@ -180,11 +218,21 @@ async function handleSend(
     else inserted += slice.length
   }
 
-  const pushResult = await dispatchPush(targets, {
-    title: body.title,
-    body: body.body,
-    url: body.url,
-  })
+  // Fan out across both channels in parallel. Web-push hits the
+  // existing push_subscriptions table; FCM hits fcm_tokens. A user
+  // with both a browser AND the Android app will get both deliveries.
+  const [pushResult, fcmResult] = await Promise.all([
+    dispatchPush(targets, {
+      title: body.title,
+      body: body.body,
+      url: body.url,
+    }),
+    dispatchFcm(targets, {
+      title: body.title,
+      body: body.body,
+      url: body.url,
+    }),
+  ])
 
   if (audit.actorId) {
     await logAudit({
@@ -203,6 +251,8 @@ async function handleSend(
         inserted,
         pushSent: pushResult.sent,
         pushFailed: pushResult.failed,
+        fcmSent: fcmResult.sent,
+        fcmFailed: fcmResult.failed,
       },
       ip: audit.ip,
     })
@@ -212,6 +262,8 @@ async function handleSend(
     notifications: inserted,
     pushSent: pushResult.sent,
     pushFailed: pushResult.failed,
+    fcmSent: fcmResult.sent,
+    fcmFailed: fcmResult.failed,
     errors,
   })
 }
