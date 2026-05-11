@@ -57,9 +57,15 @@ const notoArabic = Noto_Sans_Arabic({
 })
 
 export const metadata: Metadata = {
+  // metadataBase makes every relative URL inside this Metadata
+  // (canonical, openGraph.url, openGraph.images, etc) resolve to
+  // the production origin. Without it Next emits "vercel.app"
+  // URLs for previews which leak into Google's index.
+  metadataBase: new URL('https://greenofig.com'),
   title: 'Greenofig | Personalized Nutrition Plans — Coach Rawan Othman',
   description:
     'Get a personalized nutrition plan from Coach Rawan Othman, certified clinical nutritionist. Science-backed meal plans, AI food scanning, and one-on-one consultations designed specifically for your body and goals.',
+  applicationName: 'Greenofig',
   keywords: [
     'personalized nutrition plan',
     'nutritionist consultation',
@@ -74,6 +80,56 @@ export const metadata: Metadata = {
     'online nutritionist',
     'Greenofig',
   ],
+  // Tell crawlers this site is open for business. We use the explicit
+  // index/follow shape instead of relying on defaults so the directive
+  // shows up in page source where Google's URL Inspector can confirm.
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+      'max-video-preview': -1,
+    },
+  },
+  // Canonical homepage + hreflang alternates for the en/ar split.
+  // Without these Google sometimes treats /ar and / as duplicates and
+  // collapses both into one search result with a coin-flip on which
+  // language wins.
+  alternates: {
+    canonical: 'https://greenofig.com/',
+    languages: {
+      en: 'https://greenofig.com/',
+      ar: 'https://greenofig.com/ar',
+      'x-default': 'https://greenofig.com/',
+    },
+  },
+  openGraph: {
+    type: 'website',
+    siteName: 'Greenofig',
+    url: 'https://greenofig.com/',
+    title: 'Greenofig | Personalized Nutrition Plans — Coach Rawan Othman',
+    description:
+      'Science-backed nutrition coaching from Coach Rawan Othman, certified clinical nutritionist. Personalized meal plans, AI food scanning, 1-on-1 consultations.',
+    locale: 'en_US',
+    images: [
+      {
+        url: '/images/dr-rawan-othman.jpg',
+        width: 1200,
+        height: 630,
+        alt: 'Coach Rawan Othman — Certified Clinical Nutritionist',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Greenofig | Personalized Nutrition Plans — Coach Rawan Othman',
+    description:
+      'Science-backed nutrition coaching from Coach Rawan Othman. Personalized meal plans, AI food scanning, 1-on-1 consultations.',
+    images: ['/images/dr-rawan-othman.jpg'],
+  },
   // Next 13+ auto-detects src/app/favicon.ico, but be explicit so any
   // CDN / browser doesn't fall back to a stale cached default. The
   // multi-size set in /public/logo/ (16, 32, apple, android 192/512)
@@ -123,13 +179,44 @@ interface LayoutProps {
 const GA_MEASUREMENT_ID =
   process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID ?? 'G-SYXCWBYXPB'
 
-const NUTRITIONIST_JSON_LD = {
+// Three structured-data entities in one @graph so Google sees them
+// as related, not three independent things — boosts the chance of a
+// brand knowledge panel for "greenofig".
+const SITE_JSON_LD = {
   '@context': 'https://schema.org',
-  '@type': 'Person',
-  name: 'Coach Rawan Othman',
-  jobTitle: 'Certified Clinical Nutritionist',
-  worksFor: { '@type': 'Organization', name: 'Greenofig' },
-  url: 'https://greenofig.com',
+  '@graph': [
+    {
+      '@type': 'Organization',
+      '@id': 'https://greenofig.com/#organization',
+      name: 'Greenofig',
+      url: 'https://greenofig.com',
+      logo: 'https://greenofig.com/logo.png',
+      sameAs: [
+        'https://instagram.com/greenofig',
+        'https://twitter.com/greenofig',
+        'https://linkedin.com/company/greenofig',
+      ],
+    },
+    {
+      '@type': 'WebSite',
+      '@id': 'https://greenofig.com/#website',
+      url: 'https://greenofig.com',
+      name: 'Greenofig',
+      description:
+        'Science-backed personalized nutrition coaching from Coach Rawan Othman.',
+      publisher: { '@id': 'https://greenofig.com/#organization' },
+      inLanguage: ['en', 'ar'],
+    },
+    {
+      '@type': 'Person',
+      '@id': 'https://greenofig.com/#coach-rawan',
+      name: 'Coach Rawan Othman',
+      jobTitle: 'Certified Clinical Nutritionist',
+      worksFor: { '@id': 'https://greenofig.com/#organization' },
+      url: 'https://greenofig.com',
+      image: 'https://greenofig.com/images/dr-rawan-othman.jpg',
+    },
+  ],
 }
 
 export default async function LocaleLayout({ children, params }: LayoutProps) {
@@ -185,7 +272,7 @@ export default async function LocaleLayout({ children, params }: LayoutProps) {
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
-            __html: JSON.stringify(NUTRITIONIST_JSON_LD),
+            __html: JSON.stringify(SITE_JSON_LD),
           }}
         />
       </body>
