@@ -6,45 +6,44 @@ import { isInsideCapacitor } from '@/lib/is-capacitor'
 import { getBrowserSupabase } from '@/lib/supabase/client'
 
 /**
- * Inside the Capacitor Android WebView, the marketing homepage is
- * skipped — there's no reason to ship a "Download the app" page to
- * someone who's already inside the app. This gate fires on mount:
+ * Inside the Capacitor Android WebView, signed-in users skip the
+ * marketing homepage and land on /dashboard. Signed-out users see
+ * the marketing page like everyone else so they can browse, read
+ * about features, and sign up. Behaviour:
  *
  *   - Not in Capacitor          → render nothing, marketing page stays.
- *   - In Capacitor + signed in  → router.replace('/dashboard').
- *   - In Capacitor + signed out → router.replace('/sign-in').
+ *   - In Capacitor + signed in  → splash + router.replace('/dashboard').
+ *   - In Capacitor + signed out → render nothing, marketing page stays.
  *
- * While the session check is in flight (which is one HTTP round-trip
- * to Supabase), we cover the marketing content with a full-screen
- * splash so users never see the homepage flash before the redirect.
- *
- * NOTE: the spec said redirect to /login, but the live route is
- * /sign-in — using that. If a /login alias gets added later, swap
- * the path here.
+ * The splash overlay is ONLY mounted once we've confirmed a session
+ * exists. While the auth check is in flight the marketing page
+ * renders normally — Supabase reads the session from local storage
+ * synchronously after init, so the gap is essentially imperceptible
+ * for signed-out users.
  */
 export function CapacitorHomeGate() {
   const router = useRouter()
-  const [active, setActive] = useState(false)
+  const [redirecting, setRedirecting] = useState(false)
 
   useEffect(() => {
     if (!isInsideCapacitor()) return
-    setActive(true)
-    let cancelled = false
     const supabase = getBrowserSupabase()
-    if (!supabase) {
-      router.replace('/sign-in')
-      return
-    }
+    if (!supabase) return // no Supabase client → treat as signed-out
+    let cancelled = false
     supabase.auth.getSession().then(({ data }) => {
       if (cancelled) return
-      router.replace(data.session ? '/dashboard' : '/sign-in')
+      if (data.session) {
+        setRedirecting(true)
+        router.replace('/dashboard')
+      }
+      // No session → leave the marketing homepage alone.
     })
     return () => {
       cancelled = true
     }
   }, [router])
 
-  if (!active) return null
+  if (!redirecting) return null
   return (
     <div
       aria-hidden
