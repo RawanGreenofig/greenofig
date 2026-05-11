@@ -38,6 +38,9 @@ interface Msg {
   /** Minutes ago */
   ago: number
   read?: boolean
+  /** True when the Greenofig Assistant auto-replied on the coach's
+   *  behalf — coach should review and follow up. */
+  isAi?: boolean
 }
 
 interface ThreadRow {
@@ -267,10 +270,11 @@ export default function NutritionistMessagesPage() {
         read_at: string | null
         created_at: string
         id: string
+        is_ai: boolean | null
       }
       const { data: msgs } = await supabase
         .from('messages')
-        .select('id, conversation_id, sender_id, content, read_at, created_at')
+        .select('id, conversation_id, sender_id, content, read_at, created_at, is_ai')
         .in('conversation_id', convRows.map((c) => c.id))
         .order('created_at', { ascending: true })
       const msgRows = (msgs as MsgRow[] | null) ?? []
@@ -304,6 +308,7 @@ export default function NutritionistMessagesPage() {
             body: m.content,
             ago: Math.max(0, Math.floor((now - new Date(m.created_at).getTime()) / 60_000)),
             read: !!m.read_at,
+            isAi: !!m.is_ai,
           })),
         }
       })
@@ -340,10 +345,12 @@ export default function NutritionistMessagesPage() {
             content: string
             read_at: string | null
             created_at: string
+            is_ai: boolean | null
           }
-          // Ignore our own messages (already added optimistically) and
-          // any insert for a conversation we don't own.
-          if (r.sender_id === userId) return
+          // Ignore the coach's own messages (already added optimistically).
+          // Don't ignore AI replies even though they share sender_id with
+          // the coach — those need to surface in the thread.
+          if (r.sender_id === userId && !r.is_ai) return
           const now = Date.now()
           setThreads((curr) => {
             const idx = curr.findIndex((t) => t.id === r.conversation_id)
@@ -354,18 +361,26 @@ export default function NutritionistMessagesPage() {
               ...existing,
               preview: r.content.slice(0, 100),
               lastAgoMin: 0,
-              unread: existing.unread + 1,
+              // AI replies don't count as unread for the coach — they
+              // initiated nothing, just informational.
+              unread: r.is_ai ? existing.unread : existing.unread + 1,
               messages: [
                 ...existing.messages,
                 {
                   id: r.id,
-                  fromMe: false,
+                  // From the coach's perspective the AI message looks
+                  // like it came from "them" because it was posted with
+                  // their sender_id. Keeping fromMe=true keeps the
+                  // bubble alignment intuitive; the isAi flag carries
+                  // the badge.
+                  fromMe: r.sender_id === userId,
                   body: r.content,
                   ago: Math.max(
                     0,
                     Math.floor((now - new Date(r.created_at).getTime()) / 60_000),
                   ),
                   read: !!r.read_at,
+                  isAi: !!r.is_ai,
                 },
               ],
             }
@@ -996,11 +1011,23 @@ function Bubble({
       {!msg.fromMe && <ClientAvatar initials={clientInitials} small />}
       <div
         className={`max-w-[70%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed shadow-sm ${
-          msg.fromMe
+          msg.isAi
+            ? 'bg-lime-400/10 text-fg-1 border border-lime-400/40'
+            : msg.fromMe
             ? 'bg-gradient-to-b from-lime-400 to-lime-600 text-bg rounded-br-md'
             : 'bg-surface-raised text-fg-1 border border-border rounded-bl-md'
         }`}
       >
+        {msg.isAi && (
+          <p
+            className="inline-flex items-center gap-1 text-[10px] uppercase tracking-eyebrow font-bold mb-1.5 rounded-pill px-1.5 py-0.5"
+            style={{ color: '#a3e635', background: 'rgba(132,217,61,0.16)' }}
+            dir="ltr"
+          >
+            <span className="w-1.5 h-1.5 rounded-full bg-lime-400" aria-hidden />
+            AI replied — review and follow up
+          </p>
+        )}
         <p className="whitespace-pre-wrap">{msg.body}</p>
         <div
           className={`mt-1 flex items-center gap-1 text-[11px] font-mono ${

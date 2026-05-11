@@ -427,6 +427,9 @@ interface Msg {
   body: string
   ago: number
   read?: boolean
+  /** True when this is an instant AI-generated reply from the
+   *  Greenofig Assistant. Coach Rawan still follows up personally. */
+  isAi?: boolean
 }
 
 const SEED: Msg[] = [
@@ -498,7 +501,7 @@ function Thread() {
 
       const { data } = await supabase
         .from('messages')
-        .select('id, sender_id, content, read_at, created_at')
+        .select('id, sender_id, content, read_at, created_at, is_ai')
         .eq('conversation_id', id)
         .order('created_at', { ascending: true })
         .limit(200)
@@ -510,6 +513,7 @@ function Thread() {
         content: string
         read_at: string | null
         created_at: string
+        is_ai: boolean | null
       }
       const now = Date.now()
       const next = ((data as Row[] | null) ?? []).map((r) => ({
@@ -521,6 +525,7 @@ function Thread() {
           Math.floor((now - new Date(r.created_at).getTime()) / 60_000),
         ),
         read: !!r.read_at,
+        isAi: !!r.is_ai,
       }))
       if (next.length > 0) setMessages(next)
 
@@ -562,6 +567,7 @@ function Thread() {
             content: string
             read_at: string | null
             created_at: string
+            is_ai: boolean | null
           }
           // Skip our own messages (already added optimistically).
           if (r.sender_id === userId) return
@@ -579,6 +585,7 @@ function Thread() {
                   Math.floor((now - new Date(r.created_at).getTime()) / 60_000),
                 ),
                 read: !!r.read_at,
+                isAi: !!r.is_ai,
               },
             ]
           })
@@ -659,6 +666,16 @@ function Thread() {
           setMessages((curr) =>
             curr.map((m) => (m.id === localId ? { ...m, id: realId } : m)),
           )
+          // Kick off the AI auto-reply. Fire-and-forget — failure
+          // doesn't block the user's send flow. The reply lands via
+          // the postgres-changes realtime subscription below.
+          void fetch('/api/messages/ai-reply', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ conversationId: convId }),
+          }).catch(() => {
+            /* silent — coach will follow up regardless */
+          })
         } else {
           if (error) console.error('[messages/insert]', error)
           toast.error('Could not deliver message — please retry')
@@ -769,12 +786,28 @@ function Bubble({ msg }: { msg: Msg }) {
                 background: 'hsl(var(--primary))',
                 color: 'hsl(var(--primary-foreground))',
               }
+            : msg.isAi
+            ? {
+                background: 'rgba(132,217,61,0.07)',
+                color: 'hsl(var(--foreground))',
+                border: '1px solid rgba(132,217,61,0.35)',
+              }
             : {
                 background: 'hsl(var(--muted))',
                 color: 'hsl(var(--foreground))',
               }
         }
       >
+        {msg.isAi && (
+          <p
+            className="inline-flex items-center gap-1 text-[10px] uppercase tracking-eyebrow font-bold mb-1.5 rounded-pill px-1.5 py-0.5"
+            style={{ color: '#a3e635', background: 'rgba(132,217,61,0.16)' }}
+            dir="ltr"
+          >
+            <span className="w-1.5 h-1.5 rounded-full bg-lime-400" aria-hidden />
+            AI · Greenofig Assistant
+          </p>
+        )}
         <p className="text-sm whitespace-pre-wrap break-words">{msg.body}</p>
         <div
           className="flex items-center justify-end gap-1 mt-1 text-xs"

@@ -23,6 +23,7 @@ interface MsgRow {
   content: string
   read_at: string | null
   created_at: string
+  is_ai?: boolean | null
 }
 
 /**
@@ -69,7 +70,7 @@ export default function TeamMessagesPage() {
       if (!supabase) return
       const { data } = await supabase
         .from('messages')
-        .select('id, conversation_id, sender_id, content, read_at, created_at')
+        .select('id, conversation_id, sender_id, content, read_at, created_at, is_ai')
         .eq('conversation_id', activeId)
         .order('created_at', { ascending: true })
         .limit(500)
@@ -186,7 +187,10 @@ export default function TeamMessagesPage() {
                   <p className="text-sm text-fg-3 text-center mt-6">No messages yet.</p>
                 ) : msgs.map((m) => {
                   const fromClient = m.sender_id === active.user_id
-                  const senderName = profiles.get(m.sender_id)?.full_name ?? 'Unknown'
+                  const isAi = !!m.is_ai
+                  const senderName = isAi
+                    ? 'Greenofig Assistant (AI)'
+                    : profiles.get(m.sender_id)?.full_name ?? 'Unknown'
                   return (
                     <div key={m.id} className={fromClient ? 'flex justify-start' : 'flex justify-end'}>
                       <div
