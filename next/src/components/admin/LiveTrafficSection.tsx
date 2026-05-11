@@ -397,32 +397,19 @@ function LiveKpi({
 }) {
   return (
     <article
-      className="rounded-2xl border p-4 relative overflow-hidden transition-transform hover:-translate-y-px"
-      style={{
-        background: live
-          ? `radial-gradient(circle at 100% 0%, ${tint}1c 0%, var(--gf-surface) 65%)`
-          : `linear-gradient(135deg, ${tint}0d 0%, var(--gf-surface) 60%)`,
-        borderColor: live ? `${tint}55` : 'var(--gf-border)',
-        boxShadow: live
-          ? `0 1px 0 rgba(255,255,255,0.04) inset, 0 10px 28px ${tint}22`
-          : '0 1px 0 rgba(255,255,255,0.04) inset, 0 8px 22px rgba(0,0,0,0.22)',
-      }}
+      className="rounded-xl border border-border bg-surface p-4"
+      style={{ boxShadow: `inset 4px 0 0 ${tint}` }}
     >
-      <div className="flex items-center gap-2 mb-3">
-        <div
-          className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
-          style={{ background: `${tint}1f`, boxShadow: `0 0 0 1px ${tint}33 inset` }}
-        >
-          <Icon className="w-4 h-4" strokeWidth={1.75} color={tint} />
-        </div>
-        <p className="text-[10px] uppercase tracking-eyebrow font-semibold text-fg-3 truncate">
+      <div className="flex items-center gap-2">
+        <Icon className="w-4 h-4 flex-shrink-0" strokeWidth={1.75} color={tint} />
+        <p className="text-[11px] uppercase tracking-eyebrow text-fg-3 font-semibold truncate">
           {label}
         </p>
         {live && (
           <span
             aria-hidden
-            className="ml-auto inline-flex items-center gap-1 text-[9px] uppercase tracking-eyebrow font-bold rounded-pill px-1.5 py-0.5"
-            style={{ color: tint, background: `${tint}1a` }}
+            className="ml-auto inline-flex items-center gap-1 text-[9px] uppercase tracking-eyebrow font-bold"
+            style={{ color: tint }}
           >
             <span
               className="w-1.5 h-1.5 rounded-full animate-pulse"
@@ -432,13 +419,15 @@ function LiveKpi({
           </span>
         )}
       </div>
-      <p
-        className="font-display font-bold text-fg-1 tracking-tight"
-        style={{ fontSize: '28px', lineHeight: 1.05 }}
-        dir="ltr"
-      >
-        {value.toLocaleString()}
-      </p>
+      <div className="mt-2">
+        <p
+          className="font-display text-2xl font-bold"
+          style={{ color: tint }}
+          dir="ltr"
+        >
+          {value.toLocaleString()}
+        </p>
+      </div>
     </article>
   )
 }
