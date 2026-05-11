@@ -1,3 +1,5 @@
+'use client'
+
 import { useLocale, useTranslations } from 'next-intl'
 import { Apple, Download, Share2, Plus, AlertTriangle, Smartphone } from 'lucide-react'
 
@@ -16,8 +18,12 @@ interface DownloadSectionProps {
   withSectionChrome?: boolean
 }
 
+// /releases/latest/download/<asset> always resolves to the newest
+// published release, so this only needs to change when the asset
+// FILENAME itself changes (which happens whenever next/package.json
+// "version" is bumped, since the CI build names the APK after it).
 const DEFAULT_APK =
-  'https://github.com/RawanGreenofig/greenofig/releases/latest/download/greenofig-0.0.1.apk'
+  'https://github.com/RawanGreenofig/greenofig/releases/latest/download/greenofig-0.0.2.apk'
 
 /**
  * Reusable download section. Renders the headline, version badge,
