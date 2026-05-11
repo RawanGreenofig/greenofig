@@ -1,27 +1,31 @@
 import type { SVGProps } from 'react'
 
 /**
- * Official X (formerly Twitter) brand mark. Lucide-react still ships
- * only the legacy bird, so we render the new wordmark glyph inline.
- * Mirrors lucide's API so it's swap-compatible at call sites: takes
- * `className`, `strokeWidth` (ignored — this is a filled glyph, not
- * stroked), and any other SVG props. Default size is 1em so it
- * follows surrounding font-size like lucide icons do.
+ * X (formerly Twitter) social icon. Drawn from scratch as two
+ * crossing diagonal strokes — basic geometry, no copied artwork,
+ * licensable as your own. Lucide-react still ships only the legacy
+ * Twitter bird, so this fills the gap with a lucide-style API
+ * (className + strokeWidth).
  */
 export function XLogo({
   className,
-  strokeWidth: _strokeWidth, // unused; kept for API parity with lucide icons
+  strokeWidth = 2,
   ...rest
 }: SVGProps<SVGSVGElement> & { strokeWidth?: number | string }) {
   return (
     <svg
       viewBox="0 0 24 24"
-      fill="currentColor"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={strokeWidth}
+      strokeLinecap="round"
+      strokeLinejoin="round"
       aria-hidden="true"
       className={className}
       {...rest}
     >
-      <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+      <path d="M4 4 L20 20" />
+      <path d="M20 4 L4 20" />
     </svg>
   )
 }
