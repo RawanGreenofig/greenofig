@@ -3,47 +3,30 @@
 import { useState } from 'react'
 import { useTranslations } from 'next-intl'
 import {
-  Apple,
-  Download,
-  Share2,
-  Plus,
   AlertTriangle,
-  Smartphone,
-  ShieldAlert,
+  Apple,
   ChevronDown,
+  Download,
+  Plus,
+  Share2,
+  ShieldAlert,
+  Smartphone,
 } from 'lucide-react'
 
 interface DownloadSectionProps {
-  /** APK download URL — defaults to the GitHub release link but
-   *  overridable so the homepage and /download page can point at
-   *  the same artifact even if the path moves. */
   apkUrl?: string
-  /** App version label shown in the badge. Source of truth lives
-   *  in next/package.json, but the section keeps a fallback. */
   version?: string
-  /** When true (default), wraps the section in a <section> with
-   *  the standard padded marketing chrome. Set to false when
-   *  embedding inside the dedicated page that already has its
-   *  own container. */
+  /** When true (default), wraps in <section> with marketing chrome. */
   withSectionChrome?: boolean
 }
 
-// Served from Vercel's static asset folder (next/public/downloads/).
-// The GitHub Action overwrites this file on every release so the
-// stable URL always points at the latest signed APK without us
-// needing to update the link here.
 const DEFAULT_APK = 'https://greenofig.com/downloads/greenofig-0.0.1.apk'
 
 /**
- * Reusable download section. Renders the headline, version badge,
- * Android download card, and iPhone "Add to Home Screen" walkthrough.
- * Used on:
- *
- *   - the homepage at /  (just below the store section)
- *   - the dedicated page at /download
- *
- * Server-rendered — no client state. Translations come from the
- * `download` and `nav` namespaces in messages/{en,ar}.json.
+ * Reusable download section. Typography-led, single-column layout —
+ * Android is the primary CTA (the actual native app) and iOS is a
+ * secondary "Add to Home Screen" walkthrough below. Used on /download
+ * and as a section on the marketing homepage.
  */
 export function DownloadSection({
   apkUrl = DEFAULT_APK,
@@ -53,14 +36,24 @@ export function DownloadSection({
   const t = useTranslations('download')
 
   const content = (
-    <div className="max-w-screen-xl mx-auto">
-      <header className="text-center mb-10 md:mb-12 max-w-2xl mx-auto">
+    <div className="max-w-2xl mx-auto">
+      {/* Header */}
+      <header className="text-center mb-10 md:mb-12">
         <p className="inline-flex items-center gap-1.5 text-xs uppercase tracking-eyebrow font-semibold text-lime-400">
-          <Smartphone className="w-3.5 h-3.5" strokeWidth={1.75} />
           {t('eyebrow')}
+          <span
+            className="inline-flex items-center gap-1 font-mono text-[10px] rounded-pill px-2 py-0.5"
+            style={{
+              background: 'rgba(132,217,61,0.12)',
+              border: '1px solid rgba(132,217,61,0.3)',
+            }}
+            dir="ltr"
+          >
+            v{version}
+          </span>
         </p>
         <h2
-          className="mt-3 font-display font-bold text-fg-1 tracking-tight"
+          className="mt-4 font-display font-bold text-fg-1 tracking-tight"
           style={{
             fontSize: 'clamp(32px, 5vw, 52px)',
             lineHeight: 1.05,
@@ -70,129 +63,79 @@ export function DownloadSection({
           {t('title')}
         </h2>
         <p className="mt-3 text-base md:text-lg text-fg-2">{t('subtitle')}</p>
-        <p
-          className="mt-5 inline-flex items-center gap-1.5 font-mono text-[11px] uppercase tracking-eyebrow font-bold rounded-pill px-3 py-1.5"
-          style={{
-            color: '#a3e635',
-            background: 'rgba(132,217,61,0.12)',
-            border: '1px solid rgba(132,217,61,0.3)',
-          }}
-          dir="ltr"
-        >
-          {t('versionLabel')} v{version}
-        </p>
       </header>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-5 md:gap-6 max-w-4xl mx-auto">
-        {/* Android card */}
-        <article
-          className="rounded-2xl border p-6 md:p-7 flex flex-col"
+      {/* Android — primary path */}
+      <div className="mb-12">
+        <SecurityWarning />
+
+        <a
+          href={apkUrl}
+          download
+          className="group block w-full rounded-2xl text-center transition-all hover:-translate-y-px"
           style={{
-            background:
-              'linear-gradient(135deg, rgba(132,217,61,0.06) 0%, var(--gf-surface) 60%)',
-            borderColor: 'rgba(132,217,61,0.35)',
+            background: 'linear-gradient(180deg, var(--gf-lime-400) 0%, var(--gf-lime-500) 100%)',
             boxShadow:
-              '0 1px 0 rgba(255,255,255,0.04) inset, 0 18px 40px rgba(0,0,0,0.28)',
+              '0 1px 0 rgba(255,255,255,0.4) inset, 0 14px 36px rgba(132,217,61,0.32)',
+            border: '1px solid var(--gf-lime-600)',
           }}
         >
-          <header className="flex items-center gap-3 mb-4">
-            <div
-              className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0"
-              style={{
-                background: 'rgba(132,217,61,0.16)',
-                boxShadow: '0 0 0 1px rgba(132,217,61,0.3) inset',
-              }}
-            >
-              <AndroidGlyph className="w-5 h-5 text-lime-400" />
-            </div>
-            <h3 className="font-display text-xl font-bold text-fg-1 tracking-tight">
-              {t('androidTitle')}
-            </h3>
-          </header>
+          <span className="block px-6 py-5">
+            <span className="inline-flex items-center gap-2.5 text-bg font-bold text-base md:text-lg">
+              <Download className="w-5 h-5" strokeWidth={2.25} />
+              {t('androidCta')}
+            </span>
+            <span className="block mt-1 text-bg/70 text-xs font-mono" dir="ltr">
+              .apk · ~3.6 MB
+            </span>
+          </span>
+        </a>
 
-          <SecurityWarning />
+        <p className="mt-4 text-center text-xs text-fg-3">{t('androidNote')}</p>
 
-          <a
-            href={apkUrl}
-            download
-            className="inline-flex items-center justify-center gap-2 rounded-pill bg-gradient-to-b from-lime-400 to-lime-600 text-bg font-semibold h-12 px-6 text-sm border border-lime-600/60 transition-all hover:brightness-110"
-            style={{ boxShadow: '0 8px 28px rgba(132,217,61,0.32)' }}
-          >
-            <Download className="w-4 h-4" strokeWidth={2} />
-            {t('androidCta')}
-          </a>
+        <p className="mt-3 inline-flex w-full items-start justify-center gap-2 text-center text-[11px] text-fg-3 leading-relaxed">
+          <AlertTriangle className="w-3.5 h-3.5 shrink-0 mt-0.5" color="#f59e0b" strokeWidth={1.75} />
+          <span>{t('androidWarning')}</span>
+        </p>
+      </div>
 
-          <p className="mt-4 text-xs text-fg-3">{t('androidNote')}</p>
+      {/* Divider with iOS label */}
+      <div className="relative flex items-center justify-center mb-8" aria-hidden>
+        <span className="h-px flex-1 bg-border" />
+        <span className="px-4 inline-flex items-center gap-1.5 text-[11px] uppercase tracking-eyebrow font-semibold text-fg-3">
+          <Apple className="w-3.5 h-3.5" strokeWidth={1.75} />
+          {t('iosTitle')}
+        </span>
+        <span className="h-px flex-1 bg-border" />
+      </div>
 
-          <div
-            className="mt-4 rounded-lg p-3 flex items-start gap-2.5"
-            style={{
-              background: 'rgba(245,158,11,0.08)',
-              border: '1px solid rgba(245,158,11,0.3)',
-            }}
-          >
-            <AlertTriangle
-              className="w-4 h-4 mt-0.5 shrink-0"
-              strokeWidth={1.75}
-              color="#f59e0b"
-            />
-            <p className="text-xs text-amber leading-relaxed">
-              {t('androidWarning')}
-            </p>
-          </div>
-        </article>
-
-        {/* iOS card */}
-        <article
-          className="rounded-2xl border border-border p-6 md:p-7 flex flex-col"
-          style={{
-            background: 'var(--gf-surface)',
-            boxShadow:
-              '0 1px 0 rgba(255,255,255,0.04) inset, 0 18px 40px rgba(0,0,0,0.22)',
-          }}
-        >
-          <header className="flex items-center gap-3 mb-4">
-            <div
-              className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0"
-              style={{
-                background: 'rgba(255,255,255,0.04)',
-                boxShadow: '0 0 0 1px rgba(255,255,255,0.08) inset',
-              }}
-            >
-              <Apple className="w-5 h-5 text-fg-1" strokeWidth={1.75} />
-            </div>
-            <h3 className="font-display text-xl font-bold text-fg-1 tracking-tight">
-              {t('iosTitle')}
-            </h3>
-          </header>
-
-          <p className="text-sm text-fg-2 mb-4">{t('iosIntro')}</p>
-
-          <ol className="space-y-3 flex-1">
-            <Step n={1} text={t('iosStep1')} />
-            <Step n={2} text={t('iosStep2')} icon={Share2} />
-            <Step n={3} text={t('iosStep3')} icon={Plus} />
-            <Step n={4} text={t('iosStep4')} />
-          </ol>
-
-          <p className="mt-4 text-[11px] text-fg-3">{t('iosFootnote')}</p>
-        </article>
+      {/* iOS — secondary path */}
+      <div>
+        <p className="text-sm md:text-base text-fg-2 text-center mb-6">
+          {t('iosIntro')}
+        </p>
+        <ol className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <IosStep n={1} text={t('iosStep1')} />
+          <IosStep n={2} text={t('iosStep2')} icon={Share2} />
+          <IosStep n={3} text={t('iosStep3')} icon={Plus} />
+          <IosStep n={4} text={t('iosStep4')} />
+        </ol>
+        <p className="mt-5 text-center text-[11px] text-fg-3">
+          {t('iosFootnote')}
+        </p>
       </div>
     </div>
   )
 
   if (!withSectionChrome) return content
   return (
-    <section
-      id="download"
-      className="relative z-10 w-full px-6 py-16 lg:py-24"
-    >
+    <section id="download" className="relative z-10 w-full px-6 py-16 lg:py-24">
       {content}
     </section>
   )
 }
 
-function Step({
+function IosStep({
   n,
   text,
   icon: Icon,
@@ -202,27 +145,32 @@ function Step({
   icon?: typeof Share2
 }) {
   return (
-    <li className="flex items-start gap-3">
+    <li
+      className="flex items-center gap-3 rounded-xl px-4 py-3.5"
+      style={{
+        background: 'var(--gf-surface)',
+        border: '1px solid var(--gf-border)',
+      }}
+    >
       <span
-        className="shrink-0 w-7 h-7 rounded-full inline-flex items-center justify-center text-[11px] font-bold font-mono"
+        className="shrink-0 w-7 h-7 rounded-full inline-flex items-center justify-center text-xs font-bold font-mono text-lime-400"
         style={{
-          background: 'rgba(132,217,61,0.12)',
-          color: '#a3e635',
+          background: 'rgba(132,217,61,0.1)',
           border: '1px solid rgba(132,217,61,0.3)',
         }}
         dir="ltr"
       >
         {n}
       </span>
-      <p className="text-sm text-fg-1 leading-relaxed inline-flex items-center gap-1.5 flex-wrap">
+      <span className="flex-1 text-sm text-fg-1 inline-flex items-center gap-1.5 flex-wrap">
         {text}
         {Icon && (
           <Icon
-            className="w-3.5 h-3.5 text-fg-3 shrink-0"
+            className="w-4 h-4 text-lime-400 shrink-0"
             strokeWidth={1.75}
           />
         )}
-      </p>
+      </span>
     </li>
   )
 }
@@ -230,11 +178,9 @@ function Step({
 type SecurityTab = 'samsung' | 'regular'
 
 /**
- * Collapsible "Getting a security warning?" panel that sits above
- * the Android download button. Two tabs: Samsung (Auto Blocker
- * walkthrough) and Regular Android (Install unknown apps grant
- * for Chrome). Closed by default — the section is opt-in so users
- * who don't hit the warning aren't distracted.
+ * Collapsible "Getting a security warning?" panel above the Android
+ * download button. Two tabs (Samsung / Regular Android), each with
+ * the full bypass walkthrough. Closed by default.
  */
 function SecurityWarning() {
   const t = useTranslations('download')
@@ -260,24 +206,24 @@ function SecurityWarning() {
   const steps = tab === 'samsung' ? samsungSteps : regularSteps
 
   return (
-    <div className="mb-4">
+    <div className="mb-5">
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
         aria-controls="security-warning-body"
-        className="w-full flex items-center justify-between gap-3 rounded-lg px-3.5 py-2.5 text-left transition-colors hover:border-amber/60"
+        className="w-full flex items-center justify-between gap-3 rounded-lg px-3.5 py-2.5 text-left transition-colors"
         style={{
-          background: 'rgba(245,158,11,0.06)',
-          border: '1px solid rgba(245,158,11,0.3)',
+          background: 'transparent',
+          border: '1px solid var(--gf-border)',
         }}
       >
-        <span className="inline-flex items-center gap-2 text-xs font-semibold text-amber">
-          <ShieldAlert className="w-4 h-4 shrink-0" strokeWidth={1.75} />
+        <span className="inline-flex items-center gap-2 text-xs font-semibold text-fg-2">
+          <ShieldAlert className="w-3.5 h-3.5 text-amber" strokeWidth={1.75} />
           {t('securityToggle')}
         </span>
         <ChevronDown
-          className={`w-4 h-4 text-amber transition-transform shrink-0 ${open ? 'rotate-180' : ''}`}
+          className={`w-4 h-4 text-fg-3 transition-transform shrink-0 ${open ? 'rotate-180' : ''}`}
           strokeWidth={2}
         />
       </button>
@@ -287,13 +233,12 @@ function SecurityWarning() {
           id="security-warning-body"
           className="mt-2 rounded-lg p-4 space-y-3"
           style={{
-            background: 'rgba(245,158,11,0.04)',
-            border: '1px solid rgba(245,158,11,0.2)',
+            background: 'var(--gf-surface)',
+            border: '1px solid var(--gf-border)',
           }}
         >
-          <p className="text-xs text-fg-2">{t('securityIntro')}</p>
+          <p className="text-xs text-fg-3">{t('securityIntro')}</p>
 
-          {/* Tab bar */}
           <div
             role="tablist"
             className="inline-flex rounded-pill p-1 gap-1"
@@ -302,34 +247,29 @@ function SecurityWarning() {
               border: '1px solid var(--gf-border)',
             }}
           >
-            <SecurityTabBtn
+            <SecTab
               active={tab === 'samsung'}
               onClick={() => setTab('samsung')}
               label={t('samsungTitle')}
             />
-            <SecurityTabBtn
+            <SecTab
               active={tab === 'regular'}
               onClick={() => setTab('regular')}
               label={t('regularTitle')}
             />
           </div>
 
-          {/* Step list */}
-          <ol className="space-y-2.5">
-            {steps.map((stepText, i) => (
-              <li key={i} className="flex items-start gap-2.5">
+          <ol className="space-y-2 pt-1">
+            {steps.map((step, i) => (
+              <li key={i} className="flex items-start gap-2.5 text-sm text-fg-1 leading-relaxed">
                 <span
-                  className="shrink-0 w-6 h-6 rounded-full inline-flex items-center justify-center text-[10px] font-bold font-mono"
-                  style={{
-                    background: 'rgba(245,158,11,0.16)',
-                    color: '#f59e0b',
-                    border: '1px solid rgba(245,158,11,0.35)',
-                  }}
+                  className="shrink-0 w-5 h-5 rounded-full inline-flex items-center justify-center text-[10px] font-bold font-mono text-fg-2"
+                  style={{ background: 'var(--gf-input-bg)' }}
                   dir="ltr"
                 >
                   {i + 1}
                 </span>
-                <p className="text-sm text-fg-1 leading-relaxed">{stepText}</p>
+                <span>{step}</span>
               </li>
             ))}
           </ol>
@@ -339,7 +279,7 @@ function SecurityWarning() {
   )
 }
 
-function SecurityTabBtn({
+function SecTab({
   active,
   onClick,
   label,
@@ -358,9 +298,9 @@ function SecurityTabBtn({
       style={
         active
           ? {
-              background: 'rgba(245,158,11,0.2)',
-              color: '#f59e0b',
-              boxShadow: '0 0 0 1px rgba(245,158,11,0.4) inset',
+              background: 'rgba(132,217,61,0.18)',
+              color: '#a3e635',
+              boxShadow: '0 0 0 1px rgba(132,217,61,0.4) inset',
             }
           : {
               background: 'transparent',
@@ -373,18 +313,6 @@ function SecurityTabBtn({
   )
 }
 
-/** Tiny inline glyph that reads as the Android robot silhouette
- *  without copying anyone's brand artwork — two rounded antennae +
- *  a dome head. Drawn from basic geometry, fully ours. */
-function AndroidGlyph({ className }: { className?: string }) {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="currentColor"
-      className={className}
-      aria-hidden="true"
-    >
-      <path d="M7 5.5l-1.4-2.4a.5.5 0 0 1 .87-.5L8 5.05A8.6 8.6 0 0 1 12 4c1.45 0 2.8.36 4 1.05l1.53-2.45a.5.5 0 0 1 .87.5L17 5.5A6.3 6.3 0 0 1 19.5 11H4.5A6.3 6.3 0 0 1 7 5.5zm2 3.2a.9.9 0 1 0 0-1.8.9.9 0 0 0 0 1.8zm6 0a.9.9 0 1 0 0-1.8.9.9 0 0 0 0 1.8zM4.5 12h15v5.5a2 2 0 0 1-2 2H6.5a2 2 0 0 1-2-2V12zM2 13a1.5 1.5 0 0 1 3 0v5a1.5 1.5 0 0 1-3 0v-5zm17 0a1.5 1.5 0 0 1 3 0v5a1.5 1.5 0 0 1-3 0v-5zM9.5 21a1.5 1.5 0 0 1 3 0v1.5a1.5 1.5 0 0 1-3 0V21zm5 0a1.5 1.5 0 0 1 3 0v1.5a1.5 1.5 0 0 1-3 0V21z" />
-    </svg>
-  )
-}
+// Re-export Smartphone so anything that imported it from this file
+// previously still resolves. Not used in the new render.
+export { Smartphone }
