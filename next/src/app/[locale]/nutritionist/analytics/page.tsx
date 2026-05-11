@@ -53,53 +53,22 @@ const TIER_TINT: Record<string, string> = {
   vip: '#a855f7',
 }
 
-const TOP_POSTS = [
-  { title: 'Why protein at breakfast changes your day', views: 1842, likes: 312, comments: 47 },
-  { title: 'The PCOS plate, simplified',                views: 2104, likes: 412, comments: 88 },
-  { title: 'How to read a Greek yogurt label',          views: 1408, likes: 198, comments: 21 },
-  { title: 'The best 20-min weeknight dinners',         views: 1124, likes: 175, comments: 18 },
-]
-
-function buildGrowthSeries(days: number): { date: string; clients: number }[] {
-  const today = new Date()
-  const out: { date: string; clients: number }[] = []
-  // We aggregate per week
-  const weeks = Math.max(2, Math.ceil(days / 7))
-  for (let i = weeks - 1; i >= 0; i--) {
-    const d = new Date(today)
-    d.setDate(today.getDate() - i * 7)
-    const added = 1 + Math.floor(Math.random() * 4)
-    out.push({ date: d.toISOString().slice(5, 10), clients: added })
-  }
-  return out
-}
-
-function buildSessionsSeries(days: number): { date: string; sessions: number }[] {
+/** Generic empty timeseries — N weekly buckets ending today with the
+ *  metric key (clients or sessions) at zero. Replaces the old
+ *  random-walk mock builders so empty dashboards show a flat zero
+ *  line instead of fabricated activity. */
+function emptyWeeklySeries<K extends 'clients' | 'sessions'>(
+  days: number,
+  key: K,
+): ({ date: string } & Record<K, number>)[] {
   const today = new Date()
   const weeks = Math.max(2, Math.ceil(days / 7))
   return Array.from({ length: weeks }).map((_, i) => {
     const d = new Date(today)
     d.setDate(today.getDate() - (weeks - 1 - i) * 7)
-    return {
-      date: d.toISOString().slice(5, 10),
-      sessions: 8 + Math.floor(Math.random() * 18),
-    }
+    return { date: d.toISOString().slice(5, 10), [key]: 0 } as { date: string } & Record<K, number>
   })
 }
-
-const ADHERENCE = [
-  { label: 'Wk -3', value: 76 },
-  { label: 'Wk -2', value: 81 },
-  { label: 'Wk -1', value: 84 },
-  { label: 'This',  value: 88 },
-]
-
-const TIER_BREAKDOWN: { tier: 'free' | 'basic' | 'premium' | 'vip'; count: number }[] = [
-  { tier: 'free',    count: 6 },
-  { tier: 'basic',   count: 9 },
-  { tier: 'premium', count: 8 },
-  { tier: 'vip',     count: 5 },
-]
 
 export default function AnalyticsPage() {
   const t = useTranslations('nutritionist.analyticsPage')
@@ -219,26 +188,22 @@ export default function AnalyticsPage() {
     }
   }, [period])
 
-  const growth = useMemo(() => {
-    if (seriesRes.data && seriesRes.data.growth.some((r) => r.clients > 0)) {
-      return seriesRes.data.growth
-    }
-    return buildGrowthSeries(PERIOD_DAYS[period])
-  }, [period, seriesRes.data])
-  const sessions = useMemo(() => {
-    if (seriesRes.data && seriesRes.data.sessions.some((r) => r.sessions > 0)) {
-      return seriesRes.data.sessions
-    }
-    return buildSessionsSeries(PERIOD_DAYS[period])
-  }, [period, seriesRes.data])
-  const topPosts =
-    seriesRes.data && seriesRes.data.topPosts.length > 0
-      ? seriesRes.data.topPosts
-      : TOP_POSTS
-  const adherence =
-    seriesRes.data && seriesRes.data.adherence.some((d) => d.value > 0)
-      ? seriesRes.data.adherence
-      : ADHERENCE
+  // Empty-bucket series so charts render a flat zero line instead of
+  // synthetic noise when there's nothing to show yet.
+  const growth = useMemo(
+    () =>
+      seriesRes.data?.growth ?? emptyWeeklySeries(PERIOD_DAYS[period], 'clients'),
+    [period, seriesRes.data],
+  )
+  const sessions = useMemo(
+    () =>
+      seriesRes.data?.sessions ?? emptyWeeklySeries(PERIOD_DAYS[period], 'sessions'),
+    [period, seriesRes.data],
+  )
+  // Live-only — no mock fallbacks. Empty arrays render their own
+  // "no data yet" states so coaches don't see fake numbers.
+  const topPosts = seriesRes.data?.topPosts ?? []
+  const adherence = seriesRes.data?.adherence ?? []
 
   // Live aggregates: total clients + new-this-period from profiles, tier breakdown
   interface AggregatesRes {
@@ -281,13 +246,9 @@ export default function AnalyticsPage() {
     }
   }, [period])
 
-  const totalClients = live.data?.totalClients
-    ?? TIER_BREAKDOWN.reduce((acc, t) => acc + t.count, 0)
-  const newThisPeriod = live.data?.newThisPeriod
-    ?? growth.reduce((acc, p) => acc + p.clients, 0)
-  const tierBreakdown = (live.data?.tierBreakdown && live.data.tierBreakdown.some((r) => r.count > 0))
-    ? live.data.tierBreakdown
-    : TIER_BREAKDOWN
+  const totalClients = live.data?.totalClients ?? 0
+  const newThisPeriod = live.data?.newThisPeriod ?? 0
+  const tierBreakdown = live.data?.tierBreakdown ?? []
 
   const kpis: Kpi[] = [
     { Icon: Users,          labelKey: 'totalClients',       value: String(totalClients),       delta: 8,  tint: '#a3e635' },
@@ -381,6 +342,9 @@ export default function AnalyticsPage() {
             </h2>
             <p className="text-xs text-fg-3 mt-0.5">{t('tierBreakdownBody')}</p>
           </header>
+          {tierBreakdown.length === 0 || totalClients === 0 ? (
+            <p className="text-sm text-fg-3 text-center py-6">No clients yet.</p>
+          ) : (
           <ul className="space-y-3">
             {tierBreakdown.map((row) => {
               const pct = totalClients > 0 ? (row.count / totalClients) * 100 : 0
@@ -404,6 +368,7 @@ export default function AnalyticsPage() {
               )
             })}
           </ul>
+          )}
         </article>
 
         <article className="rounded-xl border border-border bg-surface p-5 lg:col-span-2">
@@ -413,6 +378,9 @@ export default function AnalyticsPage() {
             </h2>
             <p className="text-xs text-fg-3 mt-0.5">{t('adherenceBody')}</p>
           </header>
+          {adherence.length === 0 ? (
+            <p className="text-sm text-fg-3 text-center py-12">No adherence data yet.</p>
+          ) : (
           <div className="grid grid-cols-4 gap-3 items-end h-40">
             {adherence.map((d) => (
               <div key={d.label} className="flex flex-col items-center gap-2 h-full">
@@ -431,6 +399,7 @@ export default function AnalyticsPage() {
               </div>
             ))}
           </div>
+          )}
         </article>
       </section>
 
@@ -440,6 +409,11 @@ export default function AnalyticsPage() {
           <h2 className="text-base font-semibold text-fg-1">{t('topContent')}</h2>
           <p className="text-xs text-fg-3 mt-0.5">{t('topContentBody')}</p>
         </header>
+        {topPosts.length === 0 ? (
+          <p className="px-5 py-8 text-sm text-fg-3 text-center">
+            No published posts yet.
+          </p>
+        ) : (
         <ul className="divide-y divide-border">
           {topPosts.map((p, i) => (
             <li
@@ -461,6 +435,7 @@ export default function AnalyticsPage() {
             </li>
           ))}
         </ul>
+        )}
       </article>
     </div>
   )

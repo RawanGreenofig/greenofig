@@ -272,7 +272,7 @@ export function LiveTrafficSection() {
 
           {/* 3-col detail */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <Panel title="Top pages" subtitle="Most-viewed paths, last 30 days" Icon={FileText}>
+            <Panel title="Top pages" subtitle="Most-viewed paths, last 30 days" Icon={FileText} iconTint="#a855f7">
               {cleanPages.length === 0 ? (
                 <EmptyRow />
               ) : (
@@ -309,7 +309,7 @@ export function LiveTrafficSection() {
               )}
             </Panel>
 
-            <Panel title="Top countries" subtitle="Active users, last 30 days" Icon={MapPin}>
+            <Panel title="Top countries" subtitle="Active users, last 30 days" Icon={MapPin} iconTint="#06b6d4">
               {cleanCountries.length === 0 ? (
                 <EmptyRow />
               ) : (
@@ -341,7 +341,7 @@ export function LiveTrafficSection() {
               )}
             </Panel>
 
-            <Panel title="Devices" subtitle="Share of users, last 30 days" Icon={Monitor}>
+            <Panel title="Devices" subtitle="Share of users, last 30 days" Icon={Monitor} iconTint="#a3e635">
               {data.usersByDevice.length === 0 ? (
                 <EmptyRow />
               ) : (
@@ -436,11 +436,13 @@ function Panel({
   title,
   subtitle,
   Icon,
+  iconTint = 'var(--gf-lime-400)',
   children,
 }: {
   title: string
   subtitle?: string
   Icon?: LucideIcon
+  iconTint?: string
   children: React.ReactNode
 }) {
   return (
@@ -452,17 +454,9 @@ function Panel({
           '0 1px 0 rgba(255,255,255,0.03) inset, 0 8px 22px rgba(0,0,0,0.22)',
       }}
     >
-      <header className="mb-4 flex items-start gap-2.5">
+      <header className="mb-4 flex items-start gap-2">
         {Icon && (
-          <div
-            className="w-7 h-7 rounded-md flex items-center justify-center shrink-0"
-            style={{
-              background: 'rgba(132,217,61,0.12)',
-              boxShadow: '0 0 0 1px rgba(132,217,61,0.2) inset',
-            }}
-          >
-            <Icon className="w-3.5 h-3.5" strokeWidth={1.75} color="var(--gf-lime-400)" />
-          </div>
+          <Icon className="w-4 h-4 shrink-0 mt-0.5" strokeWidth={1.75} color={iconTint} />
         )}
         <div className="min-w-0">
           <h3 className="text-sm font-semibold text-fg-1">{title}</h3>

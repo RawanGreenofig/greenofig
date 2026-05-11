@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import {
   CreditCard,
@@ -44,50 +44,17 @@ const TIER_TINT: Record<string, string> = {
   vip:     '#a855f7',
 }
 
-const TIER_MIX = [
-  { tier: 'free',    count: 240 },
-  { tier: 'basic',   count: 92 },
-  { tier: 'premium', count: 56 },
-  { tier: 'vip',     count: 24 },
-]
-
-const COUNTRIES = [
-  { code: 'JO', name: 'Jordan',          users: 184 },
-  { code: 'PS', name: 'Palestine',       users: 76 },
-  { code: 'LB', name: 'Lebanon',         users: 54 },
-  { code: 'AE', name: 'UAE',             users: 41 },
-  { code: 'SA', name: 'Saudi Arabia',    users: 28 },
-  { code: 'EG', name: 'Egypt',           users: 19 },
-  { code: 'CA', name: 'Canada',          users: 10 },
-]
-
-const FUNNEL = [
-  { key: 'visitors', count: 12_400, tint: '#9baf9f' },
-  { key: 'signups',  count: 1_180,  tint: '#06b6d4' },
-  { key: 'trials',   count: 540,    tint: '#e8912a' },
-  { key: 'paid',     count: 172,    tint: '#a3e635' },
-] as const
-
-function buildUserGrowth(): { week: string; users: number }[] {
+/** 12 empty weekly buckets ending today — used as the X-axis when no
+ *  signups exist yet so the chart renders a flat zero line instead of
+ *  the old sinusoidal mock data. */
+function emptyWeeklySeries(): { week: string; users: number }[] {
   const today = new Date()
   return Array.from({ length: 12 }).map((_, i) => {
     const d = new Date(today)
     d.setDate(today.getDate() - (11 - i) * 7)
-    return {
-      week: d.toISOString().slice(5, 10),
-      users: 8 + Math.round(Math.sin(i / 2) * 5) + i * 3,
-    }
+    return { week: d.toISOString().slice(5, 10), users: 0 }
   })
 }
-
-const REVENUE = [
-  { month: 'Dec', subs: 4200, sessions: 980,  store: 410 },
-  { month: 'Jan', subs: 4640, sessions: 1080, store: 510 },
-  { month: 'Feb', subs: 4920, sessions: 1140, store: 480 },
-  { month: 'Mar', subs: 5280, sessions: 1180, store: 612 },
-  { month: 'Apr', subs: 5740, sessions: 1240, store: 580 },
-  { month: 'May', subs: 6180, sessions: 1240, store: 624 },
-]
 
 export default function AdminAnalyticsPage() {
   const t = useTranslations('admin')
@@ -95,7 +62,9 @@ export default function AdminAnalyticsPage() {
   const tTiers = useTranslations('tiers')
 
   const [period, setPeriod] = useState<Period>('90d')
-  const series = useMemo(buildUserGrowth, [])
+  const [liveSeries, setLiveSeries] = useState<
+    { week: string; users: number }[] | null
+  >(null)
 
   const [liveTiers, setLiveTiers] = useState<{ tier: string; count: number }[] | null>(null)
   const [liveKpis, setLiveKpis] = useState<{
@@ -164,7 +133,36 @@ export default function AdminAnalyticsPage() {
         0,
       )
 
+      // Weekly signup buckets — last 12 weeks of profiles by
+      // created_at, used for the User Growth area chart.
+      const series = (() => {
+        const today = new Date()
+        const buckets = Array.from({ length: 12 }).map((_, i) => {
+          const start = new Date(today)
+          start.setDate(today.getDate() - (11 - i) * 7)
+          start.setHours(0, 0, 0, 0)
+          return {
+            startMs: start.getTime(),
+            endMs: start.getTime() + 7 * 86400 * 1000,
+            week: start.toISOString().slice(5, 10),
+            users: 0,
+          }
+        })
+        for (const p of list) {
+          if (!p.created_at) continue
+          const ts = new Date(p.created_at).getTime()
+          for (const b of buckets) {
+            if (ts >= b.startMs && ts < b.endMs) {
+              b.users += 1
+              break
+            }
+          }
+        }
+        return buckets.map((b) => ({ week: b.week, users: b.users }))
+      })()
+
       if (cancelled) return
+      setLiveSeries(series)
       setLiveTiers(tierRows)
       setLiveKpis({
         mrr,
@@ -292,12 +290,14 @@ export default function AdminAnalyticsPage() {
     }
   }, [])
 
-  const tierData = liveTiers && liveTiers.some((r) => r.count > 0) ? liveTiers : TIER_MIX
+  // Live data only — no mock fallbacks. Each section renders its own
+  // empty state when the live array hasn't loaded yet or is genuinely
+  // empty (e.g. zero signups for the period). Admin shouldn't see
+  // fake users/funnels/countries flash before the real numbers land.
+  const tierData = liveTiers ?? []
   const totalActive = tierData.reduce((acc, r) => acc + r.count, 0)
-  const funnelData =
-    liveFunnel && liveFunnel.some((f) => f.count > 0) ? liveFunnel : FUNNEL
-  const countriesData =
-    liveCountries && liveCountries.length > 0 ? liveCountries : COUNTRIES
+  const funnelData = liveFunnel ?? []
+  const countriesData = liveCountries ?? []
   const totalCountryUsers = countriesData.reduce((acc, c) => acc + c.users, 0)
 
   // KPI values render from live DB queries — fall back to a dash
@@ -377,7 +377,7 @@ export default function AdminAnalyticsPage() {
       <section className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <ChartCard title={tA('userGrowth')} body={tA('userGrowthBody')}>
           <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={series} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
+            <AreaChart data={liveSeries ?? emptyWeeklySeries()} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
               <defs>
                 <linearGradient id="adminAna" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="0%"   stopColor="#a3e635" stopOpacity={0.32} />
@@ -399,11 +399,7 @@ export default function AdminAnalyticsPage() {
         <ChartCard title={tA('revenue')} body={tA('revenueBody')}>
           <ResponsiveContainer width="100%" height="100%">
             <BarChart
-              data={
-                liveRevenue && liveRevenue.some((r) => r.subs + r.sessions + r.store > 0)
-                  ? liveRevenue
-                  : REVENUE
-              }
+              data={liveRevenue ?? []}
               margin={{ top: 8, right: 8, left: 0, bottom: 0 }}
             >
               <defs>
@@ -443,6 +439,9 @@ export default function AdminAnalyticsPage() {
             <h2 className="text-base font-semibold text-fg-1">{tA('conversion')}</h2>
             <p className="text-xs text-fg-3 mt-0.5">{tA('conversionBody')}</p>
           </header>
+          {funnelData.length === 0 ? (
+            <p className="text-sm text-fg-3 text-center py-6">No funnel data yet.</p>
+          ) : (
           <ul className="space-y-2.5">
             {funnelData.map((f, i) => {
               const max = funnelData[0]?.count || 1
@@ -481,6 +480,7 @@ export default function AdminAnalyticsPage() {
               )
             })}
           </ul>
+          )}
         </article>
 
         <article className="rounded-xl border border-border bg-surface p-5">
@@ -488,6 +488,9 @@ export default function AdminAnalyticsPage() {
             <h2 className="text-base font-semibold text-fg-1">{tA('tierMix')}</h2>
             <p className="text-xs text-fg-3 mt-0.5">{tA('tierMixBody')}</p>
           </header>
+          {tierData.length === 0 ? (
+            <p className="text-sm text-fg-3 text-center py-6">No active subscribers yet.</p>
+          ) : (
           <ul className="space-y-3">
             {tierData.map((row) => {
               const pct = (row.count / totalActive) * 100
@@ -522,6 +525,7 @@ export default function AdminAnalyticsPage() {
               )
             })}
           </ul>
+          )}
         </article>
       </section>
 
@@ -538,46 +542,52 @@ export default function AdminAnalyticsPage() {
             <p className="text-xs text-fg-3 mt-0.5">{tA('geographyBody')}</p>
           </div>
         </header>
-        <ul className="divide-y divide-border">
-          {countriesData.map((c) => {
-            const pct = totalCountryUsers > 0 ? (c.users / totalCountryUsers) * 100 : 0
-            return (
-              <li
-                key={c.code}
-                className="grid grid-cols-[60px_1fr_120px] gap-3 items-center px-5 py-3"
-              >
-                <span className="font-mono text-sm text-fg-3 text-center" dir="ltr">
-                  {c.code}
-                </span>
-                <div>
-                  <div className="flex items-baseline justify-between mb-1">
-                    <p className="text-sm text-fg-1">{c.name}</p>
-                    <p className="font-mono text-xs text-fg-3" dir="ltr">
-                      {pct.toFixed(1)}%
-                    </p>
-                  </div>
-                  <div
-                    className="h-1.5 rounded-full overflow-hidden"
-                    style={{ background: 'var(--gf-input-bg)' }}
-                  >
+        {countriesData.length === 0 ? (
+          <p className="px-5 py-8 text-sm text-fg-3 text-center">
+            No signups yet — data will appear once users start joining.
+          </p>
+        ) : (
+          <ul className="divide-y divide-border">
+            {countriesData.map((c) => {
+              const pct = totalCountryUsers > 0 ? (c.users / totalCountryUsers) * 100 : 0
+              return (
+                <li
+                  key={c.code}
+                  className="grid grid-cols-[60px_1fr_120px] gap-3 items-center px-5 py-3"
+                >
+                  <span className="font-mono text-sm text-fg-3 text-center" dir="ltr">
+                    {c.code}
+                  </span>
+                  <div>
+                    <div className="flex items-baseline justify-between mb-1">
+                      <p className="text-sm text-fg-1">{c.name}</p>
+                      <p className="font-mono text-xs text-fg-3" dir="ltr">
+                        {pct.toFixed(1)}%
+                      </p>
+                    </div>
                     <div
-                      className="h-full rounded-full transition-all"
-                      style={{
-                        width: `${pct * 2}%`,
-                        background:
-                          'linear-gradient(90deg, #a3e635, #a3e635cc)',
-                        boxShadow: '0 0 8px rgba(163,230,53,0.35)',
-                      }}
-                    />
+                      className="h-1.5 rounded-full overflow-hidden"
+                      style={{ background: 'var(--gf-input-bg)' }}
+                    >
+                      <div
+                        className="h-full rounded-full transition-all"
+                        style={{
+                          width: `${pct * 2}%`,
+                          background:
+                            'linear-gradient(90deg, #a3e635, #a3e635cc)',
+                          boxShadow: '0 0 8px rgba(163,230,53,0.35)',
+                        }}
+                      />
+                    </div>
                   </div>
-                </div>
-                <p className="font-mono text-sm text-fg-1 text-end" dir="ltr">
-                  {c.users.toLocaleString()}
-                </p>
-              </li>
-            )
-          })}
-        </ul>
+                  <p className="font-mono text-sm text-fg-1 text-end" dir="ltr">
+                    {c.users.toLocaleString()}
+                  </p>
+                </li>
+              )
+            })}
+          </ul>
+        )}
       </article>
 
       <AIUsageTodaySection />
