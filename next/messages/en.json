@@ -69,7 +69,25 @@
     "getStarted": "Get started",
     "openMenu": "Open menu",
     "closeMenu": "Close menu",
-    "logoTagline": "Personalized Nutrition"
+    "logoTagline": "Personalized Nutrition",
+    "download": "Download app"
+  },
+  "download": {
+    "eyebrow": "Mobile app",
+    "title": "Download the Greenofig App",
+    "subtitle": "Take your nutrition coach with you — full app, instant push reminders, offline-friendly.",
+    "versionLabel": "Version",
+    "androidTitle": "Android",
+    "androidCta": "Download for Android",
+    "androidNote": "Direct install — no Play Store needed.",
+    "androidWarning": "When prompted, tap “Install anyway” — this is normal for direct installs.",
+    "iosTitle": "iPhone & iPad",
+    "iosIntro": "Install Greenofig as a Home Screen app in four taps.",
+    "iosStep1": "Open greenofig.com in Safari",
+    "iosStep2": "Tap the Share button at the bottom",
+    "iosStep3": "Tap “Add to Home Screen”",
+    "iosStep4": "Tap Add",
+    "iosFootnote": "Safari only — Chrome and Firefox on iOS can’t install web apps."
   },
   "auth": {
     "signInTitle": "Welcome back",

@@ -69,7 +69,25 @@
     "getStarted": "ابدأ الآن",
     "openMenu": "فتح القائمة",
     "closeMenu": "إغلاق القائمة",
-    "logoTagline": "تغذية شخصية"
+    "logoTagline": "تغذية شخصية",
+    "download": "حمّل التطبيق"
+  },
+  "download": {
+    "eyebrow": "تطبيق الموبايل",
+    "title": "حمّل تطبيق Greenofig",
+    "subtitle": "خذ كوتش التغذية معك أينما كنت — تطبيق كامل، تنبيهات فورية، ومتوافق مع وضع عدم الاتصال.",
+    "versionLabel": "الإصدار",
+    "androidTitle": "أندرويد",
+    "androidCta": "تنزيل لأندرويد",
+    "androidNote": "تنزيل مباشر — لا حاجة لمتجر Play.",
+    "androidWarning": "عندما يُطلب منك، اضغط «تثبيت على أي حال» — هذا طبيعي للتنزيلات المباشرة.",
+    "iosTitle": "آيفون وآيباد",
+    "iosIntro": "ثبّت Greenofig كتطبيق على الشاشة الرئيسية بأربع نقرات.",
+    "iosStep1": "افتح greenofig.com في Safari",
+    "iosStep2": "اضغط زر المشاركة في الأسفل",
+    "iosStep3": "اضغط «إضافة إلى الشاشة الرئيسية»",
+    "iosStep4": "اضغط إضافة",
+    "iosFootnote": "Safari فقط — متصفحات Chrome وFirefox على iOS لا يمكنها تثبيت تطبيقات الويب."
   },
   "auth": {
     "signInTitle": "مرحباً بعودتك",

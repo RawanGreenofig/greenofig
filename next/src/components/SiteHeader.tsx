@@ -86,6 +86,7 @@ export function SiteHeader() {
   const navLinks: { href: string; label: string }[] = [
     { href: '/pricing', label: t('pricing') },
     { href: '/blog', label: t('blog') },
+    { href: '/download', label: t('download') },
     { href: '/contact', label: t('contact') },
   ]
 
