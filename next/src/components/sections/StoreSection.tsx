@@ -226,19 +226,19 @@ export function StoreSection() {
         </header>
       </div>
 
-      <div className="relative max-w-screen-xl mx-auto group/carousel">
+      <div className="relative max-w-screen-xl mx-auto px-6 group/carousel">
         {/* Edge fades blend the rail into the page so cut-off cards
             don't look like a UI bug. */}
         <div
           aria-hidden
-          className="pointer-events-none absolute inset-y-0 start-0 w-8 z-10"
+          className="pointer-events-none absolute inset-y-0 start-6 w-8 z-10"
           style={{
             background: 'linear-gradient(to right, var(--gf-bg) 0%, transparent 100%)',
           }}
         />
         <div
           aria-hidden
-          className="pointer-events-none absolute inset-y-0 end-0 w-8 z-10"
+          className="pointer-events-none absolute inset-y-0 end-6 w-8 z-10"
           style={{
             background: 'linear-gradient(to left, var(--gf-bg) 0%, transparent 100%)',
           }}
@@ -248,7 +248,7 @@ export function StoreSection() {
           ref={scrollerRef}
           role="region"
           aria-label={t('storeEyebrow')}
-          className="flex gap-4 overflow-x-auto px-6 pb-3 snap-x snap-mandatory scroll-smooth [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+          className="flex gap-4 overflow-x-auto pb-3 snap-x snap-mandatory scroll-smooth [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
         >
           {PRODUCTS.map((product, idx) => {
             const Icon = product.Icon
