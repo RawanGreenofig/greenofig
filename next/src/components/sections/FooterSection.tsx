@@ -97,7 +97,7 @@ export function FooterSection() {
               )}
               {address && <p className="text-fg-3">{address}</p>}
             </div>
-            <div className="mt-5 flex items-center gap-3">
+            <div className="mt-5 mb-8 flex items-center gap-3">
               <SocialLink href={instagram} icon={Instagram} label="Instagram" />
               <SocialLink href="https://x.com"         icon={XLogo}     label="X" />
               <SocialLink href="https://linkedin.com"  icon={Linkedin}  label="LinkedIn" />
