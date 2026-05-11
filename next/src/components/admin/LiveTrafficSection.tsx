@@ -480,19 +480,11 @@ function EmptyRow() {
   return <p className="text-xs text-fg-3">No data yet.</p>
 }
 
-/** Small tinted icon square used at the start of each data row —
- *  matches the larger ringed icon pattern from the KPI cards. */
+/** Bare tinted icon at the start of each data row — no box, no
+ *  shadow, just the lucide glyph in the metric color. */
 function RowIcon({ Icon, tint }: { Icon: LucideIcon; tint: string }) {
   return (
-    <span
-      className="w-7 h-7 rounded-lg inline-flex items-center justify-center shrink-0"
-      style={{
-        background: `${tint}1f`,
-        boxShadow: `0 0 0 1px ${tint}33 inset`,
-      }}
-    >
-      <Icon className="w-3.5 h-3.5" strokeWidth={1.75} color={tint} />
-    </span>
+    <Icon className="w-4 h-4 shrink-0" strokeWidth={1.75} color={tint} />
   )
 }
 
