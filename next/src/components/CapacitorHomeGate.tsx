@@ -28,18 +28,38 @@ export function CapacitorHomeGate() {
   useEffect(() => {
     if (!isInsideCapacitor()) return
     const supabase = getBrowserSupabase()
-    if (!supabase) return // no Supabase client → treat as signed-out
+    if (!supabase) return
     let cancelled = false
-    supabase.auth.getSession().then(({ data }) => {
+
+    const redirectIfSession = (sessionExists: boolean) => {
       if (cancelled) return
-      if (data.session) {
+      // eslint-disable-next-line no-console
+      console.log('[gf-cap] HomeGate: session=', sessionExists)
+      if (sessionExists) {
         setRedirecting(true)
         router.replace('/dashboard')
       }
-      // No session → leave the marketing homepage alone.
+    }
+
+    // Initial check — if Supabase has rehydrated by now we redirect
+    // immediately. If not (e.g. the localStorage read happened a tick
+    // later) the auth listener below catches it.
+    supabase.auth.getSession().then(({ data }) => {
+      redirectIfSession(!!data.session)
     })
+
+    // Late-arrival path: a SIGNED_IN event after deep-link OAuth or
+    // after a tab restoration that rehydrates the session later than
+    // the initial getSession() call.
+    const { data: sub } = supabase.auth.onAuthStateChange((event, sess) => {
+      if (event === 'SIGNED_IN' && sess) {
+        redirectIfSession(true)
+      }
+    })
+
     return () => {
       cancelled = true
+      sub.subscription.unsubscribe()
     }
   }, [router])
 
