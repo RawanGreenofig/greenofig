@@ -37,6 +37,7 @@ interface GaDiagnostic {
   jsonParsedOk: boolean
   hasClientEmail: boolean
   clientEmailDomain: string | null
+  serviceAccountProjectId: string | null
   hasPrivateKey: boolean
   privateKeyLooksLikePem: boolean
   privateKeyLength: number
@@ -390,6 +391,11 @@ function CredentialDiagnosticBlock({ d }: { d: GaDiagnostic }) {
     { label: 'GA_SERVICE_ACCOUNT_JSON set', ok: d.jsonSet, value: d.jsonSet ? 'yes' : 'NO' },
     { label: 'JSON parsed', ok: d.jsonParsedOk, value: d.jsonParsedOk ? 'yes' : 'NO' },
     { label: 'client_email present', ok: d.hasClientEmail, value: d.clientEmailDomain ? `@${d.clientEmailDomain}` : 'NO' },
+    {
+      label: 'service-account project',
+      ok: !!d.serviceAccountProjectId,
+      value: d.serviceAccountProjectId ?? 'unknown',
+    },
     { label: 'private_key present', ok: d.hasPrivateKey, value: d.hasPrivateKey ? `${d.privateKeyLength} chars` : 'NO' },
     { label: 'key has real newlines', ok: d.privateKeyHasRealNewlines, value: d.privateKeyHasRealNewlines ? 'yes' : 'NO' },
     {
