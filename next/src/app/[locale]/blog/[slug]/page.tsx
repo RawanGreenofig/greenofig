@@ -7,6 +7,7 @@ import { ArrowRight, ArrowLeft, Clock, Calendar, Crown, BadgeCheck } from 'lucid
 import { BLOG_ARTICLES, type BlogArticle } from '@/lib/blog-seed'
 import { NUTRITIONIST } from '@/lib/tokens'
 import { ArticleImage } from '@/components/blog/ArticleImage'
+import { ShareAndCite } from '@/components/blog/ShareAndCite'
 import { SiteHeader } from '@/components/SiteHeader'
 
 interface RouteParams {
@@ -75,6 +76,7 @@ export default async function ArticlePage({ params }: RouteParams) {
       '@type': 'Person',
       name: NUTRITIONIST.name,
       jobTitle: 'Certified Clinical Nutritionist',
+      url: 'https://greenofig.com/coach-rawan-othman',
     },
     publisher: {
       '@type': 'Organization',
@@ -151,8 +153,13 @@ export default async function ArticlePage({ params }: RouteParams) {
             {title}
           </h1>
 
-          {/* Author row */}
-          <div className="mt-6 flex items-center gap-3">
+          {/* Author row — links to the dedicated profile page so
+              the byline accrues link equity to one canonical author
+              URL. */}
+          <Link
+            href="/coach-rawan-othman"
+            className="mt-6 flex items-center gap-3 group"
+          >
             <div className="w-12 h-12 rounded-full overflow-hidden bg-surface-raised shrink-0">
               <Image
                 src="/images/dr-rawan-othman.jpg"
@@ -163,7 +170,7 @@ export default async function ArticlePage({ params }: RouteParams) {
               />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold text-fg-1 inline-flex items-center gap-1.5">
+              <p className="text-sm font-semibold text-fg-1 inline-flex items-center gap-1.5 group-hover:text-lime-400 transition-colors">
                 {isAr ? NUTRITIONIST.nameAr : NUTRITIONIST.name}
                 <BadgeCheck className="w-4 h-4 text-lime-400" strokeWidth={2} />
               </p>
@@ -171,13 +178,23 @@ export default async function ArticlePage({ params }: RouteParams) {
                 {isAr ? NUTRITIONIST.roleAr : NUTRITIONIST.role}
               </p>
             </div>
-          </div>
+          </Link>
         </header>
 
         {/* Article body */}
         <article className="max-w-3xl mx-auto">
           <ArticleBody markdown={body} isAr={isAr} />
         </article>
+
+        {/* Share + Cite — drops in right after the article body so
+            readers can share, and journalists can grab a citation. */}
+        <ShareAndCite
+          url={`https://greenofig.com${isAr ? '/ar' : ''}/blog/${article.slug}`}
+          title={title}
+          author={isAr ? NUTRITIONIST.nameAr : NUTRITIONIST.name}
+          publishedAt={article.publishedAt}
+          isAr={isAr}
+        />
 
         {/* Author card */}
         <aside
