@@ -1,7 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import { Check, Copy, Linkedin, Mail, Quote, Share2, Twitter } from 'lucide-react'
+import { Check, Copy, Linkedin, Mail, Quote, Share2 } from 'lucide-react'
+import { XLogo } from '@/components/icons/XLogo'
 
 interface Props {
   url: string
@@ -27,7 +28,10 @@ export function ShareAndCite({ url, title, author, publishedAt, isAr }: Props) {
 
   const encodedUrl = encodeURIComponent(url)
   const encodedTitle = encodeURIComponent(title)
-  const twitter = `https://twitter.com/intent/tweet?text=${encodedTitle}&url=${encodedUrl}&via=greenofig`
+  // X (formerly Twitter) post-compose URL. Still under twitter.com
+  // because X hasn't migrated the share intent endpoint to x.com,
+  // but the share dialog itself shows the new X branding.
+  const x = `https://twitter.com/intent/tweet?text=${encodedTitle}&url=${encodedUrl}&via=greenofig`
   const linkedin = `https://www.linkedin.com/sharing/share-offsite/?url=${encodedUrl}`
   const email = `mailto:?subject=${encodedTitle}&body=${encodedUrl}`
 
@@ -60,7 +64,7 @@ export function ShareAndCite({ url, title, author, publishedAt, isAr }: Props) {
           {isAr ? 'شارك' : 'Share'}
         </span>
         <div className="flex-1" />
-        <ShareBtn href={twitter} label="X" Icon={Twitter} />
+        <ShareBtn href={x} label="X" Icon={XLogo} />
         <ShareBtn href={linkedin} label="LinkedIn" Icon={Linkedin} />
         <ShareBtn href={email} label="Email" Icon={Mail} />
         <button
@@ -132,6 +136,10 @@ export function ShareAndCite({ url, title, author, publishedAt, isAr }: Props) {
   )
 }
 
+// Accept any lucide-style component (Linkedin, Mail) and our
+// custom XLogo — both render an SVG and accept className.
+type ShareIcon = React.ComponentType<{ className?: string; strokeWidth?: number | string }>
+
 function ShareBtn({
   href,
   label,
@@ -139,7 +147,7 @@ function ShareBtn({
 }: {
   href: string
   label: string
-  Icon: typeof Twitter
+  Icon: ShareIcon
 }) {
   return (
     <a

@@ -194,7 +194,7 @@ const SITE_JSON_LD = {
       logo: 'https://greenofig.com/logo.png',
       sameAs: [
         'https://instagram.com/greenofig',
-        'https://twitter.com/greenofig',
+        'https://x.com/greenofig',
         'https://linkedin.com/company/greenofig',
       ],
     },

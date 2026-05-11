@@ -2,7 +2,8 @@
 
 import { motion } from 'framer-motion'
 import { useLocale, useTranslations } from 'next-intl'
-import { Facebook, Instagram, Linkedin, Twitter, type LucideIcon } from 'lucide-react'
+import { Facebook, Instagram, Linkedin, type LucideIcon } from 'lucide-react'
+import { XLogo } from '@/components/icons/XLogo'
 import { Link } from '@/i18n/navigation'
 import { LanguageSwitcher } from '@/components/LanguageSwitcher'
 import { Wordmark } from '@/components/Wordmark'
@@ -98,7 +99,7 @@ export function FooterSection() {
             </div>
             <div className="mt-5 flex items-center gap-3">
               <SocialLink href={instagram} icon={Instagram} label="Instagram" />
-              <SocialLink href="https://twitter.com"   icon={Twitter}   label="Twitter / X" />
+              <SocialLink href="https://x.com"         icon={XLogo}     label="X" />
               <SocialLink href="https://linkedin.com"  icon={Linkedin}  label="LinkedIn" />
               <SocialLink href="https://facebook.com"  icon={Facebook}  label="Facebook" />
               {/* youtube/tiktok URLs are stored in settings but the icon
@@ -194,13 +195,17 @@ function FooterLink({ href, label }: { href: string; label: string }) {
   )
 }
 
+// Icon type allows both lucide-react components and our own
+// SVG components (e.g. XLogo) — they share a className-based API.
+type SocialIcon = LucideIcon | React.ComponentType<{ className?: string; strokeWidth?: number | string }>
+
 function SocialLink({
   href,
   icon: Icon,
   label,
 }: {
   href: string
-  icon: LucideIcon
+  icon: SocialIcon
   label: string
 }) {
   return (
