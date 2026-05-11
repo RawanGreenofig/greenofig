@@ -76,6 +76,14 @@ jobs:
           # Source icon ships in the repo at mobile/resources/icon.png.
           npm run assets:generate
 
+      - name: Patch AndroidManifest with com.greenofig.app:// intent filter
+        run: |
+          cd mobile
+          # OAuth deep-link return. Adds an <intent-filter> on the
+          # MainActivity for the custom scheme so providers like Google
+          # can redirect back into the app after sign-in. Idempotent.
+          npm run patch:manifest
+
       - name: Patch build.gradle with the synced versionName/versionCode
         run: |
           cd mobile

@@ -33,13 +33,22 @@ export function GoogleAuthButton({ label, withDivider = true }: Props) {
     }
     setError(null)
     setPending(true)
-    // Prefer the configured production URL (NEXT_PUBLIC_APP_URL) so
-    // OAuth always lands on greenofig.com. Fall back to the runtime
-    // origin only for local development where the env var is unset.
+    // Inside the Capacitor Android app, Google sign-in opens a Chrome
+    // Custom Tab — when Google finishes, it needs to bounce back into
+    // OUR app, not greenofig.com on the system browser. Use the
+    // custom URL scheme registered in AndroidManifest.xml; the
+    // CapacitorAuthListener picks the callback up and completes the
+    // Supabase session inside the WebView.
+    //
+    // In a regular browser, redirect back to greenofig.com/<locale>/
+    // auth/callback as before.
+    const { isInsideCapacitor } = await import('@/lib/is-capacitor')
     const baseUrl =
       process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, '') ||
       window.location.origin
-    const redirectTo = `${baseUrl}/${locale}/auth/callback`
+    const redirectTo = isInsideCapacitor()
+      ? 'com.greenofig.app://login-callback'
+      : `${baseUrl}/${locale}/auth/callback`
     const { error: oauthError } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: { redirectTo },

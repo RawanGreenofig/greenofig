@@ -6,6 +6,7 @@
   "scripts": {
     "sync:version": "node scripts/sync-version.mjs",
     "assets:generate": "capacitor-assets generate --android",
+    "patch:manifest": "node scripts/patch-manifest.mjs",
     "cap:add": "cap add android",
     "cap:sync": "cap sync android",
     "open:android": "cap open android",
@@ -15,6 +16,7 @@
   },
   "dependencies": {
     "@capacitor/android": "^6.2.0",
+    "@capacitor/app": "^6.0.3",
     "@capacitor/core": "^6.2.0",
     "@capacitor/local-notifications": "^6.1.0",
     "@capacitor/push-notifications": "^6.0.4",
