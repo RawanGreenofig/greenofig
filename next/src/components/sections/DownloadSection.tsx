@@ -20,7 +20,7 @@ interface DownloadSectionProps {
   withSectionChrome?: boolean
 }
 
-const DEFAULT_APK = 'https://greenofig.com/downloads/greenofig-0.0.1.apk'
+const DEFAULT_APK = 'https://greenofig.com/downloads/greenofig-latest.apk'
 
 const LIME = '#a3e635'
 const SKY = '#06b6d4'
@@ -36,7 +36,7 @@ const AMBER = '#f59e0b'
  */
 export function DownloadSection({
   apkUrl = DEFAULT_APK,
-  version = '0.0.2',
+  version = '0.0.5',
   withSectionChrome = true,
 }: DownloadSectionProps) {
   const t = useTranslations('download')

@@ -101,9 +101,12 @@ Two options:
    the APK to the release for tag `v0.0.1` automatically. Link to it
    from the website:
    ```
-   https://github.com/RawanGreenofig/greenofig/releases/latest/download/greenofig-0.0.1.apk
+   https://github.com/RawanGreenofig/greenofig/releases/latest/download/greenofig-<version>.apk
    ```
-   Always-current URL: `releases/latest/download/greenofig-<version>.apk`.
+   The website itself doesn't use this URL — the GitHub Release
+   page assets are version-tagged for traceability; the live link
+   on greenofig.com is the stable `greenofig-latest.apk` that the
+   CI publishes to `next/public/downloads/`.
 
 2. **Drop into `next/public/downloads/` and serve from Vercel** — fine
    for small releases. APKs are large though (~5–10 MB), so this

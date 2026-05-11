@@ -174,11 +174,14 @@ jobs:
           git fetch origin main:refs/remotes/origin/main
           git checkout -B ci-publish-apk refs/remotes/origin/main
           mkdir -p next/public/downloads
-          cp "${{ steps.apk.outputs.path }}" "next/public/downloads/greenofig-0.0.1.apk"
+          # Stable filename — the website link never changes, only the
+          # bytes do. Per-release APKs are still attached to GitHub
+          # Releases with their version-tagged names for traceability.
+          cp "${{ steps.apk.outputs.path }}" "next/public/downloads/greenofig-latest.apk"
 
           git config user.name  "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add next/public/downloads/greenofig-0.0.1.apk
+          git add next/public/downloads/greenofig-latest.apk
 
           if git diff --cached --quiet; then
             echo "[publish-apk] No change to APK — nothing to commit."

@@ -1,15 +1,14 @@
 # Greenofig APK hosting
 
-Each release of the Android app lands here as `greenofig-0.0.1.apk`
-(filename is intentionally pinned even when the version bumps — it's
-the URL that users hit from /download, and they keep the same stable
-URL across releases). The CI build (.github/workflows/build-android.yml)
-overwrites this file every time a `v*` tag is published.
+Each release of the Android app overwrites `greenofig-latest.apk`
+here. The public URL the website points at is therefore stable:
 
-Manual bootstrap (one time, for v0.0.2):
-  1. On a device that's authenticated to the private repo, download:
-     https://github.com/RawanGreenofig/greenofig/releases/download/v0.0.2/greenofig-0.0.1.apk
-  2. Drop the file at next/public/downloads/greenofig-0.0.1.apk
-  3. git add + commit + push to main.
+    https://greenofig.com/downloads/greenofig-latest.apk
 
-After that the CI keeps it fresh automatically on every release.
+The CI build (.github/workflows/build-android.yml) handles the copy
+and commit automatically on every `v*` tag push — no manual step
+required after the initial bootstrap.
+
+Per-release version-tagged APKs (greenofig-0.0.5.apk, etc.) are
+attached to the matching GitHub Release for traceability, but the
+website never links to those.
