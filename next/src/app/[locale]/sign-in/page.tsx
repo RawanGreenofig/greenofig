@@ -47,7 +47,20 @@ export default function SignInPage() {
     const { error, data } = await supabase.auth.signInWithPassword(form)
     if (error) {
       setPending(false)
-      setServerError(error.message || tErrors('general'))
+      // "Invalid login credentials" is what Supabase returns both for a
+      // genuinely wrong password AND for an account that exists but was
+      // created via Google OAuth (so there's literally no password to
+      // match). Surface a hint about Forgot password / Google sign-in
+      // instead of just relaying the raw message — it's the single
+      // biggest "I can't sign in" support cause.
+      const msg = (error.message || '').toLowerCase()
+      if (msg.includes('invalid login credentials')) {
+        setServerError(
+          'Email or password is wrong. If you signed up with Google, use the Google button — or tap “Forgot your password?” below to set one.',
+        )
+      } else {
+        setServerError(error.message || tErrors('general'))
+      }
       return
     }
 
