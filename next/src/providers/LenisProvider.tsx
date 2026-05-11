@@ -13,15 +13,43 @@ import Lenis from 'lenis'
  *   - dashboard / admin / nutritionist routes — their inner <main> scrolls,
  *     and a body-level smooth-wheel interceptor fights the inner scroll
  *     container, leaving the page feeling frozen to the mouse wheel.
+ *   - the Capacitor WebView (Android APK) — Lenis hijacks wheel/touch
+ *     events which intermittently kills native scroll inside the
+ *     WebView. Detected via the UA tag we set in capacitor.config.ts
+ *     (`GreenofigApp/...`) and the `window.Capacitor` runtime global.
  */
 const APP_PATH_RX = /^\/(?:[a-z]{2}\/)?(dashboard|admin|nutritionist|onboarding|sign-in|sign-up|reset-password|forgot-password)/
+
+function isInsideCapacitor(): boolean {
+  if (typeof window === 'undefined') return false
+  if (/GreenofigApp\//.test(window.navigator.userAgent)) return true
+  const w = window as Window & { Capacitor?: { isNativePlatform?: () => boolean } }
+  return !!w.Capacitor?.isNativePlatform?.()
+}
+
+/**
+ * Tag <html> with `in-capacitor` when running inside the Android
+ * WebView so globals.css can apply WebView-specific scroll fixes
+ * (touch-action: pan-y on the body, pan-x on horizontal scrollers)
+ * without polluting the browser experience.
+ */
+function useCapacitorBodyClass() {
+  useEffect(() => {
+    if (!isInsideCapacitor()) return
+    const root = document.documentElement
+    root.classList.add('in-capacitor')
+    return () => root.classList.remove('in-capacitor')
+  }, [])
+}
 
 export function LenisProvider({ children }: { children: ReactNode }) {
   const pathname = usePathname()
   const isAppShell = !!pathname && APP_PATH_RX.test(pathname)
+  useCapacitorBodyClass()
 
   useEffect(() => {
     if (isAppShell) return
+    if (isInsideCapacitor()) return
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
     if (reduced) return
 

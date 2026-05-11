@@ -1352,3 +1352,27 @@ textarea:focus-visible {
     padding-bottom: calc(96px + env(safe-area-inset-bottom)) !important;
   }
 }
+
+/* ──────────────────────────────────────────────────────────────────
+ * Capacitor WebView scroll fixes.
+ *
+ * The Android WebView intermittently drops scroll mid-page when a
+ * framer-motion / GSAP element on the page handles touchmove during
+ * the gesture. Constraining touch-action on the body to vertical pan
+ * makes the browser commit to scroll early and stops competing JS
+ * from stealing the gesture. Children that need horizontal scroll
+ * (store carousel, tab rails) override back to pan-x.
+ *
+ * Scoped under html.in-capacitor so the regular browser experience
+ * keeps its existing horizontal/vertical freedom.
+ * ────────────────────────────────────────────────────────────────── */
+html.in-capacitor,
+html.in-capacitor body {
+  touch-action: pan-y;
+  overscroll-behavior-y: contain;
+}
+html.in-capacitor [class*="overflow-x-auto"],
+html.in-capacitor [class*="overflow-x-scroll"],
+html.in-capacitor [data-scroll-x] {
+  touch-action: pan-x;
+}
