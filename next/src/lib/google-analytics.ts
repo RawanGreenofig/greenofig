@@ -14,6 +14,49 @@ import { BetaAnalyticsDataClient } from '@google-analytics/data'
  * setup-instructions UI instead of crashing.
  */
 let cached: { client: BetaAnalyticsDataClient; propertyId: string } | null | undefined
+let cachedReason: string | null = null
+
+/**
+ * Why the client couldn't be built (when getAnalyticsClient() returns
+ * null). Lets the API route distinguish "not configured" from "config
+ * is broken" so the dashboard can tell the user the real problem.
+ */
+export function getAnalyticsConfigError(): string | null {
+  return cachedReason
+}
+
+/**
+ * Best-effort parse of GA_SERVICE_ACCOUNT_JSON. Tolerates the two
+ * common ways it gets mangled when copy-pasted into Vercel:
+ *   1. Raw JSON pasted as-is — works.
+ *   2. Newlines inside "private_key" got converted to real newlines —
+ *      JSON.parse rejects it. We re-escape them and retry.
+ *   3. Pasted as base64 (some teams do this on purpose to avoid #2).
+ *      We attempt base64 → utf8 → JSON.
+ */
+function parseServiceAccount(raw: string): unknown {
+  // 1. As-is
+  try {
+    return JSON.parse(raw)
+  } catch {
+    /* fall through */
+  }
+  // 2. Re-escape literal newlines inside the JSON string
+  //    (covers the case where Vercel turned \n into real \n)
+  try {
+    return JSON.parse(raw.replace(/\n/g, '\\n').replace(/\r/g, ''))
+  } catch {
+    /* fall through */
+  }
+  // 3. Base64 decode and try again
+  try {
+    const decoded = Buffer.from(raw, 'base64').toString('utf8')
+    return JSON.parse(decoded)
+  } catch {
+    /* fall through */
+  }
+  throw new Error('GA_SERVICE_ACCOUNT_JSON is not valid JSON (raw, escaped, or base64).')
+}
 
 export function getAnalyticsClient():
   | { client: BetaAnalyticsDataClient; propertyId: string }
@@ -21,25 +64,48 @@ export function getAnalyticsClient():
   if (cached !== undefined) return cached
   const propertyId = process.env.GA_PROPERTY_ID?.trim()
   const rawJson = process.env.GA_SERVICE_ACCOUNT_JSON?.trim()
-  if (!propertyId || !rawJson) {
+  if (!propertyId) {
+    cachedReason = 'GA_PROPERTY_ID is not set.'
+    cached = null
+    return null
+  }
+  if (!rawJson) {
+    cachedReason = 'GA_SERVICE_ACCOUNT_JSON is not set.'
     cached = null
     return null
   }
   try {
-    const credentials = JSON.parse(rawJson) as {
+    const parsed = parseServiceAccount(rawJson) as {
+      type?: string
       client_email?: string
       private_key?: string
     }
-    if (!credentials.client_email || !credentials.private_key) {
-      console.error('[ga] GA_SERVICE_ACCOUNT_JSON missing client_email/private_key')
+    if (!parsed.client_email || !parsed.private_key) {
+      cachedReason =
+        'GA_SERVICE_ACCOUNT_JSON is parsed but missing client_email or private_key.'
       cached = null
       return null
     }
-    const client = new BetaAnalyticsDataClient({ credentials })
+    // Repair private_key: if its \n sequences arrived as the literal
+    // two characters "\\n", expand them back to real newlines. The
+    // Google auth library wants the PEM with real newlines.
+    let privateKey = parsed.private_key
+    if (!privateKey.includes('\n') && privateKey.includes('\\n')) {
+      privateKey = privateKey.replace(/\\n/g, '\n')
+    }
+    const client = new BetaAnalyticsDataClient({
+      credentials: {
+        client_email: parsed.client_email,
+        private_key: privateKey,
+      },
+    })
+    cachedReason = null
     cached = { client, propertyId }
     return cached
   } catch (err) {
-    console.error('[ga] Failed to parse GA_SERVICE_ACCOUNT_JSON:', err)
+    const message = err instanceof Error ? err.message : String(err)
+    cachedReason = `Failed to parse GA_SERVICE_ACCOUNT_JSON: ${message}`
+    console.error('[ga]', cachedReason)
     cached = null
     return null
   }

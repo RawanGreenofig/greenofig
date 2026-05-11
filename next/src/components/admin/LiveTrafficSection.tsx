@@ -35,6 +35,10 @@ interface GaResponse {
   configured: boolean
   data?: GaSummary
   error?: string
+  reason?: string
+  code?: number | string
+  details?: string
+  status?: string
 }
 
 const DEVICE_ICON: Record<string, LucideIcon> = {
@@ -87,7 +91,7 @@ export function LiveTrafficSection() {
   }
 
   if (resp && !resp.configured) {
-    return <NotConfiguredCard />
+    return <NotConfiguredCard reason={resp.reason} />
   }
 
   const data = resp?.data
@@ -121,9 +125,32 @@ export function LiveTrafficSection() {
         </button>
       </header>
 
-      {error && (
-        <div className="rounded-lg border border-rose-500/40 bg-rose-500/5 px-4 py-3 text-xs text-rose-300">
-          GA error: {error}
+      {(error || resp?.error) && (
+        <div className="rounded-lg border border-rose-500/40 bg-rose-500/5 px-4 py-3 text-xs text-rose-300 space-y-2">
+          <p className="font-semibold">GA Data API error</p>
+          <p className="font-mono break-all">{resp?.error ?? error}</p>
+          {(resp?.code !== undefined || resp?.status || resp?.details) && (
+            <details className="opacity-80">
+              <summary className="cursor-pointer">Diagnostic detail</summary>
+              <pre className="mt-2 whitespace-pre-wrap text-[10px] leading-snug">
+                {JSON.stringify(
+                  {
+                    code: resp?.code,
+                    status: resp?.status,
+                    details: resp?.details,
+                  },
+                  null,
+                  2,
+                )}
+              </pre>
+            </details>
+          )}
+          <p className="text-fg-3 pt-1 border-t border-rose-500/20">
+            Most common cause: <code>GA_SERVICE_ACCOUNT_JSON</code> was pasted
+            with newline damage. Try re-pasting it from the original .json
+            file. If the code is <strong>403</strong>, the service account
+            needs <strong>Viewer</strong> permission on this GA property.
+          </p>
         </div>
       )}
 
@@ -327,7 +354,7 @@ function EmptyRow() {
   return <p className="text-xs text-fg-3">No data yet.</p>
 }
 
-function NotConfiguredCard() {
+function NotConfiguredCard({ reason }: { reason?: string }) {
   return (
     <section
       className="rounded-xl p-6 md:p-8 space-y-5"
@@ -355,6 +382,11 @@ function NotConfiguredCard() {
             Wire up the GA4 Data API to see real-time visitors, top pages,
             countries, and devices for greenofig.com right here.
           </p>
+          {reason && (
+            <p className="mt-3 inline-block rounded-md bg-amber/10 border border-amber/30 px-3 py-1.5 text-[11px] text-amber font-mono">
+              {reason}
+            </p>
+          )}
         </div>
       </header>
 

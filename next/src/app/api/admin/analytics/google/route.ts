@@ -1,35 +1,75 @@
 import type { NextRequest } from 'next/server'
 import { withAuth, type AuthedContext } from '@/lib/api/auth'
 import { forbidden, json } from '@/lib/api/response'
-import { fetchAnalyticsSummary, getAnalyticsClient } from '@/lib/google-analytics'
+import {
+  fetchAnalyticsSummary,
+  getAnalyticsClient,
+  getAnalyticsConfigError,
+} from '@/lib/google-analytics'
 
 /**
  * GET /api/admin/analytics/google
  *
- * Returns live Google Analytics 4 traffic for the marketing site.
- * Pulls real-time active users plus 30d rollups (country, device,
- * top pages, daily timeseries). Admin-only.
+ * Returns live GA4 traffic. Admin-only.
  *
- * Returns { configured: false } when GA_PROPERTY_ID or
- * GA_SERVICE_ACCOUNT_JSON env vars aren't set so the dashboard can
- * render setup instructions inline.
+ * Response shapes:
+ *   { configured: false, reason: string }    when env not wired up
+ *   { configured: true, data: GaSummary }    happy path
+ *   { configured: true, error: string,       when the Data API call
+ *     code?, details? }                       itself failed
  */
+function describeError(err: unknown): {
+  message: string
+  code?: number | string
+  details?: string
+  status?: string
+} {
+  if (err && typeof err === 'object') {
+    const e = err as {
+      message?: string
+      code?: number | string
+      details?: string
+      status?: string
+      reason?: string
+      errors?: unknown
+      response?: { statusText?: string; data?: unknown }
+    }
+    const message =
+      e.message ||
+      (typeof e.details === 'string' ? e.details : '') ||
+      e.status ||
+      e.reason ||
+      e.response?.statusText ||
+      'Unknown error from Google Analytics Data API.'
+    return {
+      message,
+      code: e.code,
+      details: e.details || JSON.stringify(e.errors ?? e.response?.data ?? ''),
+      status: e.status,
+    }
+  }
+  return { message: String(err) }
+}
+
 export const GET = withAuth(async (_req: NextRequest, ctx: AuthedContext) => {
   if (ctx.profile.role !== 'admin') return forbidden('Admin only.')
-  if (!getAnalyticsClient()) {
-    return json({ configured: false })
+
+  const client = getAnalyticsClient()
+  if (!client) {
+    return json({
+      configured: false,
+      reason: getAnalyticsConfigError() ?? 'Not configured.',
+    })
   }
   try {
     const data = await fetchAnalyticsSummary()
     return json({ configured: true, data })
-  } catch (err: unknown) {
-    console.error('[ga] fetchAnalyticsSummary failed:', err)
-    const message =
-      err instanceof Error ? err.message : 'Failed to fetch GA data'
-    return json({ configured: true, error: message }, 502)
+  } catch (err) {
+    const desc = describeError(err)
+    console.error('[ga] fetchAnalyticsSummary failed:', desc, err)
+    return json({ configured: true, error: desc.message, code: desc.code, details: desc.details, status: desc.status }, 502)
   }
 })
 
-// Force dynamic — we always want fresh real-time numbers, not cached
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
