@@ -6,6 +6,14 @@ export const metadata: Metadata = {
   title: 'About Greenofig | Personalized Nutrition Coaching',
   description:
     "Greenofig is a personalized nutrition coaching platform combining certified clinical nutritionists with AI-powered tools — meal plans, food tracking, and 1-on-1 consultations.",
+  alternates: { canonical: 'https://greenofig.com/about' },
+  openGraph: {
+    url: 'https://greenofig.com/about',
+    title: 'About Greenofig | Personalized Nutrition Coaching',
+    description:
+      'Greenofig combines certified clinical nutritionists with AI-powered tools — meal plans, food tracking, and 1-on-1 consultations.',
+    type: 'website',
+  },
 }
 
 export default function AboutPage() {

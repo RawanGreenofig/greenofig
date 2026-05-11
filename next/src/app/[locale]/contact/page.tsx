@@ -6,6 +6,7 @@ export const metadata: Metadata = {
   title: 'Contact | Greenofig',
   description:
     'Get in touch with Greenofig — questions about plans, billing, or your nutrition journey. We reply within one business day.',
+  alternates: { canonical: 'https://greenofig.com/contact' },
 }
 
 export default function ContactPage() {

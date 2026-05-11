@@ -8,6 +8,7 @@ export const metadata: Metadata = {
   title: 'Customer reviews | Greenofig',
   description:
     'Read real reviews from Greenofig members and share your own experience. Star ratings, photos, and detailed feedback from people working with our certified clinical nutritionists.',
+  alternates: { canonical: 'https://greenofig.com/reviews' },
 }
 
 export default function ReviewsPage({

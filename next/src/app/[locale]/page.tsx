@@ -1,3 +1,4 @@
+import type { Metadata } from 'next'
 import { setRequestLocale } from 'next-intl/server'
 import { HeroSequence } from '@/components/HeroSequence'
 import { SiteHeader } from '@/components/SiteHeader'
@@ -12,6 +13,11 @@ import { FooterSection } from '@/components/sections/FooterSection'
 
 interface PageProps {
   params: { locale: string }
+}
+
+export const metadata: Metadata = {
+  alternates: { canonical: 'https://greenofig.com/' },
+  openGraph: { url: 'https://greenofig.com/' },
 }
 
 /**

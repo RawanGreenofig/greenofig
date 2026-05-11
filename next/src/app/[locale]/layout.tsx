@@ -94,12 +94,13 @@ export const metadata: Metadata = {
       'max-video-preview': -1,
     },
   },
-  // Canonical homepage + hreflang alternates for the en/ar split.
-  // Without these Google sometimes treats /ar and / as duplicates and
-  // collapses both into one search result with a coin-flip on which
-  // language wins.
+  // Hreflang alternates for the en/ar split. We intentionally do
+  // NOT set a global canonical here — layout metadata is inherited
+  // by every page, so a layout-level canonical of "/" would tell
+  // Google that /blog, /about, /pricing etc are all duplicates of
+  // the homepage. Each page sets its own canonical via its own
+  // metadata block.
   alternates: {
-    canonical: 'https://greenofig.com/',
     languages: {
       en: 'https://greenofig.com/',
       ar: 'https://greenofig.com/ar',

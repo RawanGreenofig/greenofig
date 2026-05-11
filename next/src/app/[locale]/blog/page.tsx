@@ -11,7 +11,9 @@ export const metadata: Metadata = {
   title: 'Nutrition Blog | Coach Rawan Othman | Greenofig',
   description:
     'Evidence-based nutrition articles by Coach Rawan Othman, certified clinical nutritionist. Learn about healthy eating, weight loss, supplements, and more.',
+  alternates: { canonical: 'https://greenofig.com/blog' },
   openGraph: {
+    url: 'https://greenofig.com/blog',
     title: 'Nutrition Blog | Coach Rawan Othman | Greenofig',
     description:
       'Evidence-based nutrition articles by Coach Rawan Othman, certified clinical nutritionist.',
