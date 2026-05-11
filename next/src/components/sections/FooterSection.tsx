@@ -35,7 +35,8 @@ export function FooterSection() {
   // override is empty, so a partial edit doesn't blank the rest.
   const { value: footerOv } = usePlatformSetting<FooterSettings>('site_footer')
   const tagline = footerOv?.tagline?.trim() || t('footerTagline')
-  const supportEmail = footerOv?.supportEmail?.trim() || 'health@greenofig.com'
+  const supportEmail = footerOv?.supportEmail?.trim() || 'support@greenofig.com'
+  const careersEmail = 'careers@greenofig.com'
   const supportPhone = footerOv?.supportPhone?.trim() || ''
   const address = footerOv?.address?.trim() || ''
   const instagram = footerOv?.instagram?.trim() || 'https://instagram.com'
@@ -85,6 +86,12 @@ export function FooterSection() {
                 className="block text-fg-2 hover:text-lime-400 transition-colors"
               >
                 {supportEmail}
+              </a>
+              <a
+                href={`mailto:${careersEmail}`}
+                className="block text-fg-2 hover:text-lime-400 transition-colors"
+              >
+                {careersEmail}
               </a>
               {supportPhone && (
                 <a
