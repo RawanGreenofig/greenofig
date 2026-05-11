@@ -18,12 +18,12 @@ interface DownloadSectionProps {
   withSectionChrome?: boolean
 }
 
-// /releases/latest/download/<asset> always resolves to the newest
-// published release, so this only needs to change when the asset
-// FILENAME itself changes (which happens whenever next/package.json
-// "version" is bumped, since the CI build names the APK after it).
+// Pinned to the specific v0.0.2 release because that's where the
+// signed APK currently lives. Switch to /releases/latest/download/
+// once subsequent tagged releases consistently produce a same-named
+// asset.
 const DEFAULT_APK =
-  'https://github.com/RawanGreenofig/greenofig/releases/latest/download/greenofig-0.0.2.apk'
+  'https://github.com/RawanGreenofig/greenofig/releases/download/v0.0.2/greenofig-0.0.1.apk'
 
 /**
  * Reusable download section. Renders the headline, version badge,
