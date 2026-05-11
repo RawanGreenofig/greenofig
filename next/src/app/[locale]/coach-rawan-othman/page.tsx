@@ -9,13 +9,13 @@ import { FooterSection } from '@/components/sections/FooterSection'
 import { BLOG_ARTICLES } from '@/lib/blog-seed'
 
 export const metadata: Metadata = {
-  title: 'Nutritionist Coach Rawan Othman | Certified Clinical Nutritionist | Greenofig',
+  title: 'Nutrition Coach Rawan Othman | Certified Clinical Nutritionist | Greenofig',
   description:
-    'Meet Nutritionist Coach Rawan Othman, head coach at Greenofig and certified clinical nutritionist. 3 years of practice, 500+ clients, evidence-based personalized nutrition.',
+    'Meet Nutrition Coach Rawan Othman, head coach at Greenofig and certified clinical nutritionist. 3 years of practice, 500+ clients, evidence-based personalized nutrition.',
   alternates: { canonical: 'https://greenofig.com/coach-rawan-othman' },
   openGraph: {
     url: 'https://greenofig.com/coach-rawan-othman',
-    title: 'Nutritionist Coach Rawan Othman | Certified Clinical Nutritionist',
+    title: 'Nutrition Coach Rawan Othman | Certified Clinical Nutritionist',
     description:
       '3 years of practice, 500+ clients, evidence-based personalized nutrition. Head coach of the Greenofig team.',
     type: 'profile',
@@ -24,7 +24,7 @@ export const metadata: Metadata = {
         url: '/images/dr-rawan-othman.jpg',
         width: 1200,
         height: 630,
-        alt: 'Nutritionist Coach Rawan Othman — Certified Clinical Nutritionist',
+        alt: 'Nutrition Coach Rawan Othman — Certified Clinical Nutritionist',
       },
     ],
   },
@@ -36,7 +36,7 @@ interface PageProps {
 
 /**
  * /coach-rawan-othman — dedicated author profile page. Separate SEO
- * target that ranks for branded searches like "Nutritionist Coach Rawan Othman"
+ * target that ranks for branded searches like "Nutrition Coach Rawan Othman"
  * and "Greenofig nutritionist". Also the destination for the byline
  * link on every blog article author card.
  */
@@ -146,7 +146,7 @@ export default async function CoachRawanPage({ params }: PageProps) {
         {/* Bio */}
         <section className="mt-12 md:mt-16 max-w-3xl">
           <h2 className="font-display font-bold text-2xl text-fg-1 mb-4">
-            {isAr ? 'عن أخصائية تغذية كوتش روان' : 'About Nutritionist Coach Rawan'}
+            {isAr ? 'عن كوتش التغذية روان' : 'About Nutrition Coach Rawan'}
           </h2>
           <p className="text-base md:text-lg text-fg-2 leading-relaxed">
             {isAr ? NUTRITIONIST.bio.longAr : NUTRITIONIST.bio.long}
@@ -256,8 +256,8 @@ export default async function CoachRawanPage({ params }: PageProps) {
         >
           <h2 className="font-display font-bold text-2xl md:text-3xl text-fg-1 mb-3 tracking-tight">
             {isAr
-              ? 'ابدأ رحلتك مع أخصائية تغذية كوتش روان'
-              : 'Start your journey with Nutritionist Coach Rawan'}
+              ? 'ابدأ رحلتك مع كوتش التغذية روان'
+              : 'Start your journey with Nutrition Coach Rawan'}
           </h2>
           <p className="text-fg-2 mb-6 max-w-md mx-auto">
             {isAr

@@ -57,9 +57,9 @@ const SEVERITY_META: Record<Severity, { tint: string; bg: string; Icon: LucideIc
 const SEED: AuditEvent[] = [
   { id: 'e1',  hoursAgo: 0.2, actor: 'Ahmad Salim',     actorInitials: 'AS', action: 'feature_flag_toggled', target: 'sleep_tracking',          ip: '92.241.3.18',  severity: 'warn',   payload: { flag: 'sleep_tracking', state: 'OFF' } },
   { id: 'e2',  hoursAgo: 1,   actor: 'Ahmad Salim',     actorInitials: 'AS', action: 'broadcast_sent',       target: 'all users',                ip: '92.241.3.18',  severity: 'info',   payload: { audience: 'All users' } },
-  { id: 'e3',  hoursAgo: 4,   actor: 'Nutritionist Coach Rawan Othman', actorInitials: 'RO', action: 'post_pinned',          target: 'Why protein at breakfast', ip: '94.187.41.6',  severity: 'info' },
+  { id: 'e3',  hoursAgo: 4,   actor: 'Nutrition Coach Rawan Othman', actorInitials: 'RO', action: 'post_pinned',          target: 'Why protein at breakfast', ip: '94.187.41.6',  severity: 'info' },
   { id: 'e4',  hoursAgo: 6,   actor: 'Ahmad Salim',     actorInitials: 'AS', action: 'api_key_rotated',      target: 'Stripe Live (production)', ip: '92.241.3.18',  severity: 'warn',   payload: { provider: 'Stripe' } },
-  { id: 'e5',  hoursAgo: 9,   actor: 'Nutritionist Coach Rawan Othman', actorInitials: 'RO', action: 'moderation_resolved',  target: 'Spam: "Buy these…"',       ip: '94.187.41.6',  severity: 'info',   payload: { action: 'removed' } },
+  { id: 'e5',  hoursAgo: 9,   actor: 'Nutrition Coach Rawan Othman', actorInitials: 'RO', action: 'moderation_resolved',  target: 'Spam: "Buy these…"',       ip: '94.187.41.6',  severity: 'info',   payload: { action: 'removed' } },
   { id: 'e6',  hoursAgo: 14,  actor: 'Ahmad Salim',     actorInitials: 'AS', action: 'user_impersonated',    target: 'layla@example.com',         ip: '92.241.3.18',  severity: 'warn' },
   { id: 'e7',  hoursAgo: 22,  actor: 'Ahmad Salim',     actorInitials: 'AS', action: 'store_toggled',        target: 'Storefront',                ip: '92.241.3.18',  severity: 'warn',   payload: { state: 'OFFLINE' } },
   { id: 'e8',  hoursAgo: 28,  actor: 'Ahmad Salim',     actorInitials: 'AS', action: 'user_tier_changed',    target: 'omar@example.com',          ip: '92.241.3.18',  severity: 'info',   payload: { tier: 'PREMIUM' } },

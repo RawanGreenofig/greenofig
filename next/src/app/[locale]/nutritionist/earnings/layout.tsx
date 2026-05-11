@@ -3,7 +3,7 @@ import { requireHeadCoach } from '@/lib/auth/guard'
 
 /**
  * /nutritionist/earnings is the business view — only the head coach
- * (Nutritionist Coach Rawan) sees revenue, MRR, and payouts. Employee coaches get
+ * (Nutrition Coach Rawan) sees revenue, MRR, and payouts. Employee coaches get
  * redirected back to their /nutritionist home.
  */
 export default async function EarningsLayout({

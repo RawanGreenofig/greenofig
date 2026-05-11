@@ -283,8 +283,8 @@ export default async function ArticlePage({ params }: RouteParams) {
           </h2>
           <p className="text-fg-2 mb-6 max-w-md mx-auto">
             {isAr
-              ? 'احجز استشارة مجانية مع أخصائية تغذية كوتش روان وابدأ رحلتك اليوم.'
-              : 'Book a free consultation with Nutritionist Coach Rawan and start your journey today.'}
+              ? 'احجز استشارة مجانية مع كوتش التغذية روان وابدأ رحلتك اليوم.'
+              : 'Book a free consultation with Nutrition Coach Rawan and start your journey today.'}
           </p>
           <Link
             href="/#booking"
@@ -453,7 +453,7 @@ function renderBlock(block: Block, key: number, isAr: boolean) {
         >
           <p className="inline-flex items-center gap-2 text-xs uppercase tracking-eyebrow font-bold text-lime-400 mb-2">
             <Crown className="w-3.5 h-3.5" strokeWidth={2} />
-            {isAr ? 'نصيحة أخصائية تغذية كوتش روان' : "Nutritionist Coach Rawan's Tip"}
+            {isAr ? 'نصيحة كوتش التغذية روان' : "Nutrition Coach Rawan's Tip"}
           </p>
           <p className="italic text-fg-1 leading-relaxed">{renderInline(block.text)}</p>
         </aside>

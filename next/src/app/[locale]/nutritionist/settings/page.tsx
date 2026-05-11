@@ -79,7 +79,7 @@ export default function NutritionistSettingsPage() {
   const [saveState, setSaveState] = useState<'idle' | 'saving' | 'saved'>('idle')
 
   const [profile, setProfile] = useState<ProfileForm>({
-    displayName: 'Nutritionist Coach Rawan Othman',
+    displayName: 'Nutrition Coach Rawan Othman',
     title: 'Clinical Nutritionist · MSc, RD',
     bio:
       "I help women in the Levant rebuild their relationship with food. Mediterranean-rooted, evidence-led, no shame. Five years in clinic, four in private practice.",

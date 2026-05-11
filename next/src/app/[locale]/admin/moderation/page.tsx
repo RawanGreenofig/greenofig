@@ -118,7 +118,7 @@ const SEED: FlaggedItem[] = [
     reportCount: 9,
     flaggedHoursAgo: 72,
     resolution: 'removed',
-    resolvedBy: 'Nutritionist Coach Rawan',
+    resolvedBy: 'Nutrition Coach Rawan',
     resolvedHoursAgo: 70,
   },
 ]

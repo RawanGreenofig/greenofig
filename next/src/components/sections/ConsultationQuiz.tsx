@@ -327,8 +327,8 @@ export function ConsultationQuiz() {
           </h2>
           <p className="mt-3 text-sm text-fg-2 max-w-lg mx-auto leading-relaxed">
             {isAr
-              ? '15 سؤالاً سريعاً تساعدنا في فهم احتياجاتك. ستحصل على كتاب إلكتروني مجاني، وستتواصل معك أخصائية تغذية كوتش روان شخصياً خلال يوم أو يومين.'
-              : '15 quick questions help us understand your needs. You get a free ebook, and Nutritionist Coach Rawan personally reaches out within 1–2 business days.'}
+              ? '15 سؤالاً سريعاً تساعدنا في فهم احتياجاتك. ستحصل على كتاب إلكتروني مجاني، وستتواصل معك كوتش التغذية روان شخصياً خلال يوم أو يومين.'
+              : '15 quick questions help us understand your needs. You get a free ebook, and Nutrition Coach Rawan personally reaches out within 1–2 business days.'}
           </p>
         </header>
 

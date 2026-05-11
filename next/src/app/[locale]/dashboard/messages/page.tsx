@@ -31,7 +31,7 @@ import { NUTRITIONIST } from '@/lib/tokens'
  *
  * Two states:
  *   - Free / basic tier  → premium-pitch upgrade card with mock chat input
- *   - Premium / VIP      → real chat thread with Nutritionist Coach Rawan
+ *   - Premium / VIP      → real chat thread with Nutrition Coach Rawan
  *
  * The upgrade flow POSTs to /api/stripe/checkout and routes the user back
  * to this page with `?success=1`, where we surface a toast and clean the
@@ -61,7 +61,7 @@ function MessagesInner() {
   // Welcome toast after returning from a successful Stripe checkout.
   useEffect(() => {
     if (searchParams.get('success') === '1') {
-      toast.success('🎉 Premium unlocked! You can now message Nutritionist Coach Rawan.')
+      toast.success('🎉 Premium unlocked! You can now message Nutrition Coach Rawan.')
       router.replace(pathname)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -122,7 +122,7 @@ function UpgradeCard({ firstName }: { firstName: string }) {
     },
     {
       icon: '📋',
-      title: 'Get a personalized meal plan from Nutritionist Coach Rawan',
+      title: 'Get a personalized meal plan from Nutrition Coach Rawan',
       sub: 'Meal Planning',
     },
     {
@@ -428,7 +428,7 @@ interface Msg {
   ago: number
   read?: boolean
   /** True when this is an instant AI-generated reply from the
-   *  Greenofig Assistant. Nutritionist Coach Rawan still follows up personally. */
+   *  Greenofig Assistant. Nutrition Coach Rawan still follows up personally. */
   isAi?: boolean
 }
 
@@ -475,7 +475,7 @@ function Thread() {
     if (el) el.scrollTop = el.scrollHeight
   }, [messages])
 
-  // Load the user's existing conversation with Nutritionist Coach Rawan + its messages.
+  // Load the user's existing conversation with Nutrition Coach Rawan + its messages.
   useEffect(() => {
     if (!userId) return
     const supabase = getBrowserSupabase()
@@ -543,7 +543,7 @@ function Thread() {
   }, [userId])
 
   // Realtime: subscribe to new messages on the active conversation so
-  // a reply from Nutritionist Coach Rawan appears without a refresh. Re-runs whenever
+  // a reply from Nutrition Coach Rawan appears without a refresh. Re-runs whenever
   // conversationId changes (i.e. after the very first message creates
   // the conversation row).
   useEffect(() => {
@@ -622,7 +622,7 @@ function Thread() {
         return
       }
 
-      // First message ever: server route looks up Nutritionist Coach Rawan and
+      // First message ever: server route looks up Nutrition Coach Rawan and
       // creates the conversation row using the service-role key
       // (RLS otherwise blocks the cross-user lookup).
       let convId = conversationId

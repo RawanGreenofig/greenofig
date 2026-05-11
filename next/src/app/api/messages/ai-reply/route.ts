@@ -15,7 +15,7 @@ export const dynamic = 'force-dynamic'
  * Fires after a customer sends a message to their coach. Generates
  * a short AI reply with Gemini and posts it back into the same
  * conversation flagged is_ai=true. Also writes a notification for
- * the head coach so Nutritionist Coach Rawan can review what the AI said.
+ * the head coach so Nutrition Coach Rawan can review what the AI said.
  *
  * Safeguards:
  *   - Caller must be the conversation's `user_id` (the customer).
@@ -143,7 +143,7 @@ export const POST = withAuth(async (req: NextRequest, ctx: AuthedContext) => {
     return internalError()
   }
 
-  // Notify the head coach so Nutritionist Coach Rawan can review and follow up.
+  // Notify the head coach so Nutrition Coach Rawan can review and follow up.
   // Looks up the head coach explicitly rather than assuming it's the
   // assigned nutritionist — for employee coaches, Rawan still needs
   // to know the AI replied.

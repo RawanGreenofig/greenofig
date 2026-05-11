@@ -28,7 +28,7 @@ const JOB_TYPE_LABEL: Record<string, string> = {
  * is_published=true. Click a row → /careers/[id] with the apply form.
  *
  * Greenofig is hiring nutritionists, content creators, and ops folk
- * as the team scales beyond Nutritionist Coach Rawan; this page is the front door.
+ * as the team scales beyond Nutrition Coach Rawan; this page is the front door.
  */
 export default function CareersPage() {
   // Start as empty rather than null — when there are no postings we
@@ -75,7 +75,7 @@ export default function CareersPage() {
             personalized nutrition.
           </h1>
           <p className="mt-6 text-base md:text-lg text-fg-2 max-w-2xl mx-auto leading-relaxed">
-            Greenofig is growing. Join Nutritionist Coach Rawan and the coaching team
+            Greenofig is growing. Join Nutrition Coach Rawan and the coaching team
             to help thousands of clients build sustainable, evidence-led
             relationships with food.
           </p>

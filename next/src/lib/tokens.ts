@@ -85,17 +85,17 @@ export const heroFrames = {
 
 // Head-coach metadata used by marketing pages and components that
 // need the founder's identity (about section, footer, hero credits).
-// Greenofig is rebranding from "Nutritionist Coach Rawan" to "Nutritionist Coach Rawan Othman"
+// Greenofig is rebranding from "Nutrition Coach Rawan" to "Nutrition Coach Rawan Othman"
 // as we hire more nutritionists onto the team. Use NUTRITIONIST.name
 // or .shortName for owner-coach copy; for generic platform copy,
 // prefer "your coach" / "coaches" so additional team members can
 // own those touchpoints without rewording.
 export const NUTRITIONIST = {
-  name: 'Nutritionist Nutritionist Coach Rawan Othman',
-  nameAr: 'أخصائية تغذية أخصائية تغذية كوتش روان عثمان',
+  name: 'Nutrition Coach Rawan Othman',
+  nameAr: 'كوتش التغذية روان عثمان',
   firstName: 'Rawan',
-  title: 'Nutritionist Coach',
-  shortName: 'Nutritionist Nutritionist Coach Rawan',
+  title: 'Nutrition Coach',
+  shortName: 'Nutrition Coach Rawan',
   role: 'Certified Clinical Nutritionist · Head Coach',
   roleAr: 'أخصائية التغذية الإكلينيكية · المدرّبة الرئيسية',
   initials: 'RO',
@@ -112,13 +112,13 @@ export const NUTRITIONIST = {
   ],
   bio: {
     short:
-      'Nutritionist Nutritionist Coach Rawan Othman is a certified clinical nutritionist and head coach of the Greenofig team, dedicated to helping people achieve lasting health through science-backed, personalized nutrition.',
+      'Nutrition Coach Rawan Othman is a certified clinical nutritionist and head coach of the Greenofig team, dedicated to helping people achieve lasting health through science-backed, personalized nutrition.',
     long:
-      'Nutritionist Nutritionist Coach Rawan Othman leads the Greenofig coaching team. She brings an evidence-based approach to nutrition that goes beyond generic diets. In her 3 years of specialized practice, she — along with the nutritionist coaches she trains — has helped hundreds of clients transform their relationship with food, building sustainable habits that fit real life, not just theory.',
+      'Nutrition Coach Rawan Othman leads the Greenofig coaching team. She brings an evidence-based approach to nutrition that goes beyond generic diets. In her 3 years of specialized practice, she — along with the nutritionist coaches she trains — has helped hundreds of clients transform their relationship with food, building sustainable habits that fit real life, not just theory.',
     shortAr:
-      'أخصائية تغذية أخصائية تغذية كوتش روان عثمان أخصائية تغذية إكلينيكية معتمدة ومدرّبة رئيسية في فريق Greenofig، تكرّس جهودها لمساعدة الناس على تحقيق صحة دائمة من خلال تغذية شخصية قائمة على العلم.',
+      'كوتش التغذية روان عثمان أخصائية تغذية إكلينيكية معتمدة ومدرّبة رئيسية في فريق Greenofig، تكرّس جهودها لمساعدة الناس على تحقيق صحة دائمة من خلال تغذية شخصية قائمة على العلم.',
     longAr:
-      'تقود أخصائية تغذية أخصائية تغذية كوتش روان عثمان فريق Greenofig. تقدّم نهجاً حديثاً قائماً على الأدلة العلمية في التغذية، يتجاوز الأنظمة العامة. في سنواتها الثلاث من الممارسة، ساعدت — مع أخصائيي التغذية المدرّبين الذين تدرّبهم — مئات العملاء على تغيير علاقتهم بالطعام وبناء عادات صحية مستدامة تناسب الحياة الواقعية.',
+      'تقود كوتش التغذية روان عثمان فريق Greenofig. تقدّم نهجاً حديثاً قائماً على الأدلة العلمية في التغذية، يتجاوز الأنظمة العامة. في سنواتها الثلاث من الممارسة، ساعدت — مع أخصائيي التغذية المدرّبين الذين تدرّبهم — مئات العملاء على تغيير علاقتهم بالطعام وبناء عادات صحية مستدامة تناسب الحياة الواقعية.',
   },
 } as const
 

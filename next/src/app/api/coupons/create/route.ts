@@ -122,8 +122,8 @@ export const POST = withNutritionistOrAdmin(
         {
           user_id: body.sentToUserId,
           type: 'system',
-          title: '🎁 A gift from Nutritionist Coach Rawan',
-          title_ar: '🎁 هدية من أخصائية تغذية كوتش روان',
+          title: '🎁 A gift from Nutrition Coach Rawan',
+          title_ar: '🎁 هدية من كوتش التغذية روان',
           body: notifBody,
           body_ar: notifBodyAr,
           data: { couponCode: code, discountType: type, value },
@@ -141,8 +141,8 @@ export const POST = withNutritionistOrAdmin(
         const rows = list.map((u) => ({
           user_id: u.id,
           type: 'system' as const,
-          title: '🎁 A gift from Nutritionist Coach Rawan',
-          title_ar: '🎁 هدية من أخصائية تغذية كوتش روان',
+          title: '🎁 A gift from Nutrition Coach Rawan',
+          title_ar: '🎁 هدية من كوتش التغذية روان',
           body: notifBody,
           body_ar: notifBodyAr,
           data: { couponCode: code, discountType: type, value },

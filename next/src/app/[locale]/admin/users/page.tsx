@@ -65,7 +65,7 @@ const SEED: AdminUser[] = [
   { id: 'u8',  name: 'Rasha Tarawneh',   initials: 'RT', email: 'rasha@example.com',   role: 'user',         tier: 'premium', status: 'active',    joinedISO: '2026-03-15', lastSeenHours: 1 },
   { id: 'u9',  name: 'Diana Costa',      initials: 'DC', email: 'diana@example.com',   role: 'user',         tier: 'premium', status: 'active',    joinedISO: '2026-01-04', lastSeenHours: 4 },
   { id: 'u10', name: 'Reem Odeh',        initials: 'RO', email: 'reem@example.com',    role: 'user',         tier: 'basic',   status: 'invited',   joinedISO: '2026-05-01', lastSeenHours: 9999 },
-  { id: 'u11', name: 'Nutritionist Coach Rawan Othman', initials: 'RO', email: 'rawan@greenofig.com', role: 'nutritionist', tier: 'vip',     status: 'active',    joinedISO: '2025-09-01', lastSeenHours: 1 },
+  { id: 'u11', name: 'Nutrition Coach Rawan Othman', initials: 'RO', email: 'rawan@greenofig.com', role: 'nutritionist', tier: 'vip',     status: 'active',    joinedISO: '2025-09-01', lastSeenHours: 1 },
   { id: 'u12', name: 'Ahmad Salim',      initials: 'AS', email: 'admin@greenofig.com', role: 'admin',        tier: 'vip',     status: 'active',    joinedISO: '2025-08-15', lastSeenHours: 0 },
 ]
 

@@ -57,7 +57,7 @@ export const PRODUCTS: Product[] = [
     badges: ['drPick'],
     hue: 'rgb(168 85 247 / 0.18)',
     description:
-      'Glycinate (not citrate) for the form most people tolerate without GI upset. 200 mg elemental magnesium per capsule. Take 30 minutes before sleep — Nutritionist Coach Rawan’s most-recommended single supplement.',
+      'Glycinate (not citrate) for the form most people tolerate without GI upset. 200 mg elemental magnesium per capsule. Take 30 minutes before sleep — Nutrition Coach Rawan’s most-recommended single supplement.',
     benefits: [
       'Supports sleep quality and nervous-system calm',
       'Better-tolerated than magnesium citrate',
@@ -221,14 +221,14 @@ export const PRODUCTS: Product[] = [
   },
   {
     id: 'p12',
-    name: 'Eat Real — Nutritionist Coach Rawan',
+    name: 'Eat Real — Nutrition Coach Rawan',
     category: 'books',
     price: 18,
     stock: 12,
     badges: ['drPick', 'newBadge'],
     hue: 'rgb(61 122 74 / 0.22)',
     description:
-      'Nutritionist Coach Rawan’s clinical-but-warm guide to eating in the Mediterranean style without turning food into a stressful project. 240 pages, 60 recipes, no calorie math.',
+      'Nutrition Coach Rawan’s clinical-but-warm guide to eating in the Mediterranean style without turning food into a stressful project. 240 pages, 60 recipes, no calorie math.',
     benefits: [
       '240 pages, 60 recipes',
       'Mediterranean-style framework',

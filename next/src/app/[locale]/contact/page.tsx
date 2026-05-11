@@ -54,7 +54,7 @@ export default function ContactPage() {
             خذ <a href="/#booking" className="text-lime-400 hover:underline">
               تقييمنا الصحي المجاني
             </a>{' '}
-            (15 سؤالاً فقط). ستحصل على كتاب إلكتروني مجاني وستتواصل معك أخصائية تغذية كوتش روان
+            (15 سؤالاً فقط). ستحصل على كتاب إلكتروني مجاني وستتواصل معك كوتش التغذية روان
             شخصياً خلال يوم أو يومين.
           </P>
         </section>
@@ -103,7 +103,7 @@ export default function ContactPage() {
           <a href="/#booking" className="text-lime-400 hover:underline">
             free 15-question health assessment
           </a>
-          . You&rsquo;ll get a free ebook and Nutritionist Coach Rawan will personally reach
+          . You&rsquo;ll get a free ebook and Nutrition Coach Rawan will personally reach
           out within 1–2 business days.
         </P>
       </section>

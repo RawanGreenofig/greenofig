@@ -173,7 +173,7 @@ export default function ProductDetailPage() {
               }}
             >
               <Sparkles className="w-3 h-3" strokeWidth={2.25} />
-              Nutritionist Coach Rawan&apos;s Pick
+              Nutrition Coach Rawan&apos;s Pick
             </span>
           )}
 
