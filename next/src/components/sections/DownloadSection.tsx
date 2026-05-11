@@ -1,6 +1,6 @@
 'use client'
 
-import { useLocale, useTranslations } from 'next-intl'
+import { useTranslations } from 'next-intl'
 import { Apple, Download, Share2, Plus, AlertTriangle, Smartphone } from 'lucide-react'
 
 interface DownloadSectionProps {
@@ -42,8 +42,6 @@ export function DownloadSection({
   withSectionChrome = true,
 }: DownloadSectionProps) {
   const t = useTranslations('download')
-  const locale = useLocale()
-  const isAr = locale === 'ar'
 
   const content = (
     <div className="max-w-screen-xl mx-auto">
@@ -160,10 +158,10 @@ export function DownloadSection({
           <p className="text-sm text-fg-2 mb-4">{t('iosIntro')}</p>
 
           <ol className="space-y-3 flex-1">
-            <Step n={1} text={t('iosStep1')} isAr={isAr} />
-            <Step n={2} text={t('iosStep2')} icon={Share2} isAr={isAr} />
-            <Step n={3} text={t('iosStep3')} icon={Plus} isAr={isAr} />
-            <Step n={4} text={t('iosStep4')} isAr={isAr} />
+            <Step n={1} text={t('iosStep1')} />
+            <Step n={2} text={t('iosStep2')} icon={Share2} />
+            <Step n={3} text={t('iosStep3')} icon={Plus} />
+            <Step n={4} text={t('iosStep4')} />
           </ol>
 
           <p className="mt-4 text-[11px] text-fg-3">{t('iosFootnote')}</p>
@@ -187,12 +185,10 @@ function Step({
   n,
   text,
   icon: Icon,
-  isAr,
 }: {
   n: number
   text: string
   icon?: typeof Share2
-  isAr: boolean
 }) {
   return (
     <li className="flex items-start gap-3">
