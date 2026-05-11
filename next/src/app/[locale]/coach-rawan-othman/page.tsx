@@ -83,21 +83,22 @@ export default async function CoachRawanPage({ params }: PageProps) {
       <SiteHeader />
       <div style={{ height: 'calc(64px + env(safe-area-inset-top))' }} />
 
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-20">
-        {/* Hero */}
-        <header className="flex flex-col md:flex-row md:items-start gap-8 md:gap-10">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
+        {/* Hero — compact so the name, role, and CTAs fit one viewport
+            on most laptops without scrolling. */}
+        <header className="flex flex-row items-center md:items-start gap-5 md:gap-6">
           <div
-            className="w-40 h-40 md:w-48 md:h-48 rounded-full overflow-hidden bg-surface-raised shrink-0"
+            className="w-24 h-24 md:w-28 md:h-28 rounded-full overflow-hidden bg-surface-raised shrink-0"
             style={{
               boxShadow:
-                '0 0 0 1px var(--gf-border), 0 0 0 6px rgba(132,217,61,0.12), 0 18px 40px rgba(0,0,0,0.32)',
+                '0 0 0 1px var(--gf-border), 0 0 0 4px rgba(132,217,61,0.12), 0 12px 28px rgba(0,0,0,0.28)',
             }}
           >
             <Image
               src="/images/dr-rawan-othman.jpg"
               alt={isAr ? NUTRITIONIST.nameAr : NUTRITIONIST.name}
-              width={192}
-              height={192}
+              width={112}
+              height={112}
               className="w-full h-full object-cover object-top"
               priority
             />
@@ -107,23 +108,23 @@ export default async function CoachRawanPage({ params }: PageProps) {
               {isAr ? 'فريق غرينوفيغ' : 'Greenofig Team'}
             </p>
             <h1
-              className="mt-2 font-display font-bold text-fg-1 tracking-tight inline-flex items-center gap-2 flex-wrap"
+              className="mt-1.5 font-display font-bold text-fg-1 tracking-tight inline-flex items-center gap-2 flex-wrap"
               style={{
-                fontSize: 'clamp(36px, 5.5vw, 56px)',
-                lineHeight: 1.05,
+                fontSize: 'clamp(22px, 3.5vw, 36px)',
+                lineHeight: 1.1,
                 fontVariationSettings: "'opsz' 144, 'wght' 700, 'SOFT' 100, 'WONK' 1",
               }}
             >
               {isAr ? NUTRITIONIST.nameAr : NUTRITIONIST.name}
-              <BadgeCheck className="w-7 h-7 text-lime-400 shrink-0" strokeWidth={2} />
+              <BadgeCheck className="w-5 h-5 md:w-6 md:h-6 text-lime-400 shrink-0" strokeWidth={2} />
             </h1>
-            <p className="mt-2 text-base md:text-lg text-fg-2">
+            <p className="mt-1.5 text-sm md:text-base text-fg-2">
               {isAr ? NUTRITIONIST.roleAr : NUTRITIONIST.role}
             </p>
-            <div className="mt-6 flex flex-wrap gap-3">
+            <div className="mt-4 flex flex-wrap gap-2.5">
               <Link
                 href="/#booking"
-                className="inline-flex items-center justify-center gap-1.5 rounded-pill bg-gradient-to-b from-lime-400 to-lime-600 text-bg font-semibold h-11 px-6 text-sm border border-lime-600/60 transition-all hover:brightness-110"
+                className="inline-flex items-center justify-center gap-1.5 rounded-pill bg-gradient-to-b from-lime-400 to-lime-600 text-bg font-semibold h-10 px-5 text-sm border border-lime-600/60 transition-all hover:brightness-110"
                 style={{ boxShadow: '0 6px 22px rgba(132,217,61,0.28)' }}
               >
                 {isAr ? 'احجز استشارة' : 'Book a consultation'}
@@ -134,7 +135,7 @@ export default async function CoachRawanPage({ params }: PageProps) {
               </Link>
               <Link
                 href="/blog"
-                className="inline-flex items-center justify-center gap-1.5 rounded-pill border border-border h-11 px-6 text-sm font-semibold text-fg-1 hover:border-lime-400/50 hover:text-lime-400 transition-colors"
+                className="inline-flex items-center justify-center gap-1.5 rounded-pill border border-border h-10 px-5 text-sm font-semibold text-fg-1 hover:border-lime-400/50 hover:text-lime-400 transition-colors"
                 style={{ background: 'var(--gf-input-bg)' }}
               >
                 {isAr ? 'اقرأ المقالات' : 'Read the articles'}
@@ -144,7 +145,7 @@ export default async function CoachRawanPage({ params }: PageProps) {
         </header>
 
         {/* Bio */}
-        <section className="mt-12 md:mt-16 max-w-3xl">
+        <section className="mt-8 md:mt-10 max-w-3xl">
           <h2 className="font-display font-bold text-2xl text-fg-1 mb-4">
             {isAr ? 'عن كوتش التغذية روان' : 'About Nutrition Coach Rawan'}
           </h2>
@@ -154,7 +155,7 @@ export default async function CoachRawanPage({ params }: PageProps) {
         </section>
 
         {/* Credentials */}
-        <section className="mt-12 max-w-3xl">
+        <section className="mt-8 max-w-3xl">
           <h2 className="font-display font-bold text-2xl text-fg-1 mb-4">
             {isAr ? 'الخبرات والشهادات' : 'Credentials & experience'}
           </h2>
@@ -181,7 +182,7 @@ export default async function CoachRawanPage({ params }: PageProps) {
         </section>
 
         {/* Areas of expertise */}
-        <section className="mt-12 max-w-3xl">
+        <section className="mt-8 max-w-3xl">
           <h2 className="font-display font-bold text-2xl text-fg-1 mb-4">
             {isAr ? 'مجالات التخصص' : 'Areas of expertise'}
           </h2>
@@ -218,7 +219,7 @@ export default async function CoachRawanPage({ params }: PageProps) {
 
         {/* Recent articles */}
         {recentArticles.length > 0 && (
-          <section className="mt-12 max-w-3xl">
+          <section className="mt-8 max-w-3xl">
             <h2 className="font-display font-bold text-2xl text-fg-1 mb-4">
               {isAr ? 'مقالات حديثة' : 'Recent articles'}
             </h2>
@@ -246,7 +247,7 @@ export default async function CoachRawanPage({ params }: PageProps) {
 
         {/* CTA */}
         <section
-          className="mt-16 rounded-2xl p-8 md:p-10 text-center max-w-3xl mx-auto"
+          className="mt-10 rounded-2xl p-7 md:p-8 text-center max-w-3xl mx-auto"
           style={{
             background:
               'radial-gradient(circle at 50% 0%, rgba(132,217,61,0.08) 0%, var(--gf-surface) 60%)',
