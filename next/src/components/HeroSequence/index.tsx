@@ -2,10 +2,12 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 import Image from 'next/image'
+import Link from 'next/link'
 import { useLocale, useTranslations } from 'next-intl'
 import { ArrowRight } from 'lucide-react'
 import { heroFrames } from '@/lib/tokens'
 import { usePlatformSetting } from '@/lib/hooks/usePlatformSetting'
+import { isInsideCapacitor } from '@/lib/is-capacitor'
 
 interface HeroSettings {
   headline1?: string
@@ -68,14 +70,29 @@ export function HeroSequence() {
   const [frames, setFrames] = useState<HTMLImageElement[] | null>(null)
   const [currentFrame, setCurrentFrame] = useState(0)
   const [staticMode, setStaticMode] = useState(false)
+  const [inCap, setInCap] = useState(false)
 
   useEffect(() => {
+    if (isInsideCapacitor()) {
+      // eslint-disable-next-line no-console
+      console.log('[gf-cap] HeroSequence: Capacitor detected, switching to static hero')
+      setInCap(true)
+      setStaticMode(true)
+      return
+    }
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
     const lowCpu = (navigator.hardwareConcurrency || 4) < 4
     if (reduced || lowCpu) setStaticMode(true)
   }, [])
 
   useEffect(() => {
+    // Inside Capacitor we render the static hero — no canvas, no
+    // scrub, no preloaded frames. Skipping the fetch saves ~40+
+    // image requests and prevents the loading-screen flash that
+    // briefly mounts a fixed full-viewport overlay (which by
+    // itself can lock WebView scroll).
+    if (isInsideCapacitor()) return
+
     let cancelled = false
     const imgs: HTMLImageElement[] = []
     let loaded = 0
@@ -131,6 +148,76 @@ export function HeroSequence() {
 
   const isLoading = framesLoaded < TOTAL
   const progressPct = Math.round((framesLoaded / TOTAL) * 100)
+
+  // ── Capacitor branch ─────────────────────────────────────────────
+  // Inside the Android app the full hero (fixed canvas + fixed word
+  // overlay + ScrollTrigger pin) breaks the WebView's native scroll.
+  // Render a flow-positioned static hero instead: single section, no
+  // fixed children, no animations. Detection is both UA-based and
+  // state-based so the swap also happens if window.Capacitor lands
+  // a bit later than navigator.userAgent.
+  if (inCap || isInsideCapacitor()) {
+    // eslint-disable-next-line no-console
+    console.log('[gf-cap] HeroSequence: rendering static hero (no fixed children)')
+    return (
+      <section
+        aria-label="Hero — Nourish Better."
+        className="relative w-full overflow-hidden"
+        style={{ background: '#0d1a12' }}
+      >
+        <div className="relative w-full" style={{ aspectRatio: '16 / 10' }}>
+          <Image
+            src={framePath(STILL_FRAME)}
+            alt=""
+            fill
+            priority
+            sizes="100vw"
+            className="object-cover"
+          />
+          {/* Soft bottom gradient to ground the text */}
+          <div
+            aria-hidden
+            className="absolute inset-0"
+            style={{
+              background:
+                'linear-gradient(to bottom, rgba(13,26,18,0) 35%, rgba(13,26,18,0.85) 100%)',
+            }}
+          />
+        </div>
+
+        <div className="px-6 -mt-16 relative z-10 pb-12 max-w-screen-md mx-auto text-center">
+          <h1
+            className="font-display font-bold text-fg-1"
+            style={{
+              fontSize: 'clamp(40px, 9vw, 88px)',
+              lineHeight: 0.98,
+              letterSpacing: '-0.03em',
+              textShadow: TEXT_SHADOW,
+              fontVariationSettings:
+                "'opsz' 144, 'wght' 700, 'SOFT' 100, 'WONK' 1",
+            }}
+          >
+            {heroEat}{' '}
+            <span className="text-lime-400">{heroReal}</span>
+          </h1>
+          <p
+            className="mt-5 text-base md:text-lg text-fg-1"
+            style={{ textShadow: TEXT_SHADOW }}
+          >
+            {heroSub}
+          </p>
+          <Link
+            href="/#booking"
+            className="mt-7 inline-flex items-center justify-center gap-2 rounded-pill bg-gradient-to-b from-lime-400 to-lime-600 text-bg font-semibold h-12 px-6 text-sm border border-lime-600/60"
+            style={{ boxShadow: '0 8px 28px rgba(132,217,61,0.32)' }}
+          >
+            {heroCta}
+            <ArrowRight className={`w-4 h-4 ${isAr ? 'rotate-180' : ''}`} strokeWidth={2} />
+          </Link>
+        </div>
+      </section>
+    )
+  }
 
   // ── Word reveal triggers ──────────────────────────────────────────
   const f = staticMode ? heroFrames.cta : currentFrame
