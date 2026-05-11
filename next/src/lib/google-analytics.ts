@@ -15,6 +15,48 @@ import { BetaAnalyticsDataClient } from '@google-analytics/data'
  */
 let cached: { client: BetaAnalyticsDataClient; propertyId: string } | null | undefined
 let cachedReason: string | null = null
+let cachedDiagnostic: AnalyticsDiagnostic | null = null
+
+/**
+ * Sanity check of GA env vars without leaking secrets — safe to expose
+ * on the admin diagnostic panel. Use this to figure out *which* of
+ * many possible failure modes you're hitting.
+ */
+export interface AnalyticsDiagnostic {
+  propertyIdSet: boolean
+  jsonSet: boolean
+  jsonParsedOk: boolean
+  hasClientEmail: boolean
+  clientEmailDomain: string | null
+  hasPrivateKey: boolean
+  privateKeyLooksLikePem: boolean
+  privateKeyLength: number
+  privateKeyHasRealNewlines: boolean
+  /** First 32 chars of the private key with anything that's not part
+   *  of the PEM header stripped to make the shape visible without
+   *  exposing key bits. */
+  privateKeyHeader: string
+  parseError: string | null
+}
+
+export function getAnalyticsDiagnostic(): AnalyticsDiagnostic {
+  if (cachedDiagnostic) return cachedDiagnostic
+  // Trigger init so we populate the diagnostic
+  getAnalyticsClient()
+  return cachedDiagnostic ?? {
+    propertyIdSet: false,
+    jsonSet: false,
+    jsonParsedOk: false,
+    hasClientEmail: false,
+    clientEmailDomain: null,
+    hasPrivateKey: false,
+    privateKeyLooksLikePem: false,
+    privateKeyLength: 0,
+    privateKeyHasRealNewlines: false,
+    privateKeyHeader: '',
+    parseError: 'Initialization did not run.',
+  }
+}
 
 /**
  * Why the client couldn't be built (when getAnalyticsClient() returns
@@ -64,13 +106,29 @@ export function getAnalyticsClient():
   if (cached !== undefined) return cached
   const propertyId = process.env.GA_PROPERTY_ID?.trim()
   const rawJson = process.env.GA_SERVICE_ACCOUNT_JSON?.trim()
+  // Start a fresh diagnostic
+  const diag: AnalyticsDiagnostic = {
+    propertyIdSet: !!propertyId,
+    jsonSet: !!rawJson,
+    jsonParsedOk: false,
+    hasClientEmail: false,
+    clientEmailDomain: null,
+    hasPrivateKey: false,
+    privateKeyLooksLikePem: false,
+    privateKeyLength: 0,
+    privateKeyHasRealNewlines: false,
+    privateKeyHeader: '',
+    parseError: null,
+  }
   if (!propertyId) {
     cachedReason = 'GA_PROPERTY_ID is not set.'
+    cachedDiagnostic = diag
     cached = null
     return null
   }
   if (!rawJson) {
     cachedReason = 'GA_SERVICE_ACCOUNT_JSON is not set.'
+    cachedDiagnostic = diag
     cached = null
     return null
   }
@@ -80,9 +138,15 @@ export function getAnalyticsClient():
       client_email?: string
       private_key?: string
     }
+    diag.jsonParsedOk = true
+    diag.hasClientEmail = !!parsed.client_email
+    diag.clientEmailDomain = parsed.client_email?.split('@')[1] ?? null
+    diag.hasPrivateKey = !!parsed.private_key
+
     if (!parsed.client_email || !parsed.private_key) {
       cachedReason =
         'GA_SERVICE_ACCOUNT_JSON is parsed but missing client_email or private_key.'
+      cachedDiagnostic = diag
       cached = null
       return null
     }
@@ -93,6 +157,14 @@ export function getAnalyticsClient():
     if (!privateKey.includes('\n') && privateKey.includes('\\n')) {
       privateKey = privateKey.replace(/\\n/g, '\n')
     }
+    diag.privateKeyLength = privateKey.length
+    diag.privateKeyHasRealNewlines = privateKey.includes('\n')
+    diag.privateKeyLooksLikePem =
+      privateKey.includes('BEGIN PRIVATE KEY') &&
+      privateKey.includes('END PRIVATE KEY')
+    diag.privateKeyHeader = privateKey.slice(0, 32)
+    cachedDiagnostic = diag
+
     const client = new BetaAnalyticsDataClient({
       credentials: {
         client_email: parsed.client_email,
@@ -104,6 +176,8 @@ export function getAnalyticsClient():
     return cached
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err)
+    diag.parseError = message
+    cachedDiagnostic = diag
     cachedReason = `Failed to parse GA_SERVICE_ACCOUNT_JSON: ${message}`
     console.error('[ga]', cachedReason)
     cached = null

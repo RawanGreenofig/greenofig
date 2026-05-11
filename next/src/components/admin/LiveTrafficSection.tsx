@@ -31,6 +31,20 @@ interface GaSummary {
   totals: { users30d: number; views30d: number; sessions30d: number }
 }
 
+interface GaDiagnostic {
+  propertyIdSet: boolean
+  jsonSet: boolean
+  jsonParsedOk: boolean
+  hasClientEmail: boolean
+  clientEmailDomain: string | null
+  hasPrivateKey: boolean
+  privateKeyLooksLikePem: boolean
+  privateKeyLength: number
+  privateKeyHasRealNewlines: boolean
+  privateKeyHeader: string
+  parseError: string | null
+}
+
 interface GaResponse {
   configured: boolean
   data?: GaSummary
@@ -39,6 +53,7 @@ interface GaResponse {
   code?: number | string
   details?: string
   status?: string
+  diagnostic?: GaDiagnostic
 }
 
 const DEVICE_ICON: Record<string, LucideIcon> = {
@@ -129,15 +144,18 @@ export function LiveTrafficSection() {
         <div className="rounded-lg border border-rose-500/40 bg-rose-500/5 px-4 py-3 text-xs text-rose-300 space-y-2">
           <p className="font-semibold">GA Data API error</p>
           <p className="font-mono break-all">{resp?.error ?? error}</p>
+          {resp?.diagnostic && (
+            <CredentialDiagnosticBlock d={resp.diagnostic} />
+          )}
           {(resp?.code !== undefined || resp?.status || resp?.details) && (
             <details className="opacity-80">
-              <summary className="cursor-pointer">Diagnostic detail</summary>
-              <pre className="mt-2 whitespace-pre-wrap text-[10px] leading-snug">
+              <summary className="cursor-pointer">Raw error payload</summary>
+              <pre className="mt-2 whitespace-pre-wrap text-[10px] leading-snug max-h-64 overflow-auto">
                 {JSON.stringify(
                   {
                     code: resp?.code,
                     status: resp?.status,
-                    details: resp?.details,
+                    details: resp?.details ? safeParse(resp.details) : null,
                   },
                   null,
                   2,
@@ -146,10 +164,11 @@ export function LiveTrafficSection() {
             </details>
           )}
           <p className="text-fg-3 pt-1 border-t border-rose-500/20">
-            Most common cause: <code>GA_SERVICE_ACCOUNT_JSON</code> was pasted
-            with newline damage. Try re-pasting it from the original .json
-            file. If the code is <strong>403</strong>, the service account
-            needs <strong>Viewer</strong> permission on this GA property.
+            If diagnostic above shows <code>privateKeyLooksLikePem: false</code>,
+            the key was pasted with damage — re-paste the JSON file as-is.
+            If <code>code: 403</code>, the service account isn&apos;t a Viewer
+            on this GA property. If <code>code: 401</code>, the key signature
+            is invalid — usually a corrupt private key.
           </p>
         </div>
       )}
@@ -352,6 +371,52 @@ function Panel({ title, children }: { title: string; children: React.ReactNode }
 
 function EmptyRow() {
   return <p className="text-xs text-fg-3">No data yet.</p>
+}
+
+function safeParse(s: string): unknown {
+  try {
+    return JSON.parse(s)
+  } catch {
+    return s
+  }
+}
+
+function CredentialDiagnosticBlock({ d }: { d: GaDiagnostic }) {
+  // Rows are tagged ok / warn / fail so the user can scan the column
+  // and immediately see what's broken.
+  const rows: { label: string; ok: boolean; value: string }[] = [
+    { label: 'GA_PROPERTY_ID set', ok: d.propertyIdSet, value: d.propertyIdSet ? 'yes' : 'NO' },
+    { label: 'GA_SERVICE_ACCOUNT_JSON set', ok: d.jsonSet, value: d.jsonSet ? 'yes' : 'NO' },
+    { label: 'JSON parsed', ok: d.jsonParsedOk, value: d.jsonParsedOk ? 'yes' : 'NO' },
+    { label: 'client_email present', ok: d.hasClientEmail, value: d.clientEmailDomain ? `@${d.clientEmailDomain}` : 'NO' },
+    { label: 'private_key present', ok: d.hasPrivateKey, value: d.hasPrivateKey ? `${d.privateKeyLength} chars` : 'NO' },
+    { label: 'key has real newlines', ok: d.privateKeyHasRealNewlines, value: d.privateKeyHasRealNewlines ? 'yes' : 'NO' },
+    { label: 'key looks like PEM', ok: d.privateKeyLooksLikePem, value: d.privateKeyLooksLikePem ? 'yes' : 'NO' },
+  ]
+  return (
+    <details className="opacity-90" open>
+      <summary className="cursor-pointer font-semibold">Credential diagnostic</summary>
+      <ul className="mt-2 space-y-1 font-mono text-[11px]">
+        {rows.map((r) => (
+          <li key={r.label} className="flex items-center gap-2">
+            <span style={{ color: r.ok ? '#a3e635' : '#fb7185' }}>
+              {r.ok ? '✓' : '✗'}
+            </span>
+            <span className="text-fg-2 flex-1">{r.label}</span>
+            <span className={r.ok ? 'text-fg-2' : 'text-rose-300'}>{r.value}</span>
+          </li>
+        ))}
+        {d.privateKeyHeader && (
+          <li className="pt-1 text-fg-3">
+            key header: <code className="text-fg-2">{d.privateKeyHeader}…</code>
+          </li>
+        )}
+        {d.parseError && (
+          <li className="pt-1 text-rose-300">parse error: {d.parseError}</li>
+        )}
+      </ul>
+    </details>
+  )
 }
 
 function NotConfiguredCard({ reason }: { reason?: string }) {
