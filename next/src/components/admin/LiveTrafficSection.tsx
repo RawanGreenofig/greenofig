@@ -41,6 +41,7 @@ interface GaDiagnostic {
   privateKeyLooksLikePem: boolean
   privateKeyLength: number
   privateKeyHasRealNewlines: boolean
+  privateKeyNewlineCount: number
   privateKeyHeader: string
   parseError: string | null
 }
@@ -391,6 +392,11 @@ function CredentialDiagnosticBlock({ d }: { d: GaDiagnostic }) {
     { label: 'client_email present', ok: d.hasClientEmail, value: d.clientEmailDomain ? `@${d.clientEmailDomain}` : 'NO' },
     { label: 'private_key present', ok: d.hasPrivateKey, value: d.hasPrivateKey ? `${d.privateKeyLength} chars` : 'NO' },
     { label: 'key has real newlines', ok: d.privateKeyHasRealNewlines, value: d.privateKeyHasRealNewlines ? 'yes' : 'NO' },
+    {
+      label: 'key newline count',
+      ok: d.privateKeyNewlineCount >= 20,
+      value: `${d.privateKeyNewlineCount}${d.privateKeyNewlineCount >= 20 ? '' : ' (expect ~28 for RSA 2048)'}`,
+    },
     { label: 'key looks like PEM', ok: d.privateKeyLooksLikePem, value: d.privateKeyLooksLikePem ? 'yes' : 'NO' },
   ]
   return (

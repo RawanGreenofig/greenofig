@@ -32,6 +32,9 @@ export interface AnalyticsDiagnostic {
   privateKeyLooksLikePem: boolean
   privateKeyLength: number
   privateKeyHasRealNewlines: boolean
+  /** A typical RSA 2048 PEM has ~28 newlines; <5 means the body is
+   *  collapsed onto one line which OpenSSL will reject. */
+  privateKeyNewlineCount: number
   /** First 32 chars of the private key with anything that's not part
    *  of the PEM header stripped to make the shape visible without
    *  exposing key bits. */
@@ -53,6 +56,7 @@ export function getAnalyticsDiagnostic(): AnalyticsDiagnostic {
     privateKeyLooksLikePem: false,
     privateKeyLength: 0,
     privateKeyHasRealNewlines: false,
+    privateKeyNewlineCount: 0,
     privateKeyHeader: '',
     parseError: 'Initialization did not run.',
   }
@@ -117,6 +121,7 @@ export function getAnalyticsClient():
     privateKeyLooksLikePem: false,
     privateKeyLength: 0,
     privateKeyHasRealNewlines: false,
+    privateKeyNewlineCount: 0,
     privateKeyHeader: '',
     parseError: null,
   }
@@ -159,6 +164,7 @@ export function getAnalyticsClient():
     }
     diag.privateKeyLength = privateKey.length
     diag.privateKeyHasRealNewlines = privateKey.includes('\n')
+    diag.privateKeyNewlineCount = (privateKey.match(/\n/g) ?? []).length
     diag.privateKeyLooksLikePem =
       privateKey.includes('BEGIN PRIVATE KEY') &&
       privateKey.includes('END PRIVATE KEY')
@@ -199,6 +205,27 @@ export async function fetchAnalyticsSummary(): Promise<GaSummary | null> {
   if (!ctx) return null
   const { client, propertyId } = ctx
   const property = `properties/${propertyId}`
+
+  // Preflight: explicitly mint an access token. If the credentials are
+  // bad, this throws a *useful* error (e.g. "invalid_grant: Invalid JWT
+  // Signature") before we hit gRPC, which otherwise wraps the failure
+  // as "undefined undefined: undefined".
+  try {
+    const auth = (client as unknown as {
+      auth?: {
+        getClient?: () => Promise<{ getAccessToken?: () => Promise<unknown> }>
+      }
+    }).auth
+    if (auth?.getClient) {
+      const authClient = await auth.getClient()
+      if (authClient?.getAccessToken) {
+        await authClient.getAccessToken()
+      }
+    }
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err)
+    throw new Error(`GA auth preflight failed: ${msg}`)
+  }
 
   const [realtime, country, device, pages, daily, totals] = await Promise.all([
     client.runRealtimeReport({
