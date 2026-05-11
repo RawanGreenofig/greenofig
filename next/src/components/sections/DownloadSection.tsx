@@ -18,12 +18,11 @@ interface DownloadSectionProps {
   withSectionChrome?: boolean
 }
 
-// Pinned to the specific v0.0.2 release because that's where the
-// signed APK currently lives. Switch to /releases/latest/download/
-// once subsequent tagged releases consistently produce a same-named
-// asset.
-const DEFAULT_APK =
-  'https://github.com/RawanGreenofig/greenofig/releases/download/v0.0.2/greenofig-0.0.1.apk'
+// Served from Vercel's static asset folder (next/public/downloads/).
+// The GitHub Action overwrites this file on every release so the
+// stable URL always points at the latest signed APK without us
+// needing to update the link here.
+const DEFAULT_APK = 'https://greenofig.com/downloads/greenofig-0.0.1.apk'
 
 /**
  * Reusable download section. Renders the headline, version badge,

@@ -138,3 +138,36 @@ jobs:
         with:
           files: ${{ steps.apk.outputs.path }}
           fail_on_unmatched_files: true
+
+      # ── Publish APK to greenofig.com via Vercel ───────────────────
+      # Copies the freshly-built APK into next/public/downloads/ at
+      # the stable filename greenofig-0.0.1.apk (the URL the website
+      # points at), then commits + pushes back to main. The push
+      # triggers a Vercel deploy that makes the new APK live at
+      # https://greenofig.com/downloads/greenofig-0.0.1.apk.
+      #
+      # Skipped on debug builds — debug APKs aren't signed for distribution.
+      - name: Publish APK to next/public/downloads/
+        if: ${{ github.event_name == 'push' || inputs.buildType == 'release' }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -e
+          # Work on a fresh checkout of main so the commit lands cleanly
+          # even when this run was triggered by a tag.
+          git fetch origin main:refs/remotes/origin/main
+          git checkout -B ci-publish-apk refs/remotes/origin/main
+          mkdir -p next/public/downloads
+          cp "${{ steps.apk.outputs.path }}" "next/public/downloads/greenofig-0.0.1.apk"
+
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add next/public/downloads/greenofig-0.0.1.apk
+
+          if git diff --cached --quiet; then
+            echo "[publish-apk] No change to APK — nothing to commit."
+            exit 0
+          fi
+
+          git commit -m "ci: publish ${{ steps.apk.outputs.name }} to web"
+          git push origin HEAD:main
