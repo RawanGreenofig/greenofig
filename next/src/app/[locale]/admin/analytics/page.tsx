@@ -300,29 +300,34 @@ export default function AdminAnalyticsPage() {
     liveCountries && liveCountries.length > 0 ? liveCountries : COUNTRIES
   const totalCountryUsers = countriesData.reduce((acc, c) => acc + c.users, 0)
 
+  // KPI values render from live DB queries — fall back to a dash
+  // while loading rather than seeded mock numbers so admins never
+  // see "6,180 USD" flash before the real $0 lands. Churn isn't
+  // computed yet so it stays as an em-dash until that pipeline
+  // is wired up.
   const kpis: KpiSpec[] = [
     {
       Icon: CreditCard,
       labelKey: 'mrr',
-      value: liveKpis ? `${liveKpis.mrr.toLocaleString()} USD` : '6,180 USD',
-      delta: 9,
+      value: liveKpis ? `${liveKpis.mrr.toLocaleString()} USD` : '—',
+      delta: 0,
       tint: '#a3e635',
     },
     {
       Icon: Users,
       labelKey: 'newUsers',
-      value: liveKpis ? String(liveKpis.newUsers) : '142',
-      delta: 14,
+      value: liveKpis ? String(liveKpis.newUsers) : '—',
+      delta: 0,
       tint: '#06b6d4',
     },
     {
       Icon: Activity,
       labelKey: 'activeUsers',
-      value: liveKpis ? String(liveKpis.activeUsers) : '301',
-      delta: 6,
+      value: liveKpis ? String(liveKpis.activeUsers) : '—',
+      delta: 0,
       tint: '#e8912a',
     },
-    { Icon: TrendingDown, labelKey: 'churn', value: '3.2%', delta: -1, tint: '#a855f7' },
+    { Icon: TrendingDown, labelKey: 'churn', value: '—', delta: 0, tint: '#a855f7' },
   ]
 
   return (
@@ -587,44 +592,50 @@ function Kpi({
   kpi: KpiSpec
   tA: ReturnType<typeof useTranslations>
 }) {
+  const hasDelta = kpi.delta !== 0
   const DeltaIcon = kpi.delta > 0 ? TrendingUp : TrendingDown
   const deltaTint = kpi.delta > 0 ? '#a3e635' : '#f43f5e'
   return (
     <article
-      className="rounded-xl border border-border bg-surface p-4"
-      style={{ boxShadow: `inset 4px 0 0 ${kpi.tint}` }}
+      className="rounded-2xl border p-4 transition-transform hover:-translate-y-px"
+      style={{
+        background: `linear-gradient(135deg, ${kpi.tint}0d 0%, var(--gf-surface) 60%)`,
+        borderColor: 'var(--gf-border)',
+        boxShadow:
+          '0 1px 0 rgba(255,255,255,0.04) inset, 0 8px 22px rgba(0,0,0,0.22)',
+      }}
     >
-      <div className="flex items-center gap-2">
-        <kpi.Icon
-          className="w-4 h-4 flex-shrink-0"
-          strokeWidth={1.75}
-          color={kpi.tint}
-        />
-        <p className="text-[11px] uppercase tracking-eyebrow text-fg-3 font-semibold">
+      <div className="flex items-center gap-2 mb-3">
+        <div
+          className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
+          style={{
+            background: `${kpi.tint}1f`,
+            boxShadow: `0 0 0 1px ${kpi.tint}33 inset`,
+          }}
+        >
+          <kpi.Icon className="w-4 h-4" strokeWidth={1.75} color={kpi.tint} />
+        </div>
+        <p className="text-[10px] uppercase tracking-eyebrow text-fg-3 font-semibold truncate">
           {tA(`kpis.${kpi.labelKey}` as 'kpis.mrr')}
         </p>
+        {hasDelta && (
+          <span
+            className="ml-auto inline-flex items-center gap-0.5 text-[10px] font-bold font-mono rounded-pill px-1.5 py-0.5"
+            style={{ color: deltaTint, background: `${deltaTint}1a` }}
+            dir="ltr"
+          >
+            <DeltaIcon className="w-3 h-3" strokeWidth={2.25} color="currentColor" />
+            {Math.abs(kpi.delta)}%
+          </span>
+        )}
       </div>
-      <div className="mt-2 flex items-baseline gap-2">
-        <p
-          className="font-display text-2xl font-bold"
-          style={{ color: kpi.tint }}
-          dir="ltr"
-        >
-          {kpi.value}
-        </p>
-        <span
-          className="inline-flex items-center gap-0.5 text-xs font-semibold font-mono"
-          style={{ color: deltaTint }}
-          dir="ltr"
-        >
-          <DeltaIcon
-            className="w-3 h-3"
-            strokeWidth={2.25}
-            color="currentColor"
-          />
-          {Math.abs(kpi.delta)}%
-        </span>
-      </div>
+      <p
+        className="font-display font-bold text-fg-1 tracking-tight"
+        style={{ fontSize: '28px', lineHeight: 1.05 }}
+        dir="ltr"
+      >
+        {kpi.value}
+      </p>
     </article>
   )
 }
