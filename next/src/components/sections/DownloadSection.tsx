@@ -16,6 +16,9 @@ import {
 interface DownloadSectionProps {
   apkUrl?: string
   version?: string
+  /** When true (default), wraps in <section> with marketing chrome.
+   *  Set false when embedded inside the dedicated /download page which
+   *  already has its own page wrapper. */
   withSectionChrome?: boolean
 }
 
@@ -25,11 +28,10 @@ const SKY = '#06b6d4'
 const AMBER = '#f59e0b'
 
 /**
- * Download page / homepage section. Vertically-stacked dashboard
- * panels on the marketing-page background — same chrome as the
- * admin and nutritionist surfaces (rounded-2xl, var(--gf-surface),
- * border + inset highlight + soft drop shadow). Bare lucide icons,
- * no custom SVG, no tinted boxes.
+ * Download page / homepage section. Uses the same outer chrome the
+ * dashboard surfaces use — px-4 md:px-8 py-6 md:py-8 max-w-screen-xl,
+ * generous space-y-6 stacking — and stacks two vertical panels
+ * (Android then iOS) below a compact title.
  */
 export function DownloadSection({
   apkUrl = DEFAULT_APK,
@@ -39,14 +41,12 @@ export function DownloadSection({
   const t = useTranslations('download')
 
   const content = (
-    <div className="max-w-2xl mx-auto">
-      {/* Header — dashboard h1 size, not marketing display */}
-      <header className="mb-8">
-        <p className="inline-flex items-center gap-2 text-[10px] uppercase tracking-eyebrow font-semibold text-lime-400">
-          <Smartphone className="w-3 h-3" strokeWidth={1.75} />
+    <>
+      <header>
+        <p className="text-[10px] uppercase tracking-eyebrow font-semibold text-lime-400">
           {t('eyebrow')}
           <span
-            className="inline-flex items-center font-mono text-[10px] rounded-pill px-2 py-0.5"
+            className="ms-2 inline-flex items-center font-mono text-[10px] rounded-pill px-2 py-0.5"
             style={{
               background: 'rgba(132,217,61,0.12)',
               border: '1px solid rgba(132,217,61,0.3)',
@@ -57,18 +57,24 @@ export function DownloadSection({
             v{version}
           </span>
         </p>
-        <h2
-          className="mt-3 font-display font-bold text-fg-1 tracking-tight"
+        <h1
+          className="mt-2 font-display font-bold text-fg-1 tracking-tight"
           style={{ fontSize: 'clamp(28px, 4vw, 40px)', lineHeight: 1.1 }}
         >
           {t('title')}
-        </h2>
-        <p className="mt-2 text-sm md:text-base text-fg-2">{t('subtitle')}</p>
+        </h1>
+        <p className="mt-2 text-sm md:text-base text-fg-2 max-w-2xl">
+          {t('subtitle')}
+        </p>
       </header>
 
-      <div className="space-y-4">
-        {/* Android — primary card */}
-        <Panel Icon={Smartphone} iconTint={LIME} title={t('androidTitle')}>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-5">
+        {/* Android */}
+        <Panel
+          Icon={Smartphone}
+          iconTint={LIME}
+          title={t('androidTitle')}
+        >
           <SecurityWarning />
 
           <a
@@ -81,7 +87,7 @@ export function DownloadSection({
             {t('androidCta')}
           </a>
 
-          <p className="mt-3 text-[11px] text-fg-3">{t('androidNote')}</p>
+          <p className="mt-4 text-[11px] text-fg-3">{t('androidNote')}</p>
 
           <p className="mt-2 flex items-start gap-1.5 text-[11px] text-fg-3 leading-relaxed">
             <AlertTriangle
@@ -93,7 +99,7 @@ export function DownloadSection({
           </p>
         </Panel>
 
-        {/* iOS — secondary card */}
+        {/* iOS */}
         <Panel
           Icon={Apple}
           iconTint={SKY}
@@ -109,21 +115,26 @@ export function DownloadSection({
           <p className="mt-4 text-[11px] text-fg-3">{t('iosFootnote')}</p>
         </Panel>
       </div>
-    </div>
+    </>
   )
 
-  if (!withSectionChrome) return content
+  // Outer wrapper matches the dashboard chrome exactly:
+  //   px-4 md:px-8 py-6 md:py-8 max-w-screen-xl mx-auto space-y-6
+  // That's the same container the /dashboard /admin /nutritionist
+  // pages use for their content, so this section reads as a piece of
+  // the app on the marketing background.
+  if (!withSectionChrome) {
+    return <div className="space-y-6">{content}</div>
+  }
   return (
-    <section
-      id="download"
-      className="relative z-10 w-full px-6 py-16 lg:py-24"
-    >
-      {content}
+    <section id="download" className="relative z-10 w-full">
+      <div className="px-4 md:px-8 py-12 md:py-16 max-w-screen-xl mx-auto space-y-6">
+        {content}
+      </div>
     </section>
   )
 }
 
-/** Same panel chrome as the admin/nutritionist dashboards. */
 function Panel({
   Icon,
   iconTint,
@@ -139,21 +150,21 @@ function Panel({
 }) {
   return (
     <article
-      className="rounded-2xl border border-border p-5 md:p-6"
+      className="rounded-2xl border border-border p-6 md:p-7"
       style={{
         background: 'var(--gf-surface)',
         boxShadow:
           '0 1px 0 rgba(255,255,255,0.03) inset, 0 8px 22px rgba(0,0,0,0.22)',
       }}
     >
-      <header className="mb-4 flex items-start gap-2">
+      <header className="mb-5 flex items-start gap-2">
         <Icon
           className="w-4 h-4 shrink-0 mt-0.5"
           strokeWidth={1.75}
           color={iconTint}
         />
         <div className="min-w-0">
-          <h3 className="text-sm font-semibold text-fg-1">{title}</h3>
+          <h2 className="text-sm font-semibold text-fg-1">{title}</h2>
           {subtitle && (
             <p className="text-[11px] text-fg-3 mt-0.5">{subtitle}</p>
           )}
@@ -232,7 +243,7 @@ function SecurityWarning() {
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
         aria-controls="security-warning-body"
-        className="w-full flex items-center justify-between gap-3 rounded-lg px-3 py-2 text-left transition-colors hover:border-amber/40"
+        className="w-full flex items-center justify-between gap-3 rounded-lg px-3 py-2 text-left transition-colors"
         style={{
           background: 'transparent',
           border: '1px solid var(--gf-border)',
@@ -251,7 +262,7 @@ function SecurityWarning() {
       {open && (
         <div
           id="security-warning-body"
-          className="mt-2 rounded-lg p-3.5 space-y-3"
+          className="mt-2 rounded-lg p-4 space-y-3"
           style={{
             background: 'var(--gf-input-bg)',
             border: '1px solid var(--gf-border)',

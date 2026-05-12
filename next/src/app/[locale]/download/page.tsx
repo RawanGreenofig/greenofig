@@ -33,7 +33,10 @@ export default function DownloadPage({ params }: PageProps) {
     <main className="min-h-screen" style={{ background: 'var(--gf-bg)' }}>
       <SiteHeader />
       <div style={{ height: 'calc(64px + env(safe-area-inset-top))' }} />
-      <div className="py-10 md:py-16 px-6">
+      {/* Dashboard chrome — same padding + max-w as the admin /
+          nutritionist / dashboard surfaces use, so /download reads
+          as a piece of the app on the marketing background. */}
+      <div className="px-4 md:px-8 py-6 md:py-8 max-w-screen-xl mx-auto">
         <DownloadSection withSectionChrome={false} />
       </div>
       <FooterSection />

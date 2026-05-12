@@ -43,6 +43,17 @@ export default function ForgotPasswordPage() {
     })
     setPending(false)
     if (error) {
+      // Supabase rate-limits resetPasswordForEmail to ~4 per email per
+      // hour (default). The raw message is technical — surface a
+      // human one so the user knows to wait, not to keep clicking.
+      const msg = (error.message || '').toLowerCase()
+      if (msg.includes('rate') || msg.includes('limit') || msg.includes('exceeded')) {
+        toast.error(
+          'Too many reset requests for this email. Please wait about an hour and try again.',
+          { duration: 6000 },
+        )
+        return
+      }
       toast.error(error.message || tErrors('general'))
       return
     }
