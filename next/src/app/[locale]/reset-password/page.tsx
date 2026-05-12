@@ -128,9 +128,11 @@ export default function ResetPasswordPage() {
     window.setTimeout(() => router.replace('/sign-in'), 1200)
   }
 
+  const formDisabled = stage !== 'ready'
+
   return (
     <AuthSplitShell quoteKey="quoteForgotBody">
-      <header className="mb-8">
+      <header className="mb-6">
         <h1
           className="font-display font-bold text-fg-1 tracking-tight"
           style={{ fontSize: '2rem', lineHeight: 1.15 }}
@@ -138,56 +140,58 @@ export default function ResetPasswordPage() {
           {t('newPasswordTitle')}
         </h1>
         <p className="mt-2 text-sm text-fg-2">
-          {stage === 'expired'
-            ? 'This link has expired or isn’t valid. Request a fresh password reset and try again.'
-            : 'Pick a new password to finish resetting your account.'}
+          Pick a new password to finish resetting your account.
         </p>
       </header>
 
-      {stage === 'waiting' && (
-        <div className="rounded-xl border border-border bg-surface px-4 py-5 flex items-center gap-3 text-sm text-fg-2">
-          <span
-            className="w-4 h-4 rounded-full animate-spin shrink-0"
-            style={{
-              border: '2px solid rgba(132,217,61,0.25)',
-              borderTopColor: '#a3e635',
-            }}
-            aria-hidden
-          />
-          Verifying your reset link…
+      {/* Status banner — one consistent surface across all stages */}
+      {stage !== 'ready' && (
+        <div
+          role="status"
+          className="mb-5 rounded-xl border px-4 py-3.5 flex items-center gap-3 text-sm"
+          style={
+            stage === 'expired'
+              ? {
+                  background: 'rgba(192,57,43,0.08)',
+                  borderColor: 'rgba(192,57,43,0.35)',
+                  color: '#fda4af',
+                }
+              : stage === 'done'
+                ? {
+                    background: 'rgba(132,217,61,0.08)',
+                    borderColor: 'rgba(132,217,61,0.4)',
+                    color: '#a3e635',
+                  }
+                : {
+                    background: 'var(--gf-surface)',
+                    borderColor: 'var(--gf-border)',
+                    color: 'var(--gf-fg-2)',
+                  }
+          }
+        >
+          {stage === 'waiting' && (
+            <span
+              className="w-4 h-4 rounded-full animate-spin shrink-0"
+              style={{
+                border: '2px solid rgba(132,217,61,0.25)',
+                borderTopColor: '#a3e635',
+              }}
+              aria-hidden
+            />
+          )}
+          <span className="flex-1">
+            {stage === 'waiting' && 'Verifying your reset link…'}
+            {stage === 'expired' &&
+              'This reset link is expired or invalid. Request a new one below.'}
+            {stage === 'done' &&
+              'Password updated. Redirecting to sign-in…'}
+          </span>
         </div>
       )}
 
-      {stage === 'expired' && (
-        <div className="space-y-4">
-          <div
-            className="rounded-xl border px-4 py-4 text-sm"
-            style={{
-              background: 'rgba(192,57,43,0.08)',
-              borderColor: 'rgba(192,57,43,0.35)',
-              color: '#fda4af',
-            }}
-          >
-            The reset link is expired or invalid. Start the flow again
-            from “Forgot your password?”.
-          </div>
-          <Link
-            href="/forgot-password"
-            className="inline-flex items-center justify-center w-full h-11 rounded-pill bg-gradient-to-b from-lime-400 to-lime-600 text-bg font-semibold text-sm border border-lime-600/60"
-          >
-            Request new reset link
-          </Link>
-        </div>
-      )}
-
-      {stage === 'done' && (
-        <div className="rounded-xl border border-border bg-surface px-4 py-5 text-sm text-fg-1">
-          Password updated. Redirecting to sign-in…
-        </div>
-      )}
-
-      {stage === 'ready' && (
-        <form onSubmit={handleSubmit(onSubmit)} noValidate>
+      {/* Form — always rendered, disabled until ready */}
+      <form onSubmit={handleSubmit(onSubmit)} noValidate>
+        <fieldset disabled={formDisabled} className="space-y-0">
           <Field
             label={t('password')}
             type="password"
@@ -212,7 +216,18 @@ export default function ResetPasswordPage() {
           <PrimarySubmit pending={pending}>
             {pending ? 'Saving…' : t('newPasswordCta')}
           </PrimarySubmit>
-        </form>
+        </fieldset>
+      </form>
+
+      {/* "Request new reset link" only shows for the expired state */}
+      {stage === 'expired' && (
+        <Link
+          href="/forgot-password"
+          className="mt-3 inline-flex items-center justify-center w-full h-11 rounded-pill border border-border text-fg-1 font-semibold text-sm hover:border-lime-400/50 hover:text-lime-400 transition-colors"
+          style={{ background: 'var(--gf-input-bg)' }}
+        >
+          Request a new reset link
+        </Link>
       )}
 
       <div className="mt-6 text-center">
