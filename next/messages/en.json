@@ -451,6 +451,7 @@
     "inStock": "In stock",
     "lowStock": "Only {count} left",
     "drPick": "Coach pick",
+    "addedToCart": "Added to cart",
     "bestseller": "Bestseller",
     "newBadge": "New",
     "saleBadge": "Sale",

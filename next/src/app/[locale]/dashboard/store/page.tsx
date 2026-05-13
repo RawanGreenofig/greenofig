@@ -4,6 +4,7 @@
 import { motion } from 'framer-motion'
 import { useMemo, useState } from 'react'
 import { useTranslations } from 'next-intl'
+import toast from 'react-hot-toast'
 import {
   ShoppingBag,
   ShoppingCart,
@@ -157,46 +158,23 @@ export default function StorePage() {
   const total = Math.max(0, subtotal - discountAmount)
 
   const addToCart = (id: string) => {
+    let added = false
     setCart((curr) => {
       const existing = curr.find((l) => l.productId === id)
       if (existing) {
+        added = true
         return curr.map((l) =>
           l.productId === id ? { ...l, qty: l.qty + 1 } : l,
         )
       }
+      added = true
       return [...curr, { productId: id, qty: 1 }]
     })
-    // Open the cart drawer so the user immediately sees what they added.
+    // Toast feedback — the previous version silently mutated state +
+    // opened the drawer, so on slow renders users tapped repeatedly
+    // thinking nothing happened. Now we always confirm.
+    if (added) toast.success(t('addedToCart'))
     setDrawerOpen(true)
-  }
-
-  const buyNow = async (id: string) => {
-    if (checkingOut) return
-    setCheckingOut(true)
-    try {
-      const res = await fetch('/api/stripe/checkout', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          kind: 'order',
-          items: [{ productId: id, qty: 1 }],
-        }),
-      })
-      if (res.ok) {
-        const { url } = (await res.json()) as { url?: string }
-        if (url) {
-          window.location.href = url
-          return
-        }
-      }
-    } catch {
-      /* fall through to error */
-    } finally {
-      setCheckingOut(false)
-    }
-    // Couldn't start checkout — keep state and just open the cart with
-    // the product added so the user can retry from the drawer.
-    addToCart(id)
   }
 
   const setQty = (id: string, qty: number) => {
@@ -294,8 +272,6 @@ export default function StorePage() {
             t={t}
             product={p}
             onAdd={() => addToCart(p.id)}
-            onBuyNow={() => void buyNow(p.id)}
-            buying={checkingOut}
           />
         ))}
       </ul>
@@ -353,14 +329,10 @@ function ProductCard({
   t,
   product,
   onAdd,
-  onBuyNow,
-  buying,
 }: {
   t: ReturnType<typeof useTranslations>
   product: Product
   onAdd: () => void
-  onBuyNow: () => void
-  buying: boolean
 }) {
   const out = product.stock <= 0
   const low = product.stock > 0 && product.stock <= 5
@@ -437,9 +409,13 @@ function ProductCard({
         </div>
       </div>
       </Link>
-      {/* Add-to-cart sits outside the wrapping Link so its onClick fires
-       * cleanly without navigating away to the detail page. */}
-      <div className="px-4 pb-4 grid grid-cols-2 gap-2">
+      {/* Single primary CTA — the old 2-col layout (Add to cart +
+       *  Buy now) was visually noisy on a 180px mobile card and
+       *  users couldn't tell which button was the safe choice.
+       *  Buy-now still lives on the product detail page. Add sits
+       *  outside the wrapping Link so its onClick fires cleanly
+       *  without navigating away. */}
+      <div className="px-4 pb-4">
         <button
           type="button"
           onClick={(e) => {
@@ -448,30 +424,19 @@ function ProductCard({
             onAdd()
           }}
           disabled={out}
-          className={`inline-flex items-center justify-center gap-1.5 rounded-pill h-9 text-xs font-semibold transition-all ${
+          className={`w-full inline-flex items-center justify-center gap-1.5 rounded-pill h-10 text-xs font-semibold transition-all ${
             out
               ? 'bg-surface-raised text-fg-3 cursor-not-allowed'
-              : 'bg-primary/15 text-lime-400 hover:bg-primary/25'
+              : 'bg-gradient-to-b from-lime-400 to-lime-600 text-bg border border-lime-600/60 active:brightness-95'
           }`}
+          style={
+            out
+              ? undefined
+              : { boxShadow: '0 4px 14px rgba(132,217,61,0.28)' }
+          }
         >
           <Plus className="w-3.5 h-3.5" strokeWidth={2.25} />
-          {t('addToCart')}
-        </button>
-        <button
-          type="button"
-          onClick={(e) => {
-            e.preventDefault()
-            e.stopPropagation()
-            onBuyNow()
-          }}
-          disabled={out || buying}
-          className={`inline-flex items-center justify-center gap-1.5 rounded-pill h-9 text-xs font-semibold transition-all ${
-            out || buying
-              ? 'bg-surface-raised text-fg-3 cursor-not-allowed'
-              : 'bg-gradient-to-b from-lime-400 to-lime-600 text-bg shadow-lime-glow border border-lime-600/60'
-          }`}
-        >
-          {buying ? '…' : 'Buy now'}
+          {out ? t('outOfStock') : t('addToCart')}
         </button>
       </div>
     </li>

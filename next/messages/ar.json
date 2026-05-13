@@ -451,6 +451,7 @@
     "inStock": "متوفر",
     "lowStock": "تبقى {count} فقط",
     "drPick": "اختيار الكوتش",
+    "addedToCart": "تمت الإضافة إلى السلة",
     "bestseller": "الأكثر مبيعًا",
     "newBadge": "جديد",
     "saleBadge": "تخفيض",
