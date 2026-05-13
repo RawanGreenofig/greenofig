@@ -1,9 +1,8 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useLocale } from 'next-intl'
 import { getBrowserSupabase } from '@/lib/supabase/client'
-import { isInsideCapacitor } from '@/lib/is-capacitor'
 
 interface Props {
   /** When omitted, defaults to the localized "Continue with Google" copy. */
@@ -21,18 +20,12 @@ export function GoogleAuthButton({ label, withDivider = true }: Props) {
   const isAr = locale === 'ar'
   const [pending, setPending] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  // Hide entirely inside the Capacitor Android app until the deep-link
-  // OAuth round-trip is verified working in a tagged release. Without
-  // the AndroidManifest intent filter (only added in v0.0.3+), Google
-  // redirects back to com.greenofig.app://login-callback and the
-  // system shows "Unknown" because no app claimed the scheme. Email +
-  // password works fully in-WebView so we route everyone through that
-  // path inside the app for now.
-  const [hide, setHide] = useState(false)
-  useEffect(() => {
-    if (isInsideCapacitor()) setHide(true)
-  }, [])
-  if (hide) return null
+  // Capacitor v0.0.5+ ships the com.greenofig.app:// AndroidManifest
+  // intent filter, so the deep-link OAuth round-trip can complete.
+  // Google never sees the custom scheme — Supabase bounces the user
+  // from its own HTTPS callback (which Google does accept) to the
+  // custom scheme that the APK claims. CapacitorAuthListener picks
+  // it up and completes the session.
 
   const handleClick = async () => {
     const supabase = getBrowserSupabase()

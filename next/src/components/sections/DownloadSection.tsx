@@ -184,20 +184,15 @@ function Step({
   text: string
   icon?: typeof Share2
 }) {
+  // No circular badges — just clean text with the step number
+  // inline. The list is short enough that visual ranking comes
+  // from the order, not from ornate numerals.
   return (
-    <li className="flex items-center gap-2.5">
-      <span
-        className="shrink-0 w-6 h-6 rounded-full inline-flex items-center justify-center text-[10px] font-bold font-mono"
-        style={{
-          background: 'rgba(132,217,61,0.1)',
-          color: LIME,
-          border: '1px solid rgba(132,217,61,0.3)',
-        }}
-        dir="ltr"
-      >
-        {n}
+    <li className="flex items-baseline gap-2.5">
+      <span className="font-mono text-xs text-fg-3 shrink-0 w-5" dir="ltr">
+        {n}.
       </span>
-      <span className="text-sm text-fg-1 inline-flex items-center gap-1.5 flex-wrap">
+      <span className="text-sm text-fg-1 inline-flex items-center gap-1.5 flex-wrap leading-relaxed">
         {text}
         {Icon && (
           <Icon
