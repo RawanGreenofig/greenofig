@@ -35,10 +35,13 @@ export async function GET(request: NextRequest) {
 
   // Capacitor WebView path — see /[locale]/auth/callback/route.ts for
   // the full rationale. PKCE verifier lives in localStorage, so the
-  // exchange has to run client-side.
+  // exchange has to run client-side. This non-localized callback
+  // defaults to /en since the root route has no locale of its own;
+  // the Capacitor sign-in flow always goes through the localized
+  // callback in practice, so this is just belt-and-braces.
   const ua = request.headers.get('user-agent') ?? ''
   if (/GreenofigApp\//.test(ua)) {
-    const dest = new URL('/auth/capacitor-complete', origin)
+    const dest = new URL('/en/auth/capacitor-complete', origin)
     dest.searchParams.set('code', code)
     return NextResponse.redirect(dest)
   }

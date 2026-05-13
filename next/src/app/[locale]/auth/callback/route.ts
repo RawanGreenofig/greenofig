@@ -31,11 +31,11 @@ export async function GET(request: NextRequest) {
   // Capacitor WebView path. The PKCE verifier was written to localStorage
   // when /app-login called signInWithOAuth, so the swap has to happen
   // client-side — the server has no way to read it. Hand the code off
-  // to /auth/capacitor-complete which runs in the same WebView and
-  // therefore sees the verifier.
+  // to /<locale>/auth/capacitor-complete which runs in the same WebView
+  // and therefore sees the verifier.
   const ua = request.headers.get('user-agent') ?? ''
   if (/GreenofigApp\//.test(ua)) {
-    const dest = new URL('/auth/capacitor-complete', origin)
+    const dest = new URL(`/${locale}/auth/capacitor-complete`, origin)
     dest.searchParams.set('code', code)
     return NextResponse.redirect(dest)
   }

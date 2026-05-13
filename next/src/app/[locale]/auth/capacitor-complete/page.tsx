@@ -1,8 +1,8 @@
 'use client'
 
 /**
- * /auth/capacitor-complete — landing page for the Capacitor Google
- * sign-in flow.
+ * /<locale>/auth/capacitor-complete — landing page for the Capacitor
+ * Google sign-in flow.
  *
  * The Google Console rejected the custom `com.greenofig.app://` URL
  * scheme, so the WebView-side Google flow has to round-trip through
@@ -16,8 +16,11 @@
  * server has no way to read it. So the WebView has to do the swap
  * itself.
  *
- * Path is under /auth/* so middleware skips it (see middleware.ts
- * matcher) — no locale rewrite, no auth gate, no cookie inspection.
+ * Lives under /[locale]/auth/* (not root /auth/*) so it inherits the
+ * existing /[locale]/layout.tsx — adding a second root layout under
+ * /auth/ trips a multi-root-layout build-worker bug on this setup.
+ * It's not in middleware's PROTECTED list, so the auth gate skips
+ * it, and the Capacitor UA check skips role gating regardless.
  */
 
 import { useEffect, useState } from 'react'
