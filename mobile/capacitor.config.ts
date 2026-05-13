@@ -91,6 +91,33 @@ const config: CapacitorConfig = {
     PushNotifications: {
       presentationOptions: ['badge', 'sound', 'alert'],
     },
+    /**
+     * Native Google Sign-In. Replaces the WebView OAuth round-trip
+     * that Google's `disallowed_useragent` policy and the WebView's
+     * own redirect-refetch quirks make unreliable inside the APK.
+     *
+     * `serverClientId` MUST be the **web** OAuth client ID from Google
+     * Cloud Console — the same client ID configured in Supabase's
+     * Google provider settings. Google then issues an ID token whose
+     * `aud` claim matches what Supabase verifies in
+     * `supabase.auth.signInWithIdToken({ provider: 'google', token })`.
+     *
+     * Set CAP_GOOGLE_WEB_CLIENT_ID in the environment when running
+     * `npx cap sync` / building the APK. If unset the build still
+     * works but Google sign-in will fail at runtime with a config
+     * error — surfaced to the user, not silent.
+     *
+     * The Android **OAuth client** (separate from the web client)
+     * also has to exist in Google Cloud Console, with the APK's
+     * package name (`com.greenofig.app`) and SHA-1 fingerprint
+     * registered. That client has no ID we need to embed — Google
+     * matches the request against package+SHA-1 at sign-in time.
+     */
+    GoogleAuth: {
+      scopes: ['profile', 'email'],
+      serverClientId: process.env.CAP_GOOGLE_WEB_CLIENT_ID ?? '',
+      forceCodeForRefreshToken: true,
+    },
   },
 }
 

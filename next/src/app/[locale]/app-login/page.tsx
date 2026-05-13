@@ -92,48 +92,87 @@ export default function AppLoginPage() {
       return
     }
     setGooglePending(true)
-    // Custom URL scheme com.greenofig.app:// was rejected by Google
-    // Console, so the round-trip has to land on a real HTTPS URL we
-    // control. Use the canonical greenofig.com /<locale>/auth/callback;
-    // the route detects the Capacitor UA and bounces to
-    // /auth/capacitor-complete which finishes the PKCE swap in the
-    // same WebView's localStorage.
-    const baseUrl =
-      process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, '') ||
-      'https://greenofig.com'
-    const localeFromPath =
-      typeof window !== 'undefined'
-        ? window.location.pathname.match(/^\/([a-z]{2})\b/)?.[1] ?? 'en'
-        : 'en'
-    const redirectTo = `${baseUrl}/${localeFromPath}/auth/callback`
+
+    // The WebView OAuth round-trip (signInWithOAuth + redirectTo) was
+    // unreliable: Supabase auth logs showed the same OAuth `state`
+    // being submitted 5+ times in one second per sign-in, with all
+    // but the first failing "OAuth state not found or expired".
+    // The Android WebView occasionally re-issues redirected URLs,
+    // and OAuth state tokens are one-shot — so the user got bounced
+    // back to /app-login on the failing retries.
+    //
+    // Native Google Sign-In sidesteps the entire browser flow:
+    // Android's Google Play Services library returns an ID token
+    // directly, and Supabase accepts it via signInWithIdToken. No
+    // /authorize, no /callback, no state cookie, no redirect.
+    const t0 = performance.now()
     // eslint-disable-next-line no-console
-    console.log('[gf-app-login] signInWithOAuth google start', { redirectTo })
+    console.log('[gf-app-login] google start (native plugin)')
     try {
-      const { error: oErr } = await sb.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo,
-          // Stay inside the WebView — never break out to an external
-          // browser. Supabase will set window.location to Google's URL.
-          skipBrowserRedirect: false,
-        },
-      })
-      if (oErr) {
-        // eslint-disable-next-line no-console
-        console.error('[gf-app-login] signInWithOAuth error:', oErr)
-        setError(oErr.message || 'Could not start Google sign-in.')
+      const { GoogleAuth } = await import(
+        '@codetrix-studio/capacitor-google-auth'
+      )
+      // initialize() reads serverClientId from capacitor.config.ts's
+      // plugins.GoogleAuth block on native; on web it'd need a
+      // clientId argument, but /app-login only ships inside the APK
+      // so we never hit that path.
+      await GoogleAuth.initialize()
+      const result = await GoogleAuth.signIn()
+      const idToken = result?.authentication?.idToken
+      // eslint-disable-next-line no-console
+      console.log(
+        `[gf-app-login] google plugin signed in +${Math.round(performance.now() - t0)}ms`,
+        { hasIdToken: !!idToken },
+      )
+      if (!idToken) {
+        setError('Google did not return an ID token. Please try again.')
         setGooglePending(false)
+        return
       }
-      // On success Supabase redirects the WebView to Google — no
-      // further code runs here.
+      // Hand the ID token to Supabase. signInWithIdToken validates
+      // the token's `aud` against the Google provider configured on
+      // the Supabase project — so the serverClientId in
+      // capacitor.config.ts MUST be the same web client ID Supabase
+      // has registered. If it isn't, this returns "Invalid token".
+      const { data, error: xErr } = await sb.auth.signInWithIdToken({
+        provider: 'google',
+        token: idToken,
+      })
+      // eslint-disable-next-line no-console
+      console.log(
+        `[gf-app-login] signInWithIdToken done +${Math.round(performance.now() - t0)}ms`,
+        { hasError: !!xErr, hasSession: !!data?.session },
+      )
+      if (xErr) {
+        setError(xErr.message || 'Sign-in failed. Please try again.')
+        setGooglePending(false)
+        return
+      }
+      if (!data.session) {
+        setError('Sign-in returned no session. Please try again.')
+        setGooglePending(false)
+        return
+      }
+      // localStorage is now populated. Hard-navigate so the dashboard
+      // bootstraps from scratch.
+      window.location.href = '/dashboard'
     } catch (caught) {
       // eslint-disable-next-line no-console
       console.error('[gf-app-login] google threw:', caught)
-      setError(
-        caught instanceof Error
-          ? caught.message
-          : 'Could not start Google sign-in.',
-      )
+      // Plugin throws when the user cancels the picker, when Play
+      // Services is missing, when the SHA-1 isn't registered in
+      // Google Cloud Console, etc. Surface the message — it's
+      // usually actionable (e.g. "Sign-in cancelled" vs
+      // "DEVELOPER_ERROR" which means config drift).
+      const msg =
+        caught instanceof Error ? caught.message : String(caught ?? '')
+      // Plugin emits 'popup_closed_by_user'-ish messages on cancel;
+      // don't show those as errors — silently reset.
+      if (/cancel/i.test(msg) || msg.includes('12501')) {
+        setGooglePending(false)
+        return
+      }
+      setError(msg || 'Could not start Google sign-in.')
       setGooglePending(false)
     }
   }
