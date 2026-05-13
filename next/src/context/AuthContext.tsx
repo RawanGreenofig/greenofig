@@ -263,18 +263,48 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setProfile(null)
     setTier(null)
     clearCachedTier()
-    // Wipe any lingering supabase tokens from localStorage. supabase-js
-    // stores them under sb-<project-ref>-auth-token; nuke any key
-    // starting with sb- to be exhaustive.
+    // Wipe every supabase persistence vector. supabase-js writes to
+    // localStorage AND @supabase/ssr writes auth cookies — leaving
+    // cookies behind let the session resurrect on the next page
+    // load, which is exactly what was producing the "auto sign-in"
+    // as the wrong tier.
     if (typeof window !== 'undefined') {
+      // localStorage
       try {
         for (let i = window.localStorage.length - 1; i >= 0; i -= 1) {
           const k = window.localStorage.key(i)
           if (k && k.startsWith('sb-')) window.localStorage.removeItem(k)
         }
-      } catch {
-        /* private mode / disabled — fine */
-      }
+      } catch { /* private mode / disabled — fine */ }
+      // sessionStorage (rare but documented in supabase storage adapter)
+      try {
+        for (let i = window.sessionStorage.length - 1; i >= 0; i -= 1) {
+          const k = window.sessionStorage.key(i)
+          if (k && k.startsWith('sb-')) window.sessionStorage.removeItem(k)
+        }
+      } catch { /* same */ }
+      // cookies — @supabase/ssr's default storage. Clear by setting
+      // each sb-* cookie to expire in the past on every path/domain
+      // combination that's plausible.
+      try {
+        const cookies = document.cookie.split('; ')
+        const host = window.location.hostname
+        for (const raw of cookies) {
+          const name = raw.split('=')[0]
+          if (!name?.startsWith('sb-')) continue
+          const expire = 'Thu, 01 Jan 1970 00:00:00 GMT'
+          // Plain
+          document.cookie = `${name}=; expires=${expire}; path=/`
+          // Locked to current host
+          document.cookie = `${name}=; expires=${expire}; path=/; domain=${host}`
+          // Locked to parent host (e.g. .greenofig.com)
+          const parts = host.split('.')
+          if (parts.length > 2) {
+            const parent = '.' + parts.slice(-2).join('.')
+            document.cookie = `${name}=; expires=${expire}; path=/; domain=${parent}`
+          }
+        }
+      } catch { /* document.cookie may be unavailable in some webviews */ }
       // Hard-redirect to the marketing home so the middleware sees no
       // cookie and no protected component lingers in memory.
       window.location.href = '/'

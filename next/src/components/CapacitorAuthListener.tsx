@@ -19,12 +19,44 @@ async function seedTierCache(
 ): Promise<void> {
   if (!userId) return
   try {
+    // First read — does a profile row exist?
     const { data } = await supabase
       .from('profiles')
-      .select('tier')
+      .select('tier, full_name')
       .eq('id', userId)
       .maybeSingle()
-    const tier = (data as { tier?: string } | null)?.tier
+
+    if (!data) {
+      // First-ever sign-in via the Capacitor path. The server-side
+      // /auth/callback route handles this upsert for browser visitors;
+      // we mirror it here so the user actually has a profile row.
+      // ignoreDuplicates so a race never overwrites someone else's
+      // record.
+      const { data: userData } = await supabase.auth.getUser()
+      const u = userData.user
+      await supabase
+        .from('profiles')
+        .upsert(
+          {
+            id: userId,
+            full_name:
+              (u?.user_metadata?.full_name as string | undefined) ?? '',
+            avatar_url:
+              (u?.user_metadata?.avatar_url as string | undefined) ?? '',
+            role: 'user',
+            tier: 'free',
+          } as never,
+          { onConflict: 'id', ignoreDuplicates: true },
+        )
+      // eslint-disable-next-line no-console
+      console.log('[gf-cap] AuthListener created profile row for new user')
+      // Newly-created row → tier is free.
+      window.localStorage.setItem('gf_tier', 'free')
+      window.localStorage.setItem('gf_tier_ts', String(Date.now()))
+      return
+    }
+
+    const tier = (data as { tier?: string }).tier
     if (
       tier === 'free' ||
       tier === 'basic' ||
@@ -37,7 +69,7 @@ async function seedTierCache(
       console.log('[gf-cap] AuthListener seeded tier=', tier)
     } else {
       // eslint-disable-next-line no-console
-      console.log('[gf-cap] AuthListener: no tier on profile row')
+      console.log('[gf-cap] AuthListener: existing profile, null tier')
     }
   } catch (err) {
     console.error('[gf-cap] AuthListener seedTierCache failed:', err)
