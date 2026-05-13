@@ -191,6 +191,11 @@ export function CapacitorAuthListener() {
       const path = window.location.pathname
       const isMarketingHome = path === '/' || /^\/[a-z]{2}\/?$/.test(path)
       if (!isMarketingHome) return
+      // Extract the locale from the current path so we can construct
+      // the matching /<locale>/app-login URL. The file router only
+      // serves the locale-prefixed form.
+      const localeMatch = path.match(/^\/([a-z]{2})/)
+      const locale = localeMatch?.[1] ?? 'en'
       flowLog(t0, 'mount-check getSession')
       try {
         const { data } = await withTimeout(
@@ -198,8 +203,14 @@ export function CapacitorAuthListener() {
           SIGNIN_STEP_TIMEOUT_MS,
           'getSession',
         )
-        if (cancelled || !data.session?.user) {
-          flowLog(t0, 'mount-check no session')
+        if (cancelled) return
+        if (!data.session?.user) {
+          // No session → punt the user to the dedicated app-login
+          // page. This is the Capacitor-specific sign-in surface
+          // which bypasses every cookie/SSR/middleware pathway the
+          // regular /sign-in flow depends on.
+          flowLog(t0, 'mount-check no session → /app-login')
+          window.location.replace(`/${locale}/app-login`)
           return
         }
         flowLog(t0, 'mount-check session found, resolving dest')
@@ -215,9 +226,12 @@ export function CapacitorAuthListener() {
         flowLog(t0, 'mount-check navigate', { dest })
         window.location.replace(dest)
       } catch (err) {
-        // Returning-user path stays silent on error — the user can
-        // sign in manually from the marketing page.
+        // getSession itself hung — push the user to app-login so
+        // they have a way to recover.
         console.warn('[gf-signin] mount-check skipped:', err)
+        if (!cancelled) {
+          window.location.replace(`/${locale}/app-login`)
+        }
       }
     }
     void maybeRedirect()

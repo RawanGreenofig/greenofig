@@ -191,6 +191,14 @@ export const config = {
   //   /auth/*      — non-localized OAuth / recovery callback (must NOT be
   //                  rewritten under /[locale]/, since Supabase only knows
   //                  the canonical `${APP_URL}/auth/callback`)
+  //   /app-login   — dedicated Capacitor sign-in page. It MUST run with
+  //                  zero middleware in front of it: no next-intl rewrite,
+  //                  no auth check, no cookie inspection. The page itself
+  //                  is fully client-side and uses localStorage; any
+  //                  middleware redirect on this surface would defeat the
+  //                  whole point of having an isolated path.
+  //   /[locale]/app-login — same page reached via the locale-prefixed
+  //                  URL (the only form the file router actually serves).
   //   anything with a dot — static files
-  matcher: '/((?!api|_next|_vercel|auth|.*\\..*).*)',
+  matcher: '/((?!api|_next|_vercel|auth|app-login|en/app-login|ar/app-login|.*\\..*).*)',
 }
