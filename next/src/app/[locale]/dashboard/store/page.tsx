@@ -2,7 +2,7 @@
 
 
 import { motion } from 'framer-motion'
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import toast from 'react-hot-toast'
 import {
@@ -80,7 +80,34 @@ export default function StorePage() {
   const { isEnabled, isLoading } = useFeature('store_access')
 
   const [category, setCategory] = useState<Category>('all')
-  const [cart, setCart] = useState<CartLine[]>([])
+  // Cart persists across page navigation via localStorage. Without
+  // this, navigating to a product detail and back wipes the cart
+  // because the component remounts with fresh state.
+  const [cart, setCart] = useState<CartLine[]>(() => {
+    if (typeof window === 'undefined') return []
+    try {
+      const raw = window.localStorage.getItem('gf_cart')
+      if (!raw) return []
+      const parsed = JSON.parse(raw) as unknown
+      if (!Array.isArray(parsed)) return []
+      return parsed.filter(
+        (l): l is CartLine =>
+          !!l &&
+          typeof (l as CartLine).productId === 'string' &&
+          typeof (l as CartLine).qty === 'number' &&
+          (l as CartLine).qty > 0,
+      )
+    } catch {
+      return []
+    }
+  })
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    try {
+      if (cart.length === 0) window.localStorage.removeItem('gf_cart')
+      else window.localStorage.setItem('gf_cart', JSON.stringify(cart))
+    } catch { /* private mode — ignore */ }
+  }, [cart])
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [coupon, setCoupon] = useState('')
   const [couponApplied, setCouponApplied] = useState<{ pct: number } | null>(null)
@@ -309,10 +336,24 @@ export default function StorePage() {
                   couponCode: couponApplied ? coupon : undefined,
                 }),
               })
-              if (res.ok) {
-                const { url } = (await res.json()) as { url: string }
-                if (url) window.location.href = url
+              const data = (await res.json().catch(() => ({}))) as {
+                url?: string
+                error?: string
               }
+              if (!res.ok) {
+                toast.error(
+                  data.error ?? 'Checkout failed. Please try again.',
+                )
+                return
+              }
+              if (!data.url) {
+                toast.error('Checkout did not return a URL. Try again.')
+                return
+              }
+              window.location.href = data.url
+            } catch (err) {
+              console.error('[store] checkout failed:', err)
+              toast.error('Network error during checkout. Please retry.')
             } finally {
               setCheckingOut(false)
             }
@@ -342,38 +383,45 @@ function ProductCard({
         ((product.compareAt! - product.price) / product.compareAt!) * 100,
       )
     : 0
+  const href =
+    `/dashboard/store/${product.id}` as `/dashboard/store/${string}`
+
   return (
-    <li className="rounded-xl border border-border bg-surface overflow-hidden hover:border-primary/40 transition-colors">
+    <li
+      className="group rounded-2xl border border-border overflow-hidden transition-all hover:-translate-y-0.5 hover:border-lime-400/30"
+      style={{
+        background:
+          'linear-gradient(180deg, var(--gf-surface) 0%, var(--gf-bg) 100%)',
+        boxShadow:
+          '0 1px 0 rgba(255,255,255,0.04) inset, 0 10px 28px rgba(0,0,0,0.22)',
+      }}
+    >
+      {/* IMAGE — the only clickable-to-detail surface. Putting the
+       *  Link wrap around the entire card (incl. the button) caused
+       *  taps near the CTA edge to bubble to the Link in mobile
+       *  WebViews and navigate away before onAdd fired — that's
+       *  exactly why "Add to cart doesn't work" on phones. */}
       <Link
-        href={`/dashboard/store/${product.id}` as `/dashboard/store/${string}`}
-        className="block cursor-pointer"
-      >
-      {/* Visual — `data-product-hue` lets the global stylesheet
-       *  shrink this pastel fill in light mode where it would
-       *  otherwise look chalky on a white card. */}
-      <div
-        data-product-hue
-        className="relative aspect-square w-full overflow-hidden"
+        href={href}
+        className="block relative aspect-square w-full overflow-hidden"
         style={{ background: product.hue }}
+        data-product-hue
       >
         {product.image ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
             src={product.image}
             alt={product.name}
-            className="absolute inset-0 w-full h-full object-cover"
+            className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
             loading="lazy"
           />
         ) : (
           <div className="absolute inset-0 flex items-center justify-center">
-            <ShoppingBag
-              className="w-10 h-10 text-fg-1/40"
-              strokeWidth={1}
-            />
+            <ShoppingBag className="w-12 h-12 text-fg-1/40" strokeWidth={1} />
           </div>
         )}
-        {/* Badges */}
-        <div className="absolute top-3 start-3 flex flex-col gap-1.5 items-start">
+        {/* Stacked badges, top-start */}
+        <div className="absolute top-3 start-3 flex flex-col gap-1.5 items-start max-w-[calc(100%-1.5rem)]">
           {product.badges.map((b) => (
             <Badge key={b} kind={b} t={t} savePct={savePct} />
           ))}
@@ -384,21 +432,32 @@ function ProductCard({
           </span>
         )}
         {low && !out && (
-          <span className="absolute bottom-3 start-3 rounded-pill bg-amber-500/20 text-[10px] uppercase tracking-eyebrow font-semibold px-2.5 h-6 inline-flex items-center" style={{ color: '#e8912a' }}>
+          <span
+            className="absolute bottom-3 start-3 rounded-pill bg-amber-500/20 text-[10px] uppercase tracking-eyebrow font-semibold px-2.5 h-6 inline-flex items-center"
+            style={{ color: '#e8912a' }}
+          >
             {t('lowStock', { count: product.stock })}
           </span>
         )}
-      </div>
+      </Link>
 
-      <div className="p-4">
-        <p className="text-[10px] uppercase tracking-eyebrow text-fg-3 font-semibold">
-          {t(`categories.${product.category}` as 'categories.supplements')}
-        </p>
-        <h3 className="mt-1 text-sm font-semibold text-fg-1 leading-snug line-clamp-2 min-h-[2.5em]">
-          {product.name}
-        </h3>
-        <div className="mt-3 flex items-baseline gap-2 font-mono" dir="ltr">
-          <span className="text-base font-bold text-fg-1">
+      {/* INFO + CTA — outside the Link so taps on the button land
+       *  on the button, full stop. */}
+      <div className="p-4 md:p-5 flex flex-col gap-3">
+        <div>
+          <p className="text-[10px] uppercase tracking-eyebrow text-lime-400 font-semibold">
+            {t(`categories.${product.category}` as 'categories.supplements')}
+          </p>
+          <Link
+            href={href}
+            className="block mt-1 text-sm md:text-base font-semibold text-fg-1 leading-snug line-clamp-2 min-h-[2.6em] hover:text-lime-400 transition-colors"
+          >
+            {product.name}
+          </Link>
+        </div>
+
+        <div className="flex items-baseline gap-2 font-mono" dir="ltr">
+          <span className="text-lg font-bold text-fg-1">
             ${product.price.toFixed(2)}
           </span>
           {onSale && (
@@ -407,35 +466,23 @@ function ProductCard({
             </span>
           )}
         </div>
-      </div>
-      </Link>
-      {/* Single primary CTA — the old 2-col layout (Add to cart +
-       *  Buy now) was visually noisy on a 180px mobile card and
-       *  users couldn't tell which button was the safe choice.
-       *  Buy-now still lives on the product detail page. Add sits
-       *  outside the wrapping Link so its onClick fires cleanly
-       *  without navigating away. */}
-      <div className="px-4 pb-4">
+
         <button
           type="button"
-          onClick={(e) => {
-            e.preventDefault()
-            e.stopPropagation()
-            onAdd()
-          }}
+          onClick={onAdd}
           disabled={out}
-          className={`w-full inline-flex items-center justify-center gap-1.5 rounded-pill h-10 text-xs font-semibold transition-all ${
+          className={`w-full inline-flex items-center justify-center gap-1.5 rounded-pill h-11 text-sm font-semibold transition-all ${
             out
               ? 'bg-surface-raised text-fg-3 cursor-not-allowed'
-              : 'bg-gradient-to-b from-lime-400 to-lime-600 text-bg border border-lime-600/60 active:brightness-95'
+              : 'bg-gradient-to-b from-lime-400 to-lime-600 text-bg border border-lime-600/60 active:brightness-90 active:translate-y-px'
           }`}
           style={
             out
               ? undefined
-              : { boxShadow: '0 4px 14px rgba(132,217,61,0.28)' }
+              : { boxShadow: '0 8px 22px rgba(132,217,61,0.3)' }
           }
         >
-          <Plus className="w-3.5 h-3.5" strokeWidth={2.25} />
+          <Plus className="w-4 h-4" strokeWidth={2.25} />
           {out ? t('outOfStock') : t('addToCart')}
         </button>
       </div>
