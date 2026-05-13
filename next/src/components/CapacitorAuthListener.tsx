@@ -2,8 +2,47 @@
 
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import type { SupabaseClient } from '@supabase/supabase-js'
 import { isInsideCapacitor } from '@/lib/is-capacitor'
 import { getBrowserSupabase } from '@/lib/supabase/client'
+
+/**
+ * Fetch the user's profile and pre-populate localStorage with their
+ * tier BEFORE we navigate to /dashboard. AuthContext reads this
+ * cache on first render, so the dashboard never paints with `null`
+ * tier → "Free" badge → upgrade prompt, even though the user is
+ * actually VIP. Same keys AuthContext uses: gf_tier + gf_tier_ts.
+ */
+async function seedTierCache(
+  supabase: SupabaseClient,
+  userId: string | undefined,
+): Promise<void> {
+  if (!userId) return
+  try {
+    const { data } = await supabase
+      .from('profiles')
+      .select('tier')
+      .eq('id', userId)
+      .maybeSingle()
+    const tier = (data as { tier?: string } | null)?.tier
+    if (
+      tier === 'free' ||
+      tier === 'basic' ||
+      tier === 'premium' ||
+      tier === 'vip'
+    ) {
+      window.localStorage.setItem('gf_tier', tier)
+      window.localStorage.setItem('gf_tier_ts', String(Date.now()))
+      // eslint-disable-next-line no-console
+      console.log('[gf-cap] AuthListener seeded tier=', tier)
+    } else {
+      // eslint-disable-next-line no-console
+      console.log('[gf-cap] AuthListener: no tier on profile row')
+    }
+  } catch (err) {
+    console.error('[gf-cap] AuthListener seedTierCache failed:', err)
+  }
+}
 
 /**
  * Capacitor deep-link → Supabase session bridge.
@@ -56,11 +95,12 @@ export function CapacitorAuthListener() {
             const parsed = new URL(url)
             const code = parsed.searchParams.get('code')
             if (code) {
-              const { error } = await supabase.auth.exchangeCodeForSession(code)
+              const { data, error } = await supabase.auth.exchangeCodeForSession(code)
               if (error) {
                 console.error('[gf-cap] exchangeCodeForSession failed:', error)
                 return
               }
+              await seedTierCache(supabase, data.session?.user.id)
               router.replace('/dashboard')
               return
             }
@@ -71,7 +111,7 @@ export function CapacitorAuthListener() {
             const accessToken = params.get('access_token')
             const refreshToken = params.get('refresh_token')
             if (accessToken && refreshToken) {
-              const { error } = await supabase.auth.setSession({
+              const { data, error } = await supabase.auth.setSession({
                 access_token: accessToken,
                 refresh_token: refreshToken,
               })
@@ -79,6 +119,7 @@ export function CapacitorAuthListener() {
                 console.error('[gf-cap] setSession failed:', error)
                 return
               }
+              await seedTierCache(supabase, data.session?.user.id)
               router.replace('/dashboard')
             }
           } catch (err) {

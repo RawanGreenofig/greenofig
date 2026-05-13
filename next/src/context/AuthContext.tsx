@@ -239,15 +239,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [supabase, refresh, fetchAndApplyProfile])
 
   const signOut = useCallback(async () => {
-    // The redirect must run even if anything below throws — otherwise
-    // the user gets "stuck" with React state showing them as still
-    // signed in. Wrap every supabase call in try/catch and always fall
-    // through to the hard navigation at the end.
+    // The redirect must run even if anything below throws or HANGS —
+    // otherwise the user gets "stuck" with React state showing them as
+    // still signed in. Inside the Capacitor WebView the Supabase
+    // server call has been observed to hang indefinitely, so we race
+    // it against a 3-second timeout. After the race we always fall
+    // through to the hard local cleanup + redirect.
     try {
-      // Sign out on the server (revoke session + clear cookies). 'global'
-      // ensures we hit Supabase even when the local session is the only
-      // copy. Wrapped because some configs throw when there's no session.
-      await supabase?.auth.signOut({ scope: 'global' })
+      const serverSignOut = supabase
+        ? supabase.auth.signOut({ scope: 'global' })
+        : Promise.resolve(undefined)
+      await Promise.race([
+        serverSignOut,
+        new Promise<void>((resolve) =>
+          window.setTimeout(() => resolve(), 3000),
+        ),
+      ])
     } catch {
       /* fall through — local cleanup + redirect still happen */
     }
