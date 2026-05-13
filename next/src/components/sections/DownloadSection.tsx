@@ -35,7 +35,7 @@ const AMBER = '#f59e0b'
  */
 export function DownloadSection({
   apkUrl = DEFAULT_APK,
-  version = '0.0.5',
+  version = '0.0.8',
   withSectionChrome = true,
 }: DownloadSectionProps) {
   const t = useTranslations('download')
