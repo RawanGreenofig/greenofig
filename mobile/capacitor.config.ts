@@ -26,7 +26,7 @@ const config: CapacitorConfig = {
   // Also exposes a stable "GreenofigApp/{ver}" tag so server code
   // can opt the native client into different behaviour later.
   overrideUserAgent:
-    'Mozilla/5.0 (Linux; Android 13; Mobile) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36 GreenofigApp/0.0.2',
+    'Mozilla/5.0 (Linux; Android 13; Mobile) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36 GreenofigApp/0.0.8',
   server: {
     // Production URL. Override in dev via CAP_SERVER_URL.
     url: process.env.CAP_SERVER_URL ?? 'https://greenofig.com',

@@ -1,6 +1,6 @@
 {
   "name": "greenofig-mobile",
-  "version": "0.0.1",
+  "version": "0.0.8",
   "private": true,
   "description": "Capacitor wrapper that packages https://greenofig.com as a native Android app.",
   "scripts": {
