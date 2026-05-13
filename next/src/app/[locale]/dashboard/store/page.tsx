@@ -496,11 +496,16 @@ function Badge({
   const { label, color, bg, Icon } = map[kind]
   return (
     <span
-      className="inline-flex items-center gap-1 rounded-pill backdrop-blur-sm px-2 h-6 text-[10px] uppercase tracking-eyebrow font-semibold border"
+      // max-w + truncate keep the pill inside the product card no
+      // matter how long the localized label is (e.g. the previous
+      // "Nutrition Coach Rawan's pick" overflowed at the 2-col
+      // mobile grid width). The icon and the eyebrow-cased label
+      // still get a comfortable fit; anything longer ellipsizes.
+      className="inline-flex items-center gap-1 rounded-pill backdrop-blur-sm px-2 h-6 text-[10px] uppercase tracking-eyebrow font-semibold border max-w-[calc(100%-1rem)] overflow-hidden whitespace-nowrap"
       style={{ background: bg, color, borderColor: `${color}40` }}
     >
-      {Icon && <Icon className="w-2.5 h-2.5" strokeWidth={2} />}
-      {label}
+      {Icon && <Icon className="w-2.5 h-2.5 shrink-0" strokeWidth={2} />}
+      <span className="truncate">{label}</span>
     </span>
   )
 }
