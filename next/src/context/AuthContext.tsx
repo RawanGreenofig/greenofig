@@ -230,6 +230,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (event === 'TOKEN_REFRESHED') {
           await fetchAndApplyProfile(nextSession.user.id)
         }
+        // INITIAL_SESSION fires when Supabase restores a session from
+        // storage on a fresh app open. Without re-fetching the profile
+        // here, the cached tier from a previous session is the only
+        // thing the UI sees — and if it's stale (e.g. user was Free
+        // last time, was upgraded to VIP server-side, now reopens the
+        // app), the dashboard paints the old tier. The never-downgrade
+        // rule in applyTier still protects against flicker.
+        if (event === 'INITIAL_SESSION') {
+          await fetchAndApplyProfile(nextSession.user.id)
+        }
       },
     )
 

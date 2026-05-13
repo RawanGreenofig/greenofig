@@ -17,3 +17,11 @@ build/
 *.jks
 *.keystore
 keystore.properties
+
+# Firebase project descriptor — identifies the FCM Android project.
+# Not itself a secret (the keys inside are public client identifiers)
+# but we still source it from a GitHub Secret in CI so the same
+# google-services.json file lives in one place. Locals can drop a
+# copy at mobile/android/app/google-services.json if they want to
+# test push from their own machine.
+google-services.json

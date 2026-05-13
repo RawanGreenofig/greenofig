@@ -68,6 +68,22 @@ jobs:
           npx cap add android
           npx cap sync android
 
+      - name: Drop Firebase google-services.json into android/app
+        env:
+          GOOGLE_SERVICES_JSON: ${{ secrets.GOOGLE_SERVICES_JSON }}
+        run: |
+          # Required by @capacitor/push-notifications on Android. The
+          # secret is the base64-encoded contents of the file you
+          # downloaded from Firebase Console for package
+          # com.greenofig.app. Skip cleanly if it's not set so debug
+          # builds without FCM still succeed.
+          if [ -z "$GOOGLE_SERVICES_JSON" ]; then
+            echo "::warning::GOOGLE_SERVICES_JSON secret not set — APK will build but FCM push won't work."
+            exit 0
+          fi
+          echo "$GOOGLE_SERVICES_JSON" | base64 -d > "$GITHUB_WORKSPACE/mobile/android/app/google-services.json"
+          echo "[google-services] dropped $(wc -c < $GITHUB_WORKSPACE/mobile/android/app/google-services.json) bytes"
+
       - name: Generate launcher icons from mobile/resources/icon.png
         run: |
           cd mobile
