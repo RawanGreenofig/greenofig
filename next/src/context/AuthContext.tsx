@@ -241,16 +241,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signOut = useCallback(async () => {
     // The redirect must run even if anything below throws or HANGS —
     // otherwise the user gets "stuck" with React state showing them as
-    // still signed in. Inside the Capacitor WebView the Supabase
-    // server call has been observed to hang indefinitely, so we race
-    // it against a 3-second timeout. After the race we always fall
-    // through to the hard local cleanup + redirect.
+    // still signed in. Two paths in parallel:
+    //
+    //   1. POST /api/auth/signout — server route that emits proper
+    //      Set-Cookie headers expiring every sb-* cookie, including
+    //      HttpOnly ones that document.cookie can't touch. This is
+    //      what makes the sign-out actually stick on Capacitor +
+    //      cookie-stored sessions; without it the cookies survive
+    //      and supabase rehydrates the session on next load.
+    //   2. supabase.auth.signOut() — clears the in-memory client +
+    //      kicks the SIGNED_OUT event so React state matches.
+    //
+    // Both raced against a 3s timeout so a network hang doesn't
+    // strand the user on a "signing out…" state.
     try {
-      const serverSignOut = supabase
-        ? supabase.auth.signOut({ scope: 'global' })
+      const serverEndpoint = fetch('/api/auth/signout', { method: 'POST' })
+        .catch(() => undefined)
+      const clientSignOut = supabase
+        ? supabase.auth.signOut({ scope: 'global' }).catch(() => undefined)
         : Promise.resolve(undefined)
       await Promise.race([
-        serverSignOut,
+        Promise.all([serverEndpoint, clientSignOut]),
         new Promise<void>((resolve) =>
           window.setTimeout(() => resolve(), 3000),
         ),

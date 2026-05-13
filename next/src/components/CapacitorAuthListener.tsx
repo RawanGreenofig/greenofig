@@ -132,8 +132,11 @@ export function CapacitorAuthListener() {
                 console.error('[gf-cap] exchangeCodeForSession failed:', error)
                 return
               }
-              await seedTierCache(supabase, data.session?.user.id)
+              // Navigate FIRST — don't make the user wait for the
+              // profile fetch + tier seed. Those run in the background
+              // and AuthContext picks them up via onAuthStateChange.
               router.replace('/dashboard')
+              void seedTierCache(supabase, data.session?.user.id)
               return
             }
             const hash = parsed.hash.startsWith('#')
@@ -151,8 +154,8 @@ export function CapacitorAuthListener() {
                 console.error('[gf-cap] setSession failed:', error)
                 return
               }
-              await seedTierCache(supabase, data.session?.user.id)
               router.replace('/dashboard')
+              void seedTierCache(supabase, data.session?.user.id)
             }
           } catch (err) {
             console.error('[gf-cap] auth callback parse failed:', err)
