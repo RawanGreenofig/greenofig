@@ -47,6 +47,43 @@ function destinationForRole(role: string | null | undefined): string {
   return '/dashboard'
 }
 
+/**
+ * Mirror the localStorage-stored session into server-side cookies so
+ * RSC pages and API routes that read getServerSupabase() see the
+ * same user. Best-effort — a failure here doesn't block sign-in,
+ * since the client already has a valid session.
+ *
+ * 3s timeout: long enough to absorb a slow request, short enough
+ * that we don't add visible delay to the post-sign-in navigation.
+ */
+async function bridgeSessionToCookies(
+  accessToken: string,
+  refreshToken: string,
+  t0: number,
+): Promise<void> {
+  try {
+    flowLog(t0, 'cookie-bridge start')
+    const res = await withTimeout(
+      fetch('/api/auth/bridge', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          access_token: accessToken,
+          refresh_token: refreshToken,
+        }),
+      }),
+      3000,
+      'bridge',
+    )
+    flowLog(t0, 'cookie-bridge done', { status: res.status })
+  } catch (err) {
+    // Non-fatal — client-side session still works. Server-rendered
+    // surfaces will just render as unauthenticated until the next
+    // sign-in or refresh attempt re-bridges.
+    console.warn('[gf-signin] cookie bridge failed (non-fatal):', err)
+  }
+}
+
 /** Seed local tier cache + resolve role-correct destination. The
  *  profile fetch is timeout-bounded so a stuck DB call can't trap
  *  the user on the splash. On any failure we still navigate — to
@@ -166,7 +203,14 @@ export function CapacitorAuthListener() {
           return
         }
         flowLog(t0, 'mount-check session found, resolving dest')
-        const dest = await seedAndResolveDest(supabase, data.session.user.id, t0)
+        const [dest] = await Promise.all([
+          seedAndResolveDest(supabase, data.session.user.id, t0),
+          bridgeSessionToCookies(
+            data.session.access_token,
+            data.session.refresh_token,
+            t0,
+          ),
+        ])
         if (cancelled) return
         flowLog(t0, 'mount-check navigate', { dest })
         window.location.replace(dest)
@@ -213,6 +257,8 @@ export function CapacitorAuthListener() {
             if (code) {
               flowLog(t0, 'exchange start')
               let userId: string | undefined
+              let accessToken: string | undefined
+              let refreshToken: string | undefined
               try {
                 const result = await withTimeout(
                   supabase.auth.exchangeCodeForSession(code),
@@ -226,6 +272,8 @@ export function CapacitorAuthListener() {
                   return
                 }
                 userId = result.data.session?.user.id
+                accessToken = result.data.session?.access_token
+                refreshToken = result.data.session?.refresh_token
               } catch (err) {
                 console.error('[gf-signin] exchange hung/threw:', err)
                 setStatus({ kind: 'error', label: 'exchange_timeout' })
@@ -236,8 +284,18 @@ export function CapacitorAuthListener() {
                 setStatus({ kind: 'error', label: 'no_user' })
                 return
               }
+              // Bridge to cookies in parallel with the profile fetch —
+              // they don't depend on each other and we want both done
+              // before we navigate, so the dashboard's first render
+              // has an authenticated server-side context.
+              const bridgePromise = accessToken && refreshToken
+                ? bridgeSessionToCookies(accessToken, refreshToken, t0)
+                : Promise.resolve()
               flowLog(t0, 'seed+resolve dest start')
-              const dest = await seedAndResolveDest(supabase, userId, t0)
+              const [dest] = await Promise.all([
+                seedAndResolveDest(supabase, userId, t0),
+                bridgePromise,
+              ])
               flowLog(t0, 'navigating', { dest })
               window.location.replace(dest)
               return
@@ -276,7 +334,10 @@ export function CapacitorAuthListener() {
                 setStatus({ kind: 'error', label: 'no_user' })
                 return
               }
-              const dest = await seedAndResolveDest(supabase, userId, t0)
+              const [dest] = await Promise.all([
+                seedAndResolveDest(supabase, userId, t0),
+                bridgeSessionToCookies(accessToken, refreshToken, t0),
+              ])
               flowLog(t0, 'navigating', { dest })
               window.location.replace(dest)
               return

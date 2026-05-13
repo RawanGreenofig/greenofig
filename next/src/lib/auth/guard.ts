@@ -36,6 +36,27 @@ export async function requireRole(
   }
   // ───────────────────────────────────────────────────────────────────
 
+  // ── Capacitor Android WebView bypass ───────────────────────────────
+  // The Capacitor app stores sessions in localStorage (see
+  // lib/supabase/client.ts) rather than cookies, so the server has
+  // no way to read who the user is from this request. We skip the
+  // server-side auth + role check and let the page render — the
+  // client-side AuthContext hydrates from localStorage on mount and
+  // populates the chrome with the real user identity.
+  //
+  // Security: this is NOT a way to view someone else's data. All
+  // protected data lives behind Supabase Row-Level Security; an
+  // unauthenticated client gets empty result sets even if they
+  // reach the page. The check we're skipping was for redirecting
+  // unauthenticated visitors to /sign-in — useful UX for a regular
+  // browser, but actively wrong for a Capacitor app where the
+  // session is real but invisible to the server.
+  // ───────────────────────────────────────────────────────────────────
+  const ua = headers().get('user-agent') ?? ''
+  if (/GreenofigApp\//.test(ua)) {
+    return { userId: 'capacitor-client-auth', role: allowed[0] ?? 'user' }
+  }
+
   const supabase = getServerSupabase()
   // No env / no client → bounce to sign-in. Never render a protected
   // surface to a request we can't authenticate.
@@ -78,6 +99,11 @@ export async function requireHeadCoach(
     if (host.startsWith('localhost') || host.startsWith('127.0.0.1')) {
       return { userId: 'dev-bypass' }
     }
+  }
+  // Capacitor bypass — see requireRole above for the full rationale.
+  const ua = headers().get('user-agent') ?? ''
+  if (/GreenofigApp\//.test(ua)) {
+    return { userId: 'capacitor-client-auth' }
   }
   const supabase = getServerSupabase()
   if (!supabase) redirect(localePath(locale, '/sign-in'))

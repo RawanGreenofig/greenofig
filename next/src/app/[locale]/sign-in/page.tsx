@@ -144,6 +144,34 @@ export default function SignInPage() {
         /* private mode — fine */
       }
     }
+    // Inside Capacitor, the session is in localStorage and invisible
+    // to the server. Bridge it to cookies so server-rendered pages
+    // and API routes see the authenticated user on the very next
+    // navigation. 3s timeout; non-fatal on failure.
+    if (typeof window !== 'undefined' && data.session) {
+      try {
+        const { isInsideCapacitor } = await import('@/lib/is-capacitor')
+        if (isInsideCapacitor()) {
+          flowLog(t0, 'cookie-bridge start')
+          await withTimeout(
+            fetch('/api/auth/bridge', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                access_token: data.session.access_token,
+                refresh_token: data.session.refresh_token,
+              }),
+            }),
+            3000,
+            'bridge',
+          )
+          flowLog(t0, 'cookie-bridge done')
+        }
+      } catch (err) {
+        console.warn('[gf-signin] cookie bridge failed (non-fatal):', err)
+      }
+    }
+
     flowLog(t0, 'navigate', { dest })
     toast.success(t('signInTitle'))
     router.replace(dest)
