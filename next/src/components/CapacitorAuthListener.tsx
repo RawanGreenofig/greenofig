@@ -13,26 +13,44 @@ import { getBrowserSupabase } from '@/lib/supabase/client'
  * actually VIP. Same keys AuthContext uses: gf_tier + gf_tier_ts.
  */
 /**
- * Poll supabase.auth.getSession() until it returns a non-null session
- * or the timeout fires. The exchangeCodeForSession call writes the
- * session synchronously to its in-memory adapter, but @supabase/ssr's
- * cookie writes can lag a tick or two. Without this poll, our hard
- * navigation to /dashboard arrives at middleware BEFORE the cookies
- * are visible — middleware sees no auth, redirects to /sign-in, the
- * client-side sign-in page sees the local session, redirects back,
- * and we loop. The await here breaks the race.
+ * Resolve as soon as a usable Supabase session is present — without
+ * polling. The fast path is a single synchronous getSession() call
+ * (returns immediately when exchangeCodeForSession has already
+ * written to in-memory storage). The slow path subscribes to
+ * onAuthStateChange and resolves on the next SIGNED_IN /
+ * TOKEN_REFRESHED / INITIAL_SESSION event, or after the timeout —
+ * whichever comes first.
+ *
+ * 2-second timeout is intentional: we'd rather navigate optimistically
+ * than freeze the user on a splash. If middleware still hasn't seen
+ * the cookie, the worst case is one fast-redirect round-trip; with
+ * the event-driven wake-up that almost never happens in practice.
  */
 async function waitForSession(
   supabase: SupabaseClient,
-  timeoutMs: number,
+  timeoutMs = 2000,
 ): Promise<void> {
-  const start = Date.now()
-  while (Date.now() - start < timeoutMs) {
-    const { data } = await supabase.auth.getSession()
-    if (data.session) return
-    await new Promise((r) => setTimeout(r, 100))
-  }
-  console.warn('[gf-cap] waitForSession: timed out — navigating anyway')
+  // Fast path — session was written synchronously to storage.
+  const { data: initial } = await supabase.auth.getSession()
+  if (initial.session) return
+
+  // Slow path — wait for an auth event or timeout.
+  await new Promise<void>((resolve) => {
+    let settled = false
+    const finish = () => {
+      if (settled) return
+      settled = true
+      try { sub.data.subscription.unsubscribe() } catch { /* listener already gone */ }
+      clearTimeout(timer)
+      resolve()
+    }
+    const sub = supabase.auth.onAuthStateChange((event, sess) => {
+      if (sess && (event === 'SIGNED_IN' || event === 'INITIAL_SESSION' || event === 'TOKEN_REFRESHED')) {
+        finish()
+      }
+    })
+    const timer = setTimeout(finish, timeoutMs)
+  })
 }
 
 async function seedTierCache(
@@ -170,7 +188,7 @@ export function CapacitorAuthListener() {
               // cookies are flushed → middleware sees no auth →
               // redirects to /sign-in → sign-in sees the local
               // session → redirects to /dashboard → infinite loop.
-              await waitForSession(supabase, 5000)
+              await waitForSession(supabase)
               window.location.replace('/dashboard')
               return
             }
@@ -191,7 +209,7 @@ export function CapacitorAuthListener() {
                 return
               }
               void seedTierCache(supabase, data.session?.user.id)
-              await waitForSession(supabase, 5000)
+              await waitForSession(supabase)
               window.location.replace('/dashboard')
               return
             }
