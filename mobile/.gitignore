@@ -25,3 +25,8 @@ keystore.properties
 # copy at mobile/android/app/google-services.json if they want to
 # test push from their own machine.
 google-services.json
+
+# Service-account / credentials JSONs — never commit. Delivered via
+# GitHub Secrets in CI; out-of-band on dev machines.
+*firebase-adminsdk*.json
+gen-lang-client-*.json

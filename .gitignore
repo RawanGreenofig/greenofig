@@ -40,3 +40,10 @@ next/.next/
 *.keystore
 *.b64
 keystore.properties
+
+# Credentials and service-account JSONs — never commit. These are
+# delivered to CI through GitHub Secrets (FCM_SERVICE_ACCOUNT_JSON,
+# GOOGLE_SERVICES_JSON) and to local dev machines out-of-band.
+google-services.json
+*firebase-adminsdk*.json
+gen-lang-client-*.json
