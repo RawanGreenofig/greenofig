@@ -62,7 +62,18 @@ jobs:
           npm run sync:version
 
       - name: Generate Android project
+        env:
+          # Read at sync time by mobile/capacitor.config.ts and baked into
+          # android/app/src/main/res/values/strings.xml as `server_client_id`.
+          # Must be the **web** OAuth client ID configured in Supabase's
+          # Google provider — Supabase verifies `aud` against it when
+          # exchanging the ID token from native Google Sign-In.
+          CAP_GOOGLE_WEB_CLIENT_ID: ${{ secrets.CAP_GOOGLE_WEB_CLIENT_ID }}
         run: |
+          if [ -z "$CAP_GOOGLE_WEB_CLIENT_ID" ]; then
+            echo "::error::CAP_GOOGLE_WEB_CLIENT_ID secret is required — native Google sign-in will not work without it."
+            exit 1
+          fi
           cd mobile
           # Symlink www/ exists; cap add picks the webDir from capacitor.config.ts
           npx cap add android
