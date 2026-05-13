@@ -45,6 +45,37 @@ function localePath(locale: string, path: string): string {
   return `/${locale}${path === '/' ? '' : path}`
 }
 
+/**
+ * Detect the Capacitor Android WebView from the request's User-Agent.
+ * We tag the WebView with `GreenofigApp/<version>` in
+ * mobile/capacitor.config.ts, so this is a stable signal.
+ *
+ * When detected, middleware delegates ALL auth gating to the page's
+ * server-side requireRole() guard rather than redirecting at the edge.
+ * Two reasons:
+ *
+ *   1. The Capacitor WebView uses cookie-stored sessions, but those
+ *      cookies are written by the client just after exchangeCodeForSession
+ *      resolves. There's a sub-second window where the redirect would
+ *      land before the cookies are propagated to the next request —
+ *      and middleware would then redirect the user back to /sign-in
+ *      mid-flight, producing the "redirect storm" the user has
+ *      reported. requireRole runs later in the request lifecycle and
+ *      typically has the cookies by then. One redirect site instead
+ *      of two.
+ *
+ *   2. The CapacitorAuthListener is the single authority for in-app
+ *      redirects. Middleware bouncing inside the app creates a second
+ *      redirect actor that races with the client-side navigation.
+ *
+ * requireRole still gates protected layouts, so security is unchanged
+ * — only the edge-level redundancy is removed.
+ */
+function isCapacitorRequest(request: NextRequest): boolean {
+  const ua = request.headers.get('user-agent') ?? ''
+  return /GreenofigApp\//.test(ua)
+}
+
 export async function middleware(request: NextRequest) {
   // ── Step 1: locale routing ─────────────────────────────────────────
   const intlResponse = intlMiddleware(request)
@@ -60,6 +91,10 @@ export async function middleware(request: NextRequest) {
 
   const protectedRoute = PROTECTED.find((p) => rest.startsWith(p.prefix))
   if (!protectedRoute) return intlResponse
+
+  // Inside Capacitor: skip edge auth/role bounces. See isCapacitorRequest
+  // for the full justification.
+  if (isCapacitorRequest(request)) return intlResponse
 
   // We need to return a response we can attach refreshed cookies to.
   // Use the intl response as the base.

@@ -23,72 +23,37 @@ function withTimeout<T>(p: Promise<T>, ms: number, label: string): Promise<T> {
 }
 
 /**
- * Fetch the user's profile and pre-populate localStorage with their
- * tier BEFORE we navigate to /dashboard. AuthContext reads this
- * cache on first render, so the dashboard never paints with `null`
- * tier → "Free" badge → upgrade prompt, even though the user is
- * actually VIP. Same keys AuthContext uses: gf_tier + gf_tier_ts.
+ * Pick the right destination for a freshly authenticated user. We
+ * route by role here (rather than always landing on /dashboard and
+ * letting middleware bounce) so the redirect count is exactly one.
  */
-/**
- * Resolve as soon as a usable Supabase session is present — without
- * polling. The fast path is a single synchronous getSession() call
- * (returns immediately when exchangeCodeForSession has already
- * written to in-memory storage). The slow path subscribes to
- * onAuthStateChange and resolves on the next SIGNED_IN /
- * TOKEN_REFRESHED / INITIAL_SESSION event, or after the timeout —
- * whichever comes first.
- *
- * 2-second timeout is intentional: we'd rather navigate optimistically
- * than freeze the user on a splash. If middleware still hasn't seen
- * the cookie, the worst case is one fast-redirect round-trip; with
- * the event-driven wake-up that almost never happens in practice.
- */
-async function waitForSession(
-  supabase: SupabaseClient,
-  timeoutMs = 2000,
-): Promise<void> {
-  // Fast path — session was written synchronously to storage.
-  const { data: initial } = await supabase.auth.getSession()
-  if (initial.session) return
-
-  // Slow path — wait for an auth event or timeout.
-  await new Promise<void>((resolve) => {
-    let settled = false
-    const finish = () => {
-      if (settled) return
-      settled = true
-      try { sub.data.subscription.unsubscribe() } catch { /* listener already gone */ }
-      clearTimeout(timer)
-      resolve()
-    }
-    const sub = supabase.auth.onAuthStateChange((event, sess) => {
-      if (sess && (event === 'SIGNED_IN' || event === 'INITIAL_SESSION' || event === 'TOKEN_REFRESHED')) {
-        finish()
-      }
-    })
-    const timer = setTimeout(finish, timeoutMs)
-  })
+function destinationForRole(role: string | null | undefined): string {
+  if (role === 'admin') return '/admin'
+  if (role === 'nutritionist') return '/nutritionist'
+  return '/dashboard'
 }
 
-async function seedTierCache(
+/**
+ * Single combined "seed local caches + decide destination" step.
+ * Replaces the old seedTierCache + waitForSession + role-discovery
+ * trio. One profile query, one navigation. If the user's profile
+ * row doesn't exist yet (first-ever Capacitor sign-in), we upsert
+ * with the OAuth provider's metadata first.
+ *
+ * Returns the destination path so the caller can navigate.
+ */
+async function seedAndResolveDest(
   supabase: SupabaseClient,
-  userId: string | undefined,
-): Promise<void> {
-  if (!userId) return
+  userId: string,
+): Promise<string> {
   try {
-    // First read — does a profile row exist?
     const { data } = await supabase
       .from('profiles')
-      .select('tier, full_name')
+      .select('role, tier, full_name')
       .eq('id', userId)
       .maybeSingle()
 
     if (!data) {
-      // First-ever sign-in via the Capacitor path. The server-side
-      // /auth/callback route handles this upsert for browser visitors;
-      // we mirror it here so the user actually has a profile row.
-      // ignoreDuplicates so a race never overwrites someone else's
-      // record.
       const { data: userData } = await supabase.auth.getUser()
       const u = userData.user
       await supabase
@@ -105,15 +70,13 @@ async function seedTierCache(
           } as never,
           { onConflict: 'id', ignoreDuplicates: true },
         )
-      // eslint-disable-next-line no-console
-      console.log('[gf-cap] AuthListener created profile row for new user')
-      // Newly-created row → tier is free.
       window.localStorage.setItem('gf_tier', 'free')
       window.localStorage.setItem('gf_tier_ts', String(Date.now()))
-      return
+      return '/dashboard'
     }
 
-    const tier = (data as { tier?: string }).tier
+    const row = data as { role?: string; tier?: string }
+    const tier = row.tier
     if (
       tier === 'free' ||
       tier === 'basic' ||
@@ -122,45 +85,41 @@ async function seedTierCache(
     ) {
       window.localStorage.setItem('gf_tier', tier)
       window.localStorage.setItem('gf_tier_ts', String(Date.now()))
-      // eslint-disable-next-line no-console
-      console.log('[gf-cap] AuthListener seeded tier=', tier)
-    } else {
-      // eslint-disable-next-line no-console
-      console.log('[gf-cap] AuthListener: existing profile, null tier')
     }
+    return destinationForRole(row.role)
   } catch (err) {
-    console.error('[gf-cap] AuthListener seedTierCache failed:', err)
+    console.error('[gf-cap] seedAndResolveDest failed:', err)
+    return '/dashboard'
   }
 }
 
 /**
- * Capacitor deep-link → Supabase session bridge.
+ * Capacitor deep-link → Supabase session bridge AND the sole authority
+ * for post-sign-in navigation inside the WebView.
  *
- * Google OAuth round-trip flow inside the Android app:
+ * Two responsibilities:
  *
- *   1. User taps "Sign in with Google" in the WebView.
- *   2. signInWithOAuth({ redirectTo: 'com.greenofig.app://login-callback' })
- *      kicks off the Supabase flow → opens a Chrome Custom Tab.
- *   3. User authenticates with Google in the Custom Tab.
- *   4. Google redirects to com.greenofig.app://login-callback?code=...
- *   5. Android's intent system invokes the Greenofig app with that URL.
- *   6. THIS listener picks it up via @capacitor/app's appUrlOpen event
- *      and calls supabase.auth.exchangeCodeForSession(code) to finish
- *      the PKCE handshake.
- *   7. User lands signed-in inside the WebView.
+ *   1. Handle the OAuth deep link arriving at com.greenofig.app://.
+ *      Exchange the code, seed caches, navigate. Splash + retry
+ *      escape provide feedback while the network round-trip lands.
  *
- * No-op in a regular browser — @capacitor/app's listener fires
- * nothing when there's no native bridge. Dynamic import keeps the
- * plugin out of the browser-side bundle until it's actually needed.
+ *   2. On mount, if a session already exists in storage AND the user
+ *      is sitting on the marketing homepage (where there's nothing
+ *      for an authenticated user to do), navigate to the role-correct
+ *      home. This handles the "returning user reopens the app" case
+ *      that CapacitorHomeGate used to handle separately.
+ *
+ * Anything else (signed-in user navigating freely inside the app)
+ * we do NOT touch — they're already where they want to be.
+ *
+ * No `waitForSession` polling, no router.replace race, no double
+ * navigation. After the exchange resolves, exactly one
+ * window.location.replace fires.
  */
 export function CapacitorAuthListener() {
   const [signingIn, setSigningIn] = useState(false)
   const [showCancel, setShowCancel] = useState(false)
 
-  // Reveal a "Tap to cancel" escape after 8 seconds. The hard 15s
-  // timeout inside the exchange will normally rescue the user first,
-  // but if anything keeps the promise pending the user always has a
-  // way out without killing the app.
   useEffect(() => {
     if (!signingIn) {
       setShowCancel(false)
@@ -170,6 +129,33 @@ export function CapacitorAuthListener() {
     return () => clearTimeout(t)
   }, [signingIn])
 
+  // Effect 1 — returning-user auto-route. Runs once on mount.
+  useEffect(() => {
+    if (!isInsideCapacitor()) return
+    const supabase = getBrowserSupabase()
+    if (!supabase) return
+    let cancelled = false
+
+    const maybeRedirect = async () => {
+      // Only auto-route from the marketing homepage. Anywhere else
+      // (sign-in, dashboard, blog, etc.) leave the user alone.
+      const path = window.location.pathname
+      const isMarketingHome = path === '/' || /^\/[a-z]{2}\/?$/.test(path)
+      if (!isMarketingHome) return
+
+      const { data } = await supabase.auth.getSession()
+      if (cancelled || !data.session?.user) return
+
+      const dest = await seedAndResolveDest(supabase, data.session.user.id)
+      if (cancelled) return
+      window.location.replace(dest)
+    }
+    void maybeRedirect()
+
+    return () => { cancelled = true }
+  }, [])
+
+  // Effect 2 — deep-link OAuth callback handler.
   useEffect(() => {
     if (!isInsideCapacitor()) return
     let cleanup: (() => void) | undefined
@@ -185,9 +171,6 @@ export function CapacitorAuthListener() {
           // eslint-disable-next-line no-console
           console.log('[gf-cap] appUrlOpen:', url)
           if (!url.startsWith('com.greenofig.app://')) return
-          // Show the splash IMMEDIATELY so the user gets feedback the
-          // moment the deep link arrives — before we wait on the
-          // Supabase code exchange.
           setSigningIn(true)
           const supabase = getBrowserSupabase()
           if (!supabase) {
@@ -195,17 +178,11 @@ export function CapacitorAuthListener() {
             return
           }
 
-          // Supabase can deliver tokens in two shapes depending on
-          // the OAuth flow:
-          //   - PKCE  → ?code=... in the query string
-          //   - implicit → #access_token=...&refresh_token=... in
-          //     the hash fragment
-          // Handle both.
           try {
             const parsed = new URL(url)
             const code = parsed.searchParams.get('code')
             if (code) {
-              let data
+              let userId: string | undefined
               try {
                 const result = await withTimeout(
                   supabase.auth.exchangeCodeForSession(code),
@@ -218,16 +195,20 @@ export function CapacitorAuthListener() {
                   setSigningIn(false)
                   return
                 }
-                data = result.data
+                userId = result.data.session?.user.id
               } catch (err) {
                 console.error('[gf-cap] exchange hung / errored:', err)
                 toast.error('Sign-in is taking too long. Check your connection and try again.')
                 setSigningIn(false)
                 return
               }
-              void seedTierCache(supabase, data.session?.user.id)
-              await waitForSession(supabase)
-              window.location.replace('/dashboard')
+              if (!userId) {
+                toast.error('Sign-in returned no user. Please try again.')
+                setSigningIn(false)
+                return
+              }
+              const dest = await seedAndResolveDest(supabase, userId)
+              window.location.replace(dest)
               return
             }
             const hash = parsed.hash.startsWith('#')
@@ -237,7 +218,7 @@ export function CapacitorAuthListener() {
             const accessToken = params.get('access_token')
             const refreshToken = params.get('refresh_token')
             if (accessToken && refreshToken) {
-              let data
+              let userId: string | undefined
               try {
                 const result = await withTimeout(
                   supabase.auth.setSession({
@@ -253,20 +234,22 @@ export function CapacitorAuthListener() {
                   setSigningIn(false)
                   return
                 }
-                data = result.data
+                userId = result.data.session?.user.id
               } catch (err) {
                 console.error('[gf-cap] setSession hung / errored:', err)
                 toast.error('Sign-in is taking too long. Check your connection and try again.')
                 setSigningIn(false)
                 return
               }
-              void seedTierCache(supabase, data.session?.user.id)
-              await waitForSession(supabase)
-              window.location.replace('/dashboard')
+              if (!userId) {
+                toast.error('Sign-in returned no user. Please try again.')
+                setSigningIn(false)
+                return
+              }
+              const dest = await seedAndResolveDest(supabase, userId)
+              window.location.replace(dest)
               return
             }
-            // URL matched our scheme but had neither code nor tokens
-            // — release the splash so the user isn't stuck.
             setSigningIn(false)
           } catch (err) {
             console.error('[gf-cap] auth callback parse failed:', err)
