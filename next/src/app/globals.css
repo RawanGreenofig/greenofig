@@ -714,9 +714,17 @@ html[dir='rtl'] .lucide-arrow-right {
     box-shadow 200ms ease,
     filter 200ms ease;
 }
-.btn-primary:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 20px rgba(101, 163, 13, 0.4);
+/* hover-only-when-supported: on touch (Capacitor WebView, iOS Safari,
+ * Android Chrome), :hover fires on tap and sticks until the next tap.
+ * The translateY + box-shadow re-render makes the Add-to-cart CTA
+ * flash and the gradient repaint as a bitmap. Gating with
+ * @media (hover: hover) keeps the polish on desktop and removes the
+ * glitch on touch. */
+@media (hover: hover) {
+  .btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 20px rgba(101, 163, 13, 0.4);
+  }
 }
 .btn-primary:active {
   transform: translateY(0);

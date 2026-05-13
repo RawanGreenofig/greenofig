@@ -446,7 +446,13 @@ function ProductCard({
 
   return (
     <li
-      className="group rounded-2xl border border-border overflow-hidden transition-all hover:-translate-y-0.5 hover:border-lime-400/30"
+      // transition-colors (not transition-all) + no hover translate:
+      // on Android WebView the :hover state sticks after a tap, and
+      // transitioning transform on a gradient-backed container causes
+      // the "glitchy gradient" flash the user sees right after pressing
+      // Add to cart. Border colour can still pulse — it doesn't repaint
+      // the gradient.
+      className="group rounded-2xl border border-border overflow-hidden transition-colors hover:border-lime-400/30"
       style={{
         background:
           'linear-gradient(180deg, var(--gf-surface) 0%, var(--gf-bg) 100%)',
@@ -537,15 +543,27 @@ function ProductCard({
             onAdd()
           }}
           disabled={out}
-          className={`relative z-10 w-full inline-flex items-center justify-center gap-1.5 rounded-pill h-11 text-sm font-semibold transition-all ${
+          // No active:brightness / active:translate / transition-all —
+          // applying a CSS filter to a gradient mid-tap on Android
+          // WebView flashes the button as a flat colour for a frame
+          // and repaints the lime gradient as a bitmap, which is the
+          // "glitchy gradient messy screen" the user reported.
+          // touchAction is also forced in inline style so even if a
+          // utility CSS rule ever changes the global default the
+          // button stays in "tap, no scroll" mode.
+          className={`relative z-10 w-full inline-flex items-center justify-center gap-1.5 rounded-pill h-11 text-sm font-semibold ${
             out
               ? 'bg-surface-raised text-fg-3 cursor-not-allowed'
-              : 'bg-gradient-to-b from-lime-400 to-lime-600 text-bg border border-lime-600/60 active:brightness-90 active:translate-y-px'
+              : 'bg-gradient-to-b from-lime-400 to-lime-600 text-bg border border-lime-600/60'
           }`}
           style={
             out
-              ? undefined
-              : { boxShadow: '0 8px 22px rgba(132,217,61,0.3)' }
+              ? { touchAction: 'manipulation' }
+              : {
+                  boxShadow: '0 8px 22px rgba(132,217,61,0.3)',
+                  touchAction: 'manipulation',
+                  WebkitTapHighlightColor: 'transparent',
+                }
           }
         >
           <Plus className="w-4 h-4" strokeWidth={2.25} />

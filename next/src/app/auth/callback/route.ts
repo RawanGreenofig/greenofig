@@ -33,6 +33,16 @@ export async function GET(request: NextRequest) {
 
   if (!code) return fail('no_code')
 
+  // Capacitor WebView path — see /[locale]/auth/callback/route.ts for
+  // the full rationale. PKCE verifier lives in localStorage, so the
+  // exchange has to run client-side.
+  const ua = request.headers.get('user-agent') ?? ''
+  if (/GreenofigApp\//.test(ua)) {
+    const dest = new URL('/auth/capacitor-complete', origin)
+    dest.searchParams.set('code', code)
+    return NextResponse.redirect(dest)
+  }
+
   const supabase = getServerSupabase()
   if (!supabase) return fail('service_unavailable')
 

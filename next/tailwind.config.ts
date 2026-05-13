@@ -6,6 +6,14 @@ import type { Config } from 'tailwindcss'
 const config: Config = {
   content: ['./src/**/*.{ts,tsx,mdx}'],
   darkMode: 'class',
+  // Without this, `hover:` styles fire on the first tap on touch
+  // devices and stick until the user taps elsewhere — the Capacitor
+  // WebView "glitchy gradient" right after tapping Add to cart was
+  // exactly the sticky `hover:-translate-y` / `hover:brightness`
+  // states from the store cards. With hoverOnlyWhenSupported, hover
+  // variants compile to `@media (hover: hover)` so they never fire
+  // on a finger tap.
+  future: { hoverOnlyWhenSupported: true },
   theme: {
     colors: {
       transparent: 'transparent',

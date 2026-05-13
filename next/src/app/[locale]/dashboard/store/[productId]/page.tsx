@@ -270,7 +270,15 @@ export default function ProductDetailPage() {
           {/* Add to cart */}
           <button
             type="button"
-            onClick={handleAdd}
+            onClick={(e) => {
+              // Defensive — there's no Link ancestor here but the
+              // Capacitor WebView has been known to bubble taps to
+              // anything with a touchstart listener. We only want
+              // this tap to add to cart, full stop.
+              e.preventDefault()
+              e.stopPropagation()
+              handleAdd()
+            }}
             disabled={out}
             className={out ? 'mt-8 w-full inline-flex items-center justify-center gap-2 rounded-xl text-sm font-semibold' : 'btn-primary mt-8'}
             style={
@@ -281,8 +289,16 @@ export default function ProductDetailPage() {
                     padding: 14,
                     minHeight: 48,
                     cursor: 'not-allowed',
+                    touchAction: 'manipulation',
+                    WebkitTapHighlightColor: 'transparent',
                   }
-                : { width: '100%', height: 48, borderRadius: 12 }
+                : {
+                    width: '100%',
+                    height: 48,
+                    borderRadius: 12,
+                    touchAction: 'manipulation',
+                    WebkitTapHighlightColor: 'transparent',
+                  }
             }
           >
             <Plus className="w-4 h-4" strokeWidth={2.25} />
