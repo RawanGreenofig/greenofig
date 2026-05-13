@@ -106,8 +106,37 @@ export default function AppLoginPage() {
     // directly, and Supabase accepts it via signInWithIdToken. No
     // /authorize, no /callback, no state cookie, no redirect.
     const t0 = performance.now()
+    // Diagnostic helpers. Native plugin throws PluginError objects
+    // whose useful fields (code, data) are non-enumerable, so plain
+    // JSON.stringify drops them — we have to walk the property list.
+    const dumpError = (e: unknown) => {
+      if (e && typeof e === 'object') {
+        const out: Record<string, unknown> = {}
+        for (const k of Object.getOwnPropertyNames(e as object)) {
+          out[k] = (e as Record<string, unknown>)[k]
+        }
+        return out
+      }
+      return { value: String(e ?? '') }
+    }
+    // Pull the `aud` claim out of the ID token so we can confirm
+    // the APK is signing tokens for the Web client ID Supabase
+    // expects. Token payload is the second base64url segment; we
+    // don't verify the signature — Supabase does — just decode.
+    const audOf = (jwt: string): string | null => {
+      try {
+        const parts = jwt.split('.')
+        if (parts.length < 2) return null
+        const pad = '='.repeat((4 - (parts[1].length % 4)) % 4)
+        const b64 = parts[1].replace(/-/g, '+').replace(/_/g, '/') + pad
+        const json = atob(b64)
+        return (JSON.parse(json) as { aud?: string }).aud ?? null
+      } catch {
+        return null
+      }
+    }
     // eslint-disable-next-line no-console
-    console.log('[gf-app-login] google start (native plugin)')
+    console.log('[gf-google] start (native plugin)')
     try {
       const { GoogleAuth } = await import(
         '@codetrix-studio/capacitor-google-auth'
@@ -117,12 +146,51 @@ export default function AppLoginPage() {
       // clientId argument, but /app-login only ships inside the APK
       // so we never hit that path.
       await GoogleAuth.initialize()
-      const result = await GoogleAuth.signIn()
+      let result
+      try {
+        result = await GoogleAuth.signIn()
+      } catch (pluginErr) {
+        // eslint-disable-next-line no-console
+        console.error(
+          '[gf-google] step=plugin failed +' +
+            Math.round(performance.now() - t0) +
+            'ms',
+          JSON.stringify(dumpError(pluginErr)),
+        )
+        const msg =
+          pluginErr instanceof Error
+            ? pluginErr.message
+            : String(pluginErr ?? '')
+        // 12501 = SIGN_IN_CANCELLED — user dismissed the picker.
+        if (/cancel/i.test(msg) || msg.includes('12501')) {
+          setGooglePending(false)
+          return
+        }
+        // Surface the code on screen so it can be reported without
+        // needing chrome://inspect. 10 = DEVELOPER_ERROR (config),
+        // 7 = NETWORK_ERROR, 8 = INTERNAL_ERROR, 12500 = generic.
+        const code =
+          (pluginErr as { code?: unknown })?.code ??
+          (pluginErr as { errorCode?: unknown })?.errorCode
+        setError(
+          `Google sign-in failed${code != null ? ` (code ${String(code)})` : ''}: ${msg || 'unknown error'}`,
+        )
+        setGooglePending(false)
+        return
+      }
       const idToken = result?.authentication?.idToken
+      const aud = idToken ? audOf(idToken) : null
       // eslint-disable-next-line no-console
       console.log(
-        `[gf-app-login] google plugin signed in +${Math.round(performance.now() - t0)}ms`,
-        { hasIdToken: !!idToken },
+        '[gf-google] step=plugin ok +' +
+          Math.round(performance.now() - t0) +
+          'ms',
+        {
+          hasIdToken: !!idToken,
+          idTokenLength: idToken?.length ?? 0,
+          aud,
+          email: result?.email ?? null,
+        },
       )
       if (!idToken) {
         setError('Google did not return an ID token. Please try again.')
@@ -138,16 +206,27 @@ export default function AppLoginPage() {
         provider: 'google',
         token: idToken,
       })
-      // eslint-disable-next-line no-console
-      console.log(
-        `[gf-app-login] signInWithIdToken done +${Math.round(performance.now() - t0)}ms`,
-        { hasError: !!xErr, hasSession: !!data?.session },
-      )
       if (xErr) {
-        setError(xErr.message || 'Sign-in failed. Please try again.')
+        // eslint-disable-next-line no-console
+        console.error(
+          '[gf-google] step=supabase failed +' +
+            Math.round(performance.now() - t0) +
+            'ms',
+          JSON.stringify(dumpError(xErr)),
+        )
+        setError(
+          `Supabase rejected the token: ${xErr.message || 'unknown error'}`,
+        )
         setGooglePending(false)
         return
       }
+      // eslint-disable-next-line no-console
+      console.log(
+        '[gf-google] step=supabase ok +' +
+          Math.round(performance.now() - t0) +
+          'ms',
+        { hasSession: !!data?.session },
+      )
       if (!data.session) {
         setError('Sign-in returned no session. Please try again.')
         setGooglePending(false)
@@ -158,20 +237,14 @@ export default function AppLoginPage() {
       window.location.href = '/dashboard'
     } catch (caught) {
       // eslint-disable-next-line no-console
-      console.error('[gf-app-login] google threw:', caught)
-      // Plugin throws when the user cancels the picker, when Play
-      // Services is missing, when the SHA-1 isn't registered in
-      // Google Cloud Console, etc. Surface the message — it's
-      // usually actionable (e.g. "Sign-in cancelled" vs
-      // "DEVELOPER_ERROR" which means config drift).
+      console.error(
+        '[gf-google] step=outer threw +' +
+          Math.round(performance.now() - t0) +
+          'ms',
+        JSON.stringify(dumpError(caught)),
+      )
       const msg =
         caught instanceof Error ? caught.message : String(caught ?? '')
-      // Plugin emits 'popup_closed_by_user'-ish messages on cancel;
-      // don't show those as errors — silently reset.
-      if (/cancel/i.test(msg) || msg.includes('12501')) {
-        setGooglePending(false)
-        return
-      }
       setError(msg || 'Could not start Google sign-in.')
       setGooglePending(false)
     }
