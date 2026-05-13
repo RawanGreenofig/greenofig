@@ -1,7 +1,6 @@
 'use client'
 
-import { useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useEffect, useState } from 'react'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { isInsideCapacitor } from '@/lib/is-capacitor'
 import { getBrowserSupabase } from '@/lib/supabase/client'
@@ -97,7 +96,7 @@ async function seedTierCache(
  * plugin out of the browser-side bundle until it's actually needed.
  */
 export function CapacitorAuthListener() {
-  const router = useRouter()
+  const [signingIn, setSigningIn] = useState(false)
 
   useEffect(() => {
     if (!isInsideCapacitor()) return
@@ -114,8 +113,15 @@ export function CapacitorAuthListener() {
           // eslint-disable-next-line no-console
           console.log('[gf-cap] appUrlOpen:', url)
           if (!url.startsWith('com.greenofig.app://')) return
+          // Show the splash IMMEDIATELY so the user gets feedback the
+          // moment the deep link arrives — before we wait on the
+          // Supabase code exchange.
+          setSigningIn(true)
           const supabase = getBrowserSupabase()
-          if (!supabase) return
+          if (!supabase) {
+            setSigningIn(false)
+            return
+          }
 
           // Supabase can deliver tokens in two shapes depending on
           // the OAuth flow:
@@ -130,13 +136,17 @@ export function CapacitorAuthListener() {
               const { data, error } = await supabase.auth.exchangeCodeForSession(code)
               if (error) {
                 console.error('[gf-cap] exchangeCodeForSession failed:', error)
+                setSigningIn(false)
                 return
               }
-              // Navigate FIRST — don't make the user wait for the
-              // profile fetch + tier seed. Those run in the background
-              // and AuthContext picks them up via onAuthStateChange.
-              router.replace('/dashboard')
+              // Fire the profile + tier seed (background — don't await).
+              // Then hard-navigate. window.location.replace forces a
+              // full page reload so middleware sees the new cookies
+              // and routes to the correct locale-prefixed dashboard;
+              // the Next router can otherwise hesitate on the locale
+              // bounce for half a second.
               void seedTierCache(supabase, data.session?.user.id)
+              window.location.replace('/dashboard')
               return
             }
             const hash = parsed.hash.startsWith('#')
@@ -152,13 +162,19 @@ export function CapacitorAuthListener() {
               })
               if (error) {
                 console.error('[gf-cap] setSession failed:', error)
+                setSigningIn(false)
                 return
               }
-              router.replace('/dashboard')
               void seedTierCache(supabase, data.session?.user.id)
+              window.location.replace('/dashboard')
+              return
             }
+            // URL matched our scheme but had neither code nor tokens
+            // — release the splash so the user isn't stuck.
+            setSigningIn(false)
           } catch (err) {
             console.error('[gf-cap] auth callback parse failed:', err)
+            setSigningIn(false)
           }
         })
         cleanup = () => {
@@ -172,7 +188,23 @@ export function CapacitorAuthListener() {
       cancelled = true
       cleanup?.()
     }
-  }, [router])
+  }, [])
 
-  return null
+  if (!signingIn) return null
+  return (
+    <div
+      aria-hidden
+      className="fixed inset-0 z-[200] flex flex-col items-center justify-center gap-4"
+      style={{ background: '#0d1a12' }}
+    >
+      <span
+        className="w-8 h-8 rounded-full animate-spin"
+        style={{
+          border: '2px solid rgba(132,217,61,0.25)',
+          borderTopColor: '#a3e635',
+        }}
+      />
+      <p className="text-sm text-fg-2">Signing you in…</p>
+    </div>
+  )
 }
