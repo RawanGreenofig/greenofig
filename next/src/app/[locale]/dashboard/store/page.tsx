@@ -64,9 +64,25 @@ const TIER_DISCOUNT_PCT: Record<string, number> = {
   vip: 15,
 }
 
+/** Captured at add-time so the cart drawer can render even when the
+ *  live products query hasn't returned yet (or returns something
+ *  different from the seed catalog). Previously cartItems did a
+ *  `sourceProducts.find(id)` lookup and dropped lines whose product
+ *  wasn't found, so the cart badge would show "3" but the drawer
+ *  rendered empty for UUID-keyed products on first paint. */
+interface CartLineSnapshot {
+  name: string
+  price: number
+  image?: string
+  hue: string
+  stock: number
+  category: Exclude<Category, 'all'>
+}
+
 interface CartLine {
   productId: string
   qty: number
+  snapshot?: CartLineSnapshot
 }
 
 const containerVariants = {
@@ -90,13 +106,28 @@ export default function StorePage() {
       if (!raw) return []
       const parsed = JSON.parse(raw) as unknown
       if (!Array.isArray(parsed)) return []
-      return parsed.filter(
-        (l): l is CartLine =>
-          !!l &&
-          typeof (l as CartLine).productId === 'string' &&
-          typeof (l as CartLine).qty === 'number' &&
-          (l as CartLine).qty > 0,
-      )
+      return parsed.flatMap((raw): CartLine[] => {
+        if (!raw || typeof raw !== 'object') return []
+        const l = raw as Partial<CartLine>
+        if (typeof l.productId !== 'string') return []
+        if (typeof l.qty !== 'number' || l.qty <= 0) return []
+        // snapshot is optional for backwards compat: legacy cart
+        // entries from before this field existed won't have one and
+        // will be resolved through sourceProducts at render time.
+        const snap = (l.snapshot ?? null) as CartLineSnapshot | null
+        const validSnap =
+          snap &&
+          typeof snap.name === 'string' &&
+          typeof snap.price === 'number' &&
+          typeof snap.hue === 'string'
+            ? snap
+            : undefined
+        return [{
+          productId: l.productId,
+          qty: l.qty,
+          snapshot: validSnap,
+        }]
+      })
     } catch {
       return []
     }
@@ -169,9 +200,27 @@ export default function StorePage() {
   if (offline) return <OfflineCard t={t} />
 
 
+  // Prefer the live product row (in case price/stock changed), but
+  // fall back to the snapshot captured at add-time so a line never
+  // ghosts. If neither exists (legacy entry without snapshot AND
+  // product missing), filter it out — there's nothing renderable.
   const cartItems = cart.flatMap((line) => {
-    const p = sourceProducts.find((x) => x.id === line.productId)
-    return p ? [{ ...line, product: p }] : []
+    const live = sourceProducts.find((x) => x.id === line.productId)
+    if (live) return [{ ...line, product: live }]
+    if (line.snapshot) {
+      const fallback: Product = {
+        id: line.productId,
+        name: line.snapshot.name,
+        category: line.snapshot.category,
+        price: line.snapshot.price,
+        stock: line.snapshot.stock,
+        badges: [],
+        hue: line.snapshot.hue,
+        image: line.snapshot.image,
+      }
+      return [{ ...line, product: fallback }]
+    }
+    return []
   })
   const totalQty = cart.reduce((acc, l) => acc + l.qty, 0)
   const subtotal = cartItems.reduce(
@@ -184,22 +233,31 @@ export default function StorePage() {
   const discountAmount = Math.round(subtotal * totalDiscountPct) / 100
   const total = Math.max(0, subtotal - discountAmount)
 
-  const addToCart = (id: string) => {
+  const addToCart = (product: Product) => {
+    const snapshot: CartLineSnapshot = {
+      name: product.name,
+      price: product.price,
+      image: product.image,
+      hue: product.hue,
+      stock: product.stock,
+      category: product.category,
+    }
     let added = false
     setCart((curr) => {
-      const existing = curr.find((l) => l.productId === id)
+      const existing = curr.find((l) => l.productId === product.id)
       if (existing) {
         added = true
         return curr.map((l) =>
-          l.productId === id ? { ...l, qty: l.qty + 1 } : l,
+          l.productId === product.id
+            // Refresh the snapshot on every add so cart lines stay
+            // in sync with the latest product data the user saw.
+            ? { ...l, qty: l.qty + 1, snapshot }
+            : l,
         )
       }
       added = true
-      return [...curr, { productId: id, qty: 1 }]
+      return [...curr, { productId: product.id, qty: 1, snapshot }]
     })
-    // Toast feedback — the previous version silently mutated state +
-    // opened the drawer, so on slow renders users tapped repeatedly
-    // thinking nothing happened. Now we always confirm.
     if (added) toast.success(t('addedToCart'))
     setDrawerOpen(true)
   }
@@ -298,7 +356,7 @@ export default function StorePage() {
             key={p.id}
             t={t}
             product={p}
-            onAdd={() => addToCart(p.id)}
+            onAdd={() => addToCart(p)}
           />
         ))}
       </ul>
@@ -469,9 +527,17 @@ function ProductCard({
 
         <button
           type="button"
-          onClick={onAdd}
+          // stopPropagation is defensive — the button is already a
+          // sibling of the Link, not a descendant, so nothing should
+          // capture this click. But on Capacitor WebView we'd rather
+          // be paranoid than have the user end up on the detail page.
+          onClick={(e) => {
+            e.preventDefault()
+            e.stopPropagation()
+            onAdd()
+          }}
           disabled={out}
-          className={`w-full inline-flex items-center justify-center gap-1.5 rounded-pill h-11 text-sm font-semibold transition-all ${
+          className={`relative z-10 w-full inline-flex items-center justify-center gap-1.5 rounded-pill h-11 text-sm font-semibold transition-all ${
             out
               ? 'bg-surface-raised text-fg-3 cursor-not-allowed'
               : 'bg-gradient-to-b from-lime-400 to-lime-600 text-bg border border-lime-600/60 active:brightness-90 active:translate-y-px'

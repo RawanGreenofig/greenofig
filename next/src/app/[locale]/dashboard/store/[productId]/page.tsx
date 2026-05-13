@@ -142,7 +142,11 @@ export default function ProductDetailPage() {
         {/* ── Visual ─────────────────────────────────────── */}
         <div
           data-product-hue
-          className="relative w-full aspect-square rounded-2xl overflow-hidden"
+          // max-w-sm + mx-auto cap the photo at 24rem on mobile so it
+          // doesn't fill the entire viewport (looked oversized inside
+          // the Capacitor WebView at native phone widths). lg+ goes
+          // back to its grid column's natural width.
+          className="relative w-full max-w-sm mx-auto lg:max-w-none lg:mx-0 aspect-square rounded-2xl overflow-hidden"
           style={{ background: product.hue }}
         >
           {product.image ? (

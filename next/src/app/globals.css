@@ -1371,27 +1371,38 @@ html.in-capacitor body {
   touch-action: pan-y;
   overscroll-behavior-y: contain;
 }
-html.in-capacitor [class*="overflow-x-auto"],
-html.in-capacitor [class*="overflow-x-scroll"],
+
+/* Re-enable horizontal panning inside elements that explicitly need
+ * it (the store filter rail, anything tagged data-scroll-x). The
+ * selector is intentionally narrow: matching loose [class*="…"]
+ * accidentally caught classes like overflow-x-auto-disabled which
+ * have nothing to do with horizontal scroll. */
+html.in-capacitor .overflow-x-auto,
+html.in-capacitor .overflow-x-scroll,
 html.in-capacitor [data-scroll-x] {
   touch-action: pan-x;
 }
 
-/* Force the WebView's native scroll container to actually own the
- * scroll. Without these, the inner <body> ends up scroll-locked
- * mid-page because some ancestor briefly transitions to
- * overflow: hidden (modal animations, framer-motion height
- * transitions, etc.). Scoping to html.in-capacitor keeps the
- * regular site untouched. */
-html.in-capacitor {
-  overflow-y: scroll;
-  height: 100%;
-}
-html.in-capacitor body {
-  overflow-y: scroll;
-  height: 100%;
-  position: relative;
-}
-html.in-capacitor * {
-  -webkit-overflow-scrolling: touch;
+/* Tap fix.
+ *
+ * touch-action: pan-y on the body tells Android WebView that vertical
+ * scroll is the primary gesture. The WebView will then treat ANY
+ * touch followed by even a couple of pixels of finger motion as the
+ * start of a scroll — and cancel the synthetic click that would
+ * otherwise fire on touch-end. That's why the Add-to-cart, Cancel,
+ * and × buttons appear unresponsive: their click is being eaten by
+ * a gesture the user didn't intend.
+ *
+ * touch-action: manipulation on the interactive element OVERRIDES
+ * the body's pan-y for that element specifically — taps fire
+ * reliably, double-tap-zoom is still suppressed, scroll still works
+ * if the user actually moves their finger meaningfully. */
+html.in-capacitor button,
+html.in-capacitor a,
+html.in-capacitor [role="button"],
+html.in-capacitor input,
+html.in-capacitor select,
+html.in-capacitor textarea,
+html.in-capacitor label {
+  touch-action: manipulation;
 }
