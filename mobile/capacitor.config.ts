@@ -39,7 +39,16 @@ const config: CapacitorConfig = {
     allowNavigation: [
       'greenofig.com',
       '*.greenofig.com',
+      // Supabase Auth + Postgrest + Realtime endpoints. The wildcard
+      // already covers our project host, but we list the explicit
+      // project URL too so it's obvious from this file which Supabase
+      // backend the WebView talks to. (allowNavigation governs
+      // top-level WebView navigations; fetch() requests aren't
+      // restricted by it on Android Capacitor — they're plain HTTPS.
+      // Listed regardless for completeness.)
+      'hledcyhwadgmbmznqzwe.supabase.co',
       '*.supabase.co',
+      '*.supabase.in',
       'api.stripe.com',
       'checkout.stripe.com',
       '*.googleapis.com',

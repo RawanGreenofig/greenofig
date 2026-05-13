@@ -1,18 +1,29 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import toast from 'react-hot-toast'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { isInsideCapacitor } from '@/lib/is-capacitor'
 import { getBrowserSupabase } from '@/lib/supabase/client'
 
+/** Per-step structured logging.
+ *  Inspect via chrome://inspect or `adb logcat | grep gf-signin`.
+ *  Each line includes elapsed-since-start so you can tell exactly
+ *  which step is eating the time when sign-in feels slow. */
+function flowLog(t0: number, step: string, extra?: unknown): void {
+  // eslint-disable-next-line no-console
+  console.log(`[gf-signin] +${Math.round(performance.now() - t0)}ms ${step}`, extra ?? '')
+}
+
 /** Race a promise against a timeout. Rejects with a "timeout" error
  *  if the deadline hits first so callers can surface a clear error
  *  instead of leaving the user staring at a spinner. */
-function withTimeout<T>(p: Promise<T>, ms: number, label: string): Promise<T> {
+// Accept any PromiseLike so we can race Supabase's PostgrestBuilder
+// (a thenable that isn't a real Promise) the same way we race normal
+// fetch promises.
+function withTimeout<T>(p: PromiseLike<T>, ms: number, label: string): Promise<T> {
   return new Promise<T>((resolve, reject) => {
     const timer = setTimeout(
-      () => reject(new Error(`${label} timed out after ${ms}ms`)),
+      () => reject(new Error(`${label}_timeout`)),
       ms,
     )
     p.then(
@@ -22,54 +33,65 @@ function withTimeout<T>(p: Promise<T>, ms: number, label: string): Promise<T> {
   })
 }
 
-/**
- * Pick the right destination for a freshly authenticated user. We
- * route by role here (rather than always landing on /dashboard and
- * letting middleware bounce) so the redirect count is exactly one.
- */
+// Hard ceiling for any single step in the sign-in flow. 8 seconds is
+// long enough that a healthy connection never trips it (the exchange
+// call typically resolves in 300–800ms over 4G), short enough that a
+// stuck WebView surfaces a retry option instead of leaving the user
+// staring at a spinner.
+const SIGNIN_STEP_TIMEOUT_MS = 8_000
+
+/** Pick the right destination for a freshly authenticated user. */
 function destinationForRole(role: string | null | undefined): string {
   if (role === 'admin') return '/admin'
   if (role === 'nutritionist') return '/nutritionist'
   return '/dashboard'
 }
 
-/**
- * Single combined "seed local caches + decide destination" step.
- * Replaces the old seedTierCache + waitForSession + role-discovery
- * trio. One profile query, one navigation. If the user's profile
- * row doesn't exist yet (first-ever Capacitor sign-in), we upsert
- * with the OAuth provider's metadata first.
- *
- * Returns the destination path so the caller can navigate.
- */
+/** Seed local tier cache + resolve role-correct destination. The
+ *  profile fetch is timeout-bounded so a stuck DB call can't trap
+ *  the user on the splash. On any failure we still navigate — to
+ *  /dashboard — because the user IS authenticated at this point and
+ *  the dashboard's own loaders will handle missing data gracefully. */
 async function seedAndResolveDest(
   supabase: SupabaseClient,
   userId: string,
+  t0: number,
 ): Promise<string> {
   try {
-    const { data } = await supabase
-      .from('profiles')
-      .select('role, tier, full_name')
-      .eq('id', userId)
-      .maybeSingle()
+    flowLog(t0, 'profile.fetch start')
+    const { data } = await withTimeout(
+      supabase
+        .from('profiles')
+        .select('role, tier, full_name')
+        .eq('id', userId)
+        .maybeSingle(),
+      SIGNIN_STEP_TIMEOUT_MS,
+      'profile_fetch',
+    )
+    flowLog(t0, 'profile.fetch done', data ? { hasRow: true } : { hasRow: false })
 
     if (!data) {
+      flowLog(t0, 'profile.upsert (first-time)')
       const { data: userData } = await supabase.auth.getUser()
       const u = userData.user
-      await supabase
-        .from('profiles')
-        .upsert(
-          {
-            id: userId,
-            full_name:
-              (u?.user_metadata?.full_name as string | undefined) ?? '',
-            avatar_url:
-              (u?.user_metadata?.avatar_url as string | undefined) ?? '',
-            role: 'user',
-            tier: 'free',
-          } as never,
-          { onConflict: 'id', ignoreDuplicates: true },
-        )
+      await withTimeout(
+        supabase
+          .from('profiles')
+          .upsert(
+            {
+              id: userId,
+              full_name:
+                (u?.user_metadata?.full_name as string | undefined) ?? '',
+              avatar_url:
+                (u?.user_metadata?.avatar_url as string | undefined) ?? '',
+              role: 'user',
+              tier: 'free',
+            } as never,
+            { onConflict: 'id', ignoreDuplicates: true },
+          ),
+        SIGNIN_STEP_TIMEOUT_MS,
+        'profile_upsert',
+      )
       window.localStorage.setItem('gf_tier', 'free')
       window.localStorage.setItem('gf_tier_ts', String(Date.now()))
       return '/dashboard'
@@ -88,10 +110,17 @@ async function seedAndResolveDest(
     }
     return destinationForRole(row.role)
   } catch (err) {
-    console.error('[gf-cap] seedAndResolveDest failed:', err)
+    console.error('[gf-signin] seedAndResolveDest failed:', err)
+    // Still let the user through — they're authenticated. /dashboard
+    // will lazy-load the profile.
     return '/dashboard'
   }
 }
+
+type SigninStatus =
+  | { kind: 'idle' }
+  | { kind: 'pending' }
+  | { kind: 'error'; label: string }
 
 /**
  * Capacitor deep-link → Supabase session bridge AND the sole authority
@@ -100,34 +129,18 @@ async function seedAndResolveDest(
  * Two responsibilities:
  *
  *   1. Handle the OAuth deep link arriving at com.greenofig.app://.
- *      Exchange the code, seed caches, navigate. Splash + retry
- *      escape provide feedback while the network round-trip lands.
+ *      Exchange the code, seed caches, navigate.
  *
  *   2. On mount, if a session already exists in storage AND the user
- *      is sitting on the marketing homepage (where there's nothing
- *      for an authenticated user to do), navigate to the role-correct
- *      home. This handles the "returning user reopens the app" case
- *      that CapacitorHomeGate used to handle separately.
+ *      is sitting on the marketing homepage, navigate to the role-
+ *      correct home (returning-user fast path).
  *
- * Anything else (signed-in user navigating freely inside the app)
- * we do NOT touch — they're already where they want to be.
- *
- * No `waitForSession` polling, no router.replace race, no double
- * navigation. After the exchange resolves, exactly one
- * window.location.replace fires.
+ * Every step is wrapped in a 8s timeout. If anything stalls the
+ * splash overlay flips to an error state with a Retry button instead
+ * of trapping the user.
  */
 export function CapacitorAuthListener() {
-  const [signingIn, setSigningIn] = useState(false)
-  const [showCancel, setShowCancel] = useState(false)
-
-  useEffect(() => {
-    if (!signingIn) {
-      setShowCancel(false)
-      return
-    }
-    const t = setTimeout(() => setShowCancel(true), 8000)
-    return () => clearTimeout(t)
-  }, [signingIn])
+  const [status, setStatus] = useState<SigninStatus>({ kind: 'idle' })
 
   // Effect 1 — returning-user auto-route. Runs once on mount.
   useEffect(() => {
@@ -135,23 +148,35 @@ export function CapacitorAuthListener() {
     const supabase = getBrowserSupabase()
     if (!supabase) return
     let cancelled = false
+    const t0 = performance.now()
 
     const maybeRedirect = async () => {
-      // Only auto-route from the marketing homepage. Anywhere else
-      // (sign-in, dashboard, blog, etc.) leave the user alone.
       const path = window.location.pathname
       const isMarketingHome = path === '/' || /^\/[a-z]{2}\/?$/.test(path)
       if (!isMarketingHome) return
-
-      const { data } = await supabase.auth.getSession()
-      if (cancelled || !data.session?.user) return
-
-      const dest = await seedAndResolveDest(supabase, data.session.user.id)
-      if (cancelled) return
-      window.location.replace(dest)
+      flowLog(t0, 'mount-check getSession')
+      try {
+        const { data } = await withTimeout(
+          supabase.auth.getSession(),
+          SIGNIN_STEP_TIMEOUT_MS,
+          'getSession',
+        )
+        if (cancelled || !data.session?.user) {
+          flowLog(t0, 'mount-check no session')
+          return
+        }
+        flowLog(t0, 'mount-check session found, resolving dest')
+        const dest = await seedAndResolveDest(supabase, data.session.user.id, t0)
+        if (cancelled) return
+        flowLog(t0, 'mount-check navigate', { dest })
+        window.location.replace(dest)
+      } catch (err) {
+        // Returning-user path stays silent on error — the user can
+        // sign in manually from the marketing page.
+        console.warn('[gf-signin] mount-check skipped:', err)
+      }
     }
     void maybeRedirect()
-
     return () => { cancelled = true }
   }, [])
 
@@ -168,13 +193,17 @@ export function CapacitorAuthListener() {
         if (!App || cancelled) return
         const handle = await App.addListener('appUrlOpen', async (event: { url: string }) => {
           const url = event?.url ?? ''
-          // eslint-disable-next-line no-console
-          console.log('[gf-cap] appUrlOpen:', url)
-          if (!url.startsWith('com.greenofig.app://')) return
-          setSigningIn(true)
+          const t0 = performance.now()
+          flowLog(t0, 'appUrlOpen', { url })
+          if (!url.startsWith('com.greenofig.app://')) {
+            flowLog(t0, 'appUrlOpen ignored (wrong scheme)')
+            return
+          }
+          setStatus({ kind: 'pending' })
           const supabase = getBrowserSupabase()
           if (!supabase) {
-            setSigningIn(false)
+            flowLog(t0, 'supabase client null — aborting')
+            setStatus({ kind: 'error', label: 'client_unavailable' })
             return
           }
 
@@ -182,32 +211,34 @@ export function CapacitorAuthListener() {
             const parsed = new URL(url)
             const code = parsed.searchParams.get('code')
             if (code) {
+              flowLog(t0, 'exchange start')
               let userId: string | undefined
               try {
                 const result = await withTimeout(
                   supabase.auth.exchangeCodeForSession(code),
-                  15000,
-                  'exchangeCodeForSession',
+                  SIGNIN_STEP_TIMEOUT_MS,
+                  'exchange',
                 )
+                flowLog(t0, 'exchange done', { hasError: !!result.error })
                 if (result.error) {
-                  console.error('[gf-cap] exchangeCodeForSession failed:', result.error)
-                  toast.error(result.error.message || 'Sign-in failed. Please try again.')
-                  setSigningIn(false)
+                  console.error('[gf-signin] exchange returned error:', result.error)
+                  setStatus({ kind: 'error', label: 'exchange_failed' })
                   return
                 }
                 userId = result.data.session?.user.id
               } catch (err) {
-                console.error('[gf-cap] exchange hung / errored:', err)
-                toast.error('Sign-in is taking too long. Check your connection and try again.')
-                setSigningIn(false)
+                console.error('[gf-signin] exchange hung/threw:', err)
+                setStatus({ kind: 'error', label: 'exchange_timeout' })
                 return
               }
               if (!userId) {
-                toast.error('Sign-in returned no user. Please try again.')
-                setSigningIn(false)
+                flowLog(t0, 'exchange returned no userId')
+                setStatus({ kind: 'error', label: 'no_user' })
                 return
               }
-              const dest = await seedAndResolveDest(supabase, userId)
+              flowLog(t0, 'seed+resolve dest start')
+              const dest = await seedAndResolveDest(supabase, userId, t0)
+              flowLog(t0, 'navigating', { dest })
               window.location.replace(dest)
               return
             }
@@ -218,6 +249,7 @@ export function CapacitorAuthListener() {
             const accessToken = params.get('access_token')
             const refreshToken = params.get('refresh_token')
             if (accessToken && refreshToken) {
+              flowLog(t0, 'setSession start (implicit flow)')
               let userId: string | undefined
               try {
                 const result = await withTimeout(
@@ -225,42 +257,42 @@ export function CapacitorAuthListener() {
                     access_token: accessToken,
                     refresh_token: refreshToken,
                   }),
-                  15000,
+                  SIGNIN_STEP_TIMEOUT_MS,
                   'setSession',
                 )
+                flowLog(t0, 'setSession done', { hasError: !!result.error })
                 if (result.error) {
-                  console.error('[gf-cap] setSession failed:', result.error)
-                  toast.error(result.error.message || 'Sign-in failed. Please try again.')
-                  setSigningIn(false)
+                  console.error('[gf-signin] setSession returned error:', result.error)
+                  setStatus({ kind: 'error', label: 'set_session_failed' })
                   return
                 }
                 userId = result.data.session?.user.id
               } catch (err) {
-                console.error('[gf-cap] setSession hung / errored:', err)
-                toast.error('Sign-in is taking too long. Check your connection and try again.')
-                setSigningIn(false)
+                console.error('[gf-signin] setSession hung/threw:', err)
+                setStatus({ kind: 'error', label: 'set_session_timeout' })
                 return
               }
               if (!userId) {
-                toast.error('Sign-in returned no user. Please try again.')
-                setSigningIn(false)
+                setStatus({ kind: 'error', label: 'no_user' })
                 return
               }
-              const dest = await seedAndResolveDest(supabase, userId)
+              const dest = await seedAndResolveDest(supabase, userId, t0)
+              flowLog(t0, 'navigating', { dest })
               window.location.replace(dest)
               return
             }
-            setSigningIn(false)
+            flowLog(t0, 'deep link had neither code nor tokens')
+            setStatus({ kind: 'idle' })
           } catch (err) {
-            console.error('[gf-cap] auth callback parse failed:', err)
-            setSigningIn(false)
+            console.error('[gf-signin] callback parse failed:', err)
+            setStatus({ kind: 'error', label: 'parse_failed' })
           }
         })
         cleanup = () => {
           try { handle.remove() } catch { /* listener already gone */ }
         }
       } catch (err) {
-        console.error('[gf-cap] @capacitor/app import failed:', err)
+        console.error('[gf-signin] @capacitor/app import failed:', err)
       }
     })()
     return () => {
@@ -269,30 +301,47 @@ export function CapacitorAuthListener() {
     }
   }, [])
 
-  if (!signingIn) return null
+  if (status.kind === 'idle') return null
+  const isError = status.kind === 'error'
   return (
     <div
-      className="fixed inset-0 z-[200] flex flex-col items-center justify-center gap-4"
+      className="fixed inset-0 z-[200] flex flex-col items-center justify-center gap-4 px-6"
       style={{ background: '#0d1a12' }}
     >
-      <span
-        aria-hidden
-        className="w-8 h-8 rounded-full animate-spin"
-        style={{
-          border: '2px solid rgba(132,217,61,0.25)',
-          borderTopColor: '#a3e635',
-        }}
-      />
-      <p className="text-sm text-fg-2">Signing you in…</p>
-      {showCancel ? (
-        <button
-          type="button"
-          onClick={() => setSigningIn(false)}
-          className="mt-2 px-4 py-2 rounded-lg text-sm text-fg-2 border border-white/15 hover:bg-white/5 active:bg-white/10"
-        >
-          Taking too long? Tap to cancel
-        </button>
-      ) : null}
+      {!isError ? (
+        <>
+          <span
+            aria-hidden
+            className="w-8 h-8 rounded-full animate-spin"
+            style={{
+              border: '2px solid rgba(132,217,61,0.25)',
+              borderTopColor: '#a3e635',
+            }}
+          />
+          <p className="text-sm text-fg-2">Signing you in…</p>
+        </>
+      ) : (
+        <>
+          <p className="text-base font-semibold text-fg-1 text-center">
+            Sign-in took too long
+          </p>
+          <p className="text-sm text-fg-2 text-center max-w-[18rem]">
+            Check your internet connection and try again. Step that
+            timed out: <span className="font-mono text-xs">{status.label}</span>
+          </p>
+          <button
+            type="button"
+            onClick={() => setStatus({ kind: 'idle' })}
+            className="mt-2 px-5 py-2 rounded-pill text-sm font-semibold text-bg"
+            style={{
+              background: 'linear-gradient(180deg,#a3e635 0%,#84cc16 100%)',
+              boxShadow: '0 6px 18px rgba(132,217,61,0.28)',
+            }}
+          >
+            Try again
+          </button>
+        </>
+      )}
     </div>
   )
 }

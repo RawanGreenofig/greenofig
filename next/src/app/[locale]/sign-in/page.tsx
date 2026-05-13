@@ -23,6 +23,27 @@ const schema = z.object({
 })
 type Form = z.infer<typeof schema>
 
+/** Hard ceiling for any single step in the sign-in flow. Healthy
+ *  connection: < 1s. Anything past 8s is hung — surface a retry. */
+const SIGNIN_STEP_TIMEOUT_MS = 8_000
+
+function flowLog(t0: number, step: string, extra?: unknown): void {
+  // eslint-disable-next-line no-console
+  console.log(`[gf-signin] +${Math.round(performance.now() - t0)}ms ${step}`, extra ?? '')
+}
+
+// PromiseLike so we can race the PostgrestBuilder (a thenable, not
+// a real Promise) the same way we race signInWithPassword.
+function withTimeout<T>(p: PromiseLike<T>, ms: number, label: string): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error(`${label}_timeout`)), ms)
+    p.then(
+      (v) => { clearTimeout(timer); resolve(v) },
+      (err) => { clearTimeout(timer); reject(err) },
+    )
+  })
+}
+
 export default function SignInPage() {
   const t = useTranslations('auth')
   const tErrors = useTranslations('errors')
@@ -44,7 +65,27 @@ export default function SignInPage() {
     }
     setServerError(null)
     setPending(true)
-    const { error, data } = await supabase.auth.signInWithPassword(form)
+    const t0 = performance.now()
+    flowLog(t0, 'signInWithPassword start')
+
+    let signInResult: Awaited<ReturnType<typeof supabase.auth.signInWithPassword>>
+    try {
+      signInResult = await withTimeout(
+        supabase.auth.signInWithPassword(form),
+        SIGNIN_STEP_TIMEOUT_MS,
+        'password',
+      )
+    } catch (err) {
+      console.error('[gf-signin] password hung/threw:', err)
+      setPending(false)
+      setServerError(
+        "Sign-in took too long. Check your connection and tap 'Sign in' again.",
+      )
+      return
+    }
+    flowLog(t0, 'signInWithPassword done', { hasError: !!signInResult.error })
+
+    const { error, data } = signInResult
     if (error) {
       setPending(false)
       // "Invalid login credentials" is what Supabase returns both for a
@@ -64,12 +105,27 @@ export default function SignInPage() {
       return
     }
 
-    const { data: profileRow } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', data.user.id)
-      .maybeSingle()
-    const role = (profileRow as { role?: string } | null)?.role ?? 'user'
+    flowLog(t0, 'profile.fetch start')
+    let role: string = 'user'
+    try {
+      const { data: profileRow } = await withTimeout(
+        supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', data.user.id)
+          .maybeSingle(),
+        SIGNIN_STEP_TIMEOUT_MS,
+        'profile_fetch',
+      )
+      role = (profileRow as { role?: string } | null)?.role ?? 'user'
+      flowLog(t0, 'profile.fetch done', { role })
+    } catch (err) {
+      // Profile fetch hung — we still want to land the user somewhere
+      // useful since they ARE signed in. Default to the user
+      // dashboard; if their actual role is different, requireRole on
+      // that page will route them correctly.
+      console.warn('[gf-signin] profile fetch timed out, defaulting role:', err)
+    }
     const dest =
       role === 'admin'
         ? '/admin'
@@ -88,6 +144,7 @@ export default function SignInPage() {
         /* private mode — fine */
       }
     }
+    flowLog(t0, 'navigate', { dest })
     toast.success(t('signInTitle'))
     router.replace(dest)
   }
