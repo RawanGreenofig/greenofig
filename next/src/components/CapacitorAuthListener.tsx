@@ -1,9 +1,26 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import toast from 'react-hot-toast'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { isInsideCapacitor } from '@/lib/is-capacitor'
 import { getBrowserSupabase } from '@/lib/supabase/client'
+
+/** Race a promise against a timeout. Rejects with a "timeout" error
+ *  if the deadline hits first so callers can surface a clear error
+ *  instead of leaving the user staring at a spinner. */
+function withTimeout<T>(p: Promise<T>, ms: number, label: string): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const timer = setTimeout(
+      () => reject(new Error(`${label} timed out after ${ms}ms`)),
+      ms,
+    )
+    p.then(
+      (v) => { clearTimeout(timer); resolve(v) },
+      (err) => { clearTimeout(timer); reject(err) },
+    )
+  })
+}
 
 /**
  * Fetch the user's profile and pre-populate localStorage with their
@@ -138,6 +155,20 @@ async function seedTierCache(
  */
 export function CapacitorAuthListener() {
   const [signingIn, setSigningIn] = useState(false)
+  const [showCancel, setShowCancel] = useState(false)
+
+  // Reveal a "Tap to cancel" escape after 8 seconds. The hard 15s
+  // timeout inside the exchange will normally rescue the user first,
+  // but if anything keeps the promise pending the user always has a
+  // way out without killing the app.
+  useEffect(() => {
+    if (!signingIn) {
+      setShowCancel(false)
+      return
+    }
+    const t = setTimeout(() => setShowCancel(true), 8000)
+    return () => clearTimeout(t)
+  }, [signingIn])
 
   useEffect(() => {
     if (!isInsideCapacitor()) return
@@ -174,20 +205,27 @@ export function CapacitorAuthListener() {
             const parsed = new URL(url)
             const code = parsed.searchParams.get('code')
             if (code) {
-              const { data, error } = await supabase.auth.exchangeCodeForSession(code)
-              if (error) {
-                console.error('[gf-cap] exchangeCodeForSession failed:', error)
+              let data
+              try {
+                const result = await withTimeout(
+                  supabase.auth.exchangeCodeForSession(code),
+                  15000,
+                  'exchangeCodeForSession',
+                )
+                if (result.error) {
+                  console.error('[gf-cap] exchangeCodeForSession failed:', result.error)
+                  toast.error(result.error.message || 'Sign-in failed. Please try again.')
+                  setSigningIn(false)
+                  return
+                }
+                data = result.data
+              } catch (err) {
+                console.error('[gf-cap] exchange hung / errored:', err)
+                toast.error('Sign-in is taking too long. Check your connection and try again.')
                 setSigningIn(false)
                 return
               }
-              // Profile + tier seed in background.
               void seedTierCache(supabase, data.session?.user.id)
-              // Wait until getSession() confirms the session has
-              // propagated to the SSR cookie store before navigating.
-              // Without this poll, the hard navigation fires before
-              // cookies are flushed → middleware sees no auth →
-              // redirects to /sign-in → sign-in sees the local
-              // session → redirects to /dashboard → infinite loop.
               await waitForSession(supabase)
               window.location.replace('/dashboard')
               return
@@ -199,12 +237,26 @@ export function CapacitorAuthListener() {
             const accessToken = params.get('access_token')
             const refreshToken = params.get('refresh_token')
             if (accessToken && refreshToken) {
-              const { data, error } = await supabase.auth.setSession({
-                access_token: accessToken,
-                refresh_token: refreshToken,
-              })
-              if (error) {
-                console.error('[gf-cap] setSession failed:', error)
+              let data
+              try {
+                const result = await withTimeout(
+                  supabase.auth.setSession({
+                    access_token: accessToken,
+                    refresh_token: refreshToken,
+                  }),
+                  15000,
+                  'setSession',
+                )
+                if (result.error) {
+                  console.error('[gf-cap] setSession failed:', result.error)
+                  toast.error(result.error.message || 'Sign-in failed. Please try again.')
+                  setSigningIn(false)
+                  return
+                }
+                data = result.data
+              } catch (err) {
+                console.error('[gf-cap] setSession hung / errored:', err)
+                toast.error('Sign-in is taking too long. Check your connection and try again.')
                 setSigningIn(false)
                 return
               }
@@ -237,11 +289,11 @@ export function CapacitorAuthListener() {
   if (!signingIn) return null
   return (
     <div
-      aria-hidden
       className="fixed inset-0 z-[200] flex flex-col items-center justify-center gap-4"
       style={{ background: '#0d1a12' }}
     >
       <span
+        aria-hidden
         className="w-8 h-8 rounded-full animate-spin"
         style={{
           border: '2px solid rgba(132,217,61,0.25)',
@@ -249,6 +301,15 @@ export function CapacitorAuthListener() {
         }}
       />
       <p className="text-sm text-fg-2">Signing you in…</p>
+      {showCancel ? (
+        <button
+          type="button"
+          onClick={() => setSigningIn(false)}
+          className="mt-2 px-4 py-2 rounded-lg text-sm text-fg-2 border border-white/15 hover:bg-white/5 active:bg-white/10"
+        >
+          Taking too long? Tap to cancel
+        </button>
+      ) : null}
     </div>
   )
 }
