@@ -116,7 +116,6 @@ const config: CapacitorConfig = {
     GoogleAuth: {
       scopes: ['profile', 'email'],
       serverClientId: process.env.CAP_GOOGLE_WEB_CLIENT_ID ?? '',
-      forceCodeForRefreshToken: true,
     },
   },
 }
