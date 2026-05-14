@@ -14,6 +14,7 @@ import { GSAPProvider } from '@/providers/GSAPProvider'
 import { CapacitorMotionGate } from '@/providers/CapacitorMotionGate'
 import { CapacitorAuthListener } from '@/components/CapacitorAuthListener'
 import { CapacitorPushRegistration } from '@/components/CapacitorPushRegistration'
+import { CapacitorLocalNotifications } from '@/components/CapacitorLocalNotifications'
 import { AuthProvider } from '@/context/AuthContext'
 import { ToastHost } from '@/components/ToastHost'
 import { FilmGrain } from '@/components/FilmGrain'
@@ -247,6 +248,7 @@ export default async function LocaleLayout({ children, params }: LayoutProps) {
                 <CapacitorMotionGate>
                   <CapacitorAuthListener />
                   <CapacitorPushRegistration />
+                  <CapacitorLocalNotifications />
                   <MaintenanceBanner />
                   {children}
                   <FilmGrain />
