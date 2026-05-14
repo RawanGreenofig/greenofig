@@ -1,5 +1,31 @@
 import type { CapacitorConfig } from '@capacitor/cli'
 
+// Resolve the Web OAuth client ID once with whitespace stripped.
+// GitHub Actions secrets occasionally retain a trailing newline if
+// the value was pasted from the Console UI on a touch event; that
+// newline survives into strings.xml as part of `server_client_id`,
+// and Google's Android Sign-In SDK then fails the auth with
+// DEVELOPER_ERROR (code 10) because the resolved client doesn't
+// match anything in the GCP project.
+const RAW_GOOGLE_CLIENT_ID = process.env.CAP_GOOGLE_WEB_CLIENT_ID ?? ''
+const GOOGLE_CLIENT_ID = RAW_GOOGLE_CLIENT_ID.trim()
+
+// TEMPORARY diagnostic — capacitor.config.ts is evaluated by Node
+// during `npx cap sync android`, so this lands in the CI log right
+// before the Android project is generated. Remove once code-10 is
+// resolved. Prints only length + public suffix, never the value.
+{
+  const raw = RAW_GOOGLE_CLIENT_ID
+  const trimmed = GOOGLE_CLIENT_ID
+  const suffix = trimmed.slice(-30)
+  console.log(
+    `[capacitor.config] CAP_GOOGLE_WEB_CLIENT_ID raw_length=${raw.length} ` +
+      `trimmed_length=${trimmed.length} ` +
+      `whitespace_stripped=${raw.length - trimmed.length} ` +
+      `suffix=${suffix}`,
+  )
+}
+
 /**
  * Greenofig Android wrapper.
  *
@@ -115,7 +141,7 @@ const config: CapacitorConfig = {
      */
     GoogleAuth: {
       scopes: ['profile', 'email'],
-      serverClientId: process.env.CAP_GOOGLE_WEB_CLIENT_ID ?? '',
+      serverClientId: GOOGLE_CLIENT_ID,
     },
   },
 }

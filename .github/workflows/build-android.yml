@@ -61,6 +61,27 @@ jobs:
           cd mobile
           npm run sync:version
 
+      # TEMPORARY diagnostic — remove once code-10 / aud mismatch is
+      # resolved. Prints only the secret's length + visible suffix
+      # (the public ".apps.googleusercontent.com" tail), never the
+      # private prefix. Detects whitespace/newline contamination
+      # without leaking the ID.
+      - name: Diagnose CAP_GOOGLE_WEB_CLIENT_ID shape
+        env:
+          CAP_GOOGLE_WEB_CLIENT_ID: ${{ secrets.CAP_GOOGLE_WEB_CLIENT_ID }}
+        run: |
+          RAW="$CAP_GOOGLE_WEB_CLIENT_ID"
+          TRIMMED="$(printf '%s' "$RAW" | tr -d '[:space:]')"
+          echo "raw_length=${#RAW}"
+          echo "trimmed_length=${#TRIMMED}"
+          if [ "${#RAW}" != "${#TRIMMED}" ]; then
+            echo "::warning::CAP_GOOGLE_WEB_CLIENT_ID contains whitespace/newline chars — they will be stripped before use."
+          fi
+          # Print only the documented suffix so we can confirm it's a Google
+          # OAuth client ID at all without exposing the project-specific prefix.
+          SUFFIX="$(printf '%s' "$TRIMMED" | tail -c 30)"
+          echo "suffix=$SUFFIX"
+
       - name: Generate Android project
         env:
           # Read at sync time by mobile/capacitor.config.ts and baked into
@@ -68,6 +89,9 @@ jobs:
           # Must be the **web** OAuth client ID configured in Supabase's
           # Google provider — Supabase verifies `aud` against it when
           # exchanging the ID token from native Google Sign-In.
+          # capacitor.config.ts .trim()s this at sync time so accidental
+          # whitespace in the GitHub secret doesn't corrupt the value
+          # baked into strings.xml.
           CAP_GOOGLE_WEB_CLIENT_ID: ${{ secrets.CAP_GOOGLE_WEB_CLIENT_ID }}
         run: |
           if [ -z "$CAP_GOOGLE_WEB_CLIENT_ID" ]; then
