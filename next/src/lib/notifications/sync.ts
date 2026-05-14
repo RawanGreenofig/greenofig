@@ -51,7 +51,8 @@ export async function fetchPreferences(
   if (!data) return { ...DEFAULT_PREFS }
   // Strip the metadata columns so callers can treat the result as
   // an editable form value.
-  const { user_id: _u, updated_at: _t, ...rest } = data as NotificationPreferences
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { user_id, updated_at, ...rest } = data as NotificationPreferences
   return rest
 }
 
