@@ -344,6 +344,32 @@ export interface ModerationFlag {
   created_at: string
 }
 
+// Per-user Capacitor local-notification reminder preferences. Mirrors
+// the 024_notification_preferences migration. Time columns serialise
+// as "HH:MM:SS" strings.
+export interface NotificationPreferencesRow {
+  user_id: string
+  breakfast_enabled: boolean
+  breakfast_time: string
+  lunch_enabled: boolean
+  lunch_time: string
+  dinner_enabled: boolean
+  dinner_time: string
+  hydration_enabled: boolean
+  hydration_start_time: string
+  hydration_end_time: string
+  hydration_interval_hours: number
+  workout_enabled: boolean
+  workout_time: string
+  updated_at: string
+}
+
+// Insert/upsert shape: user_id is required; every other column has
+// a server-side default and can be omitted on first insert.
+export type NotificationPreferencesInsert = { user_id: string } & Partial<
+  Omit<NotificationPreferencesRow, 'user_id' | 'updated_at'>
+>
+
 // Tiny helper for Insert/Update generics
 type Insertable<T extends { id?: unknown; created_at?: unknown }> =
   Partial<T> & Pick<T, never>
@@ -377,6 +403,7 @@ export interface Database {
       api_keys:           Tab<ApiKey,          Insertable<ApiKey>>
       audit_log:          Tab<AuditLog,        Insertable<AuditLog>>
       moderation_flags:   Tab<ModerationFlag,  Insertable<ModerationFlag>>
+      notification_preferences: Tab<NotificationPreferencesRow, NotificationPreferencesInsert>
     }
     Views: { [key: string]: never }
     Functions: { [key: string]: never }
