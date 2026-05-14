@@ -94,6 +94,64 @@ export default function AppLoginPage() {
   const [diagPath, setDiagPath] = useState<string>('')
   const [diagDetail, setDiagDetail] = useState<string>('')
 
+  // Inline forgot-password flow. Linking out to /forgot-password would
+  // route through next-intl + the auth middleware, which is exactly
+  // the pipeline this page is built to bypass for the Capacitor
+  // WebView. Keeping it inline preserves the "zero shared imports"
+  // architecture documented at the top of this file.
+  const [forgotPending, setForgotPending] = useState(false)
+  const [forgotSent, setForgotSent] = useState(false)
+
+  const onForgotPassword = async () => {
+    if (forgotPending) return
+    const trimmed = email.trim()
+    if (!trimmed) {
+      setError('Enter your email above first, then tap Forgot password.')
+      setDiagDetail('forgot: no email entered')
+      return
+    }
+    setError(null)
+    setForgotPending(true)
+    const sb = getClient()
+    if (!sb) {
+      setError('Auth service is not configured. Please try again later.')
+      setForgotPending(false)
+      return
+    }
+    try {
+      // Reset links land on /reset-password — the existing recovery
+      // page. Use the origin the WebView is actually on (greenofig.com
+      // in production) so the link opens correctly when tapped from
+      // an email client on the device.
+      const origin =
+        typeof window !== 'undefined'
+          ? window.location.origin
+          : 'https://greenofig.com'
+      const { error: rErr } = await sb.auth.resetPasswordForEmail(trimmed, {
+        redirectTo: `${origin}/reset-password`,
+      })
+      if (rErr) {
+        // Supabase rate-limits resetPasswordForEmail (~4/email/hour);
+        // surface the message so the user sees "wait and try again"
+        // when they spam-tap.
+        setError(rErr.message || 'Could not send reset email. Please try again.')
+        setDiagDetail(
+          `forgot: status=${rErr.status ?? '?'} msg=${rErr.message}`,
+        )
+        setForgotPending(false)
+        return
+      }
+      setForgotSent(true)
+      setForgotPending(false)
+    } catch (caught) {
+      const msg =
+        caught instanceof Error ? caught.message : String(caught ?? '')
+      setError(msg || 'Could not send reset email. Please try again.')
+      setDiagDetail(`forgot threw: ${msg}`)
+      setForgotPending(false)
+    }
+  }
+
   useEffect(() => {
     setDiagPath(window.location.pathname)
     // eslint-disable-next-line no-console
@@ -581,6 +639,51 @@ export default function AppLoginPage() {
               {showPassword ? 'Hide' : 'Show'}
             </button>
           </div>
+
+          <div
+            style={{
+              marginTop: 10,
+              display: 'flex',
+              justifyContent: 'flex-end',
+            }}
+          >
+            <button
+              type="button"
+              onClick={onForgotPassword}
+              disabled={forgotPending || pending || googlePending}
+              style={{
+                background: 'transparent',
+                border: 'none',
+                padding: '4px 0',
+                color: '#a3e635',
+                fontSize: 13,
+                fontWeight: 600,
+                cursor: forgotPending ? 'wait' : 'pointer',
+                opacity: forgotPending ? 0.7 : 1,
+                touchAction: 'manipulation',
+                fontFamily: 'inherit',
+              }}
+            >
+              {forgotPending ? 'Sending…' : 'Forgot password?'}
+            </button>
+          </div>
+
+          {forgotSent && (
+            <div
+              role="status"
+              style={{
+                marginTop: 16,
+                padding: '10px 12px',
+                borderRadius: 10,
+                background: 'rgba(132,217,61,0.12)',
+                border: '1px solid rgba(132,217,61,0.35)',
+                color: '#a3e635',
+                fontSize: 13,
+              }}
+            >
+              Check your email for a reset link.
+            </div>
+          )}
 
           {error && (
             <div
