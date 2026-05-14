@@ -226,7 +226,14 @@ export default function AppLoginPage() {
       const { data, error: oErr } = await sb.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: 'https://greenofig.com/en/auth/callback',
+          // ?from=capacitor is the discriminator the callback route
+          // uses to bounce back to the app via custom scheme rather
+          // than exchange server-side. Supabase ignores query strings
+          // when matching against its Redirect URLs allowlist, so the
+          // base URL still has to be allowlisted but no per-query
+          // entry is needed. Google preserves the param across the
+          // round-trip (Google → Supabase callback → redirectTo).
+          redirectTo: 'https://greenofig.com/en/auth/callback?from=capacitor',
           skipBrowserRedirect: true,
           queryParams: {
             access_type: 'offline',
