@@ -65,7 +65,11 @@ export async function upsertPreferences(
   const { error } = await supabase
     .from('notification_preferences')
     .upsert(
-      { user_id: userId, ...prefs },
+      // Cast matches the project's existing upsert sites (e.g.
+      // app/auth/callback/route.ts:68). The hand-curated Tab<> in
+      // lib/supabase/types.ts doesn't fully satisfy supabase-js's
+      // strict Insert generic, so call sites bypass at this seam.
+      { user_id: userId, ...prefs } as never,
       { onConflict: 'user_id' },
     )
   if (error) {
