@@ -202,30 +202,31 @@ export default function AppLoginPage() {
     // to it. We then hand the URL to Browser.open() so it loads in
     // Custom Tabs, not the WebView.
     //
-    // Bounce-back path: redirectTo is the app's custom scheme
-    // (com.greenofig.app://login-callback). After consent Google
-    // redirects there; Chrome Custom Tabs hands the URL to Android;
-    // Android routes it to MainActivity per the intent filter that
-    // mobile/scripts/patch-manifest.mjs installs at build time;
-    // Capacitor surfaces it as `appUrlOpen`; CapacitorAuthListener
-    // (Effect 2) catches the event, runs exchangeCodeForSession with
-    // the code, and navigates to /dashboard.
-    //
     // queryParams.access_type=offline + prompt=consent are passed
     // through to Google's /o/oauth2/auth so a refresh token is
     // issued on every sign-in.
     //
-    // PREREQ: com.greenofig.app://login-callback must be added to
-    // Supabase Dashboard → Authentication → URL Configuration →
-    // Redirect URLs. Otherwise signInWithOAuth fails with
-    // "redirect_to is not allowed".
+    // PREREQ: redirectTo must be in Supabase Dashboard →
+    // Authentication → URL Configuration → Redirect URLs. Both the
+    // /en and /ar locale variants need to be allowlisted so the
+    // page works for Arabic users too. Otherwise signInWithOAuth
+    // returns "redirect_to is not allowed".
+    //
+    // Bounce-back caveat (handled in /auth/callback/route.ts, NOT
+    // here): Chrome Custom Tabs renders the redirectTo URL inside
+    // the tab; Android doesn't route an https URL back to the app
+    // unless Android App Links are configured (claiming the host
+    // via /.well-known/assetlinks.json). The callback route detects
+    // the Custom-Tabs-shaped request and re-redirects to the
+    // com.greenofig.app:// custom scheme, which the app's intent
+    // filter intercepts and surfaces as appUrlOpen.
     // eslint-disable-next-line no-console
     console.log('[gf-google] signInWithOAuth (custom-tabs) start')
     try {
       const { data, error: oErr } = await sb.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: 'com.greenofig.app://login-callback',
+          redirectTo: 'https://greenofig.com/en/auth/callback',
           skipBrowserRedirect: true,
           queryParams: {
             access_type: 'offline',
