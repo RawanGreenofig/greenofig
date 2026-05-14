@@ -258,10 +258,27 @@ export default function AppLoginPage() {
         setGooglePending(false)
         return
       }
+      // Full URL log. We need to see EXACTLY what supabase-js asks
+      // Browser.open() to load — both to confirm the redirect_to it
+      // hands to Google's /authorize matches what's in Supabase's
+      // Redirect URLs allowlist, and to spot any double-encoding /
+      // trailing-slash drift that breaks an otherwise-allowlisted URL.
+      let parsedRedirectTo: string | null = null
+      try {
+        parsedRedirectTo = new URL(url).searchParams.get('redirect_to')
+      } catch {
+        /* malformed URL — log will still show the raw value */
+      }
       // eslint-disable-next-line no-console
-      console.log('[gf-google] opening custom tab', {
-        urlPrefix: url.slice(0, 60),
-      })
+      console.log('[gf-google] Browser.open URL (full):', url)
+      // eslint-disable-next-line no-console
+      console.log('[gf-google] decoded redirect_to:', parsedRedirectTo)
+      // Surface the same to the on-screen diagnostic banner so it's
+      // readable without chrome://inspect. The URL is long; the
+      // banner uses word-break so it wraps to multiple lines.
+      setDiagDetail(
+        `oauth url: ${url}\ndecoded redirect_to: ${parsedRedirectTo ?? '(parse failed)'}`,
+      )
       // Dynamic import keeps the @capacitor/browser shim out of any
       // browser bundle that might not have the plugin installed.
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -395,8 +412,17 @@ export default function AppLoginPage() {
             </span>
           </div>
           {diagDetail && (
-            <div style={{ marginTop: 4, color: '#f87171' }}>
-              Last error: {diagDetail}
+            <div
+              style={{
+                marginTop: 4,
+                color: '#f87171',
+                // Long OAuth URLs need to wrap; without these, the
+                // banner pushes the page off-screen.
+                wordBreak: 'break-all',
+                whiteSpace: 'pre-wrap',
+              }}
+            >
+              Last detail: {diagDetail}
             </div>
           )}
         </div>
