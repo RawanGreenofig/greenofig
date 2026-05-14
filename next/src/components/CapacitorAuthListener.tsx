@@ -257,6 +257,20 @@ export function CapacitorAuthListener() {
             flowLog(t0, 'appUrlOpen ignored (wrong scheme)')
             return
           }
+          // We came back from a Chrome Custom Tab (Google OAuth). Close
+          // the tab so the user doesn't see the post-redirect blank
+          // page lingering behind the splash. Fire-and-forget — if the
+          // plugin isn't installed (web build) or the tab is already
+          // gone, this is harmless. Don't block the exchange on it.
+          void (async () => {
+            try {
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              const bmod: any = await import('@capacitor/browser')
+              await bmod.Browser?.close?.()
+            } catch {
+              /* plugin missing or already closed — fine */
+            }
+          })()
           setStatus({ kind: 'pending' })
           const supabase = getBrowserSupabase()
           if (!supabase) {

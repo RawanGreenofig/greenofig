@@ -190,27 +190,43 @@ export default function AppLoginPage() {
     }
     setGooglePending(true)
 
-    // Web OAuth round-trip inside the WebView. The UA override in
-    // mobile/capacitor.config.ts presents the WebView as Chrome
-    // Mobile so Google's `disallowed_useragent` heuristic doesn't
-    // refuse the /o/oauth2/auth load. After consent, Google
-    // redirects to https://greenofig.com/en/auth/callback?code=...
-    // which (a) sees the GreenofigApp/ UA tag and (b) forwards to
-    // /en/auth/capacitor-complete?code=... — a client-side page
-    // that runs exchangeCodeForSession against the same
-    // localStorage-backed client, then navigates to /dashboard.
+    // Google blocks OAuth in embedded WebViews (disallowed_useragent)
+    // regardless of UA spoofing. The supported pattern on Android is
+    // Chrome Custom Tabs — a real Chrome surface running in its own
+    // process — which Google accepts. @capacitor/browser exposes that
+    // via Browser.open() (uses Custom Tabs when available, falls back
+    // to the system browser otherwise).
     //
-    // queryParams.access_type=offline + prompt=consent ensure
-    // Google issues a refresh token on every sign-in (otherwise
-    // Google reuses a previously-issued token and Supabase has
-    // nothing to refresh against once the access token expires).
+    // skipBrowserRedirect: true tells supabase-js to return the
+    // provider URL instead of trying to navigate the current document
+    // to it. We then hand the URL to Browser.open() so it loads in
+    // Custom Tabs, not the WebView.
+    //
+    // Bounce-back path: redirectTo is the app's custom scheme
+    // (com.greenofig.app://login-callback). After consent Google
+    // redirects there; Chrome Custom Tabs hands the URL to Android;
+    // Android routes it to MainActivity per the intent filter that
+    // mobile/scripts/patch-manifest.mjs installs at build time;
+    // Capacitor surfaces it as `appUrlOpen`; CapacitorAuthListener
+    // (Effect 2) catches the event, runs exchangeCodeForSession with
+    // the code, and navigates to /dashboard.
+    //
+    // queryParams.access_type=offline + prompt=consent are passed
+    // through to Google's /o/oauth2/auth so a refresh token is
+    // issued on every sign-in.
+    //
+    // PREREQ: com.greenofig.app://login-callback must be added to
+    // Supabase Dashboard → Authentication → URL Configuration →
+    // Redirect URLs. Otherwise signInWithOAuth fails with
+    // "redirect_to is not allowed".
     // eslint-disable-next-line no-console
-    console.log('[gf-google] signInWithOAuth start')
+    console.log('[gf-google] signInWithOAuth (custom-tabs) start')
     try {
       const { data, error: oErr } = await sb.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: 'https://greenofig.com/en/auth/callback',
+          redirectTo: 'com.greenofig.app://login-callback',
+          skipBrowserRedirect: true,
           queryParams: {
             access_type: 'offline',
             prompt: 'consent',
@@ -227,19 +243,35 @@ export default function AppLoginPage() {
         setGooglePending(false)
         return
       }
+      const url = data?.url
+      if (!url) {
+        setError('Supabase returned no OAuth URL.')
+        setDiagDetail('google oauth: no url returned')
+        setGooglePending(false)
+        return
+      }
       // eslint-disable-next-line no-console
-      console.log('[gf-google] signInWithOAuth ok, navigating', {
-        hasUrl: !!data?.url,
+      console.log('[gf-google] opening custom tab', {
+        urlPrefix: url.slice(0, 60),
       })
-      // Supabase returns the provider URL and (when skipBrowserRedirect
-      // is left at its default of false) also navigates to it. The
-      // WebView follows the redirect; control resumes at
-      // /auth/callback once Google returns.
-      // We DO NOT setGooglePending(false) here — the page is about
-      // to unmount as the WebView navigates away.
+      // Dynamic import keeps the @capacitor/browser shim out of any
+      // browser bundle that might not have the plugin installed.
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const mod: any = await import('@capacitor/browser')
+      const Browser = mod.Browser
+      await Browser.open({
+        url,
+        // toolbarColor matches the brand bg so the tab feels in-app.
+        toolbarColor: '#0d1a12',
+        // presentationStyle: only honored on iOS; benign on Android.
+        presentationStyle: 'popover',
+      })
+      // Don't reset googlePending here: the user is now in Chrome,
+      // and when they come back via the deep link the page will
+      // either navigate away (success) or be mounted fresh.
     } catch (caught) {
       // eslint-disable-next-line no-console
-      console.error('[gf-google] signInWithOAuth threw', caught)
+      console.error('[gf-google] threw', caught)
       const msg =
         caught instanceof Error ? caught.message : String(caught ?? '')
       setError(msg || 'Could not start Google sign-in.')
