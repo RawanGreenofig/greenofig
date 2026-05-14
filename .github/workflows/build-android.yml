@@ -61,43 +61,8 @@ jobs:
           cd mobile
           npm run sync:version
 
-      # TEMPORARY diagnostic — remove once code-10 / aud mismatch is
-      # resolved. Prints only the secret's length + visible suffix
-      # (the public ".apps.googleusercontent.com" tail), never the
-      # private prefix. Detects whitespace/newline contamination
-      # without leaking the ID.
-      - name: Diagnose CAP_GOOGLE_WEB_CLIENT_ID shape
-        env:
-          CAP_GOOGLE_WEB_CLIENT_ID: ${{ secrets.CAP_GOOGLE_WEB_CLIENT_ID }}
-        run: |
-          RAW="$CAP_GOOGLE_WEB_CLIENT_ID"
-          TRIMMED="$(printf '%s' "$RAW" | tr -d '[:space:]')"
-          echo "raw_length=${#RAW}"
-          echo "trimmed_length=${#TRIMMED}"
-          if [ "${#RAW}" != "${#TRIMMED}" ]; then
-            echo "::warning::CAP_GOOGLE_WEB_CLIENT_ID contains whitespace/newline chars — they will be stripped before use."
-          fi
-          # Print only the documented suffix so we can confirm it's a Google
-          # OAuth client ID at all without exposing the project-specific prefix.
-          SUFFIX="$(printf '%s' "$TRIMMED" | tail -c 30)"
-          echo "suffix=$SUFFIX"
-
       - name: Generate Android project
-        env:
-          # Read at sync time by mobile/capacitor.config.ts and baked into
-          # android/app/src/main/res/values/strings.xml as `server_client_id`.
-          # Must be the **web** OAuth client ID configured in Supabase's
-          # Google provider — Supabase verifies `aud` against it when
-          # exchanging the ID token from native Google Sign-In.
-          # capacitor.config.ts .trim()s this at sync time so accidental
-          # whitespace in the GitHub secret doesn't corrupt the value
-          # baked into strings.xml.
-          CAP_GOOGLE_WEB_CLIENT_ID: ${{ secrets.CAP_GOOGLE_WEB_CLIENT_ID }}
         run: |
-          if [ -z "$CAP_GOOGLE_WEB_CLIENT_ID" ]; then
-            echo "::error::CAP_GOOGLE_WEB_CLIENT_ID secret is required — native Google sign-in will not work without it."
-            exit 1
-          fi
           cd mobile
           # Symlink www/ exists; cap add picks the webDir from capacitor.config.ts
           npx cap add android
@@ -156,18 +121,6 @@ jobs:
           keyAlias=${{ secrets.ANDROID_KEY_ALIAS }}
           keyPassword=${{ secrets.ANDROID_KEY_PASSWORD }}
           EOF
-
-      - name: Print keystore SHA-1
-        if: ${{ github.event_name == 'push' || inputs.buildType == 'release' }}
-        env:
-          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
-          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
-        run: |
-          keytool -list -v \
-            -keystore "$GITHUB_WORKSPACE/mobile/android/app/greenofig-release.jks" \
-            -alias "$ANDROID_KEY_ALIAS" \
-            -storepass "$ANDROID_KEYSTORE_PASSWORD" \
-          | grep "SHA1:"
 
       - name: Inject signing config into app/build.gradle (release only)
         if: ${{ github.event_name == 'push' || inputs.buildType == 'release' }}

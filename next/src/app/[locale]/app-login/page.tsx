@@ -69,6 +69,8 @@ function getClient(): SupabaseClient | null {
       // PKCE is required for the Google round-trip: signInWithOAuth
       // writes the verifier to localStorage, then /auth/capacitor-
       // complete reads it back to finish exchangeCodeForSession.
+      // Same key namespace as /auth/capacitor-complete so the
+      // verifier is recoverable on the post-callback page load.
       flowType: 'pkce',
       storage: window.localStorage,
     },
@@ -188,165 +190,60 @@ export default function AppLoginPage() {
     }
     setGooglePending(true)
 
-    // The WebView OAuth round-trip (signInWithOAuth + redirectTo) was
-    // unreliable: Supabase auth logs showed the same OAuth `state`
-    // being submitted 5+ times in one second per sign-in, with all
-    // but the first failing "OAuth state not found or expired".
-    // The Android WebView occasionally re-issues redirected URLs,
-    // and OAuth state tokens are one-shot — so the user got bounced
-    // back to /app-login on the failing retries.
+    // Web OAuth round-trip inside the WebView. The UA override in
+    // mobile/capacitor.config.ts presents the WebView as Chrome
+    // Mobile so Google's `disallowed_useragent` heuristic doesn't
+    // refuse the /o/oauth2/auth load. After consent, Google
+    // redirects to https://greenofig.com/en/auth/callback?code=...
+    // which (a) sees the GreenofigApp/ UA tag and (b) forwards to
+    // /en/auth/capacitor-complete?code=... — a client-side page
+    // that runs exchangeCodeForSession against the same
+    // localStorage-backed client, then navigates to /dashboard.
     //
-    // Native Google Sign-In sidesteps the entire browser flow:
-    // Android's Google Play Services library returns an ID token
-    // directly, and Supabase accepts it via signInWithIdToken. No
-    // /authorize, no /callback, no state cookie, no redirect.
-    const t0 = performance.now()
-    // Diagnostic helpers. Native plugin throws PluginError objects
-    // whose useful fields (code, data) are non-enumerable, so plain
-    // JSON.stringify drops them — we have to walk the property list.
-    const dumpError = (e: unknown) => {
-      if (e && typeof e === 'object') {
-        const out: Record<string, unknown> = {}
-        for (const k of Object.getOwnPropertyNames(e as object)) {
-          out[k] = (e as Record<string, unknown>)[k]
-        }
-        return out
-      }
-      return { value: String(e ?? '') }
-    }
-    // Pull the `aud` claim out of the ID token so we can confirm
-    // the APK is signing tokens for the Web client ID Supabase
-    // expects. Token payload is the second base64url segment; we
-    // don't verify the signature — Supabase does — just decode.
-    const audOf = (jwt: string): string | null => {
-      try {
-        const parts = jwt.split('.')
-        if (parts.length < 2) return null
-        const pad = '='.repeat((4 - (parts[1].length % 4)) % 4)
-        const b64 = parts[1].replace(/-/g, '+').replace(/_/g, '/') + pad
-        const json = atob(b64)
-        return (JSON.parse(json) as { aud?: string }).aud ?? null
-      } catch {
-        return null
-      }
-    }
+    // queryParams.access_type=offline + prompt=consent ensure
+    // Google issues a refresh token on every sign-in (otherwise
+    // Google reuses a previously-issued token and Supabase has
+    // nothing to refresh against once the access token expires).
     // eslint-disable-next-line no-console
-    console.log('[gf-google] start (native plugin)')
+    console.log('[gf-google] signInWithOAuth start')
     try {
-      const { GoogleAuth } = await import(
-        '@codetrix-studio/capacitor-google-auth'
-      )
-      // initialize() reads serverClientId from capacitor.config.ts's
-      // plugins.GoogleAuth block on native; on web it'd need a
-      // clientId argument, but /app-login only ships inside the APK
-      // so we never hit that path.
-      await GoogleAuth.initialize()
-      let result
-      try {
-        result = await GoogleAuth.signIn()
-      } catch (pluginErr) {
-        // eslint-disable-next-line no-console
-        console.error(
-          '[gf-google] step=plugin failed +' +
-            Math.round(performance.now() - t0) +
-            'ms',
-          JSON.stringify(dumpError(pluginErr)),
-        )
-        const msg =
-          pluginErr instanceof Error
-            ? pluginErr.message
-            : String(pluginErr ?? '')
-        // 12501 = SIGN_IN_CANCELLED — user dismissed the picker.
-        if (/cancel/i.test(msg) || msg.includes('12501')) {
-          setGooglePending(false)
-          return
-        }
-        // Surface the code on screen so it can be reported without
-        // needing chrome://inspect. 10 = DEVELOPER_ERROR (config),
-        // 7 = NETWORK_ERROR, 8 = INTERNAL_ERROR, 12500 = generic.
-        const code =
-          (pluginErr as { code?: unknown })?.code ??
-          (pluginErr as { errorCode?: unknown })?.errorCode
-        setError(
-          `Google sign-in failed${code != null ? ` (code ${String(code)})` : ''}: ${msg || 'unknown error'}`,
-        )
-        setDiagDetail(
-          `google plugin: code=${code != null ? String(code) : '?'} msg=${msg || 'unknown'}`,
-        )
-        setGooglePending(false)
-        return
-      }
-      const idToken = result?.authentication?.idToken
-      const aud = idToken ? audOf(idToken) : null
-      // eslint-disable-next-line no-console
-      console.log(
-        '[gf-google] step=plugin ok +' +
-          Math.round(performance.now() - t0) +
-          'ms',
-        {
-          hasIdToken: !!idToken,
-          idTokenLength: idToken?.length ?? 0,
-          aud,
-          email: result?.email ?? null,
-        },
-      )
-      if (!idToken) {
-        setError('Google did not return an ID token. Please try again.')
-        setGooglePending(false)
-        return
-      }
-      // Hand the ID token to Supabase. signInWithIdToken validates
-      // the token's `aud` against the Google provider configured on
-      // the Supabase project — so the serverClientId in
-      // capacitor.config.ts MUST be the same web client ID Supabase
-      // has registered. If it isn't, this returns "Invalid token".
-      const { data, error: xErr } = await sb.auth.signInWithIdToken({
+      const { data, error: oErr } = await sb.auth.signInWithOAuth({
         provider: 'google',
-        token: idToken,
+        options: {
+          redirectTo: 'https://greenofig.com/en/auth/callback',
+          queryParams: {
+            access_type: 'offline',
+            prompt: 'consent',
+          },
+        },
       })
-      if (xErr) {
+      if (oErr) {
         // eslint-disable-next-line no-console
-        console.error(
-          '[gf-google] step=supabase failed +' +
-            Math.round(performance.now() - t0) +
-            'ms',
-          JSON.stringify(dumpError(xErr)),
-        )
-        setError(
-          `Supabase rejected the token: ${xErr.message || 'unknown error'}`,
-        )
+        console.error('[gf-google] signInWithOAuth error', oErr)
+        setError(oErr.message || 'Could not start Google sign-in.')
         setDiagDetail(
-          `google supabase: status=${xErr.status ?? '?'} msg=${xErr.message}`,
+          `google oauth: status=${oErr.status ?? '?'} msg=${oErr.message}`,
         )
         setGooglePending(false)
         return
       }
       // eslint-disable-next-line no-console
-      console.log(
-        '[gf-google] step=supabase ok +' +
-          Math.round(performance.now() - t0) +
-          'ms',
-        { hasSession: !!data?.session },
-      )
-      if (!data.session) {
-        setError('Sign-in returned no session. Please try again.')
-        setGooglePending(false)
-        return
-      }
-      // localStorage is now populated. Hard-navigate so the dashboard
-      // bootstraps from scratch.
-      window.location.href = '/dashboard'
+      console.log('[gf-google] signInWithOAuth ok, navigating', {
+        hasUrl: !!data?.url,
+      })
+      // Supabase returns the provider URL and (when skipBrowserRedirect
+      // is left at its default of false) also navigates to it. The
+      // WebView follows the redirect; control resumes at
+      // /auth/callback once Google returns.
+      // We DO NOT setGooglePending(false) here — the page is about
+      // to unmount as the WebView navigates away.
     } catch (caught) {
       // eslint-disable-next-line no-console
-      console.error(
-        '[gf-google] step=outer threw +' +
-          Math.round(performance.now() - t0) +
-          'ms',
-        JSON.stringify(dumpError(caught)),
-      )
+      console.error('[gf-google] signInWithOAuth threw', caught)
       const msg =
         caught instanceof Error ? caught.message : String(caught ?? '')
       setError(msg || 'Could not start Google sign-in.')
+      setDiagDetail(`google oauth threw: ${msg}`)
       setGooglePending(false)
     }
   }
