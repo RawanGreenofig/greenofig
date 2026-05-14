@@ -32,11 +32,26 @@
  * dashboard recognises the user on the very next page load.
  */
 
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL ?? ''
 const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? ''
+
+/** UA-based Capacitor check, copied here verbatim instead of imported
+ *  from @/lib/is-capacitor so this page stays free of every shared
+ *  module that might recursively pull AuthContext / SSR helpers. The
+ *  "GreenofigApp/" suffix is the UA tag set in mobile/capacitor.config.ts. */
+function detectCapacitor(): boolean {
+  if (typeof window === 'undefined') return false
+  if (typeof navigator !== 'undefined' && /GreenofigApp\//.test(navigator.userAgent)) {
+    return true
+  }
+  const w = window as Window & {
+    Capacitor?: { isNativePlatform?: () => boolean }
+  }
+  return !!w.Capacitor?.isNativePlatform?.()
+}
 
 /** Single client per page load. createClient inside the module body
  *  would error during SSR (window undefined); the singleton is
@@ -68,6 +83,28 @@ export default function AppLoginPage() {
   const [googlePending, setGooglePending] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [showPassword, setShowPassword] = useState(false)
+
+  // Visible diagnostics: lets us read the most-important runtime
+  // state directly off the screen instead of chasing logcat. The
+  // banner shows current pathname / Capacitor / Supabase env / the
+  // last error message from EITHER sign-in path. Stays compact so
+  // it doesn't get in the user's way.
+  const insideCap = useMemo(() => detectCapacitor(), [])
+  const hasSupabaseEnv = !!SUPABASE_URL && !!SUPABASE_ANON_KEY
+  const [diagPath, setDiagPath] = useState<string>('')
+  const [diagDetail, setDiagDetail] = useState<string>('')
+
+  useEffect(() => {
+    setDiagPath(window.location.pathname)
+    // eslint-disable-next-line no-console
+    console.log('[gf-app-login] mounted', {
+      path: window.location.pathname,
+      insideCapacitor: insideCap,
+      hasSupabaseEnv,
+      supabaseUrlSuffix: SUPABASE_URL.slice(-30),
+      ua: navigator?.userAgent ?? '',
+    })
+  }, [insideCap, hasSupabaseEnv])
 
   // If a session already exists in localStorage (returning user
   // landed here by accident), skip straight to the dashboard.
@@ -175,6 +212,9 @@ export default function AppLoginPage() {
         setError(
           `Google sign-in failed${code != null ? ` (code ${String(code)})` : ''}: ${msg || 'unknown error'}`,
         )
+        setDiagDetail(
+          `google plugin: code=${code != null ? String(code) : '?'} msg=${msg || 'unknown'}`,
+        )
         setGooglePending(false)
         return
       }
@@ -216,6 +256,9 @@ export default function AppLoginPage() {
         )
         setError(
           `Supabase rejected the token: ${xErr.message || 'unknown error'}`,
+        )
+        setDiagDetail(
+          `google supabase: status=${xErr.status ?? '?'} msg=${xErr.message}`,
         )
         setGooglePending(false)
         return
@@ -284,6 +327,9 @@ export default function AppLoginPage() {
         } else {
           setError(signInErr.message || 'Sign-in failed. Please try again.')
         }
+        setDiagDetail(
+          `password: status=${signInErr.status ?? '?'} name=${signInErr.name ?? '?'} msg=${signInErr.message}`,
+        )
         setPending(false)
         return
       }
@@ -298,11 +344,10 @@ export default function AppLoginPage() {
     } catch (caught) {
       // eslint-disable-next-line no-console
       console.error('[gf-app-login] threw:', caught)
-      setError(
-        caught instanceof Error
-          ? caught.message
-          : 'Sign-in failed. Please try again.',
-      )
+      const msg =
+        caught instanceof Error ? caught.message : String(caught ?? '')
+      setError(msg || 'Sign-in failed. Please try again.')
+      setDiagDetail(`password threw: ${msg}`)
       setPending(false)
     }
   }
@@ -322,6 +367,45 @@ export default function AppLoginPage() {
       }}
     >
       <div style={{ width: '100%', maxWidth: 380 }}>
+        {/* Diagnostic banner. Compact by design — reads in one
+            glance whether the page is the right one, env is present,
+            and what the last sign-in attempt produced. */}
+        <div
+          style={{
+            marginBottom: 20,
+            padding: '10px 12px',
+            borderRadius: 10,
+            background: 'rgba(255,255,255,0.04)',
+            border: '1px solid rgba(255,255,255,0.08)',
+            fontFamily:
+              'ui-monospace, SFMono-Regular, Menlo, Consolas, monospace',
+            fontSize: 11,
+            lineHeight: 1.5,
+            color: '#a8b5a8',
+          }}
+        >
+          <div>
+            Path: <span style={{ color: '#f0ede6' }}>{diagPath || '…'}</span>
+          </div>
+          <div>
+            Inside Capacitor:{' '}
+            <span style={{ color: insideCap ? '#a3e635' : '#f87171' }}>
+              {insideCap ? 'YES' : 'NO'}
+            </span>
+          </div>
+          <div>
+            Connected to Supabase:{' '}
+            <span style={{ color: hasSupabaseEnv ? '#a3e635' : '#f87171' }}>
+              {hasSupabaseEnv ? 'YES' : 'NO'}
+            </span>
+          </div>
+          {diagDetail && (
+            <div style={{ marginTop: 4, color: '#f87171' }}>
+              Last error: {diagDetail}
+            </div>
+          )}
+        </div>
+
         <h1
           style={{
             fontSize: 28,
