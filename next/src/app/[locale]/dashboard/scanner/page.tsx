@@ -3,7 +3,7 @@
 
 import { motion } from 'framer-motion'
 import { FeatureGate } from '@/components/FeatureGate'
-import { useCallback, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import Image from 'next/image'
 import { useTranslations } from 'next-intl'
 import {
@@ -19,6 +19,7 @@ import {
   ImageIcon,
 } from '@/icons'
 import { useUser } from '@/lib/hooks/useUser'
+import { getBrowserSupabase } from '@/lib/supabase/client'
 import { ScannerUsageBanner } from '@/components/dashboard/ScannerUsageBanner'
 
 type MealType = 'breakfast' | 'lunch' | 'dinner' | 'snack'
@@ -70,9 +71,18 @@ export default function ScannerPage() {
   )
 }
 
+interface RecentScan {
+  id: string
+  food_name: string
+  calories: number | null
+  meal_type: string | null
+  logged_at: string
+  image_url: string | null
+}
+
 function ScannerPageInner() {
   const t = useTranslations('scanner')
-  const { tier } = useUser()
+  const { user, tier } = useUser()
   const fileInputRef = useRef<HTMLInputElement>(null)
   const cameraInputRef = useRef<HTMLInputElement>(null)
 
@@ -83,9 +93,67 @@ function ScannerPageInner() {
   const [result, setResult] = useState<ScanResult | null>(null)
   const [meal, setMeal] = useState<MealType>(pickGreetingMeal())
   const [logged, setLogged] = useState(false)
-  const [scansToday, setScansToday] = useState(0) // Wired to nutrition_logs in Cluster H
+  const [scansToday, setScansToday] = useState(0)
+  const [recentScans, setRecentScans] = useState<RecentScan[]>([])
+  // Bumped whenever /api/scanner finishes a successful analyze (which
+  // inserts a nutrition_logs row server-side). The fetch effect below
+  // depends on this so the Recent Scans list and today's-count refresh
+  // without a full page reload.
+  const [scanTick, setScanTick] = useState(0)
   const [dragOver, setDragOver] = useState(false)
   const [noFoodReason, setNoFoodReason] = useState<string | null>(null)
+
+  useEffect(() => {
+    const supabase = getBrowserSupabase()
+    if (!supabase || !user?.id) return
+    let cancelled = false
+    void (async () => {
+      const startOfToday = new Date()
+      startOfToday.setHours(0, 0, 0, 0)
+      const startIso = startOfToday.toISOString()
+
+      const [todayRes, recentRes] = await Promise.all([
+        supabase
+          .from('nutrition_logs')
+          .select('id', { count: 'exact', head: true })
+          .eq('user_id', user.id)
+          .eq('source', 'scanner')
+          .gte('logged_at', startIso),
+        supabase
+          .from('nutrition_logs')
+          .select(
+            'id, food_name, calories, meal_type, logged_at, scanner_image_url',
+          )
+          .eq('user_id', user.id)
+          .eq('source', 'scanner')
+          .order('logged_at', { ascending: false })
+          .limit(5),
+      ])
+      if (cancelled) return
+      setScansToday(todayRes.count ?? 0)
+      type Row = {
+        id: string
+        food_name: string
+        calories: number | null
+        meal_type: string | null
+        logged_at: string
+        scanner_image_url: string | null
+      }
+      setRecentScans(
+        ((recentRes.data as Row[] | null) ?? []).map((r) => ({
+          id: r.id,
+          food_name: r.food_name,
+          calories: r.calories,
+          meal_type: r.meal_type,
+          logged_at: r.logged_at,
+          image_url: r.scanner_image_url,
+        })),
+      )
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [user?.id, scanTick])
 
   const isFree = tier === 'free' || tier == null
   const limitHit = isFree && scansToday >= FREE_DAILY_LIMIT
@@ -140,7 +208,11 @@ function ScannerPageInner() {
             alternatives: data.alternatives ?? [],
           })
           setStage('result')
-          setScansToday((n) => n + 1)
+          // /api/scanner already inserted the nutrition_logs row with
+          // source='scanner'. Bump scanTick so the effect above
+          // re-reads scansToday + recentScans from the DB instead of
+          // guessing locally.
+          setScanTick((n) => n + 1)
           return
         }
         if (res.status === 429) {
@@ -264,18 +336,67 @@ function ScannerPageInner() {
         />
       ) : null}
 
-      {/* Recent scans */}
+      {/* Recent scans — pulled from nutrition_logs where source='scanner'. */}
       <section aria-label={t('recentScans')}>
         <h2 className="text-base font-semibold text-fg-1 mb-3">
           {t('recentScans')}
         </h2>
-        <div className="rounded-xl border border-dashed border-border bg-surface/50 p-8 text-center">
-          <ImageIcon
-            className="w-7 h-7 mx-auto mb-3 text-fg-3"
-            strokeWidth={1.5}
-          />
-          <p className="text-sm text-fg-2">{t('noRecentScans')}</p>
-        </div>
+        {recentScans.length === 0 ? (
+          <div className="rounded-xl border border-dashed border-border bg-surface/50 p-8 text-center">
+            <ImageIcon
+              className="w-7 h-7 mx-auto mb-3 text-fg-3"
+              strokeWidth={1.5}
+            />
+            <p className="text-sm text-fg-2">{t('noRecentScans')}</p>
+          </div>
+        ) : (
+          <ul className="space-y-2">
+            {recentScans.map((s) => (
+              <li
+                key={s.id}
+                className="flex items-center gap-3 rounded-xl border border-border bg-surface p-3"
+              >
+                {s.image_url ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={s.image_url}
+                    alt=""
+                    className="w-12 h-12 rounded-lg object-cover shrink-0"
+                  />
+                ) : (
+                  <span className="w-12 h-12 rounded-lg bg-bg-deeper inline-flex items-center justify-center shrink-0">
+                    <ImageIcon
+                      className="w-5 h-5 text-fg-3"
+                      strokeWidth={1.5}
+                    />
+                  </span>
+                )}
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-semibold text-fg-1 truncate">
+                    {s.food_name}
+                  </p>
+                  <p className="text-[11px] text-fg-3 mt-0.5">
+                    {s.meal_type ? `${s.meal_type} · ` : ''}
+                    {new Date(s.logged_at).toLocaleString(undefined, {
+                      month: 'short',
+                      day: 'numeric',
+                      hour: 'numeric',
+                      minute: '2-digit',
+                    })}
+                  </p>
+                </div>
+                {typeof s.calories === 'number' && (
+                  <span
+                    className="shrink-0 font-mono text-xs text-lime-400"
+                    dir="ltr"
+                  >
+                    {Math.round(s.calories)} kcal
+                  </span>
+                )}
+              </li>
+            ))}
+          </ul>
+        )}
       </section>
     </motion.div>
   )

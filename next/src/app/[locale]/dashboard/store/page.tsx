@@ -21,7 +21,6 @@ import { useUser } from '@/lib/hooks/useUser'
 import { useFeature } from '@/lib/hooks/useFeature'
 import { useSupabaseQuery } from '@/lib/hooks/useSupabaseQuery'
 import { Link } from '@/i18n/navigation'
-import { PRODUCTS as SHARED_PRODUCTS } from '@/lib/products'
 
 type Category =
   | 'all'
@@ -53,11 +52,6 @@ const CATEGORIES: Category[] = [
   'kitchen',
   'books',
 ]
-
-// Source of truth lives in lib/products.ts so the per-product detail
-// page reads the same catalog. The local `Product` type is structurally
-// a subset of the shared one, so the cast is sound.
-const PRODUCTS: Product[] = SHARED_PRODUCTS as unknown as Product[]
 
 const TIER_DISCOUNT_PCT: Record<string, number> = {
   premium: 10,
@@ -145,8 +139,9 @@ export default function StorePage() {
   const [couponError, setCouponError] = useState(false)
   const [checkingOut, setCheckingOut] = useState(false)
 
-  // Live products from the products table; falls back to seed when env unset
-  // or no rows are visible yet.
+  // Live products from the products table. No seed fallback: an empty
+  // products table renders the empty-state below rather than a seed
+  // list that misleads admins into thinking products are configured.
   const liveProducts = useSupabaseQuery<Product[]>(async (supabase) => {
     const { data } = await supabase
       .from('products')
@@ -184,9 +179,7 @@ export default function StorePage() {
     })
   }, [])
 
-  const sourceProducts = (liveProducts.data && liveProducts.data.length > 0)
-    ? liveProducts.data
-    : PRODUCTS
+  const sourceProducts = liveProducts.data ?? []
 
   const visible = useMemo(
     () => sourceProducts.filter((p) => category === 'all' || p.category === category),
@@ -349,17 +342,34 @@ export default function StorePage() {
         ))}
       </div>
 
-      {/* Grid */}
-      <ul className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-        {visible.map((p) => (
-          <ProductCard
-            key={p.id}
-            t={t}
-            product={p}
-            onAdd={() => addToCart(p)}
+      {/* Grid — or empty state when the products table has no
+          active rows in the selected category. Loading is handled by
+          `liveProducts.isLoading` so we don't flash empty during the
+          initial fetch. */}
+      {liveProducts.loading ? null : visible.length === 0 ? (
+        <div className="rounded-xl border border-dashed border-border bg-surface/50 p-8 text-center">
+          <ShoppingBag
+            className="w-7 h-7 mx-auto mb-3 text-fg-3"
+            strokeWidth={1.5}
           />
-        ))}
-      </ul>
+          <p className="text-sm text-fg-2">
+            {sourceProducts.length === 0
+              ? 'No products in the store yet.'
+              : 'No products match this category.'}
+          </p>
+        </div>
+      ) : (
+        <ul className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          {visible.map((p) => (
+            <ProductCard
+              key={p.id}
+              t={t}
+              product={p}
+              onAdd={() => addToCart(p)}
+            />
+          ))}
+        </ul>
+      )}
 
       {/* Cart drawer */}
       {drawerOpen && (

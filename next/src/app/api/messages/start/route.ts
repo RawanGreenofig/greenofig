@@ -61,6 +61,18 @@ export const POST = withAuth(async (_req, ctx: AuthedContext) => {
     | { id: string; nutritionist_id: string }
     | null
   if (existingRow?.id) {
+    // Conversation exists — make sure it has at least one message.
+    // Premium users used to see a hardcoded SEED of 3 fake messages
+    // until they sent their own; now we seed exactly one real
+    // welcome row from the coach the first time we touch a thread
+    // with zero messages. Idempotent: subsequent calls see the
+    // welcome already there and skip.
+    await ensureWelcomeMessage(
+      supabase,
+      existingRow.id,
+      existingRow.nutritionist_id,
+      ctx.userId,
+    )
     return json({
       conversationId: existingRow.id,
       nutritionistId: existingRow.nutritionist_id,
@@ -115,8 +127,48 @@ export const POST = withAuth(async (_req, ctx: AuthedContext) => {
   if (error || !created) {
     return internalError()
   }
+  const conversationId = (created as { id: string }).id
+  await ensureWelcomeMessage(supabase, conversationId, nutriId, ctx.userId)
   return json({
-    conversationId: (created as { id: string }).id,
+    conversationId,
     nutritionistId: nutriId,
   })
 })
+
+/**
+ * Insert a single welcome message from the coach into a conversation
+ * that has zero messages. Idempotent — a check-then-insert race is
+ * harmless because the worst case is two identical welcome rows, and
+ * with realistic concurrency (one client mounting the messages page)
+ * the COUNT check is reliable enough.
+ *
+ * The welcome copy is intentionally plain and personal. It is NOT
+ * pulled from platform_settings yet — keeping it inline avoids a fan-out
+ * to settings for first-mount latency and means we don't need a
+ * companion admin editor. If/when an admin needs to customize, lift
+ * this string into `site_messages_welcome`.
+ */
+async function ensureWelcomeMessage(
+  supabase: ReturnType<typeof getServiceSupabase>,
+  conversationId: string,
+  nutritionistId: string,
+  recipientId: string,
+): Promise<void> {
+  if (!supabase) return
+  const { count } = await supabase
+    .from('messages')
+    .select('id', { count: 'exact', head: true })
+    .eq('conversation_id', conversationId)
+  if ((count ?? 0) > 0) return
+
+  const welcome =
+    "Welcome to your private line with the Greenofig coaching team. " +
+    "Tell me what you'd like to focus on first — meals, energy, sleep, anything " +
+    "that's been on your mind — and I'll reply personally."
+  await supabase.from('messages').insert({
+    conversation_id: conversationId,
+    sender_id: nutritionistId,
+    recipient_id: recipientId,
+    content: welcome,
+  } as never)
+}

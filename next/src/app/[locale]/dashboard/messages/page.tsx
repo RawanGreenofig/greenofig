@@ -432,38 +432,15 @@ interface Msg {
   isAi?: boolean
 }
 
-const SEED: Msg[] = [
-  {
-    id: 'm1',
-    fromMe: false,
-    body:
-      'Welcome to your VIP line. Anything you want to focus on this week?',
-    ago: 60 * 24 * 2,
-    read: true,
-  },
-  {
-    id: 'm2',
-    fromMe: true,
-    body:
-      'I keep stalling around 3pm — energy crashes and I reach for sweets.',
-    ago: 60 * 24 * 2 - 30,
-    read: true,
-  },
-  {
-    id: 'm3',
-    fromMe: false,
-    body:
-      'Classic post-lunch dip. Let us swap your lunch base for quinoa or lentils tomorrow and add a 15-min walk after eating. Track how 3pm feels for three days.',
-    ago: 60 * 24 * 2 - 35,
-    read: true,
-  },
-]
-
 function Thread() {
   const t = useTranslations('msgs')
   const { profile } = useUser()
   const userId = profile?.id ?? null
-  const [messages, setMessages] = useState<Msg[]>(SEED)
+  // Empty initial state — the welcome message comes from the DB. The
+  // server seeds exactly one real welcome row via /api/messages/start
+  // the first time a premium user opens this page, so we never show
+  // fabricated past messages.
+  const [messages, setMessages] = useState<Msg[]>([])
   const [conversationId, setConversationId] = useState<string | null>(null)
   const [nutritionistId, setNutritionistId] = useState<string | null>(null)
   const [draft, setDraft] = useState('')
@@ -475,37 +452,24 @@ function Thread() {
     if (el) el.scrollTop = el.scrollHeight
   }, [messages])
 
-  // Load the user's existing conversation with Nutrition Coach Rawan + its messages.
+  // Load the user's existing conversation with Nutrition Coach Rawan
+  // + its messages. On first visit by a premium user there's no
+  // conversation row yet — we call /api/messages/start to create one
+  // server-side, which also seeds one real welcome message from the
+  // coach so the thread isn't blank.
   useEffect(() => {
     if (!userId) return
     const supabase = getBrowserSupabase()
     if (!supabase) return
     let cancelled = false
 
-    void (async () => {
-      const { data: convRow } = await supabase
-        .from('conversations')
-        .select('id, nutritionist_id')
-        .eq('user_id', userId)
-        .order('last_message_at', { ascending: false })
-        .limit(1)
-        .maybeSingle()
-      const conv = convRow as
-        | { id: string; nutritionist_id: string | null }
-        | null
-      const id = conv?.id ?? null
-      if (cancelled) return
-      setConversationId(id)
-      setNutritionistId(conv?.nutritionist_id ?? null)
-      if (!id) return
-
+    const loadMessages = async (conversationIdToLoad: string) => {
       const { data } = await supabase
         .from('messages')
         .select('id, sender_id, content, read_at, created_at, is_ai')
-        .eq('conversation_id', id)
+        .eq('conversation_id', conversationIdToLoad)
         .order('created_at', { ascending: true })
         .limit(200)
-
       if (cancelled) return
       type Row = {
         id: string
@@ -527,14 +491,55 @@ function Thread() {
         read: !!r.read_at,
         isAi: !!r.is_ai,
       }))
-      if (next.length > 0) setMessages(next)
+      setMessages(next)
 
       void supabase
         .from('messages')
         .update({ read_at: new Date().toISOString() } as never)
-        .eq('conversation_id', id)
+        .eq('conversation_id', conversationIdToLoad)
         .neq('sender_id', userId)
         .is('read_at', null)
+    }
+
+    void (async () => {
+      const { data: convRow } = await supabase
+        .from('conversations')
+        .select('id, nutritionist_id')
+        .eq('user_id', userId)
+        .order('last_message_at', { ascending: false })
+        .limit(1)
+        .maybeSingle()
+      const conv = convRow as
+        | { id: string; nutritionist_id: string | null }
+        | null
+
+      if (conv?.id) {
+        if (cancelled) return
+        setConversationId(conv.id)
+        setNutritionistId(conv.nutritionist_id ?? null)
+        await loadMessages(conv.id)
+        return
+      }
+
+      // No conversation yet — bootstrap one server-side. The route
+      // creates the conversations row, picks the right coach, and
+      // inserts a welcome message if the thread is empty.
+      try {
+        const res = await fetch('/api/messages/start', { method: 'POST' })
+        const data = (await res.json().catch(() => ({}))) as {
+          conversationId?: string
+          nutritionistId?: string
+        }
+        if (cancelled) return
+        if (data.conversationId) {
+          setConversationId(data.conversationId)
+          setNutritionistId(data.nutritionistId ?? null)
+          await loadMessages(data.conversationId)
+        }
+      } catch {
+        // Silent — the user can still type. The next send() will
+        // retry start. We just leave the thread empty for now.
+      }
     })()
 
     return () => {

@@ -75,19 +75,62 @@ function CommunityPageInner() {
   const [search, setSearch] = useState('')
   const [feedSearch, setFeedSearch] = useState('')
 
+  // Head coach summary for the right-side profile card. Posts =
+  // published rows authored by the head coach; articles = the subset
+  // with type='article' (blog posts share the `posts` table). Followers
+  // is intentionally absent — no follows table exists yet, so it would
+  // be a fabricated number.
+  interface CoachSummary {
+    id: string
+    name: string
+    role: string
+    avatarUrl: string | null
+    postsCount: number
+    articlesCount: number
+  }
+  const [coach, setCoach] = useState<CoachSummary | null>(null)
+
+  // Recent notifications for THIS user — replaces the three hardcoded
+  // "demo" rows that used to live in the right rail. Empty array means
+  // we render an empty-state instead of inventing reminders.
+  interface NotifRowData {
+    id: string
+    type: string | null
+    title: string
+    body: string | null
+    created_at: string
+  }
+  const [notifications, setNotifications] = useState<NotifRowData[]>([])
+
   useEffect(() => {
     const supabase = getBrowserSupabase()
     if (!supabase || !user?.id) return
     let cancelled = false
 
     void (async () => {
-      const { data } = await supabase
-        .from('profiles')
-        .select('id, full_name, email, role')
-        .neq('id', user.id)
-        .limit(10)
+      const [peopleRes, coachRes, notifRes] = await Promise.all([
+        supabase
+          .from('profiles')
+          .select('id, full_name, email, role')
+          .neq('id', user.id)
+          .limit(10),
+        supabase
+          .from('profiles')
+          .select('id, full_name, avatar_url')
+          .eq('role', 'nutritionist')
+          .eq('is_head_coach', true)
+          .maybeSingle(),
+        supabase
+          .from('notifications')
+          .select('id, type, title, body, created_at')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false })
+          .limit(3),
+      ])
+
       if (cancelled) return
-      const rows = (data as PersonRow[] | null) ?? []
+
+      const rows = (peopleRes.data as PersonRow[] | null) ?? []
       setPeople(
         rows.map((r) => {
           const fallback = (r.full_name ?? r.email ?? '?').toString()
@@ -106,6 +149,40 @@ function CommunityPageInner() {
           }
         }),
       )
+
+      setNotifications((notifRes.data as NotifRowData[] | null) ?? [])
+
+      const coachRow = coachRes.data as
+        | { id: string; full_name: string | null; avatar_url: string | null }
+        | null
+      if (coachRow) {
+        // Resolve counts in parallel — head().select() avoids pulling
+        // any rows, only the count header. Both queries are scoped to
+        // published posts so unpublished drafts don't inflate the
+        // numbers shown to non-staff.
+        const [postsCnt, articlesCnt] = await Promise.all([
+          supabase
+            .from('posts')
+            .select('id', { count: 'exact', head: true })
+            .eq('author_id', coachRow.id)
+            .eq('is_published', true),
+          supabase
+            .from('posts')
+            .select('id', { count: 'exact', head: true })
+            .eq('author_id', coachRow.id)
+            .eq('is_published', true)
+            .eq('type', 'article'),
+        ])
+        if (cancelled) return
+        setCoach({
+          id: coachRow.id,
+          name: coachRow.full_name ?? 'Greenofig coach',
+          role: 'Certified Clinical Nutritionist',
+          avatarUrl: coachRow.avatar_url,
+          postsCount: postsCnt.count ?? 0,
+          articlesCount: articlesCnt.count ?? 0,
+        })
+      }
     })()
 
     return () => {
@@ -296,7 +373,10 @@ function CommunityPageInner() {
             display: 'none',
           }}
         >
-          {/* Nutrition Coach Rawan profile card */}
+          {/* Head coach profile card — counts come from `posts` (and
+              `posts where type='article'`). No follower count: there
+              is no follows table yet, so we render two stats only
+              rather than fabricating a third. */}
           <div
             style={{
               background: 'var(--gf-surface)',
@@ -314,8 +394,8 @@ function CommunityPageInner() {
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src="/images/dr-rawan-othman.jpg"
-                alt="Nutrition Coach Rawan Othman"
+                src={coach?.avatarUrl || '/images/dr-rawan-othman.jpg'}
+                alt={coach?.name ?? 'Head coach'}
                 style={{
                   position: 'absolute',
                   inset: 0,
@@ -352,21 +432,25 @@ function CommunityPageInner() {
               <p
                 style={{ fontSize: 15, fontWeight: 700, color: 'var(--gf-fg-1)' }}
               >
-                Nutrition Coach Rawan Othman
+                {coach?.name ?? 'Nutrition Coach Rawan Othman'}
               </p>
               <p
                 style={{ fontSize: 12, color: 'var(--gf-fg-3)', marginTop: 2 }}
               >
-                Certified Clinical Nutritionist
+                {coach?.role ?? 'Certified Clinical Nutritionist'}
               </p>
-              <div
-                className="grid grid-cols-3 gap-2 text-center"
-                style={{ marginTop: 12 }}
-              >
-                <ProfileStat value="24" label="Posts" />
-                <ProfileStat value="1.2k" label="Followers" />
-                <ProfileStat value="15" label="Articles" />
-              </div>
+              {coach && (
+                <div
+                  className="grid grid-cols-2 gap-2 text-center"
+                  style={{ marginTop: 12 }}
+                >
+                  <ProfileStat value={String(coach.postsCount)} label="Posts" />
+                  <ProfileStat
+                    value={String(coach.articlesCount)}
+                    label="Articles"
+                  />
+                </div>
+              )}
               <button
                 type="button"
                 onClick={goToMessages}
@@ -383,7 +467,9 @@ function CommunityPageInner() {
             </div>
           </div>
 
-          {/* Notifications card */}
+          {/* Notifications card — real rows from `notifications`. The
+              old hardcoded three "demo" rows have been removed; we show
+              an empty state when the user has no notifications yet. */}
           <div
             style={{
               background: 'var(--gf-surface)',
@@ -401,22 +487,30 @@ function CommunityPageInner() {
               >
                 Notifications
               </p>
-              <button
-                type="button"
+            </header>
+            {notifications.length === 0 ? (
+              <p
                 style={{
-                  fontSize: 13,
-                  color: '#60a5fa',
-                  cursor: 'pointer',
-                  border: 'none',
-                  background: 'none',
+                  fontSize: 12,
+                  color: 'var(--gf-fg-3)',
+                  textAlign: 'center',
+                  padding: '12px 0',
                 }}
               >
-                See all
-              </button>
-            </header>
-            <NotifRow icon="🍎" title="New meal plan added" body="Nutrition Coach Rawan added your weekly plan" time="1h" />
-            <NotifRow icon="💧" title="Hydration reminder" body="You need 750ml more to hit your goal" time="2h" />
-            <NotifRow icon="⭐" title="Streak milestone" body="You've logged meals 3 days in a row!" time="1d" last />
+                No notifications yet.
+              </p>
+            ) : (
+              notifications.map((n, idx) => (
+                <NotifRow
+                  key={n.id}
+                  icon={notifIconFor(n.type)}
+                  title={n.title}
+                  body={n.body ?? ''}
+                  time={formatNotifAge(n.created_at)}
+                  last={idx === notifications.length - 1}
+                />
+              ))
+            )}
           </div>
 
           {/* Current user identity (small, footer-like) */}
@@ -835,6 +929,37 @@ function ProfileStat({ value, label }: { value: string; label: string }) {
       </p>
     </div>
   )
+}
+
+/** Maps a notification `type` value to a small emoji marker. Keeps the
+ *  rail visually consistent with the previous demo design without
+ *  needing per-type icon components. */
+function notifIconFor(type: string | null): string {
+  switch (type) {
+    case 'meal_plan':
+      return '🍎'
+    case 'hydration':
+      return '💧'
+    case 'streak':
+    case 'achievement':
+      return '⭐'
+    case 'message':
+      return '💬'
+    case 'booking':
+      return '📅'
+    default:
+      return '🔔'
+  }
+}
+
+function formatNotifAge(createdAt: string): string {
+  const diffMs = Date.now() - new Date(createdAt).getTime()
+  const m = Math.max(0, Math.floor(diffMs / 60_000))
+  if (m < 1) return 'now'
+  if (m < 60) return `${m}m`
+  const h = Math.floor(m / 60)
+  if (h < 24) return `${h}h`
+  return `${Math.floor(h / 24)}d`
 }
 
 function NotifRow({
