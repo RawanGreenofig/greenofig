@@ -131,22 +131,27 @@ export default function StoreCurationPage() {
   }, [products, filter, query])
 
   const toggleField = <K extends 'drPick' | 'visible'>(id: string, key: K) => {
-    let nextValue = false
     setProducts((curr) =>
       curr.map((p) => {
         if (p.id !== id) return p
-        nextValue = !p[key]
-        return { ...p, [key]: nextValue }
+        return { ...p, [key]: !p[key] }
       }),
     )
-    const supabase = getBrowserSupabase()
-    if (supabase && /^[0-9a-f-]{32,}$/i.test(id)) {
-      const dbCol = key === 'drPick' ? 'is_nutritionist_pick' : 'is_active'
-      void supabase
-        .from('products')
-        .update({ [dbCol]: nextValue } as never)
-        .eq('id', id)
-    }
+    if (!/^[0-9a-f-]{32,}$/i.test(id)) return
+    // Server inverts the existing flag value. Was a fire-and-forget
+    // browser update — failed toggles silently rolled back.
+    void fetch('/api/nutritionist/products', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        id,
+        toggle: key === 'drPick' ? 'pick' : 'visible',
+      }),
+    }).then((res) => {
+      if (!res.ok) console.error('[store] toggle failed:', res.status)
+    }).catch((err) => {
+      console.error('[store] toggle threw:', err)
+    })
   }
 
   const startNew = () =>
@@ -175,45 +180,52 @@ export default function StoreCurationPage() {
     })
     setEditing(null)
 
-    const supabase = getBrowserSupabase()
-    if (!supabase) return
     const isExisting = /^[0-9a-f-]{32,}$/i.test(p.id)
-    const row = {
+    const payload = {
+      id: isExisting ? p.id : undefined,
       name: p.name,
       category: p.category,
-      price_cents: Math.round(p.price * 100),
-      stock_quantity: p.stock,
+      price: p.price,
+      stock: p.stock,
       description: p.description || null,
-      nutritionist_note: p.drNote || null,
-      is_nutritionist_pick: p.drPick,
-      is_active: p.visible,
+      drNote: p.drNote || null,
+      drPick: p.drPick,
+      visible: p.visible,
     }
-    if (isExisting) {
-      void supabase.from('products').update(row as never).eq('id', p.id)
-    } else {
-      void (async () => {
-        const { data } = await supabase
-          .from('products')
-          .insert(row as never)
-          .select('id')
-          .maybeSingle()
-        const realId = (data as { id?: string } | null)?.id
-        if (realId) {
+    void (async () => {
+      const res = await fetch('/api/nutritionist/products', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      })
+      if (!res.ok) {
+        console.error('[store] save failed:', res.status)
+        return
+      }
+      if (!isExisting) {
+        const body = (await res.json()) as { id?: string }
+        if (body.id) {
           setProducts((curr) =>
-            curr.map((x) => (x.id === p.id ? { ...x, id: realId } : x)),
+            curr.map((x) => (x.id === p.id ? { ...x, id: body.id! } : x)),
           )
         }
-      })()
-    }
+      }
+    })()
   }
 
   const removeProduct = (id: string) => {
     setProducts((curr) => curr.filter((p) => p.id !== id))
     if (editing?.id === id) setEditing(null)
-    const supabase = getBrowserSupabase()
-    if (supabase && /^[0-9a-f-]{32,}$/i.test(id)) {
-      void supabase.from('products').delete().eq('id', id)
-    }
+    if (!/^[0-9a-f-]{32,}$/i.test(id)) return
+    void fetch('/api/nutritionist/products', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id }),
+    }).then((res) => {
+      if (!res.ok) console.error('[store] delete failed:', res.status)
+    }).catch((err) => {
+      console.error('[store] delete threw:', err)
+    })
   }
 
   if (editing) {

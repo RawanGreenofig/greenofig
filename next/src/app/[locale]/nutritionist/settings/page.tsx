@@ -161,43 +161,48 @@ export default function NutritionistSettingsPage() {
     setSaveState('saving')
 
     void (async () => {
-      const supabase = getBrowserSupabase()
-      if (supabase && currentUserId) {
-        const patch: Record<string, unknown> = {}
-        if (tab === 'profile') {
-          patch.full_name = profile.displayName
-          // Bio + role-title + credentials are surfaced in `medical_notes`
-          // until we add dedicated columns; serialise as JSON.
-          patch.medical_notes = JSON.stringify({
-            title: profile.title,
-            bio: profile.bio,
-            credentials: profile.credentials,
-            languages: profile.languages,
-            specialties: profile.specialties,
-          })
+      // Build per-tab payload and POST to /api/nutritionist/settings.
+      // Server enforces auth + writes via service role + audits.
+      // Was three browser-side supabase writes wrapped in a `void`
+      // IIFE that flipped to 'saved' regardless of whether the
+      // awaits succeeded.
+      const payload: Record<string, unknown> = { tab }
+      if (tab === 'profile') {
+        payload.displayName = profile.displayName
+        payload.title = profile.title
+        payload.bio = profile.bio
+        payload.credentials = profile.credentials
+        payload.languages = profile.languages
+        payload.specialties = profile.specialties
+      }
+      if (tab === 'availability') {
+        payload.schedule = DAYS.map((day) => ({
+          day_of_week: DAY_TO_DOW[day],
+          is_open: schedule[day].open,
+          start_time: schedule[day].from,
+          end_time: schedule[day].to,
+        }))
+        payload.buffer_min = bufferMin
+      }
+      if (tab === 'sessions') {
+        payload.pricing = pricing
+      }
+
+      try {
+        const res = await fetch('/api/nutritionist/settings', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        })
+        if (!res.ok) {
+          console.error('[nutritionist/settings] save failed:', res.status)
+          setSaveState('idle')
+          return
         }
-        if (tab === 'availability') {
-          // Persist working hours into nutritionist_schedules — one row per
-          // day-of-week. The unique (nutritionist_id, day_of_week) constraint
-          // makes this an idempotent upsert.
-          const rows = DAYS.map((day) => ({
-            nutritionist_id: currentUserId,
-            day_of_week: DAY_TO_DOW[day],
-            is_open: schedule[day].open,
-            start_time: schedule[day].from,
-            end_time: schedule[day].to,
-            buffer_min: bufferMin,
-          }))
-          await supabase
-            .from('nutritionist_schedules')
-            .upsert(rows as never, { onConflict: 'nutritionist_id,day_of_week' })
-        }
-        if (tab === 'sessions') {
-          patch.medical_notes = JSON.stringify({ pricing })
-        }
-        if (Object.keys(patch).length > 0) {
-          await supabase.from('profiles').update(patch as never).eq('id', currentUserId)
-        }
+      } catch (err) {
+        console.error('[nutritionist/settings] save threw:', err)
+        setSaveState('idle')
+        return
       }
       setSaveState('saved')
       setDirty(false)

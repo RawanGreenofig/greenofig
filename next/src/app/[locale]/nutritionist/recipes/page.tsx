@@ -327,9 +327,11 @@ export default function RecipeBuilderPage() {
     })
     setEditing(null)
 
-    // Persist
-    const supabase = getBrowserSupabase()
-    if (!supabase || !profile?.id) return
+    // Persist via /api/nutritionist/recipes. Was a fire-and-forget
+    // `void supabase.from('recipes').update(...)` straight from the
+    // browser, so a failed save left the UI showing the optimistic
+    // local state while the DB never got the write.
+    if (!profile?.id) return
     const isExisting = /^[0-9a-f-]{32,}$/i.test(final.id)
     // Compute per-serving macros from the ingredient list so the
     // customer-side recipe library shows real numbers. Sum across
@@ -344,10 +346,8 @@ export default function RecipeBuilderPage() {
       { cal: 0, prot: 0, carbs: 0, fat: 0 },
     )
     const servingsDiv = Math.max(1, final.servings)
-    // Translate UI fields → DB columns. status maps to is_published,
-    // drNote into description.
-    const row = {
-      created_by: profile.id,
+    const payload = {
+      id: isExisting ? final.id : undefined,
       title: final.name,
       category: final.category,
       hue: final.hue,
@@ -365,31 +365,39 @@ export default function RecipeBuilderPage() {
       carbs_g: +(totals.carbs / servingsDiv).toFixed(1),
       fat_g: +(totals.fat / servingsDiv).toFixed(1),
     }
-    if (isExisting) {
-      void supabase.from('recipes').update(row as never).eq('id', final.id)
-    } else {
-      void (async () => {
-        const { data } = await supabase
-          .from('recipes')
-          .insert(row as never)
-          .select('id')
-          .maybeSingle()
-        const realId = (data as { id?: string } | null)?.id
-        if (realId) {
+    void (async () => {
+      const res = await fetch('/api/nutritionist/recipes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      })
+      if (!res.ok) {
+        console.error('[recipes] save failed:', res.status)
+        return
+      }
+      if (!isExisting) {
+        const body = (await res.json()) as { id?: string }
+        if (body.id) {
           setRecipes((curr) =>
-            curr.map((r) => (r.id === final.id ? { ...r, id: realId } : r)),
+            curr.map((r) => (r.id === final.id ? { ...r, id: body.id! } : r)),
           )
         }
-      })()
-    }
+      }
+    })()
   }
 
   const removeRecipe = (id: string) => {
     setRecipes((curr) => curr.filter((r) => r.id !== id))
-    const supabase = getBrowserSupabase()
-    if (supabase && /^[0-9a-f-]{32,}$/i.test(id)) {
-      void supabase.from('recipes').delete().eq('id', id)
-    }
+    if (!/^[0-9a-f-]{32,}$/i.test(id)) return
+    void fetch('/api/nutritionist/recipes', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id }),
+    }).then((res) => {
+      if (!res.ok) console.error('[recipes] delete failed:', res.status)
+    }).catch((err) => {
+      console.error('[recipes] delete threw:', err)
+    })
   }
 
   const duplicateRecipe = (r: Recipe) =>

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { useParams } from 'next/navigation'
 import { Avatar } from '@/components/Avatar'
@@ -348,7 +348,7 @@ export default function ClientDetailPage() {
       {tab === 'plan'     && <PlanPane t={t} profile={profile} />}
       {tab === 'logs'     && <LogsPane t={t} profile={profile} />}
       {tab === 'progress' && <ProgressPane t={t} profile={profile} />}
-      {tab === 'notes'    && <NotesPane t={t} />}
+      {tab === 'notes'    && <NotesPane t={t} clientId={params.id ?? ''} />}
       {tab === 'bookings' && <BookingsPane t={t} />}
       {tab === 'messages' && <MessagesPane t={t} profile={profile} />}
       {tab === 'files'    && <FilesPane t={t} />}
@@ -869,34 +869,79 @@ interface ClinicalNote {
   createdISO: string
 }
 
-function NotesPane({ t }: { t: ReturnType<typeof useTranslations> }) {
-  const [notes, setNotes] = useState<ClinicalNote[]>([
-    {
-      id: 'n1',
-      body:
-        'Reports better afternoons since switching to lentils for lunch. Sleep 7-8h, energy steady. Continue plan.',
-      createdISO: new Date(Date.now() - 1000 * 60 * 60 * 26).toISOString(),
-    },
-  ])
+function NotesPane({
+  t,
+  clientId,
+}: {
+  t: ReturnType<typeof useTranslations>
+  clientId: string
+}) {
+  // Notes now persist to the real `client_notes` table via
+  // /api/nutritionist/client-notes. Was a setTimeout-faked save that
+  // dropped every word on refresh, plus a seeded "Reports better
+  // afternoons since switching to lentils…" fixture that looked like
+  // a real prior note.
+  const [notes, setNotes] = useState<ClinicalNote[]>([])
   const [draft, setDraft] = useState('')
   const [saving, setSaving] = useState(false)
 
-  const save = (e: React.FormEvent) => {
+  // Load existing notes for this client.
+  useEffect(() => {
+    if (!clientId) return
+    let cancelled = false
+    ;(async () => {
+      const res = await fetch(
+        `/api/nutritionist/client-notes?clientId=${encodeURIComponent(clientId)}`,
+        { cache: 'no-store' },
+      )
+      if (!res.ok) return
+      const body = (await res.json()) as {
+        notes?: { id: string; body: string; created_at: string }[]
+      }
+      if (cancelled) return
+      setNotes(
+        (body.notes ?? []).map((n) => ({
+          id: n.id,
+          body: n.body,
+          createdISO: n.created_at,
+        })),
+      )
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [clientId])
+
+  const save = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!draft.trim()) return
+    const text = draft.trim()
+    if (!text || !clientId) return
     setSaving(true)
-    window.setTimeout(() => {
+    try {
+      const res = await fetch('/api/nutritionist/client-notes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ client_id: clientId, body: text }),
+      })
+      if (!res.ok) {
+        console.error('[client-notes] save failed:', res.status)
+        return
+      }
+      const body = (await res.json()) as { id?: string }
       setNotes((curr) => [
         {
-          id: `n-${Date.now()}`,
-          body: draft.trim(),
+          id: body.id ?? `n-${Date.now()}`,
+          body: text,
           createdISO: new Date().toISOString(),
         },
         ...curr,
       ])
       setDraft('')
+    } catch (err) {
+      console.error('[client-notes] save threw:', err)
+    } finally {
       setSaving(false)
-    }, 350)
+    }
   }
 
   return (

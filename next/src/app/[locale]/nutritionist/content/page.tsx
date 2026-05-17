@@ -184,14 +184,11 @@ export default function ContentPage() {
     })
     setEditing(null)
 
-    const supabase = getBrowserSupabase()
-    if (!supabase || !profile?.id) return
+    if (!profile?.id) return
     const isExisting = /^[0-9a-f-]{32,}$/i.test(final.id)
-    // Translate UI fields → DB columns. comments has no DB column
-    // (sourced from reactions jsonb on read).
     const isScheduled = status === 'scheduled' && final.publishAt
-    const row = {
-      author_id: profile.id,
+    const payload = {
+      id: isExisting ? final.id : undefined,
       title: final.title,
       content: final.body || null,
       excerpt: final.excerpt || null,
@@ -204,32 +201,43 @@ export default function ContentPage() {
         status === 'published' ? final.publishAt || new Date().toISOString() : null,
       image_url: final.imageUrl ?? null,
     }
-    if (isExisting) {
-      void supabase.from('posts').update(row as never).eq('id', final.id)
-    } else {
-      void (async () => {
-        const { data } = await supabase
-          .from('posts')
-          .insert(row as never)
-          .select('id')
-          .maybeSingle()
-        const realId = (data as { id?: string } | null)?.id
-        if (realId) {
+    // Persist via /api/nutritionist/content. Was a fire-and-forget
+    // `void supabase.from('posts').update(...)` straight from the
+    // browser, so a failed publish silently did nothing.
+    void (async () => {
+      const res = await fetch('/api/nutritionist/content', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      })
+      if (!res.ok) {
+        console.error('[content] save failed:', res.status)
+        return
+      }
+      if (!isExisting) {
+        const body = (await res.json()) as { id?: string }
+        if (body.id) {
           setPosts((curr) =>
-            curr.map((x) => (x.id === final.id ? { ...x, id: realId } : x)),
+            curr.map((x) => (x.id === final.id ? { ...x, id: body.id! } : x)),
           )
         }
-      })()
-    }
+      }
+    })()
   }
 
   const removePost = (id: string) => {
     setPosts((curr) => curr.filter((p) => p.id !== id))
     if (editing?.id === id) setEditing(null)
-    const supabase = getBrowserSupabase()
-    if (supabase && /^[0-9a-f-]{32,}$/i.test(id)) {
-      void supabase.from('posts').delete().eq('id', id)
-    }
+    if (!/^[0-9a-f-]{32,}$/i.test(id)) return
+    void fetch('/api/nutritionist/content', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id }),
+    }).then((res) => {
+      if (!res.ok) console.error('[content] delete failed:', res.status)
+    }).catch((err) => {
+      console.error('[content] delete threw:', err)
+    })
   }
 
   if (editing) {

@@ -33,7 +33,6 @@ import {
 import type { LucideIcon } from 'lucide-react'
 import { useUser } from '@/lib/hooks/useUser'
 import { useSupabaseQuery } from '@/lib/hooks/useSupabaseQuery'
-import { getBrowserSupabase } from '@/lib/supabase/client'
 
 const DAYS = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'] as const
 const MEALS = [
@@ -294,71 +293,22 @@ export default function MealPlanBuilderPage() {
     setSaveState('saving')
 
     void (async () => {
-      const supabase = getBrowserSupabase()
-      if (!supabase || !profile?.id) {
-        // No env / no user — pretend-save so dev UX still works
-        window.setTimeout(() => {
-          setSaveState('saved')
-          window.setTimeout(() => setSaveState('idle'), 1500)
-        }, 600)
-        return
-      }
-
-      // The builder is "draft" until assigned to a client. We persist as
-      // a not-active plan owned by this nutritionist; the assign-to-client
-      // flow flips is_active=true.
-      //
-      // A client should only ever have ONE active plan at a time — the
-      // dashboard reads `client_id=X AND is_active=true` and expects a
-      // single row. Before activating a new one for an assigned client,
-      // soft-deactivate any prior actives for that client so we don't
-      // end up with competing plans on the customer dashboard.
-      if (assignedClient?.id) {
-        await supabase
-          .from('meal_plans')
-          .update({ is_active: false } as never)
-          .eq('client_id', assignedClient.id)
-          .eq('is_active', true)
-      }
-      const { data: planRow } = await supabase
-        .from('meal_plans')
-        .insert({
-          // Self-owned (draft) when no client picked. The Assign To
-          // modal sets assignedClient, in which case the plan is
-          // assigned + activated immediately.
-          client_id: assignedClient?.id ?? profile.id,
-          nutritionist_id: profile.id,
-          title: planName.trim() || 'Untitled plan',
-          start_date: new Date().toISOString().slice(0, 10),
-          weeks: weekCount,
-          is_active: !!assignedClient,
-        } as never)
-        .select('id')
-        .maybeSingle()
-      const planId = (planRow as { id?: string } | null)?.id
-      if (!planId) {
-        setSaveState('idle')
-        return
-      }
-
-      // Build a flat list of meal_plan_items rows from the assignments map.
-      const itemRows: Array<{
-        plan_id: string
+      // Build items list from the assignments map.
+      const items: {
         week_idx: number
         day_idx: number
         meal_type: string
         recipe_id: string | null
         custom_name: string | null
-        notes: string | null
-      }> = []
+        notes: null
+      }[] = []
       Object.entries(assignments).forEach(([weekKey, week]) => {
         const weekIdx = Number(weekKey)
         DAYS.forEach((day, dayIdx) => {
           MEALS.forEach((meal) => {
             for (const placed of week[day][meal]) {
               const isUuid = /^[0-9a-f-]{32,}$/i.test(placed.recipe.id)
-              itemRows.push({
-                plan_id: planId,
+              items.push({
                 week_idx: weekIdx,
                 day_idx: dayIdx,
                 meal_type: meal,
@@ -371,8 +321,32 @@ export default function MealPlanBuilderPage() {
         })
       })
 
-      if (itemRows.length > 0) {
-        await supabase.from('meal_plan_items').insert(itemRows as never)
+      // Single round-trip to /api/nutritionist/meal-plans. The server
+      // does the deactivate-prior + insert-plan + insert-items
+      // sequence with rollback semantics — the previous code did the
+      // same steps from the browser with no error checking, so a
+      // network blip between deactivate and insert would silently
+      // erase the client's prior meal plan.
+      try {
+        const res = await fetch('/api/nutritionist/meal-plans', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            client_id: assignedClient?.id ?? null,
+            title: planName.trim() || 'Untitled plan',
+            weeks: weekCount,
+            items,
+          }),
+        })
+        if (!res.ok) {
+          console.error('[meal-plans] save failed:', res.status)
+          setSaveState('idle')
+          return
+        }
+      } catch (err) {
+        console.error('[meal-plans] save threw:', err)
+        setSaveState('idle')
+        return
       }
 
       setSaveState('saved')
