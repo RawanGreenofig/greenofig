@@ -86,33 +86,70 @@ export default function AdminSiteEditorPage() {
     secondHeadline1: 'Your healthiest self',
     secondHeadline2: 'starts here.',
   })
+  // Initial defaults mirror what the public site renders when no override
+  // row exists yet — about copy from NUTRITIONIST in lib/tokens, pricing
+  // copy from PLANS.en in /pricing, faq list from FAQS.en in /pricing,
+  // footer from messages/en.json + the real support email. Keep these in
+  // sync with the source files so the editor never shows fake placeholder
+  // copy on first open.
   const [about, setAbout] = useState<AboutDraft>({
     name: 'Nutrition Coach Rawan Othman',
-    role: 'Clinical Nutritionist · MSc, RD',
-    bio: "I help women in the Levant rebuild their relationship with food. Mediterranean-rooted, evidence-led, no shame.",
+    role: 'Certified Clinical Nutritionist · Head Coach',
+    bio:
+      'Nutrition Coach Rawan Othman leads the Greenofig coaching team. She brings an evidence-based approach to nutrition that goes beyond generic diets. In her 3 years of specialized practice, she — along with the nutritionist coaches she trains — has helped hundreds of clients transform their relationship with food, building sustainable habits that fit real life, not just theory.',
     credentials:
-      'MSc Clinical Nutrition — University of Jordan\nRegistered Dietitian — Jordanian MoH\nCertified Functional Nutrition Practitioner',
+      'Certified Clinical Nutritionist\n3 Years of Specialized Practice\n500+ Clients Transformed',
   })
   const [pricing, setPricing] = useState<PricingTier[]>([
-    { name: 'Free',    monthlyJod: 0,  yearlyJod: 0,    tagline: 'Get started',   features: 'Limited scanner\nRead-only community' },
-    { name: 'Basic',   monthlyJod: 9,  yearlyJod: 90,   tagline: 'Track your day', features: 'Unlimited scanner\nFood + water tracking\nRecipe library' },
-    { name: 'Premium', monthlyJod: 19, yearlyJod: 190,  tagline: 'Personalized',   features: 'Custom meal plans\n10% store discount\nPriority AI' },
-    { name: 'VIP',     monthlyJod: 49, yearlyJod: 490,  tagline: 'Concierge',      features: 'Direct messages with Nutrition Coach Rawan\n15% store discount\nMonthly 1:1 review' },
+    {
+      name: 'Free',
+      monthlyJod: 0,
+      yearlyJod: 0,
+      tagline: 'Get started with basic access',
+      features:
+        '3 food scans per day\nView Nutrition Coach Rawan’s posts\nBrowse the store\nFree intro consultation call\nCommunity feed (read only)',
+    },
+    {
+      name: 'Basic',
+      monthlyJod: 0,
+      yearlyJod: 0,
+      tagline: 'Everything you need to track your nutrition',
+      features:
+        'Unlimited food scanning\nDaily nutrition tracking\nProgress charts\nFull recipe library\nShare milestones\nStore access with discounts\nBook consultations\nCommunity feed',
+    },
+    {
+      name: 'Premium',
+      monthlyJod: 0,
+      yearlyJod: 0,
+      tagline: 'Personalized plans and direct access to Nutrition Coach Rawan',
+      features:
+        'Everything in Basic\nCustom meal plan from Nutrition Coach Rawan\nAI nutrition assistant\nAdvanced health analytics\nSleep & supplement tracking\nAuto shopping lists\n✉️ Direct messaging with Nutrition Coach Rawan\nPriority booking slots\nMember discounts on store',
+    },
+    {
+      name: 'VIP',
+      monthlyJod: 0,
+      yearlyJod: 0,
+      tagline: 'The complete Greenofig experience',
+      features:
+        'Everything in Premium\nMonthly consultation included\nExclusive VIP products\nFirst access to new features\nMonthly personal nutrition review\nPriority booking always available',
+    },
   ])
   const [faq, setFaq] = useState<FaqRow[]>([
-    { id: 'f1', question: 'Is the meal plan customized for my body?',                  answer: 'Yes — Nutrition Coach Rawan personalizes every plan after your intake form and intro call.' },
-    { id: 'f2', question: 'Can I switch between English and Arabic?',                  answer: 'Anytime. Your account preferences sync everything from menus to plan text.' },
-    { id: 'f3', question: 'What if I need to pause my subscription?',                  answer: 'You can pause for up to 60 days from Settings → Subscription with no fee.' },
-    { id: 'f4', question: 'How long until I see results?',                              answer: 'Most clients feel a difference in week 2 and see body composition shifts by week 6.' },
+    { id: 'f1', question: 'Can I cancel anytime?',                 answer: 'Yes. Cancel from Settings anytime. Your plan stays active until end of billing period with no extra charges.' },
+    { id: 'f2', question: 'Is there a free plan?',                 answer: 'Yes — our free plan has no time limit. No credit card required to start.' },
+    { id: 'f3', question: 'What does direct messaging include?',   answer: 'Premium and VIP members can send private messages directly to Nutrition Coach Rawan and receive personal replies.' },
+    { id: 'f4', question: 'What payment methods are accepted?',    answer: 'All major credit and debit cards via Stripe. Payments are secure and encrypted.' },
+    { id: 'f5', question: 'Can I switch plans?',                   answer: 'Yes, upgrade or downgrade anytime from account settings. Changes take effect next billing cycle.' },
+    { id: 'f6', question: 'Is there a refund policy?',             answer: '7-day money-back guarantee on your first paid subscription. Contact health@greenofig.com.' },
   ])
   const [footer, setFooter] = useState<FooterDraft>({
-    tagline: 'Mediterranean nutrition, made for your kitchen.',
-    supportEmail: 'help@greenofig.com',
-    supportPhone: '+962 79 555 0000',
-    address: 'Amman, Jordan',
-    instagram: 'https://instagram.com/greenofig',
-    youtube:   'https://youtube.com/@greenofig',
-    tiktok:    'https://tiktok.com/@greenofig',
+    tagline: 'Personalized nutrition coaching, built around you.',
+    supportEmail: 'health@greenofig.com',
+    supportPhone: '',
+    address: '',
+    instagram: '',
+    youtube: '',
+    tiktok: '',
   })
 
   const markDirty = () => {
@@ -423,25 +460,20 @@ function PricingPane({
   }
   return (
     <div className="space-y-4">
+      <p className="text-[11px] text-fg-3 leading-relaxed rounded-md border border-border bg-bg-deeper/40 px-3 py-2">
+        Prices are managed on the public{' '}
+        <a href="/pricing" target="_blank" rel="noopener noreferrer" className="text-lime-400 underline">
+          /pricing
+        </a>{' '}
+        page (admin-only “Edit pricing” button on each card). Stripe is the
+        source of truth for amounts charged — only tier name, tagline and
+        feature list are edited here.
+      </p>
       {tiers.map((tier, i) => (
         <Section key={i} title={`${tS('pricing.section')} · ${tier.name}`}>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <Field label={tS('pricing.tier')}>
+            <Field label={tS('pricing.tier')} className="md:col-span-3">
               <Input value={tier.name} onChange={(v) => update(i, { name: v })} />
-            </Field>
-            <Field label={tS('pricing.monthlyPrice')}>
-              <Input
-                type="number"
-                value={String(tier.monthlyJod)}
-                onChange={(v) => update(i, { monthlyJod: Number(v || 0) })}
-              />
-            </Field>
-            <Field label={tS('pricing.yearlyPrice')}>
-              <Input
-                type="number"
-                value={String(tier.yearlyJod)}
-                onChange={(v) => update(i, { yearlyJod: Number(v || 0) })}
-              />
             </Field>
             <Field label={tS('pricing.tagline')} className="md:col-span-3">
               <Input value={tier.tagline} onChange={(v) => update(i, { tagline: v })} />
@@ -454,7 +486,7 @@ function PricingPane({
               <Textarea
                 value={tier.features}
                 onChange={(v) => update(i, { features: v })}
-                rows={4}
+                rows={6}
               />
             </Field>
           </div>
@@ -633,12 +665,7 @@ function PricingPreview({ tiers }: { tiers: PricingTier[] }) {
           key={t.name}
           className="rounded-lg bg-bg-deeper border border-border p-3"
         >
-          <div className="flex items-baseline justify-between gap-2">
-            <p className="text-sm font-semibold text-fg-1">{t.name}</p>
-            <p className="font-mono text-sm text-lime-400" dir="ltr">
-              {t.monthlyJod === 0 ? 'Free' : `${t.monthlyJod} USD`}
-            </p>
-          </div>
+          <p className="text-sm font-semibold text-fg-1">{t.name}</p>
           <p className="mt-0.5 text-[11px] text-fg-3">{t.tagline}</p>
         </li>
       ))}

@@ -16,6 +16,12 @@ interface FaqRow {
   answer: string
 }
 
+interface PricingOverride {
+  name?: string
+  tagline?: string
+  features?: string
+}
+
 type TierKey = 'free' | 'basic' | 'premium' | 'vip'
 const TIER_RANK: Record<TierKey, number> = {
   free: 0,
@@ -455,7 +461,31 @@ export default function PricingPage() {
     }
   }
 
-  const plans = PLANS[locale]
+  // Admin overrides from /admin/site-editor → site_pricing. Positional
+  // match (0=free, 1=basic, 2=premium, 3=vip). Editor is single-language
+  // so we only apply overrides on EN; AR keeps the translated copy.
+  // Prices stay sourced from /api/pricing (Stripe-synced) — the editor
+  // only edits text (name, tagline, feature list).
+  const { value: pricingOv } = usePlatformSetting<PricingOverride[]>('site_pricing')
+  const plans =
+    locale === 'en' && Array.isArray(pricingOv)
+      ? PLANS[locale].map((p, i) => {
+          const ov = pricingOv[i]
+          if (!ov) return p
+          const features = ov.features?.trim()
+            ? ov.features
+                .split('\n')
+                .map((s) => s.trim())
+                .filter((s) => s.length > 0)
+            : p.features
+          return {
+            ...p,
+            name: ov.name?.trim() || p.name,
+            description: ov.tagline?.trim() || p.description,
+            features,
+          }
+        })
+      : PLANS[locale]
   const copy = COPY[locale]
   // Admin-edited FAQ list from /admin/site-editor → site_faq.
   // Single-language editor, so we only override on EN; AR keeps the
