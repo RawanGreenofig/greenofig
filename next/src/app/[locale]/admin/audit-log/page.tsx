@@ -54,23 +54,6 @@ const SEVERITY_META: Record<Severity, { tint: string; bg: string; Icon: LucideIc
   danger: { tint: '#f43f5e', bg: 'rgb(244 63 94 / 0.14)',   Icon: AlertOctagon },
 }
 
-const SEED: AuditEvent[] = [
-  { id: 'e1',  hoursAgo: 0.2, actor: 'Ahmad Salim',     actorInitials: 'AS', action: 'feature_flag_toggled', target: 'sleep_tracking',          ip: '92.241.3.18',  severity: 'warn',   payload: { flag: 'sleep_tracking', state: 'OFF' } },
-  { id: 'e2',  hoursAgo: 1,   actor: 'Ahmad Salim',     actorInitials: 'AS', action: 'broadcast_sent',       target: 'all users',                ip: '92.241.3.18',  severity: 'info',   payload: { audience: 'All users' } },
-  { id: 'e3',  hoursAgo: 4,   actor: 'Nutrition Coach Rawan Othman', actorInitials: 'RO', action: 'post_pinned',          target: 'Why protein at breakfast', ip: '94.187.41.6',  severity: 'info' },
-  { id: 'e4',  hoursAgo: 6,   actor: 'Ahmad Salim',     actorInitials: 'AS', action: 'api_key_rotated',      target: 'Stripe Live (production)', ip: '92.241.3.18',  severity: 'warn',   payload: { provider: 'Stripe' } },
-  { id: 'e5',  hoursAgo: 9,   actor: 'Nutrition Coach Rawan Othman', actorInitials: 'RO', action: 'moderation_resolved',  target: 'Spam: "Buy these…"',       ip: '94.187.41.6',  severity: 'info',   payload: { action: 'removed' } },
-  { id: 'e6',  hoursAgo: 14,  actor: 'Ahmad Salim',     actorInitials: 'AS', action: 'user_impersonated',    target: 'layla@example.com',         ip: '92.241.3.18',  severity: 'warn' },
-  { id: 'e7',  hoursAgo: 22,  actor: 'Ahmad Salim',     actorInitials: 'AS', action: 'store_toggled',        target: 'Storefront',                ip: '92.241.3.18',  severity: 'warn',   payload: { state: 'OFFLINE' } },
-  { id: 'e8',  hoursAgo: 28,  actor: 'Ahmad Salim',     actorInitials: 'AS', action: 'user_tier_changed',    target: 'omar@example.com',          ip: '92.241.3.18',  severity: 'info',   payload: { tier: 'PREMIUM' } },
-  { id: 'e9',  hoursAgo: 38,  actor: 'Ahmad Salim',     actorInitials: 'AS', action: 'site_published',       target: 'Hero copy update',          ip: '92.241.3.18',  severity: 'info' },
-  { id: 'e10', hoursAgo: 56,  actor: 'Ahmad Salim',     actorInitials: 'AS', action: 'user_suspended',       target: 'saif@example.com',          ip: '92.241.3.18',  severity: 'danger' },
-  { id: 'e11', hoursAgo: 80,  actor: 'Ahmad Salim',     actorInitials: 'AS', action: 'data_exported',        target: 'subscriptions.csv',         ip: '92.241.3.18',  severity: 'warn',   payload: { kind: 'subscriptions' } },
-  { id: 'e12', hoursAgo: 120, actor: 'Ahmad Salim',     actorInitials: 'AS', action: 'api_key_revoked',      target: 'Twilio SMS (paused)',       ip: '92.241.3.18',  severity: 'danger', payload: { provider: 'Twilio' } },
-  { id: 'e13', hoursAgo: 168, actor: 'Ahmad Salim',     actorInitials: 'AS', action: 'user_role_changed',    target: 'rawan@greenofig.com',       ip: '92.241.3.18',  severity: 'warn',   payload: { role: 'NUTRITIONIST' } },
-  { id: 'e14', hoursAgo: 240, actor: 'Ahmad Salim',     actorInitials: 'AS', action: 'api_key_added',        target: 'Gemini API',                ip: '92.241.3.18',  severity: 'info',   payload: { provider: 'Gemini' } },
-  { id: 'e15', hoursAgo: 720, actor: 'Ahmad Salim',     actorInitials: 'AS', action: 'user_deleted',         target: 'demo+test@greenofig.com',   ip: '92.241.3.18',  severity: 'danger' },
-]
 
 const RANGE_HOURS: Record<DateRange, number | null> = {
   all:    null,
@@ -148,7 +131,7 @@ export default function AdminAuditLogPage() {
     })
   }, [])
 
-  const sourceList = (live.data && live.data.length > 0) ? live.data : SEED
+  const sourceList = useMemo(() => live.data ?? [], [live.data])
 
   const visible = useMemo(() => {
     const max = RANGE_HOURS[range]

@@ -54,21 +54,6 @@ const STATUS_META: Record<Status, { tint: string; bg: string }> = {
   invited:   { tint: '#06b6d4', bg: 'rgb(6 182 212 / 0.14)' },
 }
 
-const SEED: AdminUser[] = [
-  { id: 'u1',  name: 'Layla Hijazi',     initials: 'LH', email: 'layla@example.com',   role: 'user',         tier: 'vip',     status: 'active',    joinedISO: '2026-03-02', lastSeenHours: 3 },
-  { id: 'u2',  name: 'Maya Khalil',      initials: 'MK', email: 'maya@example.com',    role: 'user',         tier: 'premium', status: 'active',    joinedISO: '2026-01-12', lastSeenHours: 5 },
-  { id: 'u3',  name: 'Yousef Abu Shaer', initials: 'YA', email: 'yousef@example.com',  role: 'user',         tier: 'basic',   status: 'active',    joinedISO: '2026-04-10', lastSeenHours: 12 },
-  { id: 'u4',  name: 'Omar Saadeh',      initials: 'OS', email: 'omar@example.com',    role: 'user',         tier: 'premium', status: 'active',    joinedISO: '2026-03-18', lastSeenHours: 96 },
-  { id: 'u5',  name: 'Hala Mansour',     initials: 'HM', email: 'hala@example.com',    role: 'user',         tier: 'basic',   status: 'active',    joinedISO: '2026-04-22', lastSeenHours: 36 },
-  { id: 'u6',  name: 'Karim Jubran',     initials: 'KJ', email: 'karim@example.com',   role: 'user',         tier: 'vip',     status: 'active',    joinedISO: '2026-02-15', lastSeenHours: 18 },
-  { id: 'u7',  name: 'Saif Haddad',      initials: 'SH', email: 'saif@example.com',    role: 'user',         tier: 'free',    status: 'suspended', joinedISO: '2025-10-22', lastSeenHours: 720 },
-  { id: 'u8',  name: 'Rasha Tarawneh',   initials: 'RT', email: 'rasha@example.com',   role: 'user',         tier: 'premium', status: 'active',    joinedISO: '2026-03-15', lastSeenHours: 1 },
-  { id: 'u9',  name: 'Diana Costa',      initials: 'DC', email: 'diana@example.com',   role: 'user',         tier: 'premium', status: 'active',    joinedISO: '2026-01-04', lastSeenHours: 4 },
-  { id: 'u10', name: 'Reem Odeh',        initials: 'RO', email: 'reem@example.com',    role: 'user',         tier: 'basic',   status: 'invited',   joinedISO: '2026-05-01', lastSeenHours: 9999 },
-  { id: 'u11', name: 'Nutrition Coach Rawan Othman', initials: 'RO', email: 'rawan@greenofig.com', role: 'nutritionist', tier: 'vip',     status: 'active',    joinedISO: '2025-09-01', lastSeenHours: 1 },
-  { id: 'u12', name: 'Ahmad Salim',      initials: 'AS', email: 'admin@greenofig.com', role: 'admin',        tier: 'vip',     status: 'active',    joinedISO: '2025-08-15', lastSeenHours: 0 },
-]
-
 const ROLE_TABS: ('all' | Role)[] = ['all', 'user', 'nutritionist', 'admin']
 const TIER_TABS: ('all' | Tier)[] = ['all', 'free', 'basic', 'premium', 'vip']
 const STATUS_TABS: ('all' | Status)[] = ['all', 'active', 'suspended', 'invited']
@@ -127,7 +112,7 @@ export default function AdminUsersPage() {
     })
   }, [])
 
-  const sourceList = (live.data && live.data.length > 0) ? live.data : SEED
+  const sourceList = useMemo(() => live.data ?? [], [live.data])
 
   const visible = useMemo(() => {
     const q = query.trim().toLowerCase()

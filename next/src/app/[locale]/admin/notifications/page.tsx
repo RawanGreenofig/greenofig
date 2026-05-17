@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import {
   Bell,
@@ -39,12 +39,6 @@ const AUDIENCE_TINT: Record<Audience, string> = {
   admin:         '#a855f7',
 }
 
-const HISTORY: BroadcastHistory[] = [
-  { id: 'b1', title: 'Ramadan kit drop is live',                         audience: 'all',     channels: ['inApp', 'email', 'push'], sentISO: '2026-04-29T08:00:00Z', recipients: 412 },
-  { id: 'b2', title: 'Weekly digest — May 3rd',                          audience: 'premium', channels: ['email'],                  sentISO: '2026-04-28T07:00:00Z', recipients: 56 },
-  { id: 'b3', title: 'New feature: AI scanner is faster',                audience: 'all',     channels: ['inApp', 'push'],          sentISO: '2026-04-22T08:00:00Z', recipients: 412 },
-  { id: 'b4', title: 'Scheduled maintenance Sunday 02:00 GMT+3',         audience: 'all',     channels: ['inApp', 'email'],         sentISO: '2026-04-15T16:00:00Z', recipients: 412 },
-]
 
 export default function AdminNotificationsPage() {
   const t = useTranslations('admin')
@@ -57,7 +51,31 @@ export default function AdminNotificationsPage() {
     () => new Set<Channel>(['inApp', 'email']),
   )
   const [scheduleAt, setScheduleAt] = useState<string>('')
-  const [history, setHistory] = useState<BroadcastHistory[]>(HISTORY)
+  const [history, setHistory] = useState<BroadcastHistory[]>([])
+
+  // Pull the real broadcast history out of audit_log. Used to be a
+  // hardcoded fixture array — "Ramadan kit drop is live" etc. —
+  // which meant every refresh wiped any newly-sent broadcast off the
+  // page. /api/admin/notifications/broadcasts returns the last 50.
+  useEffect(() => {
+    let cancelled = false
+    ;(async () => {
+      try {
+        const res = await fetch('/api/admin/notifications/broadcasts', {
+          cache: 'no-store',
+        })
+        if (!res.ok) return
+        const body = (await res.json()) as { broadcasts?: BroadcastHistory[] }
+        if (cancelled) return
+        if (Array.isArray(body.broadcasts)) setHistory(body.broadcasts)
+      } catch {
+        /* network error — leave history empty, user can resend or refresh */
+      }
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [])
   const [sentBanner, setSentBanner] = useState<{ recipients: number; scheduled: boolean } | null>(null)
 
   const willSchedule = !!scheduleAt && new Date(scheduleAt).getTime() > Date.now()
@@ -71,19 +89,43 @@ export default function AdminNotificationsPage() {
     })
   }
 
-  const recipientsForAudience = (a: Audience): number => {
-    const map: Record<Audience, number> = {
-      all: 412,
-      free: 240,
-      basic: 92,
-      premium: 56,
-      vip: 24,
-      nutritionist: 1,
-      admin: 1,
+  // Live audience counts. Was a hardcoded `{ all: 412, free: 240, … }`
+  // lookup that lied to the admin about how many recipients each
+  // audience would reach. Now reads /api/admin/audience-counts which
+  // queries profiles via service role. We treat the fetch as
+  // best-effort: a 0 in the preview is better than fake confidence.
+  const [audienceCounts, setAudienceCounts] = useState<
+    Record<Audience, number>
+  >({ all: 0, free: 0, basic: 0, premium: 0, vip: 0, nutritionist: 0, admin: 0 })
+  useEffect(() => {
+    let cancelled = false
+    ;(async () => {
+      try {
+        const res = await fetch('/api/admin/audience-counts', {
+          cache: 'no-store',
+        })
+        if (!res.ok) return
+        const body = (await res.json()) as Partial<Record<Audience, number>>
+        if (cancelled) return
+        setAudienceCounts((curr) => ({
+          ...curr,
+          all: body.all ?? curr.all,
+          free: body.free ?? curr.free,
+          basic: body.basic ?? curr.basic,
+          premium: body.premium ?? curr.premium,
+          vip: body.vip ?? curr.vip,
+          nutritionist: body.nutritionist ?? curr.nutritionist,
+          admin: body.admin ?? curr.admin,
+        }))
+      } catch {
+        /* network — leave zeros */
+      }
+    })()
+    return () => {
+      cancelled = true
     }
-    return map[a]
-  }
-  const targetCount = recipientsForAudience(audience)
+  }, [])
+  const targetCount = audienceCounts[audience]
 
   const insertTemplate = (k: (typeof TEMPLATE_KEYS)[number]) => {
     const map = {

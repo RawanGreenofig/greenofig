@@ -45,18 +45,6 @@ const FILTERS: ('all' | Status)[] = [
   'all', 'pending', 'processing', 'shipped', 'delivered', 'cancelled', 'refunded',
 ]
 
-const SEED: AdminOrder[] = [
-  { id: 'GF-10254', customerName: 'Sara Khoury',     customerInitials: 'SK', customerEmail: 'sara@example.com',   itemCount: 3, total: 92,  status: 'pending',    placedISO: '2026-05-03' },
-  { id: 'GF-10253', customerName: 'Layla Hijazi',    customerInitials: 'LH', customerEmail: 'layla@example.com',  itemCount: 2, total: 66,  status: 'shipped',    placedISO: '2026-04-29' },
-  { id: 'GF-10250', customerName: 'Maya Khalil',     customerInitials: 'MK', customerEmail: 'maya@example.com',   itemCount: 4, total: 124, status: 'processing', placedISO: '2026-04-28' },
-  { id: 'GF-10241', customerName: 'Yousef Abu Shaer', customerInitials: 'YA', customerEmail: 'yousef@example.com', itemCount: 1, total: 28,  status: 'delivered',  placedISO: '2026-04-22' },
-  { id: 'GF-10239', customerName: 'Diana Costa',     customerInitials: 'DC', customerEmail: 'diana@example.com',  itemCount: 5, total: 152, status: 'delivered',  placedISO: '2026-04-19' },
-  { id: 'GF-10231', customerName: 'Omar Saadeh',     customerInitials: 'OS', customerEmail: 'omar@example.com',   itemCount: 2, total: 48,  status: 'cancelled',  placedISO: '2026-04-15' },
-  { id: 'GF-10222', customerName: 'Maya Khalil',     customerInitials: 'MK', customerEmail: 'maya@example.com',   itemCount: 1, total: 22,  status: 'refunded',   placedISO: '2026-04-10' },
-  { id: 'GF-10213', customerName: 'Rasha Tarawneh',  customerInitials: 'RT', customerEmail: 'rasha@example.com',  itemCount: 3, total: 78,  status: 'delivered',  placedISO: '2026-04-04' },
-  { id: 'GF-10199', customerName: 'Layla Hijazi',    customerInitials: 'LH', customerEmail: 'layla@example.com',  itemCount: 4, total: 52,  status: 'delivered',  placedISO: '2026-03-30' },
-  { id: 'GF-10184', customerName: 'Karim Jubran',    customerInitials: 'KJ', customerEmail: 'karim@example.com',  itemCount: 2, total: 60,  status: 'delivered',  placedISO: '2026-03-25' },
-]
 
 export default function AdminOrdersPage() {
   const t = useTranslations('admin')
@@ -118,7 +106,7 @@ export default function AdminOrdersPage() {
     })
   }, [])
 
-  const sourceList = (live.data && live.data.length > 0) ? live.data : SEED
+  const sourceList = useMemo(() => live.data ?? [], [live.data])
 
   const visible = useMemo(() => {
     const q = query.trim().toLowerCase()

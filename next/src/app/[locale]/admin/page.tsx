@@ -1,13 +1,11 @@
 'use client'
 
-import { useMemo } from 'react'
 import { useTranslations } from 'next-intl'
 import {
   Users,
   CreditCard,
   CalendarClock,
   ShoppingBag,
-  CheckCircle2,
   AlertCircle,
   Bell,
   ToggleRight,
@@ -34,14 +32,6 @@ import { useSupabaseQuery } from '@/lib/hooks/useSupabaseQuery'
 import type { Tier } from '@/lib/constants'
 import { DemoAccountsCard } from '@/components/admin/DemoAccountsCard'
 
-type Health = 'ok' | 'degraded' | 'down'
-
-const HEALTH_TINT: Record<Health, string> = {
-  ok:       '#a3e635',
-  degraded: '#e8912a',
-  down:     '#f43f5e',
-}
-
 const TIER_TINT: Record<Tier, string> = {
   free:    '#9baf9f',
   basic:   '#06b6d4',
@@ -58,32 +48,6 @@ interface Signup {
   joinedHoursAgo: number
 }
 
-const SIGNUPS: Signup[] = [
-  { id: 'u1', name: 'Sara Khoury',  initials: 'SK', email: 'sara@example.com',  tier: 'premium', joinedHoursAgo: 2 },
-  { id: 'u2', name: 'Faisal Daher', initials: 'FD', email: 'faisal@example.com', tier: 'basic',   joinedHoursAgo: 5 },
-  { id: 'u3', name: 'Mira Halaby',  initials: 'MH', email: 'mira@example.com',  tier: 'free',    joinedHoursAgo: 9 },
-  { id: 'u4', name: 'Adam Rahmeh',  initials: 'AR', email: 'adam@example.com',  tier: 'vip',     joinedHoursAgo: 18 },
-  { id: 'u5', name: 'Lina Sabbagh', initials: 'LS', email: 'lina@example.com',  tier: 'premium', joinedHoursAgo: 26 },
-]
-
-const SYSTEM: { key: 'stripe' | 'supabase' | 'ai' | 'storage'; status: Health; lastChecked: string }[] = [
-  { key: 'stripe',   status: 'ok',       lastChecked: '2m ago' },
-  { key: 'supabase', status: 'ok',       lastChecked: '1m ago' },
-  { key: 'ai',       status: 'degraded', lastChecked: '4m ago' },
-  { key: 'storage',  status: 'ok',       lastChecked: '2m ago' },
-]
-
-function buildGrowth(): { week: string; users: number }[] {
-  const today = new Date()
-  return Array.from({ length: 12 }).map((_, i) => {
-    const d = new Date(today)
-    d.setDate(today.getDate() - (11 - i) * 7)
-    return {
-      week: d.toISOString().slice(5, 10),
-      users: 8 + Math.round(Math.sin(i / 2) * 6) + i * 2,
-    }
-  })
-}
 
 interface AdminOverviewData {
   totalUsers: number
@@ -198,12 +162,7 @@ export default function AdminOverviewPage() {
     }
   }, [])
 
-  const seedSeries = useMemo(() => buildGrowth(), [])
-  const series = (live.data?.growthSeries && live.data.growthSeries.length > 0)
-    ? live.data.growthSeries
-    : seedSeries
-
-  const allHealthy = SYSTEM.every((s) => s.status === 'ok')
+  const series = live.data?.growthSeries ?? []
 
   return (
     <div className="px-4 md:px-8 py-6 md:py-8 max-w-screen-xl mx-auto space-y-8">
@@ -223,7 +182,7 @@ export default function AdminOverviewPage() {
           Icon={Users}
           tint="#a3e635"
           label={tT('kpis.totalUsers')}
-          value={String(live.data?.totalUsers ?? 412)}
+          value={String(live.data?.totalUsers ?? 0)}
           delta={14}
           tT={tT}
         />
@@ -231,7 +190,7 @@ export default function AdminOverviewPage() {
           Icon={CreditCard}
           tint="#06b6d4"
           label={tT('kpis.mrr')}
-          value={String(live.data?.mrr ?? 6180)}
+          value={String(live.data?.mrr ?? 0)}
           unit="USD"
           delta={9}
           tT={tT}
@@ -240,7 +199,7 @@ export default function AdminOverviewPage() {
           Icon={CalendarClock}
           tint="#e8912a"
           label={tT('kpis.sessions30d')}
-          value={String(live.data?.sessions30d ?? 184)}
+          value={String(live.data?.sessions30d ?? 0)}
           delta={22}
           tT={tT}
         />
@@ -248,7 +207,7 @@ export default function AdminOverviewPage() {
           Icon={ShoppingBag}
           tint="#a855f7"
           label={tT('kpis.storeRev30d')}
-          value={String(Math.round(live.data?.storeRev30d ?? 3420))}
+          value={String(Math.round(live.data?.storeRev30d ?? 0))}
           unit="USD"
           delta={-4}
           tT={tT}
@@ -256,8 +215,8 @@ export default function AdminOverviewPage() {
       </section>
 
       {/* Growth + system */}
-      <section className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <article className="rounded-xl border border-border bg-surface p-5 lg:col-span-2">
+      <section>
+        <article className="rounded-xl border border-border bg-surface p-5">
           <header className="mb-4 flex items-center justify-between gap-3">
             <h2 className="text-base font-semibold text-fg-1">
               {tT('growth.title')}
@@ -270,70 +229,32 @@ export default function AdminOverviewPage() {
               <ArrowRight className="w-3 h-3 rtl:rotate-180" strokeWidth={2} />
             </Link>
           </header>
-          <div className="w-full h-[260px]" dir="ltr">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={series} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
-                <defs>
-                  <linearGradient id="adminGrowth" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%"   stopColor="#a3e635" stopOpacity={0.32} />
-                    <stop offset="100%" stopColor="#a3e635" stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid stroke="rgb(255 255 255 / 0.06)" strokeDasharray="3 3" vertical={false} />
-                <XAxis dataKey="week" stroke="#5c7262" tickLine={false} axisLine={false} tick={{ fontSize: 11 }} minTickGap={28} />
-                <YAxis stroke="#5c7262" tickLine={false} axisLine={false} tick={{ fontSize: 11 }} width={28} />
-                <Tooltip
-                  contentStyle={{ background: 'var(--gf-card-hover)', border: '1px solid rgb(255 255 255 / 0.08)', borderRadius: 8, fontSize: 12, color: 'var(--gf-fg-1)' }}
-                  labelStyle={{ color: '#9baf9f' }}
-                />
-                <Area type="monotone" dataKey="users" stroke="#a3e635" strokeWidth={2} fill="url(#adminGrowth)" dot={false} />
-              </AreaChart>
-            </ResponsiveContainer>
-          </div>
-        </article>
-
-        <article className="rounded-xl border border-border bg-surface p-5">
-          <header className="flex items-center justify-between gap-3 mb-4">
-            <h2 className="text-base font-semibold text-fg-1">
-              {tT('system.title')}
-            </h2>
-            {allHealthy && (
-              <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-lime-400">
-                <CheckCircle2 className="w-3 h-3" strokeWidth={2.25} />
-                {tT('system.all')}
-              </span>
-            )}
-          </header>
-          <ul className="space-y-3">
-            {SYSTEM.map((s) => (
-              <li
-                key={s.key}
-                className="flex items-center gap-3 rounded-lg bg-bg-deeper/40 border border-border px-3 py-2"
-              >
-                <span
-                  className="w-2 h-2 rounded-full shrink-0"
-                  style={{ background: HEALTH_TINT[s.status] }}
-                />
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm text-fg-1 truncate">
-                    {tT(`system.${s.key}` as 'system.stripe')}
-                  </p>
-                  <p className="text-[10px] text-fg-3 font-mono mt-0.5" dir="ltr">
-                    {tT('system.lastChecked', { time: s.lastChecked })}
-                  </p>
-                </div>
-                <span
-                  className="rounded-pill h-5 px-2 inline-flex items-center text-[10px] uppercase tracking-eyebrow font-bold"
-                  style={{
-                    background: `${HEALTH_TINT[s.status]}1a`,
-                    color: HEALTH_TINT[s.status],
-                  }}
-                >
-                  {tT(`system.${s.status}` as 'system.ok')}
-                </span>
-              </li>
-            ))}
-          </ul>
+          {series.length === 0 ? (
+            <p className="py-12 text-sm text-fg-3 text-center">
+              {tT('growth.empty')}
+            </p>
+          ) : (
+            <div className="w-full h-[260px]" dir="ltr">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={series} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
+                  <defs>
+                    <linearGradient id="adminGrowth" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%"   stopColor="#a3e635" stopOpacity={0.32} />
+                      <stop offset="100%" stopColor="#a3e635" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid stroke="rgb(255 255 255 / 0.06)" strokeDasharray="3 3" vertical={false} />
+                  <XAxis dataKey="week" stroke="#5c7262" tickLine={false} axisLine={false} tick={{ fontSize: 11 }} minTickGap={28} />
+                  <YAxis stroke="#5c7262" tickLine={false} axisLine={false} tick={{ fontSize: 11 }} width={28} />
+                  <Tooltip
+                    contentStyle={{ background: 'var(--gf-card-hover)', border: '1px solid rgb(255 255 255 / 0.08)', borderRadius: 8, fontSize: 12, color: 'var(--gf-fg-1)' }}
+                    labelStyle={{ color: '#9baf9f' }}
+                  />
+                  <Area type="monotone" dataKey="users" stroke="#a3e635" strokeWidth={2} fill="url(#adminGrowth)" dot={false} />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+          )}
         </article>
       </section>
 
@@ -353,9 +274,7 @@ export default function AdminOverviewPage() {
             </Link>
           </header>
           {(() => {
-            const signups = (live.data?.recentSignups && live.data.recentSignups.length > 0)
-              ? live.data.recentSignups
-              : SIGNUPS
+            const signups = live.data?.recentSignups ?? []
             if (signups.length === 0) {
               return (
                 <p className="p-8 text-sm text-fg-3 text-center">

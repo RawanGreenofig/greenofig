@@ -948,7 +948,8 @@
         "noSignups": "No signups yet"
       },
       "growth": {
-        "title": "User growth, last 12 weeks"
+        "title": "User growth, last 12 weeks",
+        "empty": "No signups yet — the chart will fill in as new users join."
       },
       "actions": {
         "title": "Quick actions",
