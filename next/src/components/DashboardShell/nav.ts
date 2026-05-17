@@ -28,6 +28,7 @@ import {
   Bell,
   AlertOctagon,
   Mail,
+  UserPlus,
   UserCheck,
   Star,
   Bot,
@@ -70,6 +71,7 @@ export const USER_NAV: DashboardNavItem[] = [
 export const NUTRITIONIST_NAV: DashboardNavItem[] = [
   { href: '/nutritionist',                 labelKey: 'nutritionist.today',           Icon: Sun },
   { href: '/nutritionist/clients',         labelKey: 'nutritionist.myClients',       Icon: Users },
+  { href: '/nutritionist/clinic-clients',  labelKey: 'nutritionist.clinicClients',   Icon: UserPlus },
   { href: '/nutritionist/leads',           labelKey: 'nutritionist.leads',           Icon: Mail },
   { href: '/nutritionist/meal-plans',      labelKey: 'nutritionist.mealPlanBuilder', Icon: Lightbulb },
   { href: '/nutritionist/recipes',         labelKey: 'nutritionist.recipeBuilder',   Icon: ChefHat },
@@ -85,13 +87,19 @@ export const NUTRITIONIST_NAV: DashboardNavItem[] = [
   { href: '/nutritionist/settings',        labelKey: 'nutritionist.settings',        Icon: Settings },
 ]
 
+// Indices match the NAV order above. Edit both together when nav
+// reorders — the pre-existing comments were already drifting before
+// the clinic-clients insertion, so they're now authoritative.
+const navIndex = (href: string) =>
+  NUTRITIONIST_NAV.findIndex((n) => n.href === href)
 export const NUTRITIONIST_MOBILE_TABS: DashboardNavItem[] = [
-  NUTRITIONIST_NAV[0],  // Today
-  NUTRITIONIST_NAV[1],  // Clients
-  NUTRITIONIST_NAV[5],  // Calendar
-  NUTRITIONIST_NAV[6],  // Messages
+  NUTRITIONIST_NAV[navIndex('/nutritionist')],                // Today
+  NUTRITIONIST_NAV[navIndex('/nutritionist/clients')],        // Online clients
+  NUTRITIONIST_NAV[navIndex('/nutritionist/calendar')],       // Calendar
+  NUTRITIONIST_NAV[navIndex('/nutritionist/messages')],       // Messages
 ]
-export const NUTRITIONIST_MOBILE_FAB = NUTRITIONIST_NAV[2] // Meal plan builder — center FAB
+export const NUTRITIONIST_MOBILE_FAB =
+  NUTRITIONIST_NAV[navIndex('/nutritionist/meal-plans')] // Meal plan builder — center FAB
 
 /** Admin-role sidebar. */
 export const ADMIN_NAV: DashboardNavItem[] = [

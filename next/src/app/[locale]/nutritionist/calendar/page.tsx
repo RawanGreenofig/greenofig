@@ -23,7 +23,7 @@ function initialsOf(name: string): string {
 }
 
 type View = 'week' | 'month'
-type SessionType = 'introCall' | 'followUp' | 'deepDive'
+type SessionType = 'introCall' | 'followUp' | 'deepDive' | 'inClinicVisit'
 
 interface Session {
   id: string
@@ -35,15 +35,19 @@ interface Session {
   clientName: string
   clientInitials: string
   type: SessionType
+  /** True when this booking came from the physical clinic (no online
+   *  account). Drives the small "In-clinic" badge in the cell. */
+  isClinic?: boolean
   /** Meeting URL set by the Stripe webhook (or admin override) once
    *  the booking is paid. Null while the session isn't joinable yet. */
   meetingUrl?: string | null
 }
 
 const TYPE_TINT: Record<SessionType, string> = {
-  introCall: '#a3e635',
-  followUp:  '#06b6d4',
-  deepDive:  '#a855f7',
+  introCall:      '#a3e635',
+  followUp:       '#06b6d4',
+  deepDive:       '#a855f7',
+  inClinicVisit:  '#f59e0b',
 }
 
 const DAY_START_HOUR = 8
@@ -71,13 +75,17 @@ export default function CalendarPage() {
 
   // Pull bookings inside the visible month window so both week + month
   // views have everything they need without re-fetching on view toggle.
+  // A row carries either client_id (online client) OR clinic_client_id
+  // (walk-in). We resolve names from both tables and tag the walk-ins
+  // so the cell can render an "In-clinic" badge.
   const live = useSupabaseQuery<Session[]>(async (supabase) => {
     if (!profile?.id) return []
     const monthStart = new Date(anchor.getFullYear(), anchor.getMonth() - 1, 1)
     const monthEnd = new Date(anchor.getFullYear(), anchor.getMonth() + 2, 0)
     type Row = {
       id: string
-      client_id: string
+      client_id: string | null
+      clinic_client_id: string | null
       type: SessionType
       scheduled_at: string
       duration_min: number
@@ -86,7 +94,9 @@ export default function CalendarPage() {
     }
     const { data: rows } = await supabase
       .from('bookings')
-      .select('id, client_id, type, scheduled_at, duration_min, status, meeting_url')
+      .select(
+        'id, client_id, clinic_client_id, type, scheduled_at, duration_min, status, meeting_url',
+      )
       .eq('nutritionist_id', profile.id)
       .gte('scheduled_at', monthStart.toISOString())
       .lt('scheduled_at',  monthEnd.toISOString())
@@ -95,19 +105,41 @@ export default function CalendarPage() {
     const list = (rows as Row[] | null) ?? []
     if (list.length === 0) return []
 
-    const ids = Array.from(new Set(list.map((r) => r.client_id)))
-    const { data: clients } = await supabase
-      .from('profiles')
-      .select('id, full_name')
-      .in('id', ids)
-    type ClientRow = { id: string; full_name: string | null }
-    const nameOf = new Map(
-      ((clients as ClientRow[] | null) ?? []).map((c) => [c.id, c.full_name ?? 'Client']),
+    const onlineIds = Array.from(
+      new Set(list.map((r) => r.client_id).filter((v): v is string => !!v)),
     )
+    const clinicIds = Array.from(
+      new Set(
+        list.map((r) => r.clinic_client_id).filter((v): v is string => !!v),
+      ),
+    )
+
+    const [{ data: clients }, { data: clinics }] = await Promise.all([
+      onlineIds.length
+        ? supabase.from('profiles').select('id, full_name').in('id', onlineIds)
+        : Promise.resolve({ data: [] as { id: string; full_name: string | null }[] }),
+      clinicIds.length
+        ? supabase
+            .from('clinic_clients')
+            .select('id, full_name')
+            .in('id', clinicIds)
+        : Promise.resolve({ data: [] as { id: string; full_name: string }[] }),
+    ])
+    const nameOf = new Map<string, string>()
+    for (const c of (clients as { id: string; full_name: string | null }[] | null) ?? []) {
+      nameOf.set(c.id, c.full_name ?? 'Client')
+    }
+    const clinicNameOf = new Map<string, string>()
+    for (const c of (clinics as { id: string; full_name: string }[] | null) ?? []) {
+      clinicNameOf.set(c.id, c.full_name)
+    }
 
     return list.map((r) => {
       const dt = new Date(r.scheduled_at)
-      const name = nameOf.get(r.client_id) ?? 'Client'
+      const isClinic = !!r.clinic_client_id
+      const name = isClinic
+        ? clinicNameOf.get(r.clinic_client_id!) ?? 'Clinic client'
+        : nameOf.get(r.client_id!) ?? 'Client'
       return {
         id: r.id,
         date: dt.toISOString().slice(0, 10),
@@ -118,6 +150,7 @@ export default function CalendarPage() {
         clientName: name,
         clientInitials: initialsOf(name),
         type: r.type,
+        isClinic,
         meetingUrl: r.meeting_url,
       }
     })
@@ -375,6 +408,19 @@ function WeekGrid({
                     >
                       {s.clientName}
                     </p>
+                    {s.isClinic && (
+                      <span
+                        className="inline-block mt-0.5 text-[9px] font-bold uppercase tracking-eyebrow"
+                        style={{
+                          color: tint,
+                          background: `${tint}22`,
+                          padding: '1px 6px',
+                          borderRadius: 9999,
+                        }}
+                      >
+                        In-clinic
+                      </span>
+                    )}
                   </button>
                 )
               })}
@@ -537,25 +583,27 @@ function DayPanel({
                       className="text-[11px] font-medium uppercase tracking-eyebrow"
                       style={{ color: TYPE_TINT[s.type] }}
                     >
-                      {tBookings(s.type)}
+                      {s.isClinic ? 'In-clinic visit' : tBookings(s.type)}
                     </p>
                   </div>
                   <p className="font-mono text-xs text-fg-2 shrink-0" dir="ltr">
                     {s.start} · {s.durationMin}m
                   </p>
                 </div>
-                <button
-                  type="button"
-                  disabled={!s.meetingUrl}
-                  title={s.meetingUrl ? undefined : 'Meeting link not yet generated'}
-                  onClick={() => {
-                    if (s.meetingUrl) window.open(s.meetingUrl, '_blank')
-                  }}
-                  className="mt-3 inline-flex items-center gap-1 rounded-pill bg-primary/15 text-lime-400 h-8 px-3 text-[11px] font-semibold hover:bg-primary/25 disabled:opacity-40 disabled:cursor-not-allowed"
-                >
-                  <Video className="w-3 h-3" strokeWidth={2} />
-                  {tBookings('joinSession')}
-                </button>
+                {!s.isClinic && (
+                  <button
+                    type="button"
+                    disabled={!s.meetingUrl}
+                    title={s.meetingUrl ? undefined : 'Meeting link not yet generated'}
+                    onClick={() => {
+                      if (s.meetingUrl) window.open(s.meetingUrl, '_blank')
+                    }}
+                    className="mt-3 inline-flex items-center gap-1 rounded-pill bg-primary/15 text-lime-400 h-8 px-3 text-[11px] font-semibold hover:bg-primary/25 disabled:opacity-40 disabled:cursor-not-allowed"
+                  >
+                    <Video className="w-3 h-3" strokeWidth={2} />
+                    {tBookings('joinSession')}
+                  </button>
+                )}
               </li>
             ))}
         </ul>

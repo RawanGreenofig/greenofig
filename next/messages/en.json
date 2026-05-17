@@ -1593,6 +1593,7 @@
     "title": "Nutritionist Console",
     "today": "Today",
     "myClients": "My Clients",
+    "clinicClients": "Clinic Clients",
     "leads": "Leads",
     "sendDiscount": "Send Discount Code",
     "createPromoCode": "Create a discount for a client",

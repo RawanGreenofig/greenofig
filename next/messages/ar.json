@@ -1593,6 +1593,7 @@
     "title": "لوحة تحكم أخصائية التغذية",
     "today": "اليوم",
     "myClients": "عملائي",
+    "clinicClients": "عملاء العيادة",
     "leads": "العملاء المحتملون",
     "sendDiscount": "إرسال كود خصم",
     "createPromoCode": "أنشئ كود خصم لعميل",
