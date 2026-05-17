@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react'
 import { useTranslations } from 'next-intl'
-import { getBrowserSupabase } from '@/lib/supabase/client'
 import {
   Sparkles,
   Info,
@@ -121,26 +120,31 @@ export default function AdminSiteEditorPage() {
     if (saveState === 'saved') setSaveState('idle')
   }
 
+  // Load every site-editor section through /api/settings/[key].
+  // Same race fix as /admin/settings + /admin/ai-limits: browser-side
+  // supabase reads of platform_settings fail when the session JWT
+  // hasn't been restored yet, leaving the form on its hardcoded
+  // defaults instead of the saved values.
   useEffect(() => {
-    const supabase = getBrowserSupabase()
-    if (!supabase) return
     let cancelled = false
+    const keys = ['site_hero', 'site_about', 'site_pricing', 'site_faq', 'site_footer'] as const
     ;(async () => {
-      type Row = { key: string; value: unknown }
-      const keys = ['site_hero', 'site_about', 'site_pricing', 'site_faq', 'site_footer']
-      const { data: rows } = await supabase
-        .from('platform_settings')
-        .select('key, value')
-        .in('key', keys)
+      const results = await Promise.all(
+        keys.map(async (k) => {
+          const res = await fetch(`/api/settings/${k}`, { cache: 'no-store' })
+          if (!res.ok) return [k, null] as const
+          const body = (await res.json()) as { value?: unknown }
+          return [k, body.value ?? null] as const
+        }),
+      )
       if (cancelled) return
-      const list = (rows as Row[] | null) ?? []
-      for (const r of list) {
-        if (!r?.value) continue
-        if (r.key === 'site_hero') setHero((curr) => ({ ...curr, ...(r.value as Partial<HeroDraft>) }))
-        if (r.key === 'site_about') setAbout((curr) => ({ ...curr, ...(r.value as Partial<AboutDraft>) }))
-        if (r.key === 'site_pricing' && Array.isArray(r.value)) setPricing(r.value as PricingTier[])
-        if (r.key === 'site_faq' && Array.isArray(r.value)) setFaq(r.value as FaqRow[])
-        if (r.key === 'site_footer') setFooter((curr) => ({ ...curr, ...(r.value as Partial<FooterDraft>) }))
+      for (const [k, value] of results) {
+        if (value === null || value === undefined) continue
+        if (k === 'site_hero') setHero((curr) => ({ ...curr, ...(value as Partial<HeroDraft>) }))
+        if (k === 'site_about') setAbout((curr) => ({ ...curr, ...(value as Partial<AboutDraft>) }))
+        if (k === 'site_pricing' && Array.isArray(value)) setPricing(value as PricingTier[])
+        if (k === 'site_faq' && Array.isArray(value)) setFaq(value as FaqRow[])
+        if (k === 'site_footer') setFooter((curr) => ({ ...curr, ...(value as Partial<FooterDraft>) }))
       }
     })()
     return () => {
@@ -158,7 +162,7 @@ export default function AdminSiteEditorPage() {
       { key: 'site_footer', value: footer },
     ]
     try {
-      await Promise.all(
+      const responses = await Promise.all(
         writes.map((w) =>
           fetch(`/api/settings/${w.key}`, {
             method: 'POST',
@@ -167,8 +171,18 @@ export default function AdminSiteEditorPage() {
           }),
         ),
       )
-    } catch {
-      /* show saved state regardless — user can retry on visible failure */
+      const failed = responses.find((r) => !r.ok)
+      if (failed) {
+        console.error('[site-editor] save failed:', failed.status)
+        // Surface failure by keeping the save bar visible; the dirty
+        // flag stays true so the admin can retry.
+        setSaveState('idle')
+        return
+      }
+    } catch (err) {
+      console.error('[site-editor] save threw:', err)
+      setSaveState('idle')
+      return
     }
     setSaveState('saved')
     setDirty(false)

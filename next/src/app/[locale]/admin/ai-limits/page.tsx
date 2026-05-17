@@ -85,55 +85,66 @@ export default function AILimitsPage() {
   const [saved, setSaved] = useState<string | null>(null)
 
   useEffect(() => {
-    const supabase = getBrowserSupabase()
-    if (!supabase) return
     let cancelled = false
 
+    // Load every limit through /api/settings/[key]. The previous code
+    // used the browser supabase client, which raced the session
+    // restore on hard refresh — same bug pattern that hit
+    // /admin/settings, where the form would fall back to its
+    // hardcoded defaults instead of the saved values.
+    const settingKeys: string[] = [
+      ...FEATURES.map((f) => f.settingKey),
+      'ai_daily_global_cap',
+    ]
     ;(async () => {
-      const keys: string[] = [
-        ...FEATURES.map((f) => f.settingKey),
-        'ai_daily_global_cap',
-      ]
-      const { data: rows } = await supabase
-        .from('platform_settings')
-        .select('key, value')
-        .in('key', keys)
+      const results = await Promise.all(
+        settingKeys.map(async (key) => {
+          const res = await fetch(`/api/settings/${key}`, { cache: 'no-store' })
+          if (!res.ok) return [key, null] as const
+          const body = (await res.json()) as { value?: unknown }
+          return [key, body.value ?? null] as const
+        }),
+      )
       if (cancelled) return
-      type SettingRow = { key: string; value: unknown }
-      const list = (rows as SettingRow[] | null) ?? []
       const next = { ...limits }
-      for (const row of list) {
-        if (row.key === 'ai_daily_global_cap') {
-          const v =
-            typeof row.value === 'number'
-              ? row.value
-              : Number(row.value as string)
+      for (const [key, value] of results) {
+        if (value === null) continue
+        if (key === 'ai_daily_global_cap') {
+          const v = typeof value === 'number' ? value : Number(value as string)
           if (Number.isFinite(v)) setGlobalCap(v)
         } else {
-          const feature = FEATURES.find((f) => f.settingKey === row.key)
-          if (feature && row.value && typeof row.value === 'object') {
+          const feature = FEATURES.find((f) => f.settingKey === key)
+          if (feature && typeof value === 'object') {
             next[feature.key] = {
               ...next[feature.key],
-              ...(row.value as Partial<Record<Tier, number>>),
+              ...(value as Partial<Record<Tier, number>>),
             }
           }
         }
       }
       setLimits(next)
-
-      // Today's total usage across all features (drives the global progress bar).
-      const today = new Date().toISOString().slice(0, 10)
-      const { data: usageRows } = await supabase
-        .from('ai_usage')
-        .select('request_count')
-        .eq('date', today)
-      type UsageRow = { request_count: number | null }
-      const total = ((usageRows as UsageRow[] | null) ?? []).reduce(
-        (acc, r) => acc + (r.request_count ?? 0),
-        0,
-      )
-      if (!cancelled) setTodayUsage(total)
     })()
+
+    // Today's total usage across all features still reads the aggregate
+    // off `ai_usage` directly — the row count is small, the data isn't
+    // tied to any admin-toggleable flag, and reading via the admin
+    // session is the right RLS gate.
+    const supabase = getBrowserSupabase()
+    if (supabase) {
+      ;(async () => {
+        const today = new Date().toISOString().slice(0, 10)
+        const { data: usageRows } = await supabase
+          .from('ai_usage')
+          .select('request_count')
+          .eq('date', today)
+        type UsageRow = { request_count: number | null }
+        const total = ((usageRows as UsageRow[] | null) ?? []).reduce(
+          (acc, r) => acc + (r.request_count ?? 0),
+          0,
+        )
+        if (!cancelled) setTodayUsage(total)
+      })()
+    }
 
     return () => {
       cancelled = true

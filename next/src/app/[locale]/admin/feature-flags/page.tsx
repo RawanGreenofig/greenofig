@@ -10,7 +10,6 @@ import {
   Power,
 } from '@/icons'
 import { FEATURES, type FeatureFlag, type Tier, TIERS } from '@/lib/constants'
-import { getBrowserSupabase } from '@/lib/supabase/client'
 
 type Group = 'nutrition' | 'community' | 'education' | 'commerce' | 'other'
 
@@ -81,9 +80,12 @@ export default function AdminFeatureFlagsPage() {
   const [confirm, setConfirm] = useState<FeatureFlag | null>(null)
   const [savedFlash, setSavedFlash] = useState(false)
 
+  // Load via API route (service role + withAdmin) instead of the
+  // browser supabase client. Same race fix as /admin/settings — on a
+  // hard refresh the browser-side read fired before the session JWT
+  // was restored, RLS treated it as anonymous, the page silently fell
+  // back to its hardcoded `flags` array.
   useEffect(() => {
-    const supabase = getBrowserSupabase()
-    if (!supabase) return
     let cancelled = false
     ;(async () => {
       type Row = {
@@ -91,10 +93,10 @@ export default function AdminFeatureFlagsPage() {
         enabled_for_tiers: Tier[] | null
         is_globally_enabled: boolean | null
       }
-      const { data: rows } = await supabase
-        .from('feature_flags')
-        .select('feature, enabled_for_tiers, is_globally_enabled')
-      const list = (rows as Row[] | null) ?? []
+      const res = await fetch('/api/admin/feature-flags', { cache: 'no-store' })
+      if (!res.ok) return
+      const body = (await res.json()) as { flags?: Row[] }
+      const list = body.flags ?? []
       if (cancelled || list.length === 0) return
       const byFeature = new Map(list.map((r) => [r.feature, r]))
       setFlags((curr) =>
@@ -114,12 +116,24 @@ export default function AdminFeatureFlagsPage() {
     }
   }, [])
 
-  const persist = (feature: FeatureFlag, payload: Partial<{ is_globally_enabled: boolean; enabled_for_tiers: Tier[] }>) => {
-    const supabase = getBrowserSupabase()
-    if (!supabase) return
-    void supabase
-      .from('feature_flags')
-      .upsert({ feature, ...payload } as never, { onConflict: 'feature' })
+  // Writes go through the admin API route too, with audit logging.
+  // Was previously a fire-and-forget supabase.from().upsert() with no
+  // error handling — failures were completely invisible.
+  const persist = (
+    feature: FeatureFlag,
+    payload: Partial<{ is_globally_enabled: boolean; enabled_for_tiers: Tier[] }>,
+  ) => {
+    void fetch('/api/admin/feature-flags', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ feature, ...payload }),
+    }).then((res) => {
+      if (!res.ok) {
+        console.error('[feature-flags] persist failed:', res.status)
+      }
+    }).catch((err) => {
+      console.error('[feature-flags] persist threw:', err)
+    })
   }
 
   const grouped = useMemo(() => {
