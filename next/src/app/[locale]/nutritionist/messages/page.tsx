@@ -65,81 +65,6 @@ const TIER_TINT: Record<Tier, string> = {
   vip: '#a855f7',
 }
 
-const SEED: ThreadRow[] = [
-  {
-    id: 't1',
-    clientName: 'Layla Hijazi',
-    clientInitials: 'LH',
-    tier: 'vip',
-    unread: 2,
-    flagged: false,
-    preview: 'Logged 6h sleep last night, feels related to dinner timing…',
-    lastAgoMin: 60 * 3,
-    messages: [
-      { id: 'm1', fromMe: false, body: 'Down 0.4 kg this week — feels real, not just water.', ago: 60 * 26, read: true },
-      { id: 'm2', fromMe: true,  body: 'Beautiful. Energy in the afternoons?', ago: 60 * 25, read: true },
-      { id: 'm3', fromMe: false, body: 'Steady from 2-5pm. The lentil swap is doing it.', ago: 60 * 24, read: true },
-      { id: 'm4', fromMe: false, body: 'Logged 6h sleep last night, feels related to dinner timing — thoughts?', ago: 60 * 3,  read: false },
-      { id: 'm5', fromMe: false, body: 'Should I push dinner earlier?', ago: 60 * 3 - 5, read: false },
-    ],
-  },
-  {
-    id: 't2',
-    clientName: 'Maya Khalil',
-    clientInitials: 'MK',
-    tier: 'premium',
-    unread: 0,
-    flagged: false,
-    preview: 'Goal weight hit 🎉 What now?',
-    lastAgoMin: 60 * 14,
-    messages: [
-      { id: 'm1', fromMe: false, body: 'Goal weight hit 🎉 What now?', ago: 60 * 14, read: true },
-      { id: 'm2', fromMe: true, body: 'Incredible. Let\'s shift to maintenance — same plan, +200 kcal. We\'ll meet Tuesday.', ago: 60 * 13, read: true },
-    ],
-  },
-  {
-    id: 't3',
-    clientName: 'Omar Saadeh',
-    clientInitials: 'OS',
-    tier: 'premium',
-    unread: 0,
-    flagged: true,
-    preview: 'Skipped logging this week — was traveling.',
-    lastAgoMin: 60 * 96,
-    messages: [
-      { id: 'm1', fromMe: false, body: 'Skipped logging this week — was traveling.', ago: 60 * 96, read: true },
-      { id: 'm2', fromMe: true, body: 'Welcome back. Just one full day of logging this week and we\'re good. Travel notes for next time too.', ago: 60 * 95, read: true },
-    ],
-  },
-  {
-    id: 't4',
-    clientName: 'Karim Jubran',
-    clientInitials: 'KJ',
-    tier: 'vip',
-    unread: 1,
-    flagged: false,
-    preview: 'Lab results came back, sharing now…',
-    lastAgoMin: 60 * 8,
-    messages: [
-      { id: 'm1', fromMe: false, body: 'Lab results came back, sharing now (vitamin D very low).', ago: 60 * 8, read: false },
-    ],
-  },
-  {
-    id: 't5',
-    clientName: 'Diana Costa',
-    clientInitials: 'DC',
-    tier: 'premium',
-    unread: 0,
-    flagged: false,
-    preview: 'Loved this week\'s meals, especially the salmon bowl.',
-    lastAgoMin: 60 * 28,
-    messages: [
-      { id: 'm1', fromMe: false, body: 'Loved this week\'s meals, especially the salmon bowl.', ago: 60 * 28, read: true },
-      { id: 'm2', fromMe: true, body: 'Glad it landed. I\'ll add a second variation next week.', ago: 60 * 27, read: true },
-    ],
-  },
-]
-
 const TEMPLATE_KEYS = ['wellDone', 'logReminder', 'planUpdate', 'weighIn'] as const
 
 export default function NutritionistMessagesPage() {
@@ -149,8 +74,12 @@ export default function NutritionistMessagesPage() {
   const { profile } = useUser()
   const userId = profile?.id ?? null
 
-  const [threads, setThreads] = useState<ThreadRow[]>(SEED)
-  const [activeId, setActiveId] = useState<string | null>(SEED[0]!.id)
+  // Threads start empty — the page hydrates them from messages/profiles
+  // queries in a useEffect below. Was seeded with 5 fake threads
+  // (Layla Hijazi etc.) that made every nutritionist account look
+  // identical on first load.
+  const [threads, setThreads] = useState<ThreadRow[]>([])
+  const [activeId, setActiveId] = useState<string | null>(null)
   const [filter, setFilter] = useState<Filter>('all')
   const [query, setQuery] = useState('')
   const [draft, setDraft] = useState('')

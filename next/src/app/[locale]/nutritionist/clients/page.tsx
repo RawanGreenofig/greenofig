@@ -57,21 +57,6 @@ const TIER_TINT: Record<Tier, string> = {
   vip:     '#a855f7',
 }
 
-const SEED: Client[] = [
-  { id: 'c1',  name: 'Layla Hijazi',     initials: 'LH', email: 'layla@example.com',  tier: 'vip',     status: 'onTrack',  lastLogHours: 3,    weightDelta: -3.0, hasPlan: true,  joinedDaysAgo: 62 },
-  { id: 'c2',  name: 'Maya Khalil',      initials: 'MK', email: 'maya@example.com',   tier: 'premium', status: 'onTrack',  lastLogHours: 5,    weightDelta: -5.4, hasPlan: true,  joinedDaysAgo: 110 },
-  { id: 'c3',  name: 'Yousef Abu Shaer', initials: 'YA', email: 'yousef@example.com', tier: 'basic',   status: 'onTrack',  lastLogHours: 12,   weightDelta: -1.8, hasPlan: false, joinedDaysAgo: 28 },
-  { id: 'c4',  name: 'Omar Saadeh',      initials: 'OS', email: 'omar@example.com',   tier: 'premium', status: 'atRisk',   lastLogHours: 96,   weightDelta: -0.2, hasPlan: true,  joinedDaysAgo: 41 },
-  { id: 'c5',  name: 'Hala Mansour',     initials: 'HM', email: 'hala@example.com',   tier: 'basic',   status: 'atRisk',   lastLogHours: 36,   weightDelta:  0.4, hasPlan: false, joinedDaysAgo: 18 },
-  { id: 'c6',  name: 'Karim Jubran',     initials: 'KJ', email: 'karim@example.com',  tier: 'vip',     status: 'atRisk',   lastLogHours: 18,   weightDelta:  0.0, hasPlan: true,  joinedDaysAgo: 88 },
-  { id: 'c7',  name: 'Rasha Tarawneh',   initials: 'RT', email: 'rasha@example.com',  tier: 'premium', status: 'onTrack',  lastLogHours: 1,    weightDelta: -2.6, hasPlan: true,  joinedDaysAgo: 55 },
-  { id: 'c8',  name: 'Nour Bishara',     initials: 'NB', email: 'nour@example.com',   tier: 'basic',   status: 'onTrack',  lastLogHours: 8,    weightDelta: -1.1, hasPlan: false, joinedDaysAgo: 14 },
-  { id: 'c9',  name: 'Saif Haddad',      initials: 'SH', email: 'saif@example.com',   tier: 'free',    status: 'inactive', lastLogHours: 720,  weightDelta:  0.0, hasPlan: false, joinedDaysAgo: 200 },
-  { id: 'c10', name: 'Diana Costa',      initials: 'DC', email: 'diana@example.com',  tier: 'premium', status: 'onTrack',  lastLogHours: 4,    weightDelta: -4.2, hasPlan: true,  joinedDaysAgo: 130 },
-  { id: 'c11', name: 'Tareq Sukkar',     initials: 'TS', email: 'tareq@example.com',  tier: 'vip',     status: 'onTrack',  lastLogHours: 2,    weightDelta: -2.2, hasPlan: true,  joinedDaysAgo: 33 },
-  { id: 'c12', name: 'Reem Odeh',        initials: 'RO', email: 'reem@example.com',   tier: 'basic',   status: 'inactive', lastLogHours: 480,  weightDelta:  0.0, hasPlan: false, joinedDaysAgo: 90 },
-]
-
 const STATUS_TABS: (Status | 'all')[] = ['all', 'onTrack', 'atRisk', 'inactive']
 const TIER_TABS: (Tier | 'all')[] = ['all', 'free', 'basic', 'premium', 'vip']
 
@@ -172,7 +157,7 @@ export default function ClientsListPage() {
     })
   }, [])
 
-  const sourceList = (live.data && live.data.length > 0) ? live.data : SEED
+  const sourceList = useMemo(() => live.data ?? [], [live.data])
 
   const visible = useMemo(() => {
     const q = query.trim().toLowerCase()

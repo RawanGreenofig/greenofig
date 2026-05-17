@@ -43,39 +43,6 @@ interface FlaggedClient {
   flagValue?: number
 }
 
-const SCHEDULE: SessionRow[] = [
-  {
-    id: 's1',
-    clientName: 'Layla H.',
-    clientInitials: 'LH',
-    type: 'Follow-up',
-    startMin: 55,
-    durationMin: 30,
-  },
-  {
-    id: 's2',
-    clientName: 'Maya K.',
-    clientInitials: 'MK',
-    type: 'Deep dive',
-    startMin: 230,
-    durationMin: 60,
-  },
-  {
-    id: 's3',
-    clientName: 'Yousef A.',
-    clientInitials: 'YA',
-    type: 'Intro call',
-    startMin: 380,
-    durationMin: 20,
-  },
-]
-
-const FLAGGED: FlaggedClient[] = [
-  { id: 'c1', name: 'Omar S.',  initials: 'OS', flag: 'noLogin',         flagValue: 4 },
-  { id: 'c2', name: 'Hala M.',  initials: 'HM', flag: 'belowCalories',   flagValue: 3 },
-  { id: 'c3', name: 'Karim J.', initials: 'KJ', flag: 'weightStall',     flagValue: 14 },
-]
-
 interface NutritionistTodayData {
   activeClients: number
   unreadMessages: number
@@ -188,15 +155,18 @@ export default function NutritionistTodayPage() {
     }
   }, [profile?.id])
 
-  // MRR is computed on the server (admin analytics) — surface a placeholder
-  // here. Cluster I adds an /api/nutritionist/kpis endpoint for the rich number.
-  const sourceSchedule = (live.data?.schedule ?? []).length > 0 ? live.data!.schedule : SCHEDULE
-  const sourceFlagged  = live.data ? live.data.flagged : FLAGGED
+  // Real data only — no SEED fallback. Empty arrays render the page's
+  // existing empty states instead of "Layla H. / Maya K." fixtures.
+  // MRR isn't yet computed server-side for the nutritionist view; we
+  // surface 0 rather than a fake $1240, until /api/nutritionist/kpis
+  // lands and feeds it.
+  const sourceSchedule = live.data?.schedule ?? []
+  const sourceFlagged = live.data?.flagged ?? []
   const kpis = {
-    activeClients:  live.data?.activeClients ?? 28,
+    activeClients:  live.data?.activeClients ?? 0,
     sessionsToday:  sourceSchedule.length,
-    unreadMessages: live.data?.unreadMessages ?? 4,
-    mrrJod:         1240,
+    unreadMessages: live.data?.unreadMessages ?? 0,
+    mrrJod:         0,
   }
 
   return (

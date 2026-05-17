@@ -8,7 +8,6 @@ import {
   ArrowUpRight,
   Download,
   CalendarClock,
-  ShoppingBag,
   CreditCard,
   TrendingUp,
   type LucideIcon,
@@ -37,28 +36,6 @@ interface Payout {
   paidISO: string
   sessionsCount: number
 }
-
-const SOURCES: RevenueSource[] = [
-  { key: 'subscriptions', amount: 720, Icon: CreditCard,    tint: '#a3e635' },
-  { key: 'sessionsRev',   amount: 380, Icon: CalendarClock, tint: '#06b6d4' },
-  { key: 'storeRev',      amount: 110, Icon: ShoppingBag,   tint: '#e8912a' },
-]
-
-const MONTHLY = [
-  { month: 'Dec', revenue: 980 },
-  { month: 'Jan', revenue: 1080 },
-  { month: 'Feb', revenue: 1140 },
-  { month: 'Mar', revenue: 1180 },
-  { month: 'Apr', revenue: 1240 },
-  { month: 'May', revenue: 1240 },
-]
-
-const PAYOUTS: Payout[] = [
-  { id: '00482', amount: 1140, paidISO: '2026-04-03', sessionsCount: 28 },
-  { id: '00461', amount: 1080, paidISO: '2026-03-03', sessionsCount: 24 },
-  { id: '00440', amount: 980,  paidISO: '2026-02-03', sessionsCount: 22 },
-  { id: '00419', amount: 920,  paidISO: '2026-01-03', sessionsCount: 19 },
-]
 
 export default function EarningsPage() {
   const t = useTranslations('nutritionist.earningsPage')
@@ -93,21 +70,34 @@ export default function EarningsPage() {
     return { sessionsThisMonth: completed.length, sessionRevenue: revenue }
   }, [profile?.id])
 
+  // Real values only. Subscription/store revenue per nutritionist isn't
+  // wired up (no nutritionist linkage on subscriptions or orders yet),
+  // so the breakdown card shows just the session row. Was filled with
+  // fake $720 subs / $380 sessions / $110 store fixtures + a 6-month
+  // sine-wave fake chart + 4 hardcoded payouts. Removed.
   const sessionRevenue = live.data?.sessionRevenue ?? 0
-  const thisMonth = sessionRevenue > 0
-    ? sessionRevenue
-    : SOURCES.reduce((acc, s) => acc + s.amount, 0)
-  const totalEarned = MONTHLY.reduce((acc, m) => acc + m.revenue, 0) + PAYOUTS.reduce((a, p) => a + p.amount, 0)
+  const thisMonth = sessionRevenue
+  const totalSessions = live.data?.sessionsThisMonth ?? 0
   const pendingPayout = thisMonth
-  const totalSessions = (live.data?.sessionsThisMonth ?? 0) > 0
-    ? live.data!.sessionsThisMonth
-    : PAYOUTS.reduce((a, p) => a + p.sessionsCount, 0)
 
-  const firstMonthRevenue = MONTHLY[0]?.revenue ?? 0
-  const lastMonthRevenue = MONTHLY[MONTHLY.length - 1]?.revenue ?? 0
-  const monthDelta = firstMonthRevenue > 0
-    ? ((lastMonthRevenue - firstMonthRevenue) / firstMonthRevenue) * 100
-    : null
+  // Subscription / store revenue per nutritionist isn't wired up yet
+  // (no nutritionist linkage on subscriptions or orders), and there's
+  // no historical aggregates job, so monthly + payouts come back
+  // empty. Was filled with fake $720 subs / $380 sessions / $110 store
+  // fixtures + a 6-month sine-wave fake chart + 4 hardcoded payouts.
+  // Removed — the chart + payout list now render empty states.
+  const SOURCES: RevenueSource[] = [
+    { key: 'sessionsRev', amount: sessionRevenue, Icon: CalendarClock, tint: '#06b6d4' },
+  ]
+  const MONTHLY: { month: string; revenue: number }[] = []
+  const PAYOUTS: Payout[] = []
+  const totalEarned = 0
+  const firstRevenue = MONTHLY[0]?.revenue ?? 0
+  const lastRevenue = MONTHLY[MONTHLY.length - 1]?.revenue ?? 0
+  const monthDelta =
+    firstRevenue > 0
+      ? ((lastRevenue - firstRevenue) / firstRevenue) * 100
+      : null
   const peakRevenue = MONTHLY.reduce((max, m) => Math.max(max, m.revenue), 0)
 
   return (
@@ -270,6 +260,11 @@ export default function EarningsPage() {
             </span>
           )}
         </header>
+        {MONTHLY.length === 0 ? (
+          <p className="py-12 text-sm text-fg-3 text-center">
+            {t('noPayoutsBody')}
+          </p>
+        ) : (
         <div className="w-full h-[260px]" dir="ltr">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={MONTHLY} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
@@ -326,6 +321,7 @@ export default function EarningsPage() {
             </BarChart>
           </ResponsiveContainer>
         </div>
+        )}
       </article>
 
       {/* Payouts */}

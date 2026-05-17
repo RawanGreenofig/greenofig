@@ -46,19 +46,6 @@ const TYPE_TINT: Record<SessionType, string> = {
   deepDive:  '#a855f7',
 }
 
-const SESSIONS: Session[] = [
-  { id: 's1', date: '2026-05-04', start: '10:00', durationMin: 30, clientName: 'Layla H.',  clientInitials: 'LH', type: 'followUp' },
-  { id: 's2', date: '2026-05-04', start: '15:00', durationMin: 60, clientName: 'Maya K.',   clientInitials: 'MK', type: 'deepDive' },
-  { id: 's3', date: '2026-05-05', start: '09:30', durationMin: 20, clientName: 'Yousef A.', clientInitials: 'YA', type: 'introCall' },
-  { id: 's4', date: '2026-05-05', start: '14:00', durationMin: 30, clientName: 'Tareq S.',  clientInitials: 'TS', type: 'followUp' },
-  { id: 's5', date: '2026-05-06', start: '11:00', durationMin: 60, clientName: 'Diana C.',  clientInitials: 'DC', type: 'deepDive' },
-  { id: 's6', date: '2026-05-07', start: '10:30', durationMin: 30, clientName: 'Rasha T.',  clientInitials: 'RT', type: 'followUp' },
-  { id: 's7', date: '2026-05-07', start: '16:30', durationMin: 30, clientName: 'Nour B.',   clientInitials: 'NB', type: 'followUp' },
-  { id: 's8', date: '2026-05-08', start: '09:00', durationMin: 20, clientName: 'Karim J.',  clientInitials: 'KJ', type: 'introCall' },
-  { id: 's9', date: '2026-05-08', start: '13:00', durationMin: 60, clientName: 'Hala M.',   clientInitials: 'HM', type: 'deepDive' },
-  { id: 's10', date: '2026-05-09', start: '10:00', durationMin: 30, clientName: 'Reem O.',  clientInitials: 'RO', type: 'followUp' },
-]
-
 const DAY_START_HOUR = 8
 const DAY_END_HOUR = 20
 
@@ -69,8 +56,18 @@ export default function CalendarPage() {
   const { profile } = useUser()
 
   const [view, setView] = useState<View>('week')
-  const [anchor, setAnchor] = useState<Date>(() => new Date('2026-05-04'))
-  const [selectedDay, setSelectedDay] = useState<string | null>('2026-05-04')
+  // Anchor the calendar on today, not a hardcoded 2026-05-04 (which
+  // was the date the SEED fixtures were dated for). Now that SEED is
+  // gone, the calendar would have shown an empty week from May 2026
+  // forever otherwise.
+  const [anchor, setAnchor] = useState<Date>(() => {
+    const d = new Date()
+    d.setHours(0, 0, 0, 0)
+    return d
+  })
+  const [selectedDay, setSelectedDay] = useState<string | null>(() =>
+    new Date().toISOString().slice(0, 10),
+  )
 
   // Pull bookings inside the visible month window so both week + month
   // views have everything they need without re-fetching on view toggle.
@@ -126,7 +123,7 @@ export default function CalendarPage() {
     })
   }, [profile?.id, anchor.getMonth(), anchor.getFullYear()])
 
-  const sessions = (live.data && live.data.length > 0) ? live.data : SESSIONS
+  const sessions = live.data ?? []
 
   const navLabel = useMemo(() => {
     if (view === 'week') {
@@ -187,7 +184,11 @@ export default function CalendarPage() {
           </button>
           <button
             type="button"
-            onClick={() => setAnchor(new Date('2026-05-04'))}
+            onClick={() => {
+              const today = new Date()
+              today.setHours(0, 0, 0, 0)
+              setAnchor(today)
+            }}
             className="px-3 h-9 text-xs font-semibold text-fg-1 hover:bg-surface-raised rounded-pill"
           >
             {tPage('today')}

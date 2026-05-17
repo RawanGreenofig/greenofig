@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { useParams } from 'next/navigation'
 import { Avatar } from '@/components/Avatar'
@@ -97,38 +97,32 @@ const TIER_TINT: Record<Tier, string> = {
   vip:     '#a855f7',
 }
 
-const SEED_PROFILE: ClientProfile = {
-  id: 'c1',
-  name: 'Layla Hijazi',
-  initials: 'LH',
-  email: 'layla@example.com',
-  phone: '+962 79 555 1234',
-  joinedISO: '2026-03-02',
-  tier: 'vip',
-  status: 'onTrack',
-  primaryGoal: 'Lose 5 kg in 3 months',
-  preferences: ['Mediterranean', 'High-protein', 'Halal'],
-  allergies: ['Tree nuts'],
-  conditions: ['PCOS'],
-  startWeight: 78.4,
-  currentWeight: 75.4,
-  targetWeight: 73.0,
-  lastLogHours: 3,
-  adherencePct: 84,
-  hasPlan: true,
-}
-
-function buildWeightSeries(start: number, days = 30) {
-  const today = new Date()
-  const series: { date: string; weight: number }[] = []
-  let w = start
-  for (let i = days - 1; i >= 0; i--) {
-    const d = new Date(today)
-    d.setDate(today.getDate() - i)
-    w = w - 0.04 + Math.sin(i / 5) * 0.18
-    series.push({ date: d.toISOString().slice(5, 10), weight: +w.toFixed(1) })
+/** Placeholder rendered before the real profile fetch resolves. Was
+ *  a fully-populated "Layla Hijazi VIP w/ PCOS" SEED_PROFILE that
+ *  made every newly-opened client look identical for a flash. The
+ *  empty shape below makes the chrome render without misrepresenting
+ *  the actual client. */
+function blankProfile(id: string): ClientProfile {
+  return {
+    id,
+    name: '',
+    initials: '',
+    email: '',
+    phone: '',
+    joinedISO: new Date().toISOString().slice(0, 10),
+    tier: 'free',
+    status: 'inactive',
+    primaryGoal: '',
+    preferences: [],
+    allergies: [],
+    conditions: [],
+    startWeight: 0,
+    currentWeight: 0,
+    targetWeight: 0,
+    lastLogHours: 0,
+    adherencePct: 0,
+    hasPlan: false,
   }
-  return series
 }
 
 export default function ClientDetailPage() {
@@ -224,10 +218,7 @@ export default function ClientDetailPage() {
     }
   }, [params.id])
 
-  const profile: ClientProfile = live.data ?? {
-    ...SEED_PROFILE,
-    id: params.id ?? SEED_PROFILE.id,
-  }
+  const profile: ClientProfile = live.data ?? blankProfile(params.id ?? '')
 
   return (
     <div className="px-4 md:px-8 py-6 md:py-8 max-w-screen-xl mx-auto space-y-6">
@@ -395,12 +386,7 @@ function OverviewPane({
     },
     [profile.id],
   )
-  const fallback = useMemo(
-    () => buildWeightSeries(profile.startWeight),
-    [profile.startWeight],
-  )
-  const series =
-    liveSeries.data && liveSeries.data.length > 0 ? liveSeries.data : fallback
+  const series = liveSeries.data ?? []
   const delta = +(profile.currentWeight - profile.startWeight).toFixed(1)
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -831,12 +817,7 @@ function ProgressPane({
     },
     [profile.id],
   )
-  const fallback = useMemo(
-    () => buildWeightSeries(profile.startWeight, 60),
-    [profile.startWeight],
-  )
-  const series =
-    liveSeries.data && liveSeries.data.length > 0 ? liveSeries.data : fallback
+  const series = liveSeries.data ?? []
   return (
     <div className="space-y-6">
       <p className="text-sm text-fg-2">{t('progress.subtitle')}</p>

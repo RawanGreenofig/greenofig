@@ -61,85 +61,15 @@ const CATEGORY_TINT: Record<Category, string> = {
   story:        '#a855f7',
 }
 
-const SEED: Post[] = [
-  {
-    id: 'p1',
-    title: 'Why protein at breakfast changes your day',
-    excerpt: '30 g of protein in the morning steadies blood sugar and the rest of your day reads differently.',
-    body: 'Long-form post body…',
-    category: 'tip',
-    status: 'published',
-    audience: 'all',
-    publishAt: '2026-04-29T08:00:00Z',
-    views: 1842,
-    likes: 312,
-    comments: 47,
-    hue: 'rgb(163 230 53 / 0.18)',
-  },
-  {
-    id: 'p2',
-    title: 'The PCOS plate, simplified',
-    excerpt: 'Three components, three rules. Start tomorrow.',
-    body: 'Body…',
-    category: 'article',
-    status: 'published',
-    audience: 'all',
-    publishAt: '2026-04-22T08:00:00Z',
-    views: 2104,
-    likes: 412,
-    comments: 88,
-    hue: 'rgb(6 182 212 / 0.18)',
-  },
-  {
-    id: 'p3',
-    title: 'Ramadan kit drop — limited',
-    excerpt: 'A small batch of dates, tahini, and our broth blend, available for two weeks only.',
-    body: 'Body…',
-    category: 'announcement',
-    status: 'scheduled',
-    audience: 'all',
-    publishAt: '2026-05-12T07:00:00Z',
-    views: 0,
-    likes: 0,
-    comments: 0,
-    hue: 'rgb(232 145 42 / 0.18)',
-  },
-  {
-    id: 'p4',
-    title: 'Salmon bowl variation: tahini drizzle',
-    excerpt: 'Same baked salmon plate, swap olive oil for tahini-lemon for a different flavour profile.',
-    body: 'Body…',
-    category: 'recipe',
-    status: 'draft',
-    audience: 'premium',
-    publishAt: '',
-    views: 0,
-    likes: 0,
-    comments: 0,
-    hue: 'rgb(132 204 22 / 0.18)',
-  },
-  {
-    id: 'p5',
-    title: 'Laila lost 8 kg without giving up dessert',
-    excerpt: 'A patient story that changed how I write meal plans.',
-    body: 'Body…',
-    category: 'story',
-    status: 'draft',
-    audience: 'all',
-    publishAt: '',
-    views: 0,
-    likes: 0,
-    comments: 0,
-    hue: 'rgb(168 85 247 / 0.18)',
-  },
-]
-
 export default function ContentPage() {
   const t = useTranslations('nutritionist.contentPage')
   const tNut = useTranslations('nutritionist')
   const { profile } = useUser()
 
-  const [posts, setPosts] = useState<Post[]>(SEED)
+  // Posts start empty; hydrated below from the real `posts` table.
+  // Was seeded with 5 fixture posts ("Why protein at breakfast", etc.)
+  // that masqueraded as the nutritionist's own work.
+  const [posts, setPosts] = useState<Post[]>([])
   const [filter, setFilter] = useState<'all' | Status>('all')
   const [query, setQuery] = useState('')
   const [editing, setEditing] = useState<Post | null>(null)

@@ -63,21 +63,14 @@ interface Product {
 
 const CATEGORIES: Category[] = ['supplements', 'superfoods', 'snacks', 'kitchen', 'books']
 
-const SEED: Product[] = [
-  { id: 'p1',  name: 'Daily Greens Powder',         category: 'superfoods',  price: 28, stock: 14, description: 'Grass-based blend with chlorella and spirulina.', drNote: 'My morning baseline — one scoop in cold water before coffee.', drPick: true,  visible: true,  hue: 'rgb(163 230 53 / 0.18)' },
-  { id: 'p2',  name: 'Magnesium Glycinate 200 mg',  category: 'supplements', price: 19, stock: 22, description: 'Glycinate for absorption and sleep onset.',          drNote: '', drPick: true,  visible: true,  hue: 'rgb(168 85 247 / 0.18)' },
-  { id: 'p3',  name: 'Vitamin D3 + K2',             category: 'supplements', price: 24, stock: 4,  description: 'D3 with K2 for proper calcium routing.',             drNote: '', drPick: false, visible: true,  hue: 'rgb(232 145 42 / 0.18)' },
-  { id: 'p4',  name: 'Mediterranean Olive Oil',     category: 'kitchen',     price: 22, stock: 30, description: 'Cold-pressed extra virgin from Ajloun.',             drNote: 'Use raw — drizzle on plates after cooking.', drPick: true, visible: true, hue: 'rgb(132 204 22 / 0.18)' },
-  { id: 'p5',  name: 'Almond Butter, raw',          category: 'snacks',      price: 14, stock: 24, description: 'No oils added, no sugar, just almonds.',             drNote: '', drPick: false, visible: true,  hue: 'rgb(232 145 42 / 0.16)' },
-  { id: 'p6',  name: 'Probiotic 25 Billion',        category: 'supplements', price: 38, stock: 0,  description: 'Multi-strain shelf-stable probiotic.',               drNote: '', drPick: true,  visible: false, hue: 'rgb(34 197 94 / 0.18)' },
-  { id: 'p7',  name: 'Eat Real — Nutrition Coach Rawan',        category: 'books',       price: 18, stock: 12, description: 'Hardback first edition. Signed copies available.',   drNote: 'My take on Mediterranean eating, written for Arab kitchens.', drPick: true, visible: true,  hue: 'rgb(61 122 74 / 0.22)' },
-]
-
 export default function StoreCurationPage() {
   const t = useTranslations('nutritionist.storeCurationPage')
   const tNut = useTranslations('nutritionist')
 
-  const [products, setProducts] = useState<Product[]>(SEED)
+  // Empty until the products query below resolves. Was a 7-row SEED
+  // (greens, magnesium, olive oil, the "Eat Real" book…) that made
+  // the curation page look stocked even on a fresh install.
+  const [products, setProducts] = useState<Product[]>([])
   const [filter, setFilter] = useState<'all' | 'visible' | 'hidden' | 'pick'>('all')
   const [query, setQuery] = useState('')
   const [editing, setEditing] = useState<Product | null>(null)

@@ -47,17 +47,6 @@ interface Turn {
   saved?: boolean
 }
 
-const DOCS: Doc[] = [
-  { id: 'd1', name: 'NIH — Magnesium fact sheet 2024.pdf',                       uploadedISO: '2026-04-12', sizeMb: 1.4 },
-  { id: 'd2', name: 'Hawley et al — Protein timing & MPS.pdf',                   uploadedISO: '2026-03-30', sizeMb: 2.1 },
-  { id: 'd3', name: 'Mediterranean diet & PCOS systematic review.pdf',           uploadedISO: '2026-03-18', sizeMb: 3.6 },
-  { id: 'd4', name: 'Vitamin D guidelines — Endocrine Society 2023.pdf',         uploadedISO: '2026-02-22', sizeMb: 0.9 },
-  { id: 'd5', name: 'Intermittent fasting — women specific responses.pdf',      uploadedISO: '2026-02-05', sizeMb: 4.2 },
-]
-
-const PRESET_ANSWER =
-  "Magnesium glycinate generally reaches peak plasma concentration faster than citrate (about 90 minutes vs. 2.5 hours), and it tends to be better tolerated by clients with sensitive GI systems because glycine acts as a buffering ligand. For sleep onset specifically, the literature is mixed, but the small RCTs that show benefit (Abbasi 2012, Boyle 2017) used 200–400 mg of elemental magnesium 60–90 min before bed.\n\nClinically, I would start at 200 mg glycinate 60 min before bed, hold for 14 days, and use sleep latency as the outcome rather than sleep quality scores."
-
 export default function ResearchPage() {
   return (
     <FeatureGate settingKey="research_desk_enabled" label="Research Desk">
@@ -73,7 +62,10 @@ function ResearchPageInner() {
 
   const [query, setQuery] = useState('')
   const [docQuery, setDocQuery] = useState('')
-  const [docs, setDocs] = useState<Doc[]>(DOCS)
+  // Empty until reloadDocs() resolves. Was seeded with 5 fake PDFs
+  // (NIH magnesium, Hawley protein timing, etc.) so the library
+  // looked populated even when no documents had been uploaded.
+  const [docs, setDocs] = useState<Doc[]>([])
   const [turns, setTurns] = useState<Turn[]>([])
   const [conversationId, setConversationId] = useState<string | null>(null)
   const [thinking, setThinking] = useState(false)
@@ -170,14 +162,14 @@ function ResearchPageInner() {
     if (el) el.scrollTop = el.scrollHeight
   }, [turns.length, thinking])
 
-  const ask = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!query.trim() || thinking) return
-    const q = query.trim()
-    setQuery('')
+  // Single source of truth for the ask flow. Form submit and the
+  // regenerate button both call it with a question string.
+  const askQuestion = (q: string) => {
+    if (!q.trim() || thinking) return
+    const question = q.trim()
     setTurns((curr) => [
       ...curr,
-      { id: `u-${Date.now()}`, role: 'user', body: q },
+      { id: `u-${Date.now()}`, role: 'user', body: question },
     ])
     setThinking(true)
 
@@ -186,7 +178,7 @@ function ResearchPageInner() {
         const res = await fetch('/api/research', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ question: q, conversationId }),
+          body: JSON.stringify({ question, conversationId }),
         })
         if (res.ok) {
           const data = (await res.json()) as {
@@ -208,19 +200,20 @@ function ResearchPageInner() {
           return
         }
       } catch {
-        /* fall through to demo answer */
+        /* fall through to error message */
       }
-      // Fallback demo answer (env unset / API error)
+      // API call fell through. Don't fabricate a clinical answer —
+      // the previous fallback was a hardcoded magnesium-glycinate
+      // passage that could read as the AI's real reply. Surface the
+      // failure honestly so the nutritionist retries instead of
+      // citing fixture text in a client session.
       setTurns((curr) => [
         ...curr,
         {
           id: `a-${Date.now()}`,
           role: 'assistant',
-          body: PRESET_ANSWER,
-          sources: [
-            { docId: 'd1', passage: 'Magnesium glycinate has been shown to be highly bioavailable in clinical settings…' },
-            { docId: 'd5', passage: 'Female-specific responses to magnesium intake during luteal phase…' },
-          ],
+          body:
+            'Research desk is currently unavailable. Try again in a moment, or ask the team to check the AI configuration if this persists.',
         },
       ])
       setThinking(false)
@@ -238,23 +231,26 @@ function ResearchPageInner() {
       ),
     )
 
+  // Wrapper for the form's onSubmit. Was inlined into ask() — now
+  // ask() takes a question string so regenerate() can reuse it.
+  const ask = (e: React.FormEvent) => {
+    e.preventDefault()
+    const q = query.trim()
+    if (!q) return
+    setQuery('')
+    askQuestion(q)
+  }
+
+  // Re-run the user's question that preceded this assistant turn.
+  // Was a setTimeout + hardcoded magnesium glycinate passage that
+  // returned the same canned text no matter what was asked.
   const regenerate = (id: string) => {
     const idx = turns.findIndex((t) => t.id === id)
     if (idx <= 0) return
-    setThinking(true)
+    const prior = turns[idx - 1]
+    if (!prior || prior.role !== 'user') return
     setTurns((curr) => curr.filter((_, i) => i !== idx))
-    window.setTimeout(() => {
-      setTurns((curr) => [
-        ...curr,
-        {
-          id: `a-${Date.now()}`,
-          role: 'assistant',
-          body: PRESET_ANSWER,
-          sources: [{ docId: 'd1', passage: 'Magnesium glycinate has been shown…' }],
-        },
-      ])
-      setThinking(false)
-    }, 900)
+    askQuestion(prior.body)
   }
 
   return (
