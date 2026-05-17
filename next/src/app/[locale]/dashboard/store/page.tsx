@@ -20,6 +20,7 @@ import {
 import { useUser } from '@/lib/hooks/useUser'
 import { useFeature } from '@/lib/hooks/useFeature'
 import { useSupabaseQuery } from '@/lib/hooks/useSupabaseQuery'
+import { usePlatformSetting } from '@/lib/hooks/usePlatformSetting'
 import { Link } from '@/i18n/navigation'
 
 type Category =
@@ -53,10 +54,12 @@ const CATEGORIES: Category[] = [
   'books',
 ]
 
-const TIER_DISCOUNT_PCT: Record<string, number> = {
-  premium: 10,
-  vip: 15,
-}
+// Tier discount used to be a hardcoded { premium: 10, vip: 15 } in
+// this file while Stripe checkout actually used a single
+// `member_discount_percent` from platform_settings. The two diverged
+// and confused users (cart showed 10% for premium, server charged
+// based on the admin-set percent). We now read the admin-controlled
+// value directly and apply it to any paid tier.
 
 /** Captured at add-time so the cart drawer can render even when the
  *  live products query hasn't returned yet (or returns something
@@ -220,7 +223,21 @@ export default function StorePage() {
     (acc, l) => acc + l.product.price * l.qty,
     0,
   )
-  const tierPct = tier ? TIER_DISCOUNT_PCT[tier] ?? 0 : 0
+  // member_discount_percent is the single admin-controlled member
+  // discount applied at Stripe checkout. Premium/VIP both qualify;
+  // free/basic do not. Cap defensively at 100 so a misconfig can't
+  // run negative.
+  const { value: memberDiscountRaw } =
+    usePlatformSetting<number>('member_discount_percent')
+  const memberDiscount = (() => {
+    const n =
+      typeof memberDiscountRaw === 'number'
+        ? memberDiscountRaw
+        : Number(memberDiscountRaw ?? 0)
+    return Number.isFinite(n) && n > 0 && n <= 100 ? Math.floor(n) : 0
+  })()
+  const isMemberTier = tier === 'premium' || tier === 'vip'
+  const tierPct = isMemberTier ? memberDiscount : 0
   const couponPct = couponApplied?.pct ?? 0
   const totalDiscountPct = Math.min(40, tierPct + couponPct)
   const discountAmount = Math.round(subtotal * totalDiscountPct) / 100
@@ -263,16 +280,43 @@ export default function StorePage() {
     )
   }
 
-  const applyCoupon = (e: React.FormEvent) => {
+  // Hits /api/coupons/redeem against the real `coupons` table.
+  // Replaces the previous hardcoded WELCOME10/GREEN15 check so codes
+  // are created and revoked by coaches/admins (via /api/coupons/create)
+  // instead of source edits. Only percent-type coupons translate to a
+  // pct on this screen — fixed-amount coupons would need the cart to
+  // know exact cents (deferred until we render in cents end-to-end).
+  const applyCoupon = async (e: React.FormEvent) => {
     e.preventDefault()
     const code = coupon.trim().toUpperCase()
-    if (code === 'WELCOME10') {
-      setCouponApplied({ pct: 10 })
+    if (!code) {
+      setCouponApplied(null)
+      setCouponError(true)
+      return
+    }
+    try {
+      const res = await fetch('/api/coupons/redeem', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code }),
+      })
+      if (!res.ok) {
+        setCouponApplied(null)
+        setCouponError(true)
+        return
+      }
+      const data = (await res.json()) as {
+        type?: 'percent' | 'fixed'
+        value?: number
+      }
+      if (data.type !== 'percent' || typeof data.value !== 'number') {
+        setCouponApplied(null)
+        setCouponError(true)
+        return
+      }
+      setCouponApplied({ pct: Math.min(100, Math.max(0, data.value)) })
       setCouponError(false)
-    } else if (code === 'GREEN15') {
-      setCouponApplied({ pct: 15 })
-      setCouponError(false)
-    } else {
+    } catch {
       setCouponApplied(null)
       setCouponError(true)
     }

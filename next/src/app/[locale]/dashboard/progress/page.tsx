@@ -2,7 +2,7 @@
 
 
 import { motion } from 'framer-motion'
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import {
   Scale,
@@ -28,6 +28,7 @@ import {
 } from 'recharts'
 import { useUser } from '@/lib/hooks/useUser'
 import { useSupabaseQuery } from '@/lib/hooks/useSupabaseQuery'
+import { getBrowserSupabase } from '@/lib/supabase/client'
 
 type Period = '7d' | '30d' | '90d' | '1y'
 
@@ -242,7 +243,7 @@ export default function ProgressPage() {
       </section>
 
       {/* Achievements */}
-      <AchievementsGrid t={t} />
+      <AchievementsGrid t={t} userId={profile?.id ?? null} />
 
       {/* Log weight modal */}
       {logOpen && (
@@ -462,9 +463,104 @@ function PhotosCard({
 
 function AchievementsGrid({
   t,
+  userId,
 }: {
   t: ReturnType<typeof useTranslations>
+  userId: string | null
 }) {
+  // Computed flags — the four badges used to all be hardcoded with
+  // `first_log` permanently earned and the rest permanently locked.
+  // Now they reflect real signals from nutrition_logs and
+  // progress_entries.
+  const [flags, setFlags] = useState({
+    firstLog: false,
+    weekStreak: false,
+    firstKg: false,
+    consistent: false,
+  })
+
+  useEffect(() => {
+    const supabase = getBrowserSupabase()
+    if (!supabase || !userId) return
+    let cancelled = false
+    void (async () => {
+      const sevenAgo = new Date()
+      sevenAgo.setDate(sevenAgo.getDate() - 6)
+      sevenAgo.setHours(0, 0, 0, 0)
+      const sixtyAgo = new Date()
+      sixtyAgo.setDate(sixtyAgo.getDate() - 60)
+      sixtyAgo.setHours(0, 0, 0, 0)
+
+      const [logsAnyRes, logs7Res, logs60Res, weighIns] = await Promise.all([
+        supabase
+          .from('nutrition_logs')
+          .select('id', { count: 'exact', head: true })
+          .eq('user_id', userId),
+        supabase
+          .from('nutrition_logs')
+          .select('logged_at')
+          .eq('user_id', userId)
+          .gte('logged_at', sevenAgo.toISOString()),
+        supabase
+          .from('nutrition_logs')
+          .select('logged_at')
+          .eq('user_id', userId)
+          .gte('logged_at', sixtyAgo.toISOString()),
+        supabase
+          .from('progress_entries')
+          .select('weight_kg, entry_date')
+          .eq('user_id', userId)
+          .not('weight_kg', 'is', null)
+          .order('entry_date', { ascending: true })
+          .limit(500),
+      ])
+
+      if (cancelled) return
+
+      const totalLogs = logsAnyRes.count ?? 0
+
+      // Week streak = at least 7 distinct calendar days with a log in
+      // the last 7 days (i.e. every day this week had at least one
+      // entry).
+      const days7 = new Set<string>()
+      ;((logs7Res.data as { logged_at: string }[] | null) ?? []).forEach(
+        (r) => {
+          days7.add(r.logged_at.slice(0, 10))
+        },
+      )
+      const weekStreak = days7.size >= 7
+
+      // "Consistent" = 30+ distinct logging days in the last 60 days.
+      // Captures real habit-building without demanding a 30-day streak.
+      const days60 = new Set<string>()
+      ;((logs60Res.data as { logged_at: string }[] | null) ?? []).forEach(
+        (r) => {
+          days60.add(r.logged_at.slice(0, 10))
+        },
+      )
+      const consistent = days60.size >= 30
+
+      // First kg lost = oldest weight - newest weight >= 1 kg.
+      const wRows =
+        (weighIns.data as { weight_kg: number | null }[] | null) ?? []
+      const weights = wRows
+        .map((r) => r.weight_kg)
+        .filter((w): w is number => typeof w === 'number' && w > 0)
+      const firstKg =
+        weights.length >= 2 && weights[0] - weights[weights.length - 1] >= 1
+
+      setFlags({
+        firstLog: totalLogs >= 1,
+        weekStreak,
+        firstKg,
+        consistent,
+      })
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [userId])
+
   const items: {
     id: string
     title: string
@@ -477,7 +573,7 @@ function AchievementsGrid({
       id: 'first_log',
       title: t('ach_first_log'),
       body: t('ach_first_log_body'),
-      earned: true,
+      earned: flags.firstLog,
       Icon: Trophy,
       color: '#fbbf24',
     },
@@ -485,7 +581,7 @@ function AchievementsGrid({
       id: 'week_streak',
       title: t('ach_week_streak'),
       body: t('ach_week_streak_body'),
-      earned: false,
+      earned: flags.weekStreak,
       Icon: Flame,
       color: '#fb923c',
     },
@@ -493,7 +589,7 @@ function AchievementsGrid({
       id: 'first_kg',
       title: t('ach_first_kg'),
       body: t('ach_first_kg_body'),
-      earned: false,
+      earned: flags.firstKg,
       Icon: Scale,
       color: '#60a5fa',
     },
@@ -501,7 +597,7 @@ function AchievementsGrid({
       id: 'consistent',
       title: t('ach_consistent'),
       body: t('ach_consistent_body'),
-      earned: false,
+      earned: flags.consistent,
       Icon: Star,
       color: '#fbbf24',
     },
