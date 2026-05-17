@@ -233,124 +233,6 @@ function CommunityPageInner() {
             }}
           />
 
-          {/* Pinned post — Nutrition Coach Rawan */}
-          <article
-            style={{
-              background: 'var(--gf-surface-raised)',
-              border: '1px solid var(--gf-border)',
-              borderRadius: 16,
-              padding: 20,
-            }}
-          >
-            <header className="flex items-center gap-3">
-              {/* Plain <img> + DR fallback. next/image was sometimes
-               * rendering blank for this avatar in production; the
-               * underlying file (/images/dr-rawan-othman.jpg) is a
-               * 2.4MB jpg that the optimizer occasionally fails to
-               * serve. The fallback below picks up if onError fires. */}
-              <div
-                style={{
-                  position: 'relative',
-                  width: 40,
-                  height: 40,
-                  flexShrink: 0,
-                }}
-              >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src="/images/dr-rawan-othman.jpg"
-                  alt="Nutrition Coach Rawan Othman"
-                  width={40}
-                  height={40}
-                  style={{
-                    width: 40,
-                    height: 40,
-                    borderRadius: '50%',
-                    objectFit: 'cover',
-                    objectPosition: 'center top',
-                    border: '2px solid #4ade80',
-                    display: 'block',
-                  }}
-                  onError={(e) => {
-                    e.currentTarget.style.display = 'none'
-                    const fallback = e.currentTarget
-                      .nextElementSibling as HTMLElement | null
-                    if (fallback) fallback.style.display = 'flex'
-                  }}
-                />
-                <span
-                  aria-hidden
-                  style={{
-                    display: 'none',
-                    position: 'absolute',
-                    inset: 0,
-                    width: 40,
-                    height: 40,
-                    borderRadius: '50%',
-                    background: 'linear-gradient(135deg, #4ade80, #60a5fa)',
-                    color: '#fff',
-                    fontSize: 13,
-                    fontWeight: 700,
-                    lineHeight: 1,
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    border: '2px solid #4ade80',
-                  }}
-                >
-                  DR
-                </span>
-              </div>
-              <div className="min-w-0">
-                <p
-                  className="inline-flex items-center truncate"
-                  style={{ fontSize: 14, fontWeight: 700, color: 'var(--gf-fg-1)', gap: 10 }}
-                >
-                  Nutrition Coach Rawan Othman
-                  <BadgeCheck
-                    className="w-4 h-4 shrink-0"
-                    strokeWidth={1.75}
-                    style={{ color: '#60a5fa' }}
-                  />
-                </p>
-                <div className="mt-1 flex items-center gap-2 flex-wrap">
-                  <span
-                    className="inline-flex items-center gap-1"
-                    style={{ fontSize: 11, color: 'var(--gf-fg-3)' }}
-                  >
-                    <Pin className="w-3 h-3" strokeWidth={2} />
-                    Pinned
-                  </span>
-                </div>
-              </div>
-              <span
-                className="ms-auto"
-                style={{ fontSize: 12, color: 'var(--gf-fg-3)' }}
-              >
-                4h
-              </span>
-            </header>
-
-            <p
-              style={{
-                fontSize: 14,
-                color: 'var(--gf-fg-2)',
-                lineHeight: 1.6,
-                marginTop: 12,
-              }}
-            >
-              Reminder for the week: aim for 30g of protein at breakfast.
-              It steadies blood sugar and the rest of your day reads
-              differently. Drop a 🙋 if you&apos;d like a quick 5-min recipe
-              shortlist!
-            </p>
-
-            <PostActions
-              postId="dr-rawan-protein-breakfast"
-              initialLikes={38}
-              initialComments={12}
-            />
-          </article>
-
           {/* Upgrade banner — only when free */}
           {isFree && (
             <div
@@ -398,63 +280,11 @@ function CommunityPageInner() {
             </div>
           )}
 
-          {/* Tip of the week */}
-          <article
-            style={{
-              background: 'var(--gf-surface-raised)',
-              border: '1px solid var(--gf-border)',
-              borderRadius: 16,
-              padding: 20,
-            }}
-          >
-            <header className="flex items-center gap-3">
-              <span
-                style={{
-                  width: 40,
-                  height: 40,
-                  borderRadius: '50%',
-                  background: 'rgba(74,222,128,0.10)',
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: 20,
-                }}
-              >
-                💡
-              </span>
-              <div>
-                <p style={{ fontSize: 14, fontWeight: 700, color: 'var(--gf-fg-1)' }}>
-                  Tip of the week
-                </p>
-                <p style={{ fontSize: 12, color: 'var(--gf-fg-3)', marginTop: 2 }}>
-                  Greenofig community
-                </p>
-              </div>
-              <span className="ms-auto" style={{ fontSize: 12, color: 'var(--gf-fg-3)' }}>
-                2d
-              </span>
-            </header>
-            <p
-              style={{
-                fontSize: 14,
-                color: 'var(--gf-fg-2)',
-                lineHeight: 1.6,
-                marginTop: 12,
-              }}
-            >
-              Eat the rainbow — pick three different colored vegetables this
-              week. Variety in pigment usually means variety in
-              micronutrients, and your gut bacteria notice within 48 hours.
-            </p>
-            <PostActions
-              postId="tip-of-the-week-eat-the-rainbow"
-              initialLikes={14}
-              initialComments={3}
-            />
-          </article>
-
-          {/* Real published posts from the DB — likes + comments here
-              persist via /api/dashboard/posts/* and migration 025. */}
+          {/* All published posts from the DB. Likes + comments
+              persist via /api/dashboard/posts/* (migration 025).
+              The two demo posts customers used to see inline have
+              been migrated to real rows by migration 027 — they
+              appear in this feed automatically, pinned first. */}
           <RealPostsFeed />
         </main>
 
@@ -1080,6 +910,7 @@ function RealPostsFeed() {
       content: string | null
       author_name: string
       created_at: string
+      pinned: boolean
     }[]
   >([])
 
@@ -1095,12 +926,17 @@ function RealPostsFeed() {
         content: string | null
         author_id: string
         created_at: string
+        pinned: boolean | null
       }
+      // pinned posts first (Coach Rawan's weekly reminders), then
+      // most-recent. Supabase order() chains in reverse — last call
+      // wins as primary sort key.
       const { data } = await supabase
         .from('posts')
-        .select('id, title, excerpt, content, author_id, created_at')
+        .select('id, title, excerpt, content, author_id, created_at, pinned')
         .eq('is_published', true)
         .order('created_at', { ascending: false })
+        .order('pinned', { ascending: false })
         .limit(20)
       if (cancelled) return
       const rows = (data as Row[] | null) ?? []
@@ -1124,6 +960,7 @@ function RealPostsFeed() {
           content: r.content,
           author_name: nameOf.get(r.author_id) ?? 'Greenofig',
           created_at: r.created_at,
+          pinned: r.pinned === true,
         })),
       )
     })()
@@ -1150,6 +987,15 @@ function RealPostsFeed() {
             <span style={{ fontSize: 14, fontWeight: 700, color: 'var(--gf-fg-1)' }}>
               {p.author_name}
             </span>
+            {p.pinned && (
+              <span
+                className="inline-flex items-center gap-1"
+                style={{ fontSize: 11, color: 'var(--gf-fg-3)' }}
+              >
+                <Pin className="w-3 h-3" strokeWidth={2} />
+                Pinned
+              </span>
+            )}
             <span style={{ fontSize: 12, color: 'var(--gf-fg-3)' }}>
               {new Date(p.created_at).toLocaleDateString(undefined, {
                 month: 'short',
