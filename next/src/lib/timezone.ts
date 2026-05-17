@@ -1,4 +1,40 @@
 /**
+ * Single source of truth for timezone picker options across the app.
+ * Each entry is `[ianaId, humanLabel]`. Used by:
+ *   - admin/settings (default site timezone)
+ *   - admin/availability (per-nutritionist working-hour timezone)
+ * Add new zones here; both pickers pick them up automatically.
+ *
+ * Labels show offset for quick scanning. They're hand-written rather than
+ * computed from Intl because Intl offsets change with DST and we don't
+ * want the label flipping +03 ↔ +02 mid-day — the IANA id is the
+ * authoritative value, the label is just a hint.
+ */
+export const TIMEZONE_OPTIONS: readonly (readonly [string, string])[] = [
+  // United States — all six mainland + outlying zones
+  ['America/New_York',    '(GMT-05/-04) US Eastern — New York'],
+  ['America/Chicago',     '(GMT-06/-05) US Central — Chicago'],
+  ['America/Denver',      '(GMT-07/-06) US Mountain — Denver'],
+  ['America/Phoenix',     '(GMT-07)     US Mountain (no DST) — Phoenix'],
+  ['America/Los_Angeles', '(GMT-08/-07) US Pacific — Los Angeles'],
+  ['America/Anchorage',   '(GMT-09/-08) US Alaska — Anchorage'],
+  ['Pacific/Honolulu',    '(GMT-10)     US Hawaii — Honolulu'],
+  // Middle East + Europe (existing defaults)
+  ['Asia/Amman',          '(GMT+03)     Amman'],
+  ['Asia/Dubai',          '(GMT+04)     Dubai'],
+  ['Asia/Riyadh',         '(GMT+03)     Riyadh'],
+  ['Asia/Beirut',         '(GMT+02/+03) Beirut'],
+  ['Africa/Cairo',        '(GMT+02)     Cairo'],
+  ['Europe/London',       '(GMT+00/+01) London'],
+  ['Europe/Paris',        '(GMT+01/+02) Paris'],
+] as const
+
+/** IANA ids only — for places that just need the list of valid zones. */
+export const TIMEZONE_IDS: readonly string[] = TIMEZONE_OPTIONS.map(
+  ([id]) => id,
+)
+
+/**
  * Convert a local "calendar moment" — date + time strings interpreted in
  * a specific IANA timezone — into the corresponding absolute UTC instant.
  *

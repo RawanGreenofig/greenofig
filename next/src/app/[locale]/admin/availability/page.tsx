@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { Calendar, Globe, Save, User } from '@/icons'
 import { getBrowserSupabase } from '@/lib/supabase/client'
 import { TimeOffManager } from '@/components/nutritionist/TimeOffManager'
+import { TIMEZONE_OPTIONS, TIMEZONE_IDS } from '@/lib/timezone'
 
 type Day = 'mon' | 'tue' | 'wed' | 'thu' | 'fri' | 'sat' | 'sun'
 
@@ -36,16 +37,6 @@ interface DayCfg {
   to: string
 }
 
-const COMMON_TIMEZONES = [
-  'Asia/Amman',
-  'Asia/Dubai',
-  'Asia/Riyadh',
-  'Asia/Beirut',
-  'Europe/London',
-  'Europe/Paris',
-  'America/New_York',
-  'America/Los_Angeles',
-]
 
 function trimTime(t: string): string {
   return t.length >= 5 ? t.slice(0, 5) : t
@@ -269,11 +260,15 @@ export default function AdminAvailabilityPage() {
                   border: '1px solid var(--gf-border)',
                 }}
               >
-                {Array.from(new Set([timezone, ...COMMON_TIMEZONES])).map((tz) => (
-                  <option key={tz} value={tz} className="bg-surface">
-                    {tz}
-                  </option>
-                ))}
+                {(() => {
+                  const labels = new Map(TIMEZONE_OPTIONS)
+                  const ids = Array.from(new Set([timezone, ...TIMEZONE_IDS]))
+                  return ids.map((tz) => (
+                    <option key={tz} value={tz} className="bg-surface">
+                      {labels.get(tz) ?? tz}
+                    </option>
+                  ))
+                })()}
               </select>
               <p className="text-xs text-fg-3 mt-2">
                 Working hours below are interpreted in this timezone. Customers see

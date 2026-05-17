@@ -37,14 +37,28 @@ const TIER_RANK: Record<UserTier, number> = {
 }
 
 /* ── localStorage cache ────────────────────────────────────────
- * Tier is persisted across reloads so the first render of any
- * page already knows the user's level. Without this, the dashboard
- * renders `free` chrome on every cold load while the profile fetch
- * is in flight, then flips to `premium` once the fetch resolves —
- * visible as a flicker. TTL is 1h. Cleared on sign-out. */
+ * Tier AND chrome-profile fields are persisted across reloads so the
+ * first render of any page already has the right role/tier/name. Without
+ * this the dashboard renders `free` + 'Guest' + empty role pill on every
+ * cold load while the profile fetch is in flight, then flips to the real
+ * values once the fetch resolves — visible as a flicker, or worse on slow
+ * networks an apparently-stuck "Guest/free" admin chrome. TTL is 1h.
+ * Cleared on sign-out. */
 const TIER_KEY = 'gf_tier'
 const TIER_TS_KEY = 'gf_tier_ts'
+const CHROME_KEY = 'gf_chrome'
+const CHROME_TS_KEY = 'gf_chrome_ts'
 const TIER_TTL_MS = 60 * 60 * 1000
+
+/** The subset of Profile fields the chrome (sidebar/topbar) reads on
+ *  first render. Persisted to localStorage so a returning user never
+ *  sees the empty-chrome flash. */
+export interface ChromeProfile {
+  role: UserRole
+  tier: UserTier
+  full_name: string | null
+  avatar_url: string | null
+}
 
 function readCachedTier(): UserTier | null {
   if (typeof window === 'undefined') return null
@@ -73,11 +87,51 @@ function writeCachedTier(tier: UserTier): void {
   }
 }
 
+function readCachedChrome(): ChromeProfile | null {
+  if (typeof window === 'undefined') return null
+  try {
+    const raw = window.localStorage.getItem(CHROME_KEY)
+    const ts = window.localStorage.getItem(CHROME_TS_KEY)
+    if (!raw || !ts) return null
+    const age = Date.now() - Number(ts)
+    if (Number.isNaN(age) || age >= TIER_TTL_MS) return null
+    const parsed = JSON.parse(raw) as Partial<ChromeProfile>
+    if (
+      !parsed.role ||
+      !['user', 'nutritionist', 'admin'].includes(parsed.role) ||
+      !parsed.tier ||
+      !['free', 'basic', 'premium', 'vip'].includes(parsed.tier)
+    ) {
+      return null
+    }
+    return {
+      role: parsed.role as UserRole,
+      tier: parsed.tier as UserTier,
+      full_name: parsed.full_name ?? null,
+      avatar_url: parsed.avatar_url ?? null,
+    }
+  } catch {
+    return null
+  }
+}
+
+function writeCachedChrome(c: ChromeProfile): void {
+  if (typeof window === 'undefined') return
+  try {
+    window.localStorage.setItem(CHROME_KEY, JSON.stringify(c))
+    window.localStorage.setItem(CHROME_TS_KEY, String(Date.now()))
+  } catch {
+    /* private mode / quota — fine */
+  }
+}
+
 function clearCachedTier(): void {
   if (typeof window === 'undefined') return
   try {
     window.localStorage.removeItem(TIER_KEY)
     window.localStorage.removeItem(TIER_TS_KEY)
+    window.localStorage.removeItem(CHROME_KEY)
+    window.localStorage.removeItem(CHROME_TS_KEY)
   } catch {
     /* fine */
   }
@@ -145,7 +199,43 @@ const DEV_ADMIN_PROFILE: Profile = {
 export function AuthProvider({ children }: { children: ReactNode }) {
   const supabase = getBrowserSupabase()
   const [session, setSession] = useState<Session | null>(null)
-  const [profile, setProfile] = useState<Profile | null>(null)
+  // Seed `profile` from the cached chrome snapshot on the very first
+  // render. That gives the sidebar/topbar the right role + display
+  // name on cold load — otherwise an admin sees the "Guest / empty
+  // role pill" chrome until the profiles fetch returns, and on slow
+  // networks that can look stuck. The cache is partial (chrome fields
+  // only) so it gets replaced by the full Profile once the fetch
+  // completes.
+  const [profile, setProfile] = useState<Profile | null>(() => {
+    const c = readCachedChrome()
+    if (!c) return null
+    // Build a Profile-shaped object from the cached chrome fields.
+    // Other Profile columns are filled in by the real fetch.
+    return {
+      id: '',
+      role: c.role,
+      tier: c.tier,
+      full_name: c.full_name,
+      avatar_url: c.avatar_url,
+      phone: null,
+      date_of_birth: null,
+      gender: null,
+      height_cm: null,
+      weight_kg: null,
+      target_weight_kg: null,
+      dietary_preferences: null,
+      allergies: null,
+      health_conditions: null,
+      activity_level: null,
+      primary_goal: null,
+      medical_notes: null,
+      preferred_locale: 'en',
+      is_active: true,
+      last_seen_at: null,
+      created_at: '',
+      updated_at: '',
+    } as Profile
+  })
   // Tier lives separately from profile so we can seed it from
   // localStorage before any network round-trip. Reading from cache
   // inside the initializer keeps the first render synchronous.
@@ -177,6 +267,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (!next) return
       setProfile(next)
       applyTier((next.tier ?? 'free') as UserTier)
+      // Refresh the chrome cache so the next cold load already has
+      // the right role/tier/name without waiting on this fetch.
+      writeCachedChrome({
+        role: next.role,
+        tier: (next.tier ?? 'free') as UserTier,
+        full_name: next.full_name,
+        avatar_url: next.avatar_url,
+      })
     },
     [supabase, applyTier],
   )

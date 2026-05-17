@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useTranslations } from 'next-intl'
-import { getBrowserSupabase } from '@/lib/supabase/client'
+import { TIMEZONE_OPTIONS } from '@/lib/timezone'
 import {
   Settings,
   Palette,
@@ -57,7 +57,8 @@ export default function AdminSettingsPage() {
 
   const [tab, setTab] = useState<Tab>('general')
   const [dirty, setDirty] = useState(false)
-  const [saveState, setSaveState] = useState<'idle' | 'saving' | 'saved'>('idle')
+  const [saveState, setSaveState] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle')
+  const [saveError, setSaveError] = useState<string | null>(null)
 
   const [general, setGeneral] = useState<GeneralForm>({
     appName: 'Greenofig',
@@ -88,23 +89,36 @@ export default function AdminSettingsPage() {
     if (saveState === 'saved') setSaveState('idle')
   }
 
+  // Load saved settings from the admin API. Browser-side reads of
+  // `platform_settings` via the supabase-js client suffered from a
+  // session-race on hard refresh — the request fired before the JWT
+  // was restored, so RLS treated it as anonymous and returned no rows,
+  // leaving the form stuck on its hardcoded defaults. Going through
+  // the API route (service-role + withAdmin) sidesteps that entirely.
   useEffect(() => {
-    const supabase = getBrowserSupabase()
-    if (!supabase) return
     let cancelled = false
+    const keys = ['site_general', 'site_branding', 'site_integrations'] as const
     ;(async () => {
-      type Row = { key: string; value: unknown }
-      const { data: rows } = await supabase
-        .from('platform_settings')
-        .select('key, value')
-        .in('key', ['site_general', 'site_branding', 'site_integrations'])
+      const results = await Promise.all(
+        keys.map(async (k) => {
+          const res = await fetch(`/api/settings/${k}`, { cache: 'no-store' })
+          if (!res.ok) return [k, null] as const
+          const body = (await res.json()) as { value?: unknown }
+          return [k, body.value ?? null] as const
+        }),
+      )
       if (cancelled) return
-      const list = (rows as Row[] | null) ?? []
-      for (const r of list) {
-        if (!r?.value) continue
-        if (r.key === 'site_general') setGeneral((curr) => ({ ...curr, ...(r.value as Partial<GeneralForm>) }))
-        if (r.key === 'site_branding') setBranding((curr) => ({ ...curr, ...(r.value as Partial<BrandingForm>) }))
-        if (r.key === 'site_integrations') setIntegrations((curr) => ({ ...curr, ...(r.value as Partial<IntegrationsForm>) }))
+      for (const [k, value] of results) {
+        if (!value || typeof value !== 'object') continue
+        if (k === 'site_general')
+          setGeneral((curr) => ({ ...curr, ...(value as Partial<GeneralForm>) }))
+        if (k === 'site_branding')
+          setBranding((curr) => ({ ...curr, ...(value as Partial<BrandingForm>) }))
+        if (k === 'site_integrations')
+          setIntegrations((curr) => ({
+            ...curr,
+            ...(value as Partial<IntegrationsForm>),
+          }))
       }
     })()
     return () => {
@@ -114,13 +128,14 @@ export default function AdminSettingsPage() {
 
   const save = async () => {
     setSaveState('saving')
+    setSaveError(null)
     const writes: { key: string; value: unknown }[] = [
       { key: 'site_general', value: general },
       { key: 'site_branding', value: branding },
       { key: 'site_integrations', value: integrations },
     ]
     try {
-      await Promise.all(
+      const responses = await Promise.all(
         writes.map((w) =>
           fetch(`/api/settings/${w.key}`, {
             method: 'POST',
@@ -129,8 +144,23 @@ export default function AdminSettingsPage() {
           }),
         ),
       )
-    } catch {
-      /* ignore — show saved either way; user retries on visible failure */
+      const failed = responses.find((r) => !r.ok)
+      if (failed) {
+        let msg = `Save failed (HTTP ${failed.status})`
+        try {
+          const body = (await failed.json()) as { error?: { message?: string } }
+          if (body?.error?.message) msg = body.error.message
+        } catch {
+          /* response wasn't JSON — keep the HTTP-status fallback */
+        }
+        setSaveError(msg)
+        setSaveState('error')
+        return
+      }
+    } catch (err) {
+      setSaveError(err instanceof Error ? err.message : 'Network error')
+      setSaveState('error')
+      return
     }
     setSaveState('saved')
     setDirty(false)
@@ -209,9 +239,15 @@ export default function AdminSettingsPage() {
         </div>
       </div>
 
-      {(dirty || saveState === 'saved') && tab !== 'legal' && (
-        <SaveBar tS={tS} state={saveState} onSave={save} />
-      )}
+      {(dirty || saveState === 'saved' || saveState === 'error') &&
+        tab !== 'legal' && (
+          <SaveBar
+            tS={tS}
+            state={saveState}
+            error={saveError}
+            onSave={save}
+          />
+        )}
     </div>
   )
 }
@@ -256,12 +292,9 @@ function GeneralPane({
           <Select
             value={form.defaultTimezone}
             onChange={(v) => set('defaultTimezone', v)}
-            options={[
-              ['Asia/Amman',     '(GMT+03) Amman'],
-              ['Asia/Dubai',     '(GMT+04) Dubai'],
-              ['Africa/Cairo',   '(GMT+02) Cairo'],
-              ['Europe/London',  '(GMT+00) London'],
-            ]}
+            options={TIMEZONE_OPTIONS.map(
+              ([id, label]) => [id, label] as [string, string],
+            )}
           />
         </Field>
         <Field label={tS('general.currency')}>
@@ -635,37 +668,45 @@ function Select({
 function SaveBar({
   tS,
   state,
+  error,
   onSave,
 }: {
   tS: ReturnType<typeof useTranslations>
-  state: 'idle' | 'saving' | 'saved'
+  state: 'idle' | 'saving' | 'saved' | 'error'
+  error: string | null
   onSave: () => void
 }) {
+  const isError = state === 'error'
+  const isSaved = state === 'saved'
   return (
     <div className="sticky bottom-4 z-30 mx-auto max-w-screen-md">
       <div
         className={`rounded-xl border shadow-2xl backdrop-blur-md flex items-center gap-3 px-4 py-3 ${
-          state === 'saved'
-            ? 'border-primary/40 bg-primary/10'
-            : 'border-border bg-surface/95'
+          isError
+            ? 'border-red-500/50 bg-red-500/10'
+            : isSaved
+              ? 'border-primary/40 bg-primary/10'
+              : 'border-border bg-surface/95'
         }`}
       >
-        {state === 'saved' ? (
+        {isError ? (
+          <span className="w-2 h-2 rounded-full shrink-0" style={{ background: '#ef4444' }} />
+        ) : isSaved ? (
           <Check className="w-4 h-4 text-lime-400" strokeWidth={2.5} />
         ) : (
           <span className="w-2 h-2 rounded-full shrink-0" style={{ background: '#e8912a' }} />
         )}
         <p className="text-sm text-fg-1 flex-1">
-          {state === 'saved' ? tS('saved') : tS('unsavedChanges')}
+          {isError ? (error ?? 'Save failed') : isSaved ? tS('saved') : tS('unsavedChanges')}
         </p>
         <button
           type="button"
           onClick={onSave}
-          disabled={state === 'saving' || state === 'saved'}
+          disabled={state === 'saving' || isSaved}
           className="inline-flex items-center gap-1.5 rounded-pill bg-gradient-to-b from-lime-400 to-lime-600 text-bg font-semibold h-9 px-5 text-xs shadow-lime-glow border border-lime-600/60 hover:-translate-y-px transition-transform disabled:opacity-60 disabled:hover:translate-y-0"
         >
           <Save className="w-3.5 h-3.5" strokeWidth={2} />
-          {state === 'saving' ? tS('saving') : tS('saveChanges')}
+          {state === 'saving' ? tS('saving') : isError ? 'Retry' : tS('saveChanges')}
         </button>
       </div>
     </div>

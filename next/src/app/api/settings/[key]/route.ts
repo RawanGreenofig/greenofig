@@ -1,6 +1,6 @@
 import type { NextRequest } from 'next/server'
 import { withAdmin, type AuthedContext } from '@/lib/api/auth'
-import { badRequest, json, serviceUnavailable } from '@/lib/api/response'
+import { badRequest, json, notFound, serviceUnavailable } from '@/lib/api/response'
 import { ipFromRequest, logAudit } from '@/lib/api/audit'
 import { getServiceSupabase } from '@/lib/supabase/service'
 
@@ -56,6 +56,27 @@ interface Body {
   value: unknown
   valueAr?: unknown
 }
+
+export const GET = withAdmin<{ key: string }>(
+  async (_req: NextRequest, _ctx: AuthedContext, { params }) => {
+    const key = params.key
+    if (!isAllowed(key)) {
+      return badRequest(`Setting "${key}" is not editable.`)
+    }
+
+    const service = getServiceSupabase()
+    if (!service) return serviceUnavailable('Supabase service role')
+
+    const { data: row } = await service
+      .from('platform_settings')
+      .select('value, value_ar, updated_at')
+      .eq('key', key)
+      .maybeSingle()
+
+    if (!row) return notFound(`Setting "${key}" has no row yet.`)
+    return json(row)
+  },
+)
 
 export const POST = withAdmin<{ key: string }>(
   async (req: NextRequest, ctx: AuthedContext, { params }) => {
