@@ -3,7 +3,7 @@
 
 import { motion } from 'framer-motion'
 import toast from 'react-hot-toast'
-import { Suspense, useEffect, useRef, useState } from 'react'
+import { Suspense, useEffect, useMemo, useRef, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import {
@@ -267,6 +267,20 @@ function SettingsPageInner() {
       targetCarbsG: profile.target_carbs_g ? String(profile.target_carbs_g) : '',
       targetFatG: profile.target_fat_g ? String(profile.target_fat_g) : '',
     })
+    // Notification prefs persisted on profile via migration 029. Falls
+    // through to the defaults the useState initialiser set up when the
+    // column is null (first save after the migration lands).
+    if (profile.notification_channels || profile.notification_quiet_hours) {
+      setNotif((curr) => ({
+        channels: {
+          ...curr.channels,
+          ...(profile.notification_channels ??
+            {}) as typeof curr.channels,
+        },
+        quietHours:
+          profile.notification_quiet_hours ?? curr.quietHours,
+      }))
+    }
   }, [profile, user?.user_metadata])
 
   const markDirty = () => {
@@ -297,6 +311,14 @@ function SettingsPageInner() {
           patch.dietary_preferences = Array.from(goals.preferences)
           patch.allergies = goals.allergies
           patch.health_conditions = goals.conditions
+        }
+        if (tab === 'notifications') {
+          // Persisted to profiles.notification_channels +
+          // notification_quiet_hours via migration 029. Previously the
+          // Save button only re-rendered React state, so flipping a
+          // toggle had zero effect after refresh.
+          patch.notification_channels = notif.channels
+          patch.notification_quiet_hours = notif.quietHours
         }
         if (Object.keys(patch).length > 0) {
           await supabase
@@ -514,6 +536,7 @@ function SettingsPageInner() {
             <AccountPane
               t={t}
               email={user?.email ?? ''}
+              initialUnits={profile?.units ?? 'metric'}
             />
           )}
         </div>
@@ -1232,9 +1255,49 @@ function SubscriptionPane({
   const cfg = TIER_CONFIG[safeTier]
   const isFree = safeTier === 'free'
   const isVip = safeTier === 'vip'
-  const renewISO = '2026-06-03'
   const [confirmCancel, setConfirmCancel] = useState(false)
   const [upgrading, setUpgrading] = useState(false)
+
+  // Real Stripe data — replaces the hardcoded renewISO='2026-06-03',
+  // Visa ···4242 card, and INV-20480/422/371 mock invoices. Free tier
+  // skips the fetch (no Stripe customer yet) and the UI hides the
+  // payment + invoices blocks.
+  interface StripeDetail {
+    renewsAt: string | null
+    paymentMethod: {
+      brand: string
+      last4: string
+      expMonth: number
+      expYear: number
+    } | null
+    invoices: Array<{
+      id: string
+      number: string | null
+      date: string
+      amount: number
+      currency: string
+      status: string | null
+      url: string | null
+    }>
+  }
+  const [stripeDetail, setStripeDetail] = useState<StripeDetail | null>(null)
+  useEffect(() => {
+    if (isFree) return
+    let cancelled = false
+    void (async () => {
+      try {
+        const res = await fetch('/api/stripe/subscription-detail')
+        if (!res.ok) return
+        const data = (await res.json()) as StripeDetail
+        if (!cancelled) setStripeDetail(data)
+      } catch {
+        /* leave null — UI hides those sections */
+      }
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [isFree])
 
   const startUpgrade = async (target: TierKey) => {
     if (upgrading || target === safeTier) return
@@ -1339,18 +1402,21 @@ function SubscriptionPane({
           {cfg.features}
         </p>
 
-        {!isFree && (
+        {!isFree && stripeDetail?.renewsAt && (
           <p
             className="mt-2 font-mono"
             style={{ fontSize: 12, color: 'var(--gf-fg-3)' }}
             dir="ltr"
           >
             {t('sub.renewsOn', {
-              date: new Date(renewISO).toLocaleDateString(undefined, {
-                month: 'short',
-                day: 'numeric',
-                year: 'numeric',
-              }),
+              date: new Date(stripeDetail.renewsAt).toLocaleDateString(
+                undefined,
+                {
+                  month: 'short',
+                  day: 'numeric',
+                  year: 'numeric',
+                },
+              ),
             })}
           </p>
         )}
@@ -1583,25 +1649,40 @@ function SubscriptionPane({
           <div className="rounded-xl border border-dashed border-border bg-surface/50 p-6 text-center text-sm text-fg-3">
             {t('sub.noPaymentMethod')}
           </div>
-        ) : (
+        ) : stripeDetail?.paymentMethod ? (
           <div className="dash-card-lift rounded-xl border border-border bg-surface p-5 flex items-center gap-4">
             <span
               className="w-12 h-9 rounded-md bg-gradient-to-br from-fg-2/20 to-bg-deeper border border-border inline-flex items-center justify-center font-mono text-[10px] uppercase tracking-eyebrow text-fg-3 font-bold"
               aria-hidden
             >
-              VISA
+              {stripeDetail.paymentMethod.brand.toUpperCase().slice(0, 4)}
             </span>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-mono text-fg-1" dir="ltr">
-                •••• •••• •••• 4242
+                •••• •••• •••• {stripeDetail.paymentMethod.last4}
               </p>
               <p className="text-xs text-fg-3 mt-0.5" dir="ltr">
-                Exp 04 / 28
+                Exp {String(stripeDetail.paymentMethod.expMonth).padStart(2, '0')}
+                {' / '}
+                {String(stripeDetail.paymentMethod.expYear).slice(-2)}
               </p>
             </div>
             <button
               type="button"
+              onClick={() => void openBillingPortal()}
               className="inline-flex items-center gap-1.5 rounded-pill bg-surface-raised border border-border h-9 px-4 text-xs font-semibold text-fg-1 hover:border-primary/40"
+            >
+              {t('sub.updateCard')}
+            </button>
+          </div>
+        ) : (
+          <div className="rounded-xl border border-dashed border-border bg-surface/50 p-6 text-center text-sm text-fg-3">
+            {/* No card on file (or Stripe unreachable). The portal is
+                still the only place to add one. */}
+            <button
+              type="button"
+              onClick={() => void openBillingPortal()}
+              className="rounded-pill bg-surface-raised border border-border h-9 px-4 text-xs font-semibold text-fg-1 hover:border-primary/40"
             >
               {t('sub.updateCard')}
             </button>
@@ -1614,20 +1695,20 @@ function SubscriptionPane({
           <div className="rounded-xl border border-dashed border-border bg-surface/50 p-6 text-center text-sm text-fg-3">
             {t('sub.noInvoices')}
           </div>
+        ) : (stripeDetail?.invoices.length ?? 0) === 0 ? (
+          <div className="rounded-xl border border-dashed border-border bg-surface/50 p-6 text-center text-sm text-fg-3">
+            {t('sub.noInvoices')}
+          </div>
         ) : (
           <ul className="dash-card-lift rounded-xl border border-border bg-surface divide-y divide-border">
-            {[
-              { id: 'INV-20480', date: '2026-05-03', amount: 15 },
-              { id: 'INV-20422', date: '2026-04-03', amount: 15 },
-              { id: 'INV-20371', date: '2026-03-03', amount: 15 },
-            ].map((inv) => (
+            {stripeDetail!.invoices.map((inv) => (
               <li
                 key={inv.id}
                 className="flex items-center justify-between gap-3 px-5 py-3"
               >
                 <div className="min-w-0">
                   <p className="text-sm font-mono text-fg-1" dir="ltr">
-                    {inv.id}
+                    {inv.number ?? inv.id.slice(0, 12)}
                   </p>
                   <p className="text-xs text-fg-3 font-mono" dir="ltr">
                     {new Date(inv.date).toLocaleDateString(undefined, {
@@ -1638,23 +1719,22 @@ function SubscriptionPane({
                   </p>
                 </div>
                 <p className="font-mono text-sm text-fg-1" dir="ltr">
-                  {inv.amount} USD
+                  {inv.amount.toFixed(2)} {inv.currency}
                 </p>
                 <div className="flex items-center gap-1">
-                  <button
-                    type="button"
-                    aria-label={t('sub.viewInvoice')}
-                    className="w-8 h-8 rounded-md inline-flex items-center justify-center text-fg-3 hover:text-fg-1 hover:bg-surface-raised"
-                  >
-                    <Eye className="w-3.5 h-3.5" strokeWidth={1.75} />
-                  </button>
-                  <button
-                    type="button"
-                    aria-label={t('sub.downloadAll')}
-                    className="w-8 h-8 rounded-md inline-flex items-center justify-center text-fg-3 hover:text-fg-1 hover:bg-surface-raised"
-                  >
-                    <Download className="w-3.5 h-3.5" strokeWidth={1.75} />
-                  </button>
+                  {inv.url ? (
+                    <a
+                      href={inv.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      aria-label={t('sub.viewInvoice')}
+                      className="w-8 h-8 rounded-md inline-flex items-center justify-center text-fg-3 hover:text-fg-1 hover:bg-surface-raised"
+                    >
+                      <Eye className="w-3.5 h-3.5" strokeWidth={1.75} />
+                    </a>
+                  ) : (
+                    <span className="w-8 h-8" />
+                  )}
                 </div>
               </li>
             ))}
@@ -1683,12 +1763,27 @@ function SubscriptionPane({
 function AccountPane({
   t,
   email,
+  initialUnits,
 }: {
   t: ReturnType<typeof useTranslations>
   email: string
+  initialUnits: 'metric' | 'imperial'
 }) {
-  const [twoFa, setTwoFa] = useState(false)
-  const [units, setUnits] = useState<'metric' | 'imperial'>('metric')
+  const [units, setUnits] = useState<'metric' | 'imperial'>(initialUnits)
+  // Persist units immediately on change — small enough to skip the
+  // save bar. Settings → Account, migration 029.
+  useEffect(() => {
+    setUnits(initialUnits)
+  }, [initialUnits])
+  const persistUnits = async (next: 'metric' | 'imperial') => {
+    setUnits(next)
+    const supabase = getBrowserSupabase()
+    if (!supabase) return
+    const { data: u } = await supabase.auth.getUser()
+    const uid = u.user?.id
+    if (!uid) return
+    await supabase.from('profiles').update({ units: next } as never).eq('id', uid)
+  }
   const locale = useLocale() as Locale
   const router = useRouter()
   const pathname = usePathname()
@@ -1704,7 +1799,121 @@ function AccountPane({
   }
   const [confirmDel, setConfirmDel] = useState(false)
   const [delEmail, setDelEmail] = useState('')
+  const [deleting, setDeleting] = useState(false)
   const canDelete = delEmail.trim().toLowerCase() === email.toLowerCase()
+
+  // Change-password form. Uses supabase.auth.updateUser — Supabase
+  // tracks the recent sign-in so no current-password check is needed
+  // there. We still ask for the current password as a confirmation
+  // step (verified by re-signing in below) so an attacker with brief
+  // access to a logged-in tab can't pivot to changing the password.
+  const [cpCurrent, setCpCurrent] = useState('')
+  const [cpNew, setCpNew] = useState('')
+  const [cpConfirm, setCpConfirm] = useState('')
+  const [cpBusy, setCpBusy] = useState(false)
+  const [cpMsg, setCpMsg] = useState<{ kind: 'ok' | 'err'; text: string } | null>(
+    null,
+  )
+  const onChangePassword = async () => {
+    setCpMsg(null)
+    if (cpNew.length < 8) {
+      setCpMsg({ kind: 'err', text: 'Password must be at least 8 characters.' })
+      return
+    }
+    if (cpNew !== cpConfirm) {
+      setCpMsg({ kind: 'err', text: 'New password and confirmation do not match.' })
+      return
+    }
+    setCpBusy(true)
+    try {
+      const supabase = getBrowserSupabase()
+      if (!supabase) {
+        setCpMsg({ kind: 'err', text: 'Supabase is not reachable.' })
+        return
+      }
+      // Re-authenticate with the current password before changing
+      // it. Defends against the "logged-in tab, walks away" scenario.
+      const { error: reAuthError } = await supabase.auth.signInWithPassword({
+        email,
+        password: cpCurrent,
+      })
+      if (reAuthError) {
+        setCpMsg({ kind: 'err', text: 'Current password is incorrect.' })
+        return
+      }
+      const { error } = await supabase.auth.updateUser({ password: cpNew })
+      if (error) {
+        setCpMsg({ kind: 'err', text: error.message })
+        return
+      }
+      setCpMsg({ kind: 'ok', text: 'Password updated.' })
+      setCpCurrent('')
+      setCpNew('')
+      setCpConfirm('')
+    } finally {
+      setCpBusy(false)
+    }
+  }
+
+  // Sign out from every device — Supabase scope:'global' revokes all
+  // refresh tokens for this user, so other tabs/devices lose access on
+  // their next token refresh.
+  const onSignOutAll = async () => {
+    const supabase = getBrowserSupabase()
+    if (!supabase) return
+    await supabase.auth.signOut({ scope: 'global' })
+    router.replace('/sign-in')
+  }
+
+  // Account deletion — calls /api/account/delete (admin service-role
+  // path) which cascades the profile row + auth user. We then sign
+  // out locally and route home.
+  const onDeleteAccount = async () => {
+    if (!canDelete || deleting) return
+    setDeleting(true)
+    try {
+      const res = await fetch('/api/account/delete', { method: 'POST' })
+      if (!res.ok) {
+        // Leave the confirm open so the user can retry.
+        setDeleting(false)
+        return
+      }
+      const supabase = getBrowserSupabase()
+      if (supabase) await supabase.auth.signOut()
+      router.replace('/')
+    } catch {
+      setDeleting(false)
+    }
+  }
+
+  // Best-effort device label for the "Current session" row. UA strings
+  // are unreliable; this is descriptive, not authoritative — the real
+  // session set is in Supabase's auth.sessions table.
+  const sessionLabel = useMemo(() => {
+    if (typeof navigator === 'undefined') return ''
+    const ua = navigator.userAgent
+    const browser = /Edg\//.test(ua)
+      ? 'Edge'
+      : /Chrome\//.test(ua)
+      ? 'Chrome'
+      : /Firefox\//.test(ua)
+      ? 'Firefox'
+      : /Safari\//.test(ua)
+      ? 'Safari'
+      : 'Browser'
+    const os = /Windows/.test(ua)
+      ? 'Windows'
+      : /Mac OS|Macintosh/.test(ua)
+      ? 'macOS'
+      : /Android/.test(ua)
+      ? 'Android'
+      : /iPhone|iPad|iOS/.test(ua)
+      ? 'iOS'
+      : /Linux/.test(ua)
+      ? 'Linux'
+      : 'Unknown OS'
+    return `${browser} · ${os}`
+  }, [])
 
   return (
     <div className="space-y-6">
@@ -1739,7 +1948,7 @@ function AccountPane({
           <Field label={t('account.units')}>
             <SelectInput
               value={units}
-              onChange={(v) => setUnits(v as 'metric' | 'imperial')}
+              onChange={(v) => void persistUnits(v as 'metric' | 'imperial')}
               options={[
                 ['metric', t('account.metric')],
                 ['imperial', t('account.imperial')],
@@ -1764,37 +1973,37 @@ function AccountPane({
               {t('account.changePassword')}
             </p>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-              <PasswordInput placeholder={t('account.currentPassword')} />
-              <PasswordInput placeholder={t('account.newPassword')} />
-              <PasswordInput placeholder={t('account.confirmPassword')} />
+              <PasswordInput
+                placeholder={t('account.currentPassword')}
+                value={cpCurrent}
+                onChange={setCpCurrent}
+              />
+              <PasswordInput
+                placeholder={t('account.newPassword')}
+                value={cpNew}
+                onChange={setCpNew}
+              />
+              <PasswordInput
+                placeholder={t('account.confirmPassword')}
+                value={cpConfirm}
+                onChange={setCpConfirm}
+              />
             </div>
+            {cpMsg && (
+              <p
+                className="mt-2 text-xs"
+                style={{ color: cpMsg.kind === 'ok' ? '#a3e635' : '#fca5a5' }}
+              >
+                {cpMsg.text}
+              </p>
+            )}
             <button
               type="button"
-              className="mt-4 inline-flex items-center gap-1.5 rounded-pill bg-primary/15 text-lime-400 h-9 px-4 text-xs font-semibold hover:bg-primary/25"
+              onClick={() => void onChangePassword()}
+              disabled={cpBusy || !cpCurrent || !cpNew || !cpConfirm}
+              className="mt-4 inline-flex items-center gap-1.5 rounded-pill bg-primary/15 text-lime-400 h-9 px-4 text-xs font-semibold hover:bg-primary/25 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {t('account.changePassword')}
-            </button>
-          </div>
-
-          <div className="pt-5 border-t border-border flex items-center justify-between gap-4 flex-wrap">
-            <div className="min-w-0">
-              <p className="text-sm font-medium text-fg-1">
-                {t('account.twoFa')}
-              </p>
-              <p className="mt-0.5 text-xs text-fg-3">
-                {twoFa ? t('account.twoFaOn') : t('account.twoFaOff')}
-              </p>
-            </div>
-            <button
-              type="button"
-              onClick={() => setTwoFa((v) => !v)}
-              className={`inline-flex items-center gap-1.5 rounded-pill h-9 px-4 text-xs font-semibold transition-colors ${
-                twoFa
-                  ? 'bg-rose-500/15 text-rose-400 hover:bg-rose-500/25'
-                  : 'bg-primary/15 text-lime-400 hover:bg-primary/25'
-              }`}
-            >
-              {twoFa ? t('account.twoFaDisable') : t('account.twoFaEnable')}
+              {cpBusy ? 'Updating…' : t('account.changePassword')}
             </button>
           </div>
 
@@ -1810,12 +2019,13 @@ function AccountPane({
               <div className="flex-1 min-w-0">
                 <p className="text-sm text-fg-1">{t('account.currentSession')}</p>
                 <p className="text-xs text-fg-3 font-mono" dir="ltr">
-                  Chrome · Windows · Amman
+                  {sessionLabel}
                 </p>
               </div>
             </div>
             <button
               type="button"
+              onClick={() => void onSignOutAll()}
               className="mt-3 inline-flex items-center gap-1.5 rounded-pill bg-surface-raised border border-border h-9 px-4 text-xs font-medium text-fg-2 hover:text-fg-1"
             >
               <LogOut className="w-3.5 h-3.5" strokeWidth={1.75} />
@@ -1835,13 +2045,14 @@ function AccountPane({
               {t('account.exportDataBody')}
             </p>
           </div>
-          <button
-            type="button"
+          <a
+            href="/api/account/export"
+            download
             className="inline-flex items-center gap-1.5 rounded-pill bg-surface-raised border border-border h-9 px-4 text-xs font-semibold text-fg-1 hover:border-primary/40"
           >
             <Download className="w-3.5 h-3.5" strokeWidth={1.75} />
             {t('account.exportDataCta')}
-          </button>
+          </a>
         </div>
       </Section>
 
@@ -1874,17 +2085,17 @@ function AccountPane({
           title={t('account.deleteConfirmTitle')}
           body={t('account.deleteConfirmBody')}
           cancelLabel={t('account.deleteCancel')}
-          confirmLabel={t('account.deleteConfirmCta')}
+          confirmLabel={
+            deleting ? 'Deleting…' : t('account.deleteConfirmCta')
+          }
           confirmTone="danger"
-          confirmDisabled={!canDelete}
+          confirmDisabled={!canDelete || deleting}
           onCancel={() => {
+            if (deleting) return
             setConfirmDel(false)
             setDelEmail('')
           }}
-          onConfirm={() => {
-            setConfirmDel(false)
-            setDelEmail('')
-          }}
+          onConfirm={() => void onDeleteAccount()}
         >
           <input
             type="email"
@@ -1990,11 +2201,22 @@ function TextInput({
   )
 }
 
-function PasswordInput({ placeholder }: { placeholder: string }) {
+function PasswordInput({
+  placeholder,
+  value,
+  onChange,
+}: {
+  placeholder: string
+  value?: string
+  onChange?: (v: string) => void
+}) {
   return (
     <input
       type="password"
       placeholder={placeholder}
+      value={value ?? ''}
+      onChange={(e) => onChange?.(e.target.value)}
+      autoComplete="new-password"
       className="w-full h-10 rounded-md bg-bg-deeper border border-border px-3 text-sm text-fg-1 placeholder-fg-3 focus:outline-none focus:border-primary"
     />
   )

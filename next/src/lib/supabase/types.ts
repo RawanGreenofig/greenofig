@@ -46,6 +46,19 @@ export interface Profile {
   // who owns that client.
   is_head_coach?: boolean
   assigned_coach_id?: string | null
+  // Settings → Notifications + Account, migration 029. Shape is
+  // intentionally loose (jsonb in Postgres) so the dashboard can
+  // ship new topics without a schema bump.
+  notification_channels?: Record<
+    string,
+    { email: boolean; push: boolean; sms: boolean }
+  > | null
+  notification_quiet_hours?: {
+    enabled: boolean
+    from: string
+    to: string
+  } | null
+  units?: 'metric' | 'imperial' | null
 }
 
 export interface FeatureFlagRow {
