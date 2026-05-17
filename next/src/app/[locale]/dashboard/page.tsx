@@ -22,6 +22,7 @@ import { NUTRITIONIST } from '@/lib/tokens'
 import { useSupabaseQuery } from '@/lib/hooks/useSupabaseQuery'
 import { usePushNotifications } from '@/lib/hooks/usePushNotifications'
 import { resolveFirstName } from '@/lib/displayName'
+import { MACRO_TARGETS } from '@/lib/macros-defaults'
 import { useState } from 'react'
 
 const containerVariants = {
@@ -61,13 +62,9 @@ export default function DashboardTodayPage() {
   })
 
   const userId = profile?.id ?? null
-  const targets = {
-    calories: 1840,
-    waterGlasses: 8,
-    protein: 120,
-    carbs: 200,
-    fat: 60,
-  }
+  // Platform defaults until per-user targets land. See
+  // next/src/lib/macros-defaults.ts.
+  const targets = MACRO_TARGETS
 
   const live = useSupabaseQuery<TodayQueryResult>(async (supabase) => {
     if (!userId) return { todayLogs: [], waterMlToday: 0, nextBooking: null }

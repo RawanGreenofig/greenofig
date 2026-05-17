@@ -69,126 +69,6 @@ const MEAL_ICON: Record<MealKey, LucideIcon> = {
   dinner: ChefHat,
 }
 
-/** Demo plan — replaced with `meal_plans` + `meal_plan_items` query in Cluster H */
-const DEMO_PLAN: ActivePlan = {
-  title: 'Mediterranean reset · Week 2',
-  weekIdx: 2,
-  totalWeeks: 6,
-  startDate: '2026-04-20',
-  days: Array.from({ length: 7 }).map((_, i) => ({
-    dayIdx: i,
-    isToday: i === new Date().getDay() - 1 + (new Date().getDay() === 0 ? 7 : 0) - 1,
-    meals: buildDayMeals(i),
-  })),
-}
-
-function buildDayMeals(dayIdx: number): PlanMeal[] {
-  const sets: PlanMeal[][] = [
-    [
-      {
-        key: 'breakfast',
-        name: 'Greek yogurt with berries & walnuts',
-        calories: 320,
-        protein: 22,
-        carbs: 28,
-        fat: 14,
-        prepMin: 5,
-        cookMin: 0,
-        servings: 1,
-        ingredients: [
-          '170 g Greek yogurt (full-fat)',
-          '½ cup mixed berries',
-          '15 g walnuts, chopped',
-          '1 tsp raw honey',
-          'Pinch of cinnamon',
-        ],
-        steps: [
-          'Spoon yogurt into a bowl.',
-          'Top with berries and walnuts.',
-          'Drizzle honey, dust with cinnamon.',
-        ],
-        drNote: 'Walnuts give you the omega-3s your body actually absorbs.',
-      },
-      {
-        key: 'morningSnack',
-        name: 'Apple with almond butter',
-        calories: 200,
-        protein: 5,
-        carbs: 25,
-        fat: 11,
-        prepMin: 2,
-        cookMin: 0,
-        servings: 1,
-        ingredients: ['1 medium apple', '1 tbsp natural almond butter'],
-        steps: ['Slice apple, dip in almond butter.'],
-      },
-      {
-        key: 'lunch',
-        name: 'Lemon chicken with quinoa & greens',
-        calories: 520,
-        protein: 42,
-        carbs: 48,
-        fat: 16,
-        prepMin: 10,
-        cookMin: 20,
-        servings: 1,
-        ingredients: [
-          '120 g chicken breast',
-          '½ cup cooked quinoa',
-          '2 cups arugula',
-          '1 tbsp olive oil',
-          '½ lemon, juiced',
-          'Salt, pepper, oregano',
-        ],
-        steps: [
-          'Season chicken; pan-sear 6 min per side.',
-          'Plate quinoa, top with arugula.',
-          'Slice chicken over greens; finish with lemon and olive oil.',
-        ],
-      },
-      {
-        key: 'afternoonSnack',
-        name: 'Hummus & cucumber',
-        calories: 160,
-        protein: 6,
-        carbs: 18,
-        fat: 8,
-        prepMin: 3,
-        cookMin: 0,
-        servings: 1,
-        ingredients: ['¼ cup hummus', '1 cucumber, sliced'],
-        steps: ['Slice cucumber, scoop hummus.'],
-      },
-      {
-        key: 'dinner',
-        name: 'Baked salmon with sweet potato',
-        calories: 580,
-        protein: 38,
-        carbs: 42,
-        fat: 24,
-        prepMin: 8,
-        cookMin: 22,
-        servings: 1,
-        ingredients: [
-          '140 g salmon fillet',
-          '1 medium sweet potato',
-          '2 cups steamed broccoli',
-          '1 tbsp olive oil',
-          'Garlic, dill, salt',
-        ],
-        steps: [
-          'Preheat oven to 200°C.',
-          'Roast sweet potato 25 min.',
-          'Bake salmon 12 min with garlic and dill.',
-          'Steam broccoli; plate together.',
-        ],
-        drNote: 'Eat the sweet potato skin — that is where the fiber lives.',
-      },
-    ],
-  ]
-  return sets[0]!.map((m) => ({ ...m, name: dayIdx === 0 ? m.name : m.name }))
-}
-
 const containerVariants = {
   hidden: { opacity: 0, y: 12 },
   visible: { opacity: 1, y: 0, transition: { duration: 0.3 } },
@@ -347,16 +227,16 @@ function PlanView({ t }: { t: ReturnType<typeof useTranslations> }) {
 
   // Use live plan if it has any meals; otherwise fall back to demo so
   // dev / unconfigured envs still show the rich preview.
-  const plan: ActivePlan | null = (() => {
-    if (live.data && live.data.days.some((d) => d.meals.length > 0)) {
-      return live.data
-    }
-    if (live.data === null && userId) {
-      // Configured + signed in but no plan exists — show NoPlan card.
-      return null
-    }
-    return DEMO_PLAN
-  })()
+  // Real plans only — no DEMO_PLAN fallback. Premium customers were
+  // seeing a fabricated "Mediterranean reset · Week 2" with hardcoded
+  // meals every time the live query returned empty, regardless of what
+  // their actual nutritionist had built. Now the page shows NoPlan
+  // (the "your nutritionist will build a plan for you soon" card)
+  // until a real meal_plans row exists for this user.
+  const plan: ActivePlan | null =
+    live.data && live.data.days.some((d) => d.meals.length > 0)
+      ? live.data
+      : null
 
   const [selectedDay, setSelectedDay] = useState(() =>
     plan ? Math.max(0, plan.days.findIndex((d) => d.isToday)) : 0,

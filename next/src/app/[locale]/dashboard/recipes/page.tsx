@@ -46,21 +46,6 @@ interface Recipe {
   hue: string
 }
 
-const RECIPES: Recipe[] = [
-  { id: '1', name: 'Greek yogurt berry bowl',     category: 'breakfast', calories: 320, protein: 22, minutes: 5,  servings: 1, tags: ['vegetarian','glutenFree','quick','highProtein'], drPick: true,  hue: 'rgb(163 230 53 / 0.18)' },
-  { id: '2', name: 'Avocado toast with egg',      category: 'breakfast', calories: 380, protein: 18, minutes: 10, servings: 1, tags: ['vegetarian','quick'], hue: 'rgb(132 204 22 / 0.16)' },
-  { id: '3', name: 'Lemon chicken quinoa bowl',   category: 'lunch',     calories: 520, protein: 42, minutes: 30, servings: 1, tags: ['glutenFree','dairyFree','halal','highProtein'], drPick: true, hue: 'rgb(101 163 13 / 0.18)' },
-  { id: '4', name: 'Chickpea stew with greens',   category: 'lunch',     calories: 410, protein: 18, minutes: 35, servings: 2, tags: ['vegan','glutenFree','dairyFree','halal'], hue: 'rgb(61 122 74 / 0.22)' },
-  { id: '5', name: 'Baked salmon & sweet potato', category: 'dinner',    calories: 580, protein: 38, minutes: 30, servings: 1, tags: ['glutenFree','dairyFree','halal','highProtein'], drPick: true, hue: 'rgb(232 145 42 / 0.18)' },
-  { id: '6', name: 'Stuffed bell peppers',        category: 'dinner',    calories: 460, protein: 28, minutes: 45, servings: 2, tags: ['glutenFree','halal','highProtein'], hue: 'rgb(168 85 247 / 0.16)' },
-  { id: '7', name: 'Hummus & cucumber plate',     category: 'snack',     calories: 160, protein: 6,  minutes: 5,  servings: 1, tags: ['vegan','vegetarian','quick','halal'], hue: 'rgb(132 204 22 / 0.18)' },
-  { id: '8', name: 'Apple almond butter slices',  category: 'snack',     calories: 200, protein: 5,  minutes: 3,  servings: 1, tags: ['vegan','vegetarian','glutenFree','dairyFree','quick'], hue: 'rgb(163 230 53 / 0.16)' },
-  { id: '9', name: 'Green ginger smoothie',       category: 'drink',     calories: 180, protein: 6,  minutes: 5,  servings: 1, tags: ['vegan','glutenFree','dairyFree','quick'], hue: 'rgb(34 197 94 / 0.18)' },
-  { id: '10', name: 'Date & cardamom latte',      category: 'drink',     calories: 140, protein: 5,  minutes: 6,  servings: 1, tags: ['vegetarian','glutenFree','quick','halal'], hue: 'rgb(217 119 6 / 0.16)' },
-  { id: '11', name: 'Mediterranean tuna wrap',    category: 'lunch',     calories: 440, protein: 32, minutes: 12, servings: 1, tags: ['highProtein','quick','dairyFree','halal'], hue: 'rgb(6 182 212 / 0.16)' },
-  { id: '12', name: 'Chia overnight oats',        category: 'breakfast', calories: 300, protein: 12, minutes: 5,  servings: 1, tags: ['vegetarian','dairyFree','quick'], hue: 'rgb(168 85 247 / 0.18)' },
-]
-
 const CATEGORIES: Category[] = ['all', 'breakfast', 'lunch', 'dinner', 'snack', 'drink']
 const DIETARY_TAGS: DietaryTag[] = ['vegan','vegetarian','glutenFree','dairyFree','keto','halal','highProtein','quick']
 
@@ -178,7 +163,7 @@ function Library({ t }: { t: ReturnType<typeof useTranslations> }) {
     }))
   }, [])
 
-  const sourceList = (live.data && live.data.length > 0) ? live.data : RECIPES
+  const sourceList = useMemo(() => live.data ?? [], [live.data])
 
   const visible = useMemo(() => {
     const q = query.trim().toLowerCase()

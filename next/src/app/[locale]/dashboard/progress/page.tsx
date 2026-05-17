@@ -53,26 +53,6 @@ const PERIOD_DAYS: Record<Period, number> = {
   '1y': 365,
 }
 
-/** Empty-state demo curve so the chart isn't blank — replaced with progress_entries in Cluster H */
-function buildSeed(start: number, days: number): WeightPoint[] {
-  const today = new Date()
-  const series: WeightPoint[] = []
-  let w = start
-  for (let i = days - 1; i >= 0; i--) {
-    const d = new Date(today)
-    d.setDate(today.getDate() - i)
-    // Slow downward drift with daily noise
-    w = w - 0.02 + (Math.sin(i / 4) * 0.15)
-    series.push({
-      date: d.toISOString().slice(5, 10), // MM-DD
-      weight: Number(w.toFixed(1)),
-    })
-  }
-  return series
-}
-
-const SEED = buildSeed(78.4, 90)
-
 const containerVariants = {
   hidden: { opacity: 0, y: 12 },
   visible: { opacity: 1, y: 0, transition: { duration: 0.3 } },
@@ -115,10 +95,11 @@ export default function ProgressPage() {
       }))
   }, [profile?.id, period])
 
-  const series = useMemo(() => {
-    if (liveSeries.data && liveSeries.data.length > 0) return liveSeries.data
-    return SEED.slice(-PERIOD_DAYS[period])
-  }, [liveSeries.data, period])
+  // Real series only — was falling back to a 90-day sine-wave fake
+  // weight curve (buildSeed) so the chart never looked empty even on
+  // brand-new accounts. Empty array now renders the page's
+  // "no progress logged" empty state.
+  const series = useMemo(() => liveSeries.data ?? [], [liveSeries.data])
 
   const startWeight = profile?.weight_kg ?? series[0]?.weight ?? 0
   const currentWeight = series[series.length - 1]?.weight ?? startWeight

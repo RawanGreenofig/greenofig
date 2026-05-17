@@ -63,25 +63,6 @@ function durationFor(type: SessionId): number {
   return s?.durationMin ?? 30
 }
 
-/** Demo seed — replaced by `bookings` table query in Cluster H */
-const SEED: BookingRecord[] = [
-  {
-    id: 'b1',
-    type: 'followUp',
-    date: '2026-05-08',
-    time: '15:30',
-    status: 'upcoming',
-    notes: 'Want to review the past two weeks of food logs.',
-  },
-  {
-    id: 'b2',
-    type: 'introCall',
-    date: '2026-04-19',
-    time: '10:00',
-    status: 'past',
-  },
-]
-
 function fmtDate(iso: string, locale = 'en-US') {
   const d = new Date(iso)
   return d.toLocaleDateString(locale, {
@@ -109,7 +90,11 @@ function BookingsPageInner() {
   const { profile } = useUser()
   const userId = profile?.id ?? null
   const [tab, setTab] = useState<Tab>('new')
-  const [bookings, setBookings] = useState<BookingRecord[]>(SEED)
+  // Bookings start empty and hydrate from the `bookings` table below.
+  // Was seeded with 2 fake records (b1: followUp 2026-05-08, b2:
+  // introCall 2026-04-19) that gave every new account fake "upcoming"
+  // and "past" entries.
+  const [bookings, setBookings] = useState<BookingRecord[]>([])
   const [nutritionists, setNutritionists] = useState<NutritionistOption[]>([])
   const [selectedNutId, setSelectedNutId] = useState<string | null>(null)
   const [conflictMsg, setConflictMsg] = useState<string | null>(null)

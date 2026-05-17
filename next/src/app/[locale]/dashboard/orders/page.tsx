@@ -73,58 +73,6 @@ const FILTER_TABS: (OrderStatus | 'all')[] = [
   'refunded',
 ]
 
-/** Demo seed — replaced by `orders` table query in Cluster H */
-const SEED: Order[] = [
-  {
-    id: 'GF-10248',
-    status: 'shipped',
-    placedAt: '2026-04-29',
-    estimatedAt: '2026-05-05',
-    trackingNumber: 'JOR-9482-7361',
-    items: [
-      { name: 'Daily Greens Powder',        qty: 1, unitPrice: 28, hue: 'rgb(163 230 53 / 0.18)' },
-      { name: 'Magnesium Glycinate 200 mg', qty: 2, unitPrice: 19, hue: 'rgb(168 85 247 / 0.18)' },
-    ],
-    subtotal: 66,
-    shipping: 0,
-    total: 66,
-    shipTo: 'Amman, Jordan',
-    paymentLast4: '4242',
-  },
-  {
-    id: 'GF-10199',
-    status: 'delivered',
-    placedAt: '2026-04-15',
-    deliveredAt: '2026-04-19',
-    trackingNumber: 'JOR-9381-2244',
-    items: [
-      { name: 'Mediterranean Olive Oil', qty: 1, unitPrice: 22, hue: 'rgb(132 204 22 / 0.18)' },
-      { name: 'Almond Butter (raw)',     qty: 1, unitPrice: 14, hue: 'rgb(232 145 42 / 0.18)' },
-      { name: 'Chia Seeds 500g',         qty: 2, unitPrice: 8,  hue: 'rgb(168 85 247 / 0.16)' },
-    ],
-    subtotal: 52,
-    shipping: 0,
-    total: 52,
-    shipTo: 'Amman, Jordan',
-    paymentLast4: '4242',
-  },
-  {
-    id: 'GF-10142',
-    status: 'delivered',
-    placedAt: '2026-03-22',
-    deliveredAt: '2026-03-26',
-    items: [
-      { name: 'Vitamin D3 + K2',     qty: 1, unitPrice: 24, hue: 'rgb(232 145 42 / 0.18)' },
-      { name: 'Omega-3 Fish Oil',    qty: 1, unitPrice: 32, hue: 'rgb(6 182 212 / 0.16)' },
-    ],
-    subtotal: 56,
-    shipping: 4,
-    total: 60,
-    shipTo: 'Amman, Jordan',
-    paymentLast4: '4242',
-  },
-]
-
 function fmtDate(iso: string): string {
   return new Date(iso).toLocaleDateString(undefined, {
     month: 'short',
@@ -236,9 +184,7 @@ export default function OrdersPage() {
     })
   }, [userId])
 
-  const orders = (liveOrders.data && liveOrders.data.length > 0)
-    ? liveOrders.data
-    : SEED
+  const orders = useMemo(() => liveOrders.data ?? [], [liveOrders.data])
 
   const visible = useMemo(
     () => (filter === 'all' ? orders : orders.filter((o) => o.status === filter)),

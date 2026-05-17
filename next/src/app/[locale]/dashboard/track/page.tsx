@@ -6,6 +6,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { useUser } from '@/lib/hooks/useUser'
 import { getBrowserSupabase } from '@/lib/supabase/client'
+import { MACRO_TARGETS as TARGETS } from '@/lib/macros-defaults'
 import {
   ChevronLeft,
   ChevronRight,
@@ -59,8 +60,6 @@ const COMMON_FOODS: Omit<FoodEntry, 'id'>[] = [
   { name: 'Salmon, baked',         servingLabel: '100 g',  calories: 208, protein: 22, carbs: 0,  fat: 13 },
   { name: 'Olive oil',             servingLabel: '1 tbsp', calories: 119, protein: 0,  carbs: 0,  fat: 14 },
 ]
-
-const TARGETS = { calories: 1840, protein: 120, carbs: 200, fat: 60 }
 
 function formatDateKey(d: Date) {
   return d.toISOString().slice(0, 10)
