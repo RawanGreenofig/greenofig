@@ -452,6 +452,10 @@ function CommunityPageInner() {
               initialComments={3}
             />
           </article>
+
+          {/* Real published posts from the DB — likes + comments here
+              persist via /api/dashboard/posts/* and migration 025. */}
+          <RealPostsFeed />
         </main>
 
         {/* ── RIGHT — Profile + Notifications ───────────────── */}
@@ -654,20 +658,23 @@ function PersonRow({ person }: { person: Person }) {
 }
 
 /**
- * Functional Like / Comment / Share row for a feed post.
+ * Like / Comment / Share row for a feed post.
  *
- * Why client-side only: there's no posts table yet. The home feed
- * currently renders two seeded posts (Nutrition Coach Rawan + Tip of the week)
- * — once a `community_posts` schema lands, swap the local state for
- * a Supabase-backed mutation and the call sites stay the same.
+ * Two modes:
  *
- * Behaviour:
- * - Like: optimistic toggle, count +/- 1, heart fills red while liked.
- * - Comment: expands an inline composer + the visitor's own comments,
- *   count auto-increments per submission.
- * - Share: copies the post's deep-link to clipboard (or invokes the
- *   native Web Share sheet if available); button flashes a "Copied"
- *   tick for 1.6s.
+ *   1. Real DB post (postId is a uuid):
+ *      Loads like count + my-like-state + comment list from
+ *      /api/dashboard/posts/likes and /api/dashboard/posts/comments
+ *      on mount. Like toggle and comment submit persist via the same
+ *      routes. This is what users see for posts the nutritionist
+ *      published via /nutritionist/content.
+ *
+ *   2. Seeded display post (any other id — the two hardcoded "Coach
+ *      Rawan" / "Tip of the week" blocks below):
+ *      Falls back to local state only, no API calls. Marked with a
+ *      "Likes shown for demo" hint so a user who likes one and
+ *      refreshes doesn't think the system is broken.
+ *      Remove this branch once those two posts move into the DB.
  */
 function PostActions({
   postId,
@@ -678,27 +685,111 @@ function PostActions({
   initialLikes: number
   initialComments: number
 }) {
+  const isRealPost = /^[0-9a-f-]{32,}$/i.test(postId)
+
   const [liked, setLiked] = useState(false)
+  const [likes, setLikes] = useState<number>(initialLikes)
   const [showComments, setShowComments] = useState(false)
-  const [comments, setComments] = useState<string[]>([])
+  // Stored shape mirrors the API: real posts carry author_name +
+  // created_at; locally-added comments use placeholder values for
+  // the demo branch.
+  type Comment = { id: string; body: string; author_name: string }
+  const [comments, setComments] = useState<Comment[]>([])
   const [draft, setDraft] = useState('')
   const [shared, setShared] = useState(false)
 
-  // Derive displayed count from a single source of truth — `liked` —
-  // instead of keeping a parallel `likes` count and mutating both.
-  // The previous nested-setter (`setLiked(p => { setLikes(...); return !p })`)
-  // double-fired under React StrictMode and incremented the count by 2.
-  const likes = initialLikes + (liked ? 1 : 0)
-  const commentTotal = initialComments + comments.length
+  // Hydrate real-post state on mount.
+  useEffect(() => {
+    if (!isRealPost) return
+    let cancelled = false
+    void (async () => {
+      const [likesRes, commentsRes] = await Promise.all([
+        fetch(`/api/dashboard/posts/likes?postId=${encodeURIComponent(postId)}`),
+        fetch(`/api/dashboard/posts/comments?postId=${encodeURIComponent(postId)}`),
+      ])
+      if (cancelled) return
+      if (likesRes.ok) {
+        const body = (await likesRes.json()) as { count?: number; mine?: boolean }
+        if (typeof body.count === 'number') setLikes(body.count)
+        if (typeof body.mine === 'boolean') setLiked(body.mine)
+      }
+      if (commentsRes.ok) {
+        const body = (await commentsRes.json()) as {
+          comments?: Comment[]
+        }
+        if (Array.isArray(body.comments)) setComments(body.comments)
+      }
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [isRealPost, postId])
 
-  const toggleLike = () => setLiked((p) => !p)
+  const commentTotal = isRealPost ? comments.length : initialComments + comments.length
+
+  const toggleLike = () => {
+    if (!isRealPost) {
+      // Demo branch — local toggle, no count persistence beyond the
+      // optimistic +/- 1 visible to this user.
+      setLiked((p) => !p)
+      setLikes((c) => c + (liked ? -1 : 1))
+      return
+    }
+    const nextLiked = !liked
+    setLiked(nextLiked)
+    setLikes((c) => c + (nextLiked ? 1 : -1))
+    void (async () => {
+      const res = await fetch('/api/dashboard/posts/likes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ post_id: postId, like: nextLiked }),
+      })
+      if (!res.ok) {
+        console.error('[community] like failed:', res.status)
+        // Roll back optimistic change.
+        setLiked(!nextLiked)
+        setLikes((c) => c + (nextLiked ? -1 : 1))
+        return
+      }
+      const body = (await res.json()) as { count?: number; mine?: boolean }
+      if (typeof body.count === 'number') setLikes(body.count)
+    })()
+  }
 
   const submitComment = (e: React.FormEvent) => {
     e.preventDefault()
     const v = draft.trim()
     if (!v) return
-    setComments((cs) => [...cs, v])
     setDraft('')
+    if (!isRealPost) {
+      // Demo branch — local-only comment.
+      setComments((cs) => [
+        ...cs,
+        { id: `local-${Date.now()}`, body: v, author_name: 'You' },
+      ])
+      return
+    }
+    // Optimistic insert + server persist.
+    const tempId = `tmp-${Date.now()}`
+    setComments((cs) => [...cs, { id: tempId, body: v, author_name: 'You' }])
+    void (async () => {
+      const res = await fetch('/api/dashboard/posts/comments', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ post_id: postId, body: v }),
+      })
+      if (!res.ok) {
+        console.error('[community] comment failed:', res.status)
+        setComments((cs) => cs.filter((c) => c.id !== tempId))
+        return
+      }
+      const body = (await res.json()) as { id?: string }
+      if (body.id) {
+        setComments((cs) =>
+          cs.map((c) => (c.id === tempId ? { ...c, id: body.id! } : c)),
+        )
+      }
+    })()
   }
 
   const share = async () => {
@@ -770,9 +861,9 @@ function PostActions({
 
       {showComments && (
         <div className="mt-3 space-y-2">
-          {comments.map((c, i) => (
+          {comments.map((c) => (
             <div
-              key={i}
+              key={c.id}
               style={{
                 background: 'var(--gf-bg-deeper)',
                 border: '1px solid var(--gf-border)',
@@ -785,7 +876,10 @@ function PostActions({
                 wordBreak: 'break-word',
               }}
             >
-              {c}
+              <span style={{ fontWeight: 600, color: 'var(--gf-fg-2)' }}>
+                {c.author_name}
+              </span>
+              <span style={{ marginLeft: 6 }}>{c.body}</span>
             </div>
           ))}
 
@@ -969,5 +1063,125 @@ function NotifRow({
         {time}
       </span>
     </div>
+  )
+}
+
+/**
+ * Renders posts from the `posts` table below the hardcoded demo
+ * blocks. Each gets a real uuid post_id so its like + comment
+ * interactions persist via /api/dashboard/posts/* (migration 025).
+ */
+function RealPostsFeed() {
+  const [posts, setPosts] = useState<
+    {
+      id: string
+      title: string
+      excerpt: string | null
+      content: string | null
+      author_name: string
+      created_at: string
+    }[]
+  >([])
+
+  useEffect(() => {
+    const supabase = getBrowserSupabase()
+    if (!supabase) return
+    let cancelled = false
+    void (async () => {
+      type Row = {
+        id: string
+        title: string
+        excerpt: string | null
+        content: string | null
+        author_id: string
+        created_at: string
+      }
+      const { data } = await supabase
+        .from('posts')
+        .select('id, title, excerpt, content, author_id, created_at')
+        .eq('is_published', true)
+        .order('created_at', { ascending: false })
+        .limit(20)
+      if (cancelled) return
+      const rows = (data as Row[] | null) ?? []
+      if (rows.length === 0) return
+      const authorIds = Array.from(new Set(rows.map((r) => r.author_id)))
+      const { data: profs } = await supabase
+        .from('profiles')
+        .select('id, full_name')
+        .in('id', authorIds)
+      const nameOf = new Map(
+        ((profs as { id: string; full_name: string | null }[] | null) ?? []).map(
+          (p) => [p.id, p.full_name ?? 'Greenofig'],
+        ),
+      )
+      if (cancelled) return
+      setPosts(
+        rows.map((r) => ({
+          id: r.id,
+          title: r.title,
+          excerpt: r.excerpt,
+          content: r.content,
+          author_name: nameOf.get(r.author_id) ?? 'Greenofig',
+          created_at: r.created_at,
+        })),
+      )
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  if (posts.length === 0) return null
+
+  return (
+    <>
+      {posts.map((p) => (
+        <article
+          key={p.id}
+          style={{
+            background: 'var(--gf-surface-raised)',
+            border: '1px solid var(--gf-border)',
+            borderRadius: 16,
+            padding: 20,
+          }}
+        >
+          <header className="flex items-baseline gap-2 mb-2 flex-wrap">
+            <span style={{ fontSize: 14, fontWeight: 700, color: 'var(--gf-fg-1)' }}>
+              {p.author_name}
+            </span>
+            <span style={{ fontSize: 12, color: 'var(--gf-fg-3)' }}>
+              {new Date(p.created_at).toLocaleDateString(undefined, {
+                month: 'short',
+                day: 'numeric',
+              })}
+            </span>
+          </header>
+          <h3
+            style={{
+              fontSize: 16,
+              fontWeight: 700,
+              color: 'var(--gf-fg-1)',
+              marginBottom: 8,
+            }}
+          >
+            {p.title}
+          </h3>
+          {(p.excerpt || p.content) && (
+            <p
+              style={{
+                fontSize: 14,
+                color: 'var(--gf-fg-2)',
+                lineHeight: 1.6,
+                whiteSpace: 'pre-wrap',
+              }}
+            >
+              {p.excerpt ?? p.content}
+            </p>
+          )}
+          <PostActions postId={p.id} initialLikes={0} initialComments={0} />
+        </article>
+      ))}
+    </>
   )
 }

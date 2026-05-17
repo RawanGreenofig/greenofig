@@ -128,7 +128,18 @@ export default function TrackPage() {
       const next: Record<MealType, FoodEntry[]> = {
         breakfast: [], lunch: [], dinner: [], snack: [],
       }
+      const nextSupplements: Supplement[] = []
       for (const row of rows) {
+        // Supplements share the nutrition_logs table with meal_type='supplement'.
+        // Split them out of the meal map so the SupplementsCard sees them.
+        if (row.meal_type === 'supplement') {
+          nextSupplements.push({
+            id: row.id,
+            name: row.food_name,
+            dose: row.serving_size ?? '',
+          })
+          continue
+        }
         const meal = (
           row.meal_type === 'breakfast' || row.meal_type === 'lunch' ||
           row.meal_type === 'dinner'    || row.meal_type === 'snack'
@@ -145,6 +156,7 @@ export default function TrackPage() {
         })
       }
       setEntries(next)
+      setSupplements(nextSupplements)
     })()
 
     return () => { cancelled = true }
@@ -165,43 +177,55 @@ export default function TrackPage() {
 
   const addEntry = (meal: MealType, food: Omit<FoodEntry, 'id'>) => {
     const localId = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
+    const previous = entries[meal]
     setEntries((prev) => ({
       ...prev,
       [meal]: [...prev[meal], { ...food, id: localId }],
     }))
     setPickerOpen(null)
 
-    // Persist to Supabase (best-effort) and swap the local id for the
-    // real row id when the insert returns.
-    const supabase = getBrowserSupabase()
-    if (supabase && userId) {
-      void supabase
-        .from('nutrition_logs')
-        .insert({
-          user_id: userId,
-          meal_type: meal,
-          food_name: food.name,
-          serving_size: food.servingLabel,
-          calories: food.calories,
-          protein_g: food.protein,
-          carbs_g: food.carbs,
-          fat_g: food.fat,
-          source: 'manual',
-          logged_at: date.toISOString(),
-        } as never)
-        .select('id')
-        .maybeSingle()
-        .then(({ data }) => {
-          const realId = (data as { id?: string } | null)?.id
-          if (!realId) return
+    // Persist via /api/dashboard/nutrition-log. Was a fire-and-forget
+    // browser supabase insert that silently dropped on RLS failure;
+    // the page would render the food locally, then on refresh the
+    // entry was gone with no signal to the user.
+    if (!userId) return
+    void (async () => {
+      try {
+        const res = await fetch('/api/dashboard/nutrition-log', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            meal_type: meal,
+            food_name: food.name,
+            serving_size: food.servingLabel,
+            calories: food.calories,
+            protein_g: food.protein,
+            carbs_g: food.carbs,
+            fat_g: food.fat,
+            logged_at: date.toISOString(),
+          }),
+        })
+        if (!res.ok) {
+          console.error('[track] log failed:', res.status)
+          // Roll back the optimistic insert so what's on screen
+          // matches the canonical DB state.
+          setEntries((prev) => ({ ...prev, [meal]: previous }))
+          return
+        }
+        const body = (await res.json()) as { id?: string }
+        if (body.id) {
           setEntries((prev) => ({
             ...prev,
             [meal]: prev[meal].map((e) =>
-              e.id === localId ? { ...e, id: realId } : e,
+              e.id === localId ? { ...e, id: body.id! } : e,
             ),
           }))
-        })
-    }
+        }
+      } catch (err) {
+        console.error('[track] log threw:', err)
+        setEntries((prev) => ({ ...prev, [meal]: previous }))
+      }
+    })()
   }
 
   const removeEntry = (meal: MealType, id: string) => {
@@ -214,24 +238,24 @@ export default function TrackPage() {
       [meal]: prev[meal].filter((e) => e.id !== id),
     }))
 
-    const supabase = getBrowserSupabase()
     const isPersistedId = /^[0-9a-f-]{32,}$/i.test(id)
-    if (!supabase || !userId || !isPersistedId) return
+    if (!userId || !isPersistedId) return
 
     void (async () => {
-      const { error } = await supabase
-        .from('nutrition_logs')
-        .delete()
-        .eq('id', id)
-        .eq('user_id', userId)
-
-      if (error) {
-        console.error('[track] delete failed:', error.message)
-        // Restore the entry so the UI matches the canonical DB state.
+      try {
+        const res = await fetch('/api/dashboard/nutrition-log', {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id }),
+        })
+        if (!res.ok) {
+          console.error('[track] delete failed:', res.status)
+          setEntries((prev) => ({ ...prev, [meal]: previous }))
+        }
+      } catch (err) {
+        console.error('[track] delete threw:', err)
         setEntries((prev) => ({ ...prev, [meal]: previous }))
       }
-      // No re-fetch on success — local state already reflects the
-      // canonical post-delete state.
     })()
   }
 
@@ -293,10 +317,64 @@ export default function TrackPage() {
         <SupplementsCard
           t={t}
           supplements={supplements}
-          onAdd={(s) => setSupplements((prev) => [...prev, s])}
-          onRemove={(id) =>
+          onAdd={(s) => {
+            // Optimistic add — persist via the same nutrition-log API
+            // with meal_type='supplement' so refresh keeps it. Was
+            // local-state only; supplements vanished on every reload.
+            const previous = supplements
+            setSupplements((prev) => [...prev, s])
+            if (!userId) return
+            void (async () => {
+              try {
+                const res = await fetch('/api/dashboard/nutrition-log', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    meal_type: 'supplement',
+                    food_name: s.name,
+                    serving_size: s.dose,
+                    logged_at: date.toISOString(),
+                  }),
+                })
+                if (!res.ok) {
+                  console.error('[track] supplement log failed:', res.status)
+                  setSupplements(previous)
+                  return
+                }
+                const body = (await res.json()) as { id?: string }
+                if (body.id) {
+                  setSupplements((prev) =>
+                    prev.map((x) => (x.id === s.id ? { ...x, id: body.id! } : x)),
+                  )
+                }
+              } catch (err) {
+                console.error('[track] supplement log threw:', err)
+                setSupplements(previous)
+              }
+            })()
+          }}
+          onRemove={(id) => {
+            const previous = supplements
             setSupplements((prev) => prev.filter((s) => s.id !== id))
-          }
+            const isPersistedId = /^[0-9a-f-]{32,}$/i.test(id)
+            if (!userId || !isPersistedId) return
+            void (async () => {
+              try {
+                const res = await fetch('/api/dashboard/nutrition-log', {
+                  method: 'DELETE',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ id }),
+                })
+                if (!res.ok) {
+                  console.error('[track] supplement delete failed:', res.status)
+                  setSupplements(previous)
+                }
+              } catch (err) {
+                console.error('[track] supplement delete threw:', err)
+                setSupplements(previous)
+              }
+            })()
+          }}
         />
       </section>
 

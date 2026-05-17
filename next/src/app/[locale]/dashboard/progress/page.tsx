@@ -28,7 +28,6 @@ import {
 } from 'recharts'
 import { useUser } from '@/lib/hooks/useUser'
 import { useSupabaseQuery } from '@/lib/hooks/useSupabaseQuery'
-import { getBrowserSupabase } from '@/lib/supabase/client'
 
 type Period = '7d' | '30d' | '90d' | '1y'
 
@@ -550,23 +549,46 @@ function LogWeightModal({
   const [weight, setWeight] = useState<string>(current.toString())
   const [bodyFat, setBodyFat] = useState<string>('')
   const [saved, setSaved] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [submitting, setSubmitting] = useState(false)
 
-  const submit = (e: React.FormEvent) => {
+  // Persist via /api/dashboard/progress. The modal used to flip
+  // `saved` to true and close, *before* the supabase insert resolved
+  // — and silently swallowed RLS failures. Now waits for the server
+  // response and surfaces a failure message instead of pretending.
+  const submit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!weight) return
-    setSaved(true)
-
-    const supabase = getBrowserSupabase()
-    if (supabase && profile?.id) {
-      void supabase.from('progress_entries').insert({
-        user_id: profile.id,
-        weight_kg: Number(weight),
-        body_fat_percent: bodyFat ? Number(bodyFat) : null,
-        recorded_at: new Date().toISOString(),
-      } as never)
+    if (!weight || submitting) return
+    if (!profile?.id) {
+      setError('Sign in to log weight.')
+      return
     }
-
-    window.setTimeout(onClose, 900)
+    setSubmitting(true)
+    setError(null)
+    try {
+      const res = await fetch('/api/dashboard/progress', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          weight_kg: Number(weight),
+          body_fat_percent: bodyFat ? Number(bodyFat) : null,
+          recorded_at: new Date().toISOString(),
+        }),
+      })
+      if (!res.ok) {
+        const body = (await res.json().catch(() => null)) as
+          | { error?: { message?: string } }
+          | null
+        setError(body?.error?.message ?? `Couldn't save (HTTP ${res.status})`)
+        setSubmitting(false)
+        return
+      }
+      setSaved(true)
+      window.setTimeout(onClose, 900)
+    } catch {
+      setError('Network error. Try again.')
+      setSubmitting(false)
+    }
   }
 
   return (
@@ -636,16 +658,24 @@ function LogWeightModal({
               dir="ltr"
             />
           </div>
+          {error && (
+            <div
+              role="alert"
+              className="rounded-md border border-red-500/40 bg-red-500/10 px-3 py-2 text-xs text-red-300"
+            >
+              {error}
+            </div>
+          )}
           <button
             type="submit"
-            disabled={saved}
+            disabled={saved || submitting}
             className={`w-full h-11 rounded-pill text-sm font-semibold transition-all ${
               saved
                 ? 'bg-primary/20 text-lime-400 cursor-default'
                 : 'bg-gradient-to-b from-lime-400 to-lime-600 text-bg shadow-lime-glow border border-lime-600/60 hover:-translate-y-px'
-            }`}
+            } disabled:opacity-60`}
           >
-            {saved ? t('weightLogged') : t('logWeight')}
+            {saved ? t('weightLogged') : submitting ? '…' : t('logWeight')}
           </button>
         </form>
       </div>
