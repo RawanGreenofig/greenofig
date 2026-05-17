@@ -12,6 +12,7 @@ import {
   isGeminiConfigured,
   safeJson,
 } from '@/lib/gemini'
+import { requireFeature } from '@/lib/api/features'
 
 /**
  * POST /api/research
@@ -69,6 +70,13 @@ Return ONLY valid JSON in this exact shape:
 export const POST = withNutritionistOrAdmin(
   async (req: NextRequest, ctx: AuthedContext) => {
     if (!isGeminiConfigured()) return serviceUnavailable('Gemini')
+
+    // Feature gate — /admin/store can turn the research desk off, or
+    // flip maintenance mode for the whole site.
+    {
+      const blocked = await requireFeature('research_desk_enabled')
+      if (blocked) return blocked
+    }
 
     let body: { conversationId?: string; question?: string }
     try {

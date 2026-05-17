@@ -8,6 +8,7 @@ import {
 } from '@/lib/api/response'
 import { getServerSupabase } from '@/lib/supabase/server'
 import { localDateTimeInTzToUtc } from '@/lib/timezone'
+import { requireFeature } from '@/lib/api/features'
 
 /**
  * POST /api/bookings/create
@@ -29,6 +30,14 @@ import { localDateTimeInTzToUtc } from '@/lib/timezone'
 export const POST = withAuth(async (req: NextRequest, ctx: AuthedContext) => {
   const supabase = getServerSupabase()
   if (!supabase) return serviceUnavailable('Supabase')
+
+  // Feature gate — /admin/store can turn bookings off, or flip
+  // maintenance mode site-wide. Was UI-only before; now the API
+  // refuses too.
+  {
+    const blocked = await requireFeature('booking_enabled')
+    if (blocked) return blocked
+  }
 
   let body: {
     nutritionist_id?: string

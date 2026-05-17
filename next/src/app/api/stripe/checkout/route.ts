@@ -14,6 +14,11 @@ import {
   isStripeConfigured,
 } from '@/lib/stripe'
 import { TIERS, type Tier } from '@/lib/constants'
+import {
+  requireFeature,
+  isMaintenanceMode,
+  getStoreAllowedTiers,
+} from '@/lib/api/features'
 
 /**
  * POST /api/stripe/checkout
@@ -66,6 +71,44 @@ export const POST = withAuth(async (req: NextRequest, ctx: AuthedContext) => {
 
   const supabase = getServerSupabase()
   if (!supabase) return serviceUnavailable('Supabase')
+
+  // Maintenance mode kills every paid flow including new
+  // subscriptions — admin should be able to stop ALL incoming charges
+  // with one toggle, including the upgrade flow.
+  if (await isMaintenanceMode()) {
+    return json(
+      {
+        error: {
+          code: 'maintenance',
+          message: 'Greenofig is briefly down for maintenance. Try again shortly.',
+        },
+      },
+      503,
+    )
+  }
+  // Per-kind feature gates. Subscriptions intentionally bypass the
+  // store/booking toggles — those toggles are for individual sale
+  // flows, not for the recurring revenue that keeps the lights on.
+  if (body.kind === 'order') {
+    const blocked = await requireFeature('store_enabled')
+    if (blocked) return blocked
+    const allowedTiers = await getStoreAllowedTiers()
+    if (allowedTiers && !allowedTiers.includes(ctx.profile.tier as Tier)) {
+      return json(
+        {
+          error: {
+            code: 'tier_blocked',
+            message: 'Your plan does not include store access.',
+          },
+        },
+        403,
+      )
+    }
+  }
+  if (body.kind === 'booking') {
+    const blocked = await requireFeature('booking_enabled')
+    if (blocked) return blocked
+  }
 
   // Resolve or create the Stripe customer for this user.
   const stripeCustomerId = await resolveStripeCustomer(ctx)

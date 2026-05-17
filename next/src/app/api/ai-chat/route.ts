@@ -16,6 +16,7 @@ import {
 } from '@/lib/gemini'
 import { tierAtLeast } from '@/lib/tier'
 import { checkAndIncrementUsage } from '@/lib/ai-usage'
+import { requireFeature } from '@/lib/api/features'
 
 /**
  * POST /api/ai-chat
@@ -50,6 +51,14 @@ export const POST = withAuth(async (req: NextRequest, ctx: AuthedContext) => {
   if (!isGeminiConfigured()) {
     console.error('[ai-chat] GEMINI_API_KEY not configured')
     return serviceUnavailable('Gemini')
+  }
+
+  // Feature gate — /admin/store can disable AI chat globally, or flip
+  // maintenance mode site-wide. Was UI-only before; now it refuses
+  // the request.
+  {
+    const blocked = await requireFeature('ai_chat_enabled')
+    if (blocked) return blocked
   }
 
   // Tier gate — premium and vip only

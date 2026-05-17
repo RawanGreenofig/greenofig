@@ -13,6 +13,7 @@ import {
 } from '@/lib/gemini'
 import { tierAtLeast } from '@/lib/tier'
 import { checkAndIncrementUsage } from '@/lib/ai-usage'
+import { requireFeature } from '@/lib/api/features'
 
 /**
  * POST /api/scanner
@@ -108,6 +109,14 @@ export const POST = withAuth(async (req: NextRequest, ctx: AuthedContext) => {
   if (!isGeminiConfigured()) {
     console.error('[scanner] GEMINI_API_KEY not configured')
     return serviceUnavailable('Gemini')
+  }
+
+  // Feature gate — admin can turn the whole scanner off from /admin/store,
+  // or flip maintenance mode for the whole site. Was UI-only before;
+  // this makes the toggle actually block the API.
+  {
+    const blocked = await requireFeature('scanner_enabled')
+    if (blocked) return blocked
   }
 
   let body: { imageBase64?: string; mealType?: string }

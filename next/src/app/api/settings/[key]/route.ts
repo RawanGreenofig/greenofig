@@ -2,6 +2,7 @@ import type { NextRequest } from 'next/server'
 import { withAdmin, type AuthedContext } from '@/lib/api/auth'
 import { badRequest, json, notFound, serviceUnavailable } from '@/lib/api/response'
 import { ipFromRequest, logAudit } from '@/lib/api/audit'
+import { invalidateFeatureCache } from '@/lib/api/features'
 import { getServiceSupabase } from '@/lib/supabase/service'
 
 /**
@@ -115,6 +116,10 @@ export const POST = withAdmin<{ key: string }>(
       } as never, { onConflict: 'key' })
 
     if (error) return badRequest(error.message)
+
+    // Bust the in-process feature cache so API gates pick up the new
+    // value before the 60s TTL expires.
+    invalidateFeatureCache(key)
 
     await logAudit({
       action: 'platform_settings.update',
