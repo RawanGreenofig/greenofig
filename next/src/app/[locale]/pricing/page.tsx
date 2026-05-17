@@ -193,7 +193,6 @@ const PLANS: Record<'en' | 'ar', Plan[]> = {
       features: [
         'Everything in Premium',
         'Monthly consultation included',
-        'Fastest AI response time',
         'Exclusive VIP products',
         'First access to new features',
         'Monthly personal nutrition review',
@@ -291,7 +290,6 @@ const PLANS: Record<'en' | 'ar', Plan[]> = {
       features: [
         'كل ما في المميز',
         'استشارة شهرية مشمولة',
-        'أسرع استجابة للذكاء الاصطناعي',
         'منتجات VIP حصرية',
         'أول وصول للميزات الجديدة',
         'مراجعة تغذية شهرية',
