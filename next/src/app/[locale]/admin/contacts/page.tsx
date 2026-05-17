@@ -81,7 +81,7 @@ export default function AdminContactsPage() {
 
   const { data, loading, error, reload } = useSupabaseQuery<ContactRow[]>(queryFn, [statusFilter])
 
-  const rows = data ?? []
+  const rows = useMemo(() => data ?? [], [data])
   const filtered = useMemo(() => {
     const s = search.trim().toLowerCase()
     if (!s) return rows
@@ -104,27 +104,34 @@ export default function AdminContactsPage() {
   }, [rows])
 
   async function setStatus(id: string, next: Status) {
-    const supabase = getBrowserSupabase()
-    if (!supabase) return
-    const patch: Partial<ContactRow> = { status: next }
-    if (next === 'read' && !rows.find((r) => r.id === id)?.read_at) {
-      patch.read_at = new Date().toISOString()
+    // Server-side stamps read_at / replied_at when appropriate, so we
+    // only need to send the new status. Was a direct supabase update
+    // that silently failed under RLS races; now the API route returns
+    // a structured error.
+    const res = await fetch('/api/admin/contacts', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id, status: next }),
+    })
+    if (!res.ok) {
+      console.error('[admin/contacts] update failed:', res.status)
+      return
     }
-    if (next === 'replied') {
-      patch.replied_at = new Date().toISOString()
-    }
-    const { error } = await supabase.from('contact_messages').update(patch as never).eq('id', id)
-    if (error) console.error('[admin/contacts] update failed:', error)
-    else reload()
+    reload()
   }
 
   async function deleteRow(id: string) {
     if (!confirm('Delete this message permanently?')) return
-    const supabase = getBrowserSupabase()
-    if (!supabase) return
-    const { error } = await supabase.from('contact_messages').delete().eq('id', id)
-    if (error) console.error('[admin/contacts] delete failed:', error)
-    else reload()
+    const res = await fetch('/api/admin/contacts', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id }),
+    })
+    if (!res.ok) {
+      console.error('[admin/contacts] delete failed:', res.status)
+      return
+    }
+    reload()
   }
 
   function exportMarketingCsv() {

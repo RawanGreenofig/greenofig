@@ -132,29 +132,38 @@ export default function AdminAvailabilityPage() {
   const save = async () => {
     if (!selectedId) return
     setSaveState('saving')
-    const supabase = getBrowserSupabase()
-    if (!supabase) {
-      setSaveState('idle')
-      return
-    }
 
-    // Persist working hours
-    const rows = DAYS.map((day) => ({
-      nutritionist_id: selectedId,
+    // Single round-trip to /api/admin/availability — server-side does
+    // both the schedule upsert and the profiles.timezone update under
+    // service role, so the request can't half-succeed (timezone landed
+    // but schedule didn't, or vice versa) the way the two-step browser
+    // version could.
+    const scheduleRows = DAYS.map((day) => ({
       day_of_week: DAY_TO_DOW[day],
       is_open: schedule[day].open,
       start_time: schedule[day].from,
       end_time: schedule[day].to,
     }))
-    await supabase
-      .from('nutritionist_schedules')
-      .upsert(rows as never, { onConflict: 'nutritionist_id,day_of_week' })
-
-    // Persist timezone (admin can override the nutritionist's stored zone)
-    await supabase
-      .from('profiles')
-      .update({ timezone } as never)
-      .eq('id', selectedId)
+    try {
+      const res = await fetch('/api/admin/availability', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          nutritionist_id: selectedId,
+          timezone,
+          schedule: scheduleRows,
+        }),
+      })
+      if (!res.ok) {
+        console.error('[admin/availability] save failed:', res.status)
+        setSaveState('idle')
+        return
+      }
+    } catch (err) {
+      console.error('[admin/availability] save threw:', err)
+      setSaveState('idle')
+      return
+    }
 
     // Reflect change in the local cached list so the dropdown stays in sync
     setNutritionists((curr) =>

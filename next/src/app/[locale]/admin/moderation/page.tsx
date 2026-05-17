@@ -240,12 +240,16 @@ export default function AdminModerationPage() {
           : it,
       ),
     )
-    const supabase = getBrowserSupabase()
-    if (supabase && /^[0-9a-f-]{32,}$/i.test(id)) {
-      void supabase
-        .from('moderation_flags')
-        .update({ resolution: action, resolved_at: new Date().toISOString() } as never)
-        .eq('id', id)
+    if (/^[0-9a-f-]{32,}$/i.test(id)) {
+      void fetch('/api/admin/moderation', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, resolution: action }),
+      }).then((res) => {
+        if (!res.ok) console.error('[admin/moderation] resolve failed:', res.status)
+      }).catch((err) => {
+        console.error('[admin/moderation] resolve threw:', err)
+      })
     }
   }
 

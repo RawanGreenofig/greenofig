@@ -97,11 +97,14 @@ export default function AdminStorePage() {
 
   // Hydrate products + the master toggle settings from the DB on mount.
   useEffect(() => {
-    const supabase = getBrowserSupabase()
-    if (!supabase) return
     let cancelled = false
 
+    // Products list is admin-readable via the regular client (not
+    // platform_settings), and the page IS gated by admin auth on the
+    // server, so the browser read is fine here.
     void (async () => {
+      const supabase = getBrowserSupabase()
+      if (!supabase) return
       type Row = {
         id: string; name: string; category: string; stock: number; hue: string | null
       }
@@ -110,69 +113,78 @@ export default function AdminStorePage() {
         .select('id, name, category, stock, hue')
         .order('created_at', { ascending: false })
         .limit(80)
-      if (!cancelled) {
-        const list = ((rows as Row[] | null) ?? []).map((r) => ({
-          id: r.id,
-          name: r.name,
-          category: r.category,
-          stock: r.stock,
-          hue: r.hue ?? 'rgb(132 204 22 / 0.16)',
-        }))
-        if (list.length > 0) setProducts(list)
-      }
+      if (cancelled) return
+      const list = ((rows as Row[] | null) ?? []).map((r) => ({
+        id: r.id,
+        name: r.name,
+        category: r.category,
+        stock: r.stock,
+        hue: r.hue ?? 'rgb(132 204 22 / 0.16)',
+      }))
+      if (list.length > 0) setProducts(list)
+    })()
 
-      type SettingRow = { key: string; value: unknown }
-      const { data: settingsRows } = await supabase
-        .from('platform_settings')
-        .select('key, value')
-        .in('key', [
-          'store_enabled',
-          'maintenance_mode',
-          'ai_chat_enabled',
-          'booking_enabled',
-          'scanner_enabled',
-          'community_enabled',
-          'research_desk_enabled',
-          'site_announcement',
-          'store_enabled_tiers',
-          'free_tier_scanner_limit',
-          'booking_price_cents',
-          'member_discount_percent',
-        ])
-      if (!cancelled) {
-        for (const s of (settingsRows as SettingRow[] | null) ?? []) {
-          const truthy = s.value === true || s.value === 'true'
-          // Default-true toggles read as enabled when row absent or null.
-          // Only an explicit `false`/`'false'` string disables the feature.
-          const explicitFalse = s.value === false || s.value === 'false'
-          if (s.key === 'store_enabled')        setLive(truthy)
-          if (s.key === 'maintenance_mode')     setMaintenance(truthy)
-          if (s.key === 'ai_chat_enabled')      setAiChatEnabled(!explicitFalse)
-          if (s.key === 'booking_enabled')      setBookingEnabled(!explicitFalse)
-          if (s.key === 'scanner_enabled')      setScannerEnabled(!explicitFalse)
-          if (s.key === 'community_enabled')    setCommunityEnabled(!explicitFalse)
-          if (s.key === 'research_desk_enabled') setResearchEnabled(!explicitFalse)
-          if (s.key === 'site_announcement')
-            setAnnouncement(typeof s.value === 'string' ? s.value : '')
-          if (s.key === 'store_enabled_tiers' && Array.isArray(s.value)) {
-            setStoreTiers((s.value as string[]).filter((x) => typeof x === 'string'))
-          }
-          if (s.key === 'free_tier_scanner_limit') {
-            const n = typeof s.value === 'number' ? s.value : Number(s.value)
-            if (Number.isFinite(n) && n >= 0) setFreeScannerLimit(n)
-          }
-          if (s.key === 'booking_price_cents' && s.value && typeof s.value === 'object') {
-            const v = s.value as Record<string, unknown>
-            setBookingPrices((prev) => ({
-              introCall: Number(v.introCall ?? prev.introCall) || 0,
-              followUp:  Number(v.followUp  ?? prev.followUp ) || 0,
-              deepDive:  Number(v.deepDive  ?? prev.deepDive ) || 0,
-            }))
-          }
-          if (s.key === 'member_discount_percent') {
-            const n = typeof s.value === 'number' ? s.value : Number(s.value)
-            if (Number.isFinite(n) && n >= 0 && n <= 100) setMemberDiscount(n)
-          }
+    // Platform settings now load through /api/settings/[key] (service
+    // role, admin-gated). Was using the browser supabase client, which
+    // raced the JWT restore on hard refresh → reads returned empty →
+    // the toggles reverted to their useState defaults (all true), so
+    // an admin who had turned the scanner OFF would see it as ON until
+    // they navigated again.
+    const SETTING_KEYS = [
+      'store_enabled',
+      'maintenance_mode',
+      'ai_chat_enabled',
+      'booking_enabled',
+      'scanner_enabled',
+      'community_enabled',
+      'research_desk_enabled',
+      'site_announcement',
+      'store_enabled_tiers',
+      'free_tier_scanner_limit',
+      'booking_price_cents',
+      'member_discount_percent',
+    ] as const
+    void (async () => {
+      const results = await Promise.all(
+        SETTING_KEYS.map(async (key) => {
+          const res = await fetch(`/api/settings/${key}`, { cache: 'no-store' })
+          if (!res.ok) return [key, null] as const
+          const body = (await res.json()) as { value?: unknown }
+          return [key, body.value ?? null] as const
+        }),
+      )
+      if (cancelled) return
+      for (const [key, value] of results) {
+        if (value === null) continue
+        const truthy = value === true || value === 'true'
+        const explicitFalse = value === false || value === 'false'
+        if (key === 'store_enabled')        setLive(truthy)
+        if (key === 'maintenance_mode')     setMaintenance(truthy)
+        if (key === 'ai_chat_enabled')      setAiChatEnabled(!explicitFalse)
+        if (key === 'booking_enabled')      setBookingEnabled(!explicitFalse)
+        if (key === 'scanner_enabled')      setScannerEnabled(!explicitFalse)
+        if (key === 'community_enabled')    setCommunityEnabled(!explicitFalse)
+        if (key === 'research_desk_enabled') setResearchEnabled(!explicitFalse)
+        if (key === 'site_announcement')
+          setAnnouncement(typeof value === 'string' ? value : '')
+        if (key === 'store_enabled_tiers' && Array.isArray(value)) {
+          setStoreTiers((value as string[]).filter((x) => typeof x === 'string'))
+        }
+        if (key === 'free_tier_scanner_limit') {
+          const n = typeof value === 'number' ? value : Number(value)
+          if (Number.isFinite(n) && n >= 0) setFreeScannerLimit(n)
+        }
+        if (key === 'booking_price_cents' && value && typeof value === 'object') {
+          const v = value as Record<string, unknown>
+          setBookingPrices((prev) => ({
+            introCall: Number(v.introCall ?? prev.introCall) || 0,
+            followUp:  Number(v.followUp  ?? prev.followUp ) || 0,
+            deepDive:  Number(v.deepDive  ?? prev.deepDive ) || 0,
+          }))
+        }
+        if (key === 'member_discount_percent') {
+          const n = typeof value === 'number' ? value : Number(value)
+          if (Number.isFinite(n) && n >= 0 && n <= 100) setMemberDiscount(n)
         }
       }
     })()

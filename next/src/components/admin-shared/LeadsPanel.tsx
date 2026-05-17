@@ -141,7 +141,7 @@ export function LeadsPanel() {
 
   const { data, loading, error, reload } = useSupabaseQuery<LeadRow[]>(queryFn, [statusFilter])
 
-  const rows = data ?? []
+  const rows = useMemo(() => data ?? [], [data])
   const filtered = useMemo(() => {
     const s = search.trim().toLowerCase()
     if (!s) return rows
@@ -164,46 +164,45 @@ export function LeadsPanel() {
   }, [rows])
 
   async function setStatus(id: string, next: Status) {
-    const supabase = getBrowserSupabase()
-    if (!supabase) return
-    const patch: Partial<LeadRow> = { status: next }
-    const row = rows.find((r) => r.id === id)
-    if (next === 'contacted' && !row?.contacted_at) {
-      patch.contacted_at = new Date().toISOString()
+    // Server stamps contacted_at / converted_at on first transition.
+    const res = await fetch('/api/admin/leads', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id, status: next }),
+    })
+    if (!res.ok) {
+      console.error('[leads] update failed:', res.status)
+      return
     }
-    if (next === 'converted' && !row?.converted_at) {
-      patch.converted_at = new Date().toISOString()
-    }
-    const { error } = await supabase
-      .from('consultation_leads')
-      .update(patch as never)
-      .eq('id', id)
-    if (error) console.error('[leads] update failed:', error)
-    else reload()
+    reload()
   }
 
   async function saveNotes(id: string) {
     const notes = editNotes[id] ?? ''
-    const supabase = getBrowserSupabase()
-    if (!supabase) return
-    const { error } = await supabase
-      .from('consultation_leads')
-      .update({ notes } as never)
-      .eq('id', id)
-    if (error) console.error('[leads] notes save failed:', error)
-    else reload()
+    const res = await fetch('/api/admin/leads', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id, notes }),
+    })
+    if (!res.ok) {
+      console.error('[leads] notes save failed:', res.status)
+      return
+    }
+    reload()
   }
 
   async function deleteRow(id: string) {
     if (!confirm('Delete this lead permanently?')) return
-    const supabase = getBrowserSupabase()
-    if (!supabase) return
-    const { error } = await supabase
-      .from('consultation_leads')
-      .delete()
-      .eq('id', id)
-    if (error) console.error('[leads] delete failed:', error)
-    else reload()
+    const res = await fetch('/api/admin/leads', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id }),
+    })
+    if (!res.ok) {
+      console.error('[leads] delete failed:', res.status)
+      return
+    }
+    reload()
   }
 
   function exportCsv() {

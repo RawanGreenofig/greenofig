@@ -109,52 +109,63 @@ export default function AdminCareersPage() {
   }
 
   async function save(draft: Draft): Promise<{ error?: string }> {
-    const supabase = getBrowserSupabase()
-    if (!supabase) return { error: 'Database unavailable.' }
-    const row = {
-      title: draft.title.trim(),
-      department: draft.department?.trim() || null,
-      location: draft.location?.trim() || null,
-      job_type: draft.job_type,
-      summary: draft.summary.trim(),
-      description: draft.description.trim(),
-      requirements: draft.requirements,
-      responsibilities: draft.responsibilities,
-      benefits: draft.benefits,
-      salary_min: draft.salary_min,
-      salary_max: draft.salary_max,
-      salary_currency: draft.salary_currency ?? 'USD',
-      is_published: draft.is_published,
-      published_at: draft.is_published ? new Date().toISOString() : null,
+    // Send the whole draft to the admin API. Server-side validates
+    // job_type, stamps published_at, and audits create-vs-update.
+    const res = await fetch('/api/admin/careers', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        id: draft.id,
+        title: draft.title,
+        department: draft.department,
+        location: draft.location,
+        job_type: draft.job_type,
+        summary: draft.summary,
+        description: draft.description,
+        requirements: draft.requirements,
+        responsibilities: draft.responsibilities,
+        benefits: draft.benefits,
+        salary_min: draft.salary_min,
+        salary_max: draft.salary_max,
+        salary_currency: draft.salary_currency ?? 'USD',
+        is_published: draft.is_published,
+      }),
+    })
+    if (!res.ok) {
+      const body = (await res.json().catch(() => null)) as
+        | { error?: { message?: string } }
+        | null
+      return { error: body?.error?.message ?? `Save failed (HTTP ${res.status})` }
     }
-    const res = draft.id
-      ? await supabase.from('job_postings').update(row as never).eq('id', draft.id)
-      : await supabase.from('job_postings').insert(row as never)
-    if (res.error) return { error: res.error.message }
     setEditing(null)
     void reload()
     return {}
   }
 
   async function togglePublish(job: Job) {
-    const supabase = getBrowserSupabase()
-    if (!supabase) return
-    const next = !job.is_published
-    await supabase
-      .from('job_postings')
-      .update({
-        is_published: next,
-        published_at: next ? new Date().toISOString() : null,
-      } as never)
-      .eq('id', job.id)
+    const res = await fetch('/api/admin/careers', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: job.id, toggle: true }),
+    })
+    if (!res.ok) {
+      console.error('[admin/careers] toggle failed:', res.status)
+      return
+    }
     void reload()
   }
 
   async function remove(jobId: string) {
     if (!confirm('Delete this job posting and all its applications? This cannot be undone.')) return
-    const supabase = getBrowserSupabase()
-    if (!supabase) return
-    await supabase.from('job_postings').delete().eq('id', jobId)
+    const res = await fetch('/api/admin/careers', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: jobId }),
+    })
+    if (!res.ok) {
+      console.error('[admin/careers] delete failed:', res.status)
+      return
+    }
     void reload()
   }
 
