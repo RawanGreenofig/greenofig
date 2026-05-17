@@ -81,6 +81,12 @@ interface GoalsForm {
   preferences: Set<string>
   allergies: string[]
   conditions: string[]
+  // Daily macro targets (migration 026). Empty string = "use platform
+  // default" — translated to null on save.
+  targetCalories: string
+  targetProteinG: string
+  targetCarbsG: string
+  targetFatG: string
 }
 
 const TABS: { key: TabKey; Icon: LucideIcon }[] = [
@@ -210,6 +216,10 @@ function SettingsPageInner() {
     preferences: new Set(),
     allergies: [],
     conditions: [],
+    targetCalories: '',
+    targetProteinG: '',
+    targetCarbsG: '',
+    targetFatG: '',
   })
   const [notif, setNotif] = useState<NotifPrefs>(() => ({
     channels: NOTIF_TOPICS.reduce(
@@ -252,6 +262,10 @@ function SettingsPageInner() {
       preferences: new Set(profile.dietary_preferences ?? []),
       allergies: profile.allergies ?? [],
       conditions: profile.health_conditions ?? [],
+      targetCalories: profile.target_calories ? String(profile.target_calories) : '',
+      targetProteinG: profile.target_protein_g ? String(profile.target_protein_g) : '',
+      targetCarbsG: profile.target_carbs_g ? String(profile.target_carbs_g) : '',
+      targetFatG: profile.target_fat_g ? String(profile.target_fat_g) : '',
     })
   }, [profile, user?.user_metadata])
 
@@ -289,6 +303,24 @@ function SettingsPageInner() {
             .from('profiles')
             .update(patch as never)
             .eq('id', profile.id)
+        }
+        // Macro targets go through /api/dashboard/macro-targets so the
+        // server validates ranges. Empty string is treated as "clear
+        // back to default" and sent as null.
+        if (tab === 'goals') {
+          const macroBody: Record<string, number | null> = {
+            calories: goals.targetCalories ? Number(goals.targetCalories) : null,
+            protein:  goals.targetProteinG ? Number(goals.targetProteinG) : null,
+            carbs:    goals.targetCarbsG   ? Number(goals.targetCarbsG)   : null,
+            fat:      goals.targetFatG     ? Number(goals.targetFatG)     : null,
+          }
+          await fetch('/api/dashboard/macro-targets', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(macroBody),
+          }).catch((err) => {
+            console.error('[settings] macro-targets save threw:', err)
+          })
         }
       }
       setSaveState('saved')
@@ -772,6 +804,51 @@ function GoalsPane({
               onChange={(v) => onChange({ ...goals, targetWeightKg: v })}
               ltr
               suffix="kg"
+            />
+          </Field>
+        </div>
+      </Section>
+
+      <Section title="Daily macro goals">
+        <p className="text-sm text-fg-2 mb-3">
+          Leave a field blank to use the platform default. Track and
+          today views read these instead of the defaults when set.
+        </p>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <Field label="Calories">
+            <TextInput
+              type="number"
+              value={goals.targetCalories}
+              onChange={(v) => onChange({ ...goals, targetCalories: v })}
+              ltr
+              suffix="kcal"
+            />
+          </Field>
+          <Field label="Protein">
+            <TextInput
+              type="number"
+              value={goals.targetProteinG}
+              onChange={(v) => onChange({ ...goals, targetProteinG: v })}
+              ltr
+              suffix="g"
+            />
+          </Field>
+          <Field label="Carbs">
+            <TextInput
+              type="number"
+              value={goals.targetCarbsG}
+              onChange={(v) => onChange({ ...goals, targetCarbsG: v })}
+              ltr
+              suffix="g"
+            />
+          </Field>
+          <Field label="Fat">
+            <TextInput
+              type="number"
+              value={goals.targetFatG}
+              onChange={(v) => onChange({ ...goals, targetFatG: v })}
+              ltr
+              suffix="g"
             />
           </Field>
         </div>

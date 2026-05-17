@@ -21,6 +21,12 @@ export interface Profile {
   height_cm: number | null
   weight_kg: number | null
   target_weight_kg: number | null
+  /** Per-user daily macro goals. null on any of these = use
+   *  MACRO_TARGETS platform default. Migration 026. */
+  target_calories: number | null
+  target_protein_g: number | null
+  target_carbs_g: number | null
+  target_fat_g: number | null
   dietary_preferences: string[] | null
   allergies: string[] | null
   health_conditions: string[] | null

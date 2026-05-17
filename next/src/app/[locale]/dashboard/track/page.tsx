@@ -6,7 +6,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { useUser } from '@/lib/hooks/useUser'
 import { getBrowserSupabase } from '@/lib/supabase/client'
-import { MACRO_TARGETS as TARGETS } from '@/lib/macros-defaults'
+import { resolveMacroTargets } from '@/lib/macros-defaults'
 import {
   ChevronLeft,
   ChevronRight,
@@ -79,6 +79,8 @@ export default function TrackPage() {
 
   const { profile } = useUser()
   const userId = profile?.id ?? null
+  // Profile-driven goals (migration 026) with platform fallback.
+  const TARGETS = resolveMacroTargets(profile)
 
   const [date, setDate] = useState<Date>(() => new Date())
   const [entries, setEntries] = useState<Record<MealType, FoodEntry[]>>({
@@ -288,7 +290,7 @@ export default function TrackPage() {
       </header>
 
       {/* Totals */}
-      <TotalsCard t={t} totals={totals} />
+      <TotalsCard t={t} totals={totals} targets={TARGETS} />
 
       {/* Meals */}
       <section aria-label="Meals" className="space-y-4">
@@ -447,9 +449,11 @@ function DatePager({
 function TotalsCard({
   t,
   totals,
+  targets,
 }: {
   t: ReturnType<typeof useTranslations>
   totals: { calories: number; protein: number; carbs: number; fat: number }
+  targets: { calories: number; protein: number; carbs: number; fat: number }
 }) {
   return (
     <article className="rounded-xl border border-border bg-surface p-5 md:p-6">
@@ -459,14 +463,14 @@ function TotalsCard({
           <span className="text-fg-1 text-2xl font-bold">
             {Math.round(totals.calories)}
           </span>
-          <span className="ms-1.5">/ {TARGETS.calories} kcal</span>
+          <span className="ms-1.5">/ {targets.calories} kcal</span>
         </p>
       </div>
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <MacroBar label={t('calories')} value={totals.calories} target={TARGETS.calories} unit="kcal" color="#84cc16" />
-        <MacroBar label={t('protein')}  value={totals.protein}  target={TARGETS.protein}  unit="g" color="#3b82f6" />
-        <MacroBar label={t('carbs')}    value={totals.carbs}    target={TARGETS.carbs}    unit="g" color="#f97316" />
-        <MacroBar label={t('fat')}      value={totals.fat}      target={TARGETS.fat}      unit="g" color="#a855f7" />
+        <MacroBar label={t('calories')} value={totals.calories} target={targets.calories} unit="kcal" color="#84cc16" />
+        <MacroBar label={t('protein')}  value={totals.protein}  target={targets.protein}  unit="g" color="#3b82f6" />
+        <MacroBar label={t('carbs')}    value={totals.carbs}    target={targets.carbs}    unit="g" color="#f97316" />
+        <MacroBar label={t('fat')}      value={totals.fat}      target={targets.fat}      unit="g" color="#a855f7" />
       </div>
     </article>
   )

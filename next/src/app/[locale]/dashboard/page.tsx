@@ -22,7 +22,7 @@ import { NUTRITIONIST } from '@/lib/tokens'
 import { useSupabaseQuery } from '@/lib/hooks/useSupabaseQuery'
 import { usePushNotifications } from '@/lib/hooks/usePushNotifications'
 import { resolveFirstName } from '@/lib/displayName'
-import { MACRO_TARGETS } from '@/lib/macros-defaults'
+import { resolveMacroTargets } from '@/lib/macros-defaults'
 import { useState } from 'react'
 
 const containerVariants = {
@@ -62,9 +62,9 @@ export default function DashboardTodayPage() {
   })
 
   const userId = profile?.id ?? null
-  // Platform defaults until per-user targets land. See
-  // next/src/lib/macros-defaults.ts.
-  const targets = MACRO_TARGETS
+  // Per-user goals if set on profile (migration 026), otherwise the
+  // platform defaults from macros-defaults.ts.
+  const targets = resolveMacroTargets(profile)
 
   const live = useSupabaseQuery<TodayQueryResult>(async (supabase) => {
     if (!userId) return { todayLogs: [], waterMlToday: 0, nextBooking: null }
