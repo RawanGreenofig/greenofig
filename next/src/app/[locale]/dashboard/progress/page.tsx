@@ -2,7 +2,7 @@
 
 
 import { motion } from 'framer-motion'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import {
   Scale,
@@ -71,6 +71,28 @@ export default function ProgressPage() {
     thighs: null,
     neck: null,
   })
+  // Load latest measurements once on mount. The card subsequently
+  // saves through POST /api/dashboard/measurements on blur, so we
+  // don't need to re-fetch — the local state is the source of truth
+  // for the form after first load.
+  useEffect(() => {
+    if (!profile?.id) return
+    let cancelled = false
+    void (async () => {
+      try {
+        const res = await fetch('/api/dashboard/measurements')
+        if (!res.ok) return
+        const data = (await res.json()) as Partial<Measurements>
+        if (cancelled) return
+        setMeasurements((curr) => ({ ...curr, ...data }))
+      } catch {
+        /* offline — leave nulls and let the user type fresh values */
+      }
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [profile?.id])
   const [photoTab, setPhotoTab] = useState<'frontView' | 'sideView' | 'backView'>('frontView')
 
   // Live weight series from progress_entries; falls back to SEED while
@@ -354,15 +376,50 @@ function MeasurementsCard({
     { key: 'neck',   label: t('neck') },
   ]
 
+  // Track the per-field server-saved value so we only POST on blur
+  // when the user actually changed something. Hydrated on first load
+  // from the latest /api/dashboard/measurements snapshot.
+  const lastSaved = useRef<Measurements>(measurements)
+  useEffect(() => {
+    lastSaved.current = measurements
+    // We only want to capture the *initial* hydrated values, not every
+    // edit. The 'load once' guard below uses the ref initialized state.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  const [savingKey, setSavingKey] = useState<keyof Measurements | null>(null)
+  const [savedKey, setSavedKey] = useState<keyof Measurements | null>(null)
+
+  const persist = async (key: keyof Measurements, value: number | null) => {
+    if (lastSaved.current[key] === value) return
+    setSavingKey(key)
+    try {
+      const res = await fetch('/api/dashboard/measurements', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ [key]: value }),
+      })
+      if (res.ok) {
+        lastSaved.current = { ...lastSaved.current, [key]: value }
+        setSavedKey(key)
+        window.setTimeout(
+          () => setSavedKey((curr) => (curr === key ? null : curr)),
+          1500,
+        )
+      }
+    } catch {
+      /* leave UI as-is; the value stays in local state and the next
+         blur will retry. */
+    } finally {
+      setSavingKey((curr) => (curr === key ? null : curr))
+    }
+  }
+
   return (
     <article className="rounded-xl border border-border bg-surface p-5">
       <h2 className="text-base font-semibold text-fg-1 mb-4">
         {t('measurements')}
       </h2>
-      {/* Clean row stack — no per-row sub-card, just a thin divider
-       * between fields. The label hugs the start, the input + unit
-       * pair hugs the end on a single baseline. Removes the prior
-       * "outer card → inner pill → input box" three-layer nesting. */}
       <ul className="divide-y" style={{ borderColor: 'var(--gf-border)' }}>
         {fields.map(({ key, label }) => (
           <li
@@ -389,12 +446,17 @@ function MeasurementsCard({
                     [key]: e.target.value === '' ? null : Number(e.target.value),
                   })
                 }
+                onBlur={() => void persist(key, measurements[key])}
                 placeholder="—"
                 className="w-20 h-8 rounded-md bg-bg-deeper border border-transparent hover:border-border px-2 text-sm font-mono text-fg-1 text-end focus:outline-none focus:border-primary focus:bg-bg transition-colors"
                 dir="ltr"
               />
               <span className="text-xs text-fg-3 font-medium w-5 text-start">
-                {t('cm')}
+                {savingKey === key
+                  ? '…'
+                  : savedKey === key
+                  ? '✓'
+                  : t('cm')}
               </span>
             </div>
           </li>
@@ -508,10 +570,10 @@ function AchievementsGrid({
           .gte('logged_at', sixtyAgo.toISOString()),
         supabase
           .from('progress_entries')
-          .select('weight_kg, entry_date')
+          .select('weight_kg, recorded_at')
           .eq('user_id', userId)
           .not('weight_kg', 'is', null)
-          .order('entry_date', { ascending: true })
+          .order('recorded_at', { ascending: true })
           .limit(500),
       ])
 
