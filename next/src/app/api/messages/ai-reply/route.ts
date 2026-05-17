@@ -1,8 +1,15 @@
 import type { NextRequest } from 'next/server'
 import { withAuth, type AuthedContext } from '@/lib/api/auth'
-import { badRequest, internalError, json, serviceUnavailable } from '@/lib/api/response'
+import {
+  badRequest,
+  forbidden,
+  internalError,
+  json,
+  serviceUnavailable,
+} from '@/lib/api/response'
 import { getServiceSupabase } from '@/lib/supabase/service'
 import { generateAiReply, isAiCoachConfigured, looksUrgent } from '@/lib/ai-coach'
+import { tierAtLeast } from '@/lib/tier'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -25,6 +32,16 @@ export const dynamic = 'force-dynamic'
  *     flow degrades gracefully.
  */
 export const POST = withAuth(async (req: NextRequest, ctx: AuthedContext) => {
+  // Messaging is a Premium+ feature. Reject AI-reply generation for
+  // anyone under that tier so a free user can't trigger AI cycles by
+  // posting directly to /api/messages/ai-reply.
+  if (
+    ctx.profile.role === 'user' &&
+    !tierAtLeast(ctx.profile.tier, 'premium')
+  ) {
+    return forbidden('Messaging your coach is included with the Premium plan.')
+  }
+
   let body: { conversationId?: string }
   try {
     body = (await req.json()) as typeof body

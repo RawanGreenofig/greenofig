@@ -2,6 +2,7 @@ import type { NextRequest } from 'next/server'
 import { withAuth, type AuthedContext } from '@/lib/api/auth'
 import {
   badRequest,
+  forbidden,
   internalError,
   json,
   serviceUnavailable,
@@ -9,6 +10,7 @@ import {
 import { getServerSupabase } from '@/lib/supabase/server'
 import { localDateTimeInTzToUtc } from '@/lib/timezone'
 import { requireFeature } from '@/lib/api/features'
+import { tierAtLeast } from '@/lib/tier'
 
 /**
  * POST /api/bookings/create
@@ -58,6 +60,17 @@ export const POST = withAuth(async (req: NextRequest, ctx: AuthedContext) => {
   }
   if (!type || !['introCall', 'followUp', 'deepDive'].includes(type)) {
     return badRequest('type must be introCall, followUp, or deepDive.')
+  }
+  // Per-tier booking gate. Free customers get the intro call (the
+  // top-of-funnel touchpoint). Follow-ups and deep-dives are the
+  // ongoing-engagement sessions that Premium and VIP pay for, so a
+  // free user trying to book one (via direct API call, bypassing the
+  // pricing page) gets refused here. Was previously not enforced —
+  // anyone signed in could book any session type.
+  if (type !== 'introCall' && !tierAtLeast(ctx.profile.tier, 'premium')) {
+    return forbidden(
+      `${type === 'followUp' ? 'Follow-up' : 'Deep-dive'} sessions are included with the Premium plan.`,
+    )
   }
   if (!date || !/^\d{4}-\d{2}-\d{2}$/.test(date)) {
     return badRequest('date (YYYY-MM-DD) is required.')

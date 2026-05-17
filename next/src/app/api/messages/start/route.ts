@@ -1,7 +1,13 @@
 import { NextResponse } from 'next/server'
 import { withAuth, type AuthedContext } from '@/lib/api/auth'
 import { getServiceSupabase } from '@/lib/supabase/service'
-import { internalError, json, serviceUnavailable } from '@/lib/api/response'
+import {
+  forbidden,
+  internalError,
+  json,
+  serviceUnavailable,
+} from '@/lib/api/response'
+import { tierAtLeast } from '@/lib/tier'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -30,6 +36,18 @@ export const dynamic = 'force-dynamic'
 export const POST = withAuth(async (_req, ctx: AuthedContext) => {
   const supabase = getServiceSupabase()
   if (!supabase) return serviceUnavailable('Supabase')
+
+  // Client→coach messaging is a Premium+ feature per the pricing page.
+  // Page-level FeatureGate already hides the thread for free/basic, but
+  // any caller with a session could hit this route directly — refuse
+  // here too. Nutritionists and admins always get through so staff can
+  // initiate threads on behalf of clients.
+  if (
+    ctx.profile.role === 'user' &&
+    !tierAtLeast(ctx.profile.tier, 'premium')
+  ) {
+    return forbidden('Messaging your coach is included with the Premium plan.')
+  }
 
   // Look for an existing conversation owned by this client first.
   const { data: existing } = await supabase
