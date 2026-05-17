@@ -44,19 +44,32 @@ export function useSupabaseQuery<T>(
     }
     setLoading(true)
     setError(null)
-    fetcher(supabase as Browser)
-      .then((res) => {
+
+    // Wait for the session to be hydrated from cookies/localStorage
+    // before firing the query. Otherwise supabase-js sends the
+    // request with anon credentials during the brief window between
+    // mount and session restore, RLS treats it as unauthenticated,
+    // and every list page on /admin /nutritionist /dashboard
+    // briefly returns empty on hard refresh.
+    //
+    // .getSession() reads local storage / cookies synchronously and
+    // resolves immediately — it does NOT round-trip the server, so
+    // we're not adding latency. We're just sequencing the await so
+    // supabase-js has the JWT attached when fetcher runs.
+    void (async () => {
+      try {
+        await supabase.auth.getSession()
+        if (cancelRef.current) return
+        const res = await fetcher(supabase as Browser)
         if (cancelRef.current) return
         setData(res)
-      })
-      .catch((err: unknown) => {
+      } catch (err: unknown) {
         if (cancelRef.current) return
         setError(err instanceof Error ? err.message : 'Failed to load')
-      })
-      .finally(() => {
-        if (cancelRef.current) return
-        setLoading(false)
-      })
+      } finally {
+        if (!cancelRef.current) setLoading(false)
+      }
+    })()
     return () => {
       cancelRef.current = true
     }
