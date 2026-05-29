@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import { setRequestLocale } from 'next-intl/server'
-import { HeroSequence } from '@/components/HeroSequence'
+import { VideoHero } from '@/components/VideoHero'
 import { SiteHeader } from '@/components/SiteHeader'
 import { StatsSection } from '@/components/sections/StatsSection'
 import { AboutSection } from '@/components/sections/AboutSection'
@@ -31,7 +31,7 @@ export default function Home({ params }: PageProps) {
   return (
     <main className="bg-bg">
       <SiteHeader />
-      <HeroSequence />
+      <VideoHero />
       <StatsSection />
       <AboutSection />
       <ServicesSection />
