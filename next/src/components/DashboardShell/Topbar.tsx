@@ -78,7 +78,7 @@ export function Topbar({ onOpenMenu }: { onOpenMenu: () => void }) {
         aria-label={t('openSidebar')}
         className="md:hidden inline-flex items-center justify-center w-10 h-10 rounded-md transition-colors"
         style={{ color: '#888' }}
-        onMouseEnter={(e) => (e.currentTarget.style.background = '#1f1f1f')}
+        onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--gf-hover-bg)')}
         onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
       >
         <Menu className="w-5 h-5" strokeWidth={1.75} />

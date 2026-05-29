@@ -513,7 +513,10 @@ html[dir='rtl'] .lucide-arrow-right {
     gap: 8px;
   }
   .topbar-avatar-btn:hover {
-    background: #222;
+    /* Theme-aware hover. Was hardcoded #222, which turned the avatar
+     * button near-black on hover in light mode. */
+    background: var(--gf-bg-deeper);
+    border-color: var(--gf-border-hover);
   }
 }
 
@@ -575,22 +578,25 @@ html[dir='rtl'] .lucide-arrow-right {
  *   --gf-input-bg        form fields / search bars
  *   --gf-primary         accent (lime in dark, forest in light) */
 [data-dash-theme='light'] [data-theme='dashboard'] {
-  --gf-bg:             #f5f5f5;
-  --gf-bg-deeper:      #e5e5e5;
+  /* A softly green-tinted grey page so the white cards/surfaces read as
+   * raised panels instead of dissolving into a near-white background.
+   * (Was #f5f5f5 on #ffffff — almost no separation, hence "too light".) */
+  --gf-bg:             #e7ebe4;
+  --gf-bg-deeper:      #dbe0d6;
   --gf-surface:        #ffffff;
   --gf-surface-raised: #ffffff;
   --gf-card:           #ffffff;
-  --gf-card-hover:     #fafafa;
+  --gf-card-hover:     #f3f6f0;
   --gf-overlay:        #ffffff;
-  --gf-border:         #e8e8e8;
-  --gf-border-hover:   #d4d4d4;
+  --gf-border:         #d4d9cd;
+  --gf-border-hover:   #bcc4b2;
   --gf-border-focus:   #4d7c0f;
   --gf-fg-1:           #1a1a1a;
   --gf-fg-2:           #444444;
   --gf-fg-3:           #888888;
   --gf-fg-4:           #b0b0b0;
-  --gf-input-bg:       #f8f8f8;
-  --gf-input-border:   #e8e8e8;
+  --gf-input-bg:       #f1f4ef;
+  --gf-input-border:   #d4d9cd;
   --gf-primary:        #4d7c0f;
   --gf-primary-hover:  #65a30d;
   --gf-primary-dark:   #365314;
@@ -623,7 +629,7 @@ html[dir='rtl'] .lucide-arrow-right {
   --text-primary: 220 15% 10%;
   --text-secondary: 220 10% 35%;
 
-  background: #f5f5f5;
+  background: #e7ebe4;
   color: #1a1a1a;
 }
 

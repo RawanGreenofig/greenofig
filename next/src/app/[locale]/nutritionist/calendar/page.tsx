@@ -11,6 +11,7 @@ import {
 } from '@/icons'
 import { useUser } from '@/lib/hooks/useUser'
 import { useSupabaseQuery } from '@/lib/hooks/useSupabaseQuery'
+import NewSessionModal from './NewSessionModal'
 
 function initialsOf(name: string): string {
   return name
@@ -72,6 +73,7 @@ export default function CalendarPage() {
   const [selectedDay, setSelectedDay] = useState<string | null>(() =>
     new Date().toISOString().slice(0, 10),
   )
+  const [showNew, setShowNew] = useState(false)
 
   // Pull bookings inside the visible month window so both week + month
   // views have everything they need without re-fetching on view toggle.
@@ -197,6 +199,7 @@ export default function CalendarPage() {
         </div>
         <button
           type="button"
+          onClick={() => setShowNew(true)}
           className="inline-flex items-center gap-1.5 rounded-pill bg-gradient-to-b from-lime-400 to-lime-600 text-bg font-semibold h-10 px-4 text-xs shadow-lime-glow border border-lime-600/60 hover:-translate-y-px transition-transform"
         >
           <Plus className="w-3.5 h-3.5" strokeWidth={2.25} />
@@ -283,6 +286,16 @@ export default function CalendarPage() {
           sessions={sessions.filter((s) => s.date === selectedDay)}
         />
       </section>
+
+      {showNew && profile?.id && (
+        <NewSessionModal
+          coachId={profile.id}
+          isHeadCoach={!!profile.is_head_coach}
+          defaultDate={selectedDay}
+          onClose={() => setShowNew(false)}
+          onCreated={() => live.reload()}
+        />
+      )}
     </div>
   )
 }
