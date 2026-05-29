@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import {
   DndContext,
@@ -29,6 +29,7 @@ import {
   Apple,
   Moon,
   Droplets,
+  ChevronDown,
 } from '@/icons'
 import type { LucideIcon } from 'lucide-react'
 import { useUser } from '@/lib/hooks/useUser'
@@ -774,54 +775,22 @@ function Library({
           className="w-full h-10 ps-10 pe-3 text-sm text-fg-1 placeholder-fg-3"
         />
       </div>
-      {/* Category filter — segmented control matching the rest of the
-       * dashboard (8px outer radius on --gf-input-bg surface, lime
-       * tint when active). */}
-      <div
-        className="flex items-center mb-3 flex-wrap"
-        style={{
-          background: 'var(--gf-input-bg)',
-          border: '1px solid var(--gf-border)',
-          borderRadius: 8,
-          padding: 3,
-          gap: 2,
-        }}
-      >
-        {CATEGORY_FILTERS.map((c) => {
-          const active = filter === c
-          return (
-            <button
-              key={c}
-              type="button"
-              onClick={() => setFilter(c)}
-              className="inline-flex items-center justify-center px-2.5 transition-colors"
-              style={{
-                height: 26,
-                borderRadius: 6,
-                background: active ? 'rgba(132,217,61,0.12)' : 'transparent',
-                color: active ? '#a3e635' : 'var(--gf-fg-3)',
-                fontSize: 10,
-                fontWeight: 700,
-                letterSpacing: '0.08em',
-                textTransform: 'uppercase',
-              }}
-              onMouseEnter={(e) => {
-                if (!active) {
-                  e.currentTarget.style.background = 'var(--gf-card-hover)'
-                  e.currentTarget.style.color = 'var(--gf-fg-1)'
-                }
-              }}
-              onMouseLeave={(e) => {
-                if (!active) {
-                  e.currentTarget.style.background = 'transparent'
-                  e.currentTarget.style.color = 'var(--gf-fg-3)'
-                }
-              }}
-            >
-              {c === 'all' ? t('filterAll') : c}
-            </button>
-          )
-        })}
+      {/* Category filter — dropdown matching the dashboard filter
+       * chrome on /admin/users and the Clients page (replaces the old
+       * segmented pill row). */}
+      <div className="mb-3">
+        <FilterDropdown
+          label={t('filterCategory')}
+          options={CATEGORY_FILTERS.map((c) => [
+            c,
+            c === 'all'
+              ? t('filterAll')
+              : t(`categories.${c}` as 'categories.breakfast'),
+          ])}
+          value={filter}
+          onChange={(v) => setFilter(v as 'all' | RecipeRef['category'])}
+          fullWidth
+        />
       </div>
       <ul className="space-y-2">
         {recipes.length === 0 ? (
@@ -837,6 +806,135 @@ function Library({
         )}
       </ul>
     </aside>
+  )
+}
+
+/**
+ * Dropdown category filter — same chrome as /admin/users and the
+ * Clients page (replaces the old segmented pill row). `fullWidth`
+ * makes it fill the Library sidebar column instead of hugging its
+ * label.
+ */
+function FilterDropdown({
+  label,
+  options,
+  value,
+  onChange,
+  fullWidth,
+}: {
+  label: string
+  options: [string, string][]
+  value: string
+  onChange: (v: string) => void
+  fullWidth?: boolean
+}) {
+  const [open, setOpen] = useState(false)
+  const wrapRef = useRef<HTMLDivElement>(null)
+  const selected =
+    options.find(([v]) => v === value)?.[1] ?? options[0]?.[1] ?? ''
+
+  useEffect(() => {
+    if (!open) return
+    const onClick = (e: MouseEvent) => {
+      if (!wrapRef.current?.contains(e.target as Node)) setOpen(false)
+    }
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setOpen(false)
+    }
+    document.addEventListener('mousedown', onClick)
+    document.addEventListener('keydown', onKey)
+    return () => {
+      document.removeEventListener('mousedown', onClick)
+      document.removeEventListener('keydown', onKey)
+    }
+  }, [open])
+
+  return (
+    <div
+      className={`relative ${fullWidth ? 'flex w-full' : 'inline-flex'}`}
+      ref={wrapRef}
+    >
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        className="inline-flex items-center gap-2 h-10 px-3 rounded-md text-sm transition-colors"
+        style={{
+          background: 'var(--gf-input-bg)',
+          border: '1px solid var(--gf-border)',
+          color: 'var(--gf-fg-1)',
+          ...(fullWidth ? { width: '100%' } : { minWidth: 160 }),
+        }}
+      >
+        <span
+          className="text-[11px] uppercase font-semibold"
+          style={{ letterSpacing: '0.08em', color: 'var(--gf-fg-3)' }}
+        >
+          {label}
+        </span>
+        <span className="font-medium truncate flex-1 text-start">
+          {selected}
+        </span>
+        <ChevronDown
+          className={`w-4 h-4 transition-transform ${open ? 'rotate-180' : ''}`}
+          strokeWidth={1.75}
+          color="var(--gf-fg-3)"
+        />
+      </button>
+
+      {open && (
+        <div
+          role="listbox"
+          className="absolute top-full mt-1 z-30 rounded-md py-1 overflow-hidden"
+          style={{
+            insetInlineStart: 0,
+            minWidth: '100%',
+            background: 'var(--gf-card)',
+            border: '1px solid var(--gf-border)',
+            boxShadow: '0 12px 32px rgba(0,0,0,0.45)',
+          }}
+        >
+          {options.map(([v, lbl]) => {
+            const active = v === value
+            return (
+              <button
+                key={v}
+                type="button"
+                role="option"
+                aria-selected={active}
+                onClick={() => {
+                  onChange(v)
+                  setOpen(false)
+                }}
+                className="w-full flex items-center gap-2 px-3 h-9 text-sm text-start transition-colors"
+                style={{
+                  background: active ? 'rgba(132,217,61,0.12)' : 'transparent',
+                  color: active ? '#a3e635' : 'var(--gf-fg-1)',
+                  fontWeight: active ? 600 : 500,
+                }}
+                onMouseEnter={(e) => {
+                  if (!active)
+                    e.currentTarget.style.background = 'var(--gf-card-hover)'
+                }}
+                onMouseLeave={(e) => {
+                  if (!active) e.currentTarget.style.background = 'transparent'
+                }}
+              >
+                <span className="flex-1 truncate">{lbl}</span>
+                {active && (
+                  <Check
+                    className="w-4 h-4 shrink-0"
+                    strokeWidth={2}
+                    color="#a3e635"
+                  />
+                )}
+              </button>
+            )
+          })}
+        </div>
+      )}
+    </div>
   )
 }
 

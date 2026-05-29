@@ -1844,6 +1844,13 @@
       "library": "Recipe library",
       "librarySearch": "Search recipes…",
       "filterAll": "All",
+      "filterCategory": "Category",
+      "categories": {
+        "breakfast": "Breakfast",
+        "lunch": "Lunch",
+        "dinner": "Dinner",
+        "snack": "Snack"
+      },
       "noRecipes": "No matching recipes",
       "weekTitle": "Week {n}",
       "duplicateWeek": "Duplicate week",

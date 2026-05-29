@@ -1844,6 +1844,13 @@
       "library": "مكتبة الوصفات",
       "librarySearch": "ابحث في الوصفات…",
       "filterAll": "الكل",
+      "filterCategory": "الفئة",
+      "categories": {
+        "breakfast": "فطور",
+        "lunch": "غداء",
+        "dinner": "عشاء",
+        "snack": "وجبة خفيفة"
+      },
       "noRecipes": "لا توجد وصفات مطابقة",
       "weekTitle": "الأسبوع {n}",
       "duplicateWeek": "كرّر الأسبوع",
