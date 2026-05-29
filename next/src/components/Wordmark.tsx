@@ -2,7 +2,7 @@ import Image from 'next/image'
 import { cn } from '@/lib/cn'
 
 /**
- * Greenofig wordmark. Logo image + Space Grotesk 700 text — "Greeno" in
+ * Greenofig wordmark. Logo image + Cormorant 700 serif text — "Greeno" in
  * the button lime (#a3e635), "fig" in deep plum (--gf-wordmark-fig,
  * which lifts to a brighter plum on the dark dashboard).
  * Image fallback: `/logo.png` from public/.
@@ -53,7 +53,7 @@ export function Wordmark({
           textSize,
           hideTextOnMobile && 'hidden sm:inline',
         )}
-        style={{ fontFamily: 'var(--font-space-grotesk), var(--font-inter), system-ui, sans-serif' }}
+        style={{ fontFamily: 'var(--font-cormorant), Georgia, serif' }}
       >
         {/* "Greeno" matches the .btn-primary lime (#a3e635). */}
         <span style={{ color: '#a3e635' }}>Greeno</span>

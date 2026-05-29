@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from 'next'
-import { Inter, JetBrains_Mono, Noto_Sans_Arabic, Space_Grotesk } from 'next/font/google'
+import { Inter, JetBrains_Mono, Noto_Sans_Arabic, Cormorant } from 'next/font/google'
 import localFont from 'next/font/local'
 import { notFound } from 'next/navigation'
 import { NextIntlClientProvider, hasLocale } from 'next-intl'
@@ -53,12 +53,11 @@ const jetBrainsMono = JetBrains_Mono({
   display: 'swap',
 })
 
-// Brand wordmark font (Space Grotesk — modern geometric, pairs with the
-// neon green/purple wordmark).
-const spaceGrotesk = Space_Grotesk({
+// Brand wordmark font (Cormorant — elegant high-contrast serif).
+const cormorant = Cormorant({
   subsets: ['latin'],
   weight: ['500', '600', '700'],
-  variable: '--font-space-grotesk',
+  variable: '--font-cormorant',
   display: 'swap',
 })
 
@@ -247,7 +246,7 @@ export default async function LocaleLayout({ children, params }: LayoutProps) {
     <html
       lang={locale}
       dir={dir}
-      className={`${fraunces.variable} ${inter.variable} ${jetBrainsMono.variable} ${notoArabic.variable} ${spaceGrotesk.variable}`}
+      className={`${fraunces.variable} ${inter.variable} ${jetBrainsMono.variable} ${notoArabic.variable} ${cormorant.variable}`}
     >
       <body className="bg-bg text-fg-1 antialiased">
         <NextIntlClientProvider locale={locale} messages={messages}>
