@@ -2,11 +2,10 @@ import Image from 'next/image'
 import { cn } from '@/lib/cn'
 
 /**
- * Greenofig wordmark. Logo image + Inter 700 text — "Greeno" in the
- * theme foreground, "fig" in the theme lime accent. Colors are driven by
- * CSS vars (--gf-fg-1 / --gf-lime-400) so the wordmark stays legible on
- * both the light pistachio marketing site and the dark dashboard.
- * Image fallback: `/logo.png` from public/.
+ * Greenofig wordmark. Logo image + Space Grotesk 700 text — "Greeno" in
+ * neon green, "fig" in neon fig-violet, each with a thin dark edge + soft
+ * glow so the neon reads on both the light pistachio site and the dark
+ * dashboard. Image fallback: `/logo.png` from public/.
  *
  * Three sizes:
  *   sm — GhostBar mobile, footer mobile (24px logo, base text)
@@ -54,10 +53,26 @@ export function Wordmark({
           textSize,
           hideTextOnMobile && 'hidden sm:inline',
         )}
-        style={{ fontFamily: 'var(--font-inter), system-ui, sans-serif' }}
+        style={{ fontFamily: 'var(--font-space-grotesk), var(--font-inter), system-ui, sans-serif' }}
       >
-        <span style={{ color: 'var(--gf-fg-1)' }}>Greeno</span>
-        <span style={{ color: 'var(--gf-lime-400)' }}>fig</span>
+        <span
+          style={{
+            color: '#39ff7a',
+            textShadow:
+              '0 0 1px rgba(20,45,28,0.9), 0 0 10px rgba(57,255,122,0.55)',
+          }}
+        >
+          Greeno
+        </span>
+        <span
+          style={{
+            color: '#d96bff',
+            textShadow:
+              '0 0 1px rgba(45,20,55,0.9), 0 0 10px rgba(217,107,255,0.55)',
+          }}
+        >
+          fig
+        </span>
       </span>
     </span>
   )

@@ -50,20 +50,24 @@ export const Field = forwardRef<HTMLInputElement, FieldProps>(function Field(
           ref={ref}
           id={fieldId}
           type={effectiveType}
-          className={`block w-full rounded-xl px-4 py-3 text-sm text-white placeholder:text-[#444] transition-all duration-200 focus:outline-none ${className ?? ''}`}
+          className={`block w-full rounded-xl px-4 py-3 text-sm text-fg-1 placeholder:text-fg-3 transition-all duration-200 focus:outline-none ${className ?? ''}`}
           style={{
-            background: '#111',
-            border: error ? '1px solid #ef4444' : '1px solid #222',
+            background: 'var(--gf-surface-raised)',
+            border: error
+              ? '1px solid var(--gf-error)'
+              : '1px solid var(--gf-border)',
             paddingInlineEnd: reveal ? '44px' : undefined,
           }}
           onFocus={(e) => {
             if (!error) {
-              e.currentTarget.style.borderColor = '#4ade80'
+              e.currentTarget.style.borderColor = 'var(--gf-primary)'
             }
             rest.onFocus?.(e)
           }}
           onBlur={(e) => {
-            e.currentTarget.style.borderColor = error ? '#ef4444' : '#222'
+            e.currentTarget.style.borderColor = error
+              ? 'var(--gf-error)'
+              : 'var(--gf-border)'
             rest.onBlur?.(e)
           }}
         />
@@ -136,7 +140,7 @@ export function SecondaryLink({
       className="block w-full text-center rounded-[10px] py-3.5 px-4 text-[15px] text-fg-1 transition-colors duration-fast ease-out"
       style={{
         background: 'transparent',
-        border: '1px solid rgb(255 255 255 / 0.12)',
+        border: '1px solid var(--gf-border)',
       }}
     >
       {children}
@@ -150,14 +154,14 @@ export function SecondaryLink({
 export function OrDivider({ label }: { label: string }) {
   return (
     <div className="flex items-center gap-3 my-6">
-      <span className="flex-1 h-px" style={{ background: '#222' }} />
+      <span className="flex-1 h-px" style={{ background: 'var(--gf-border)' }} />
       <span
         className="text-xs uppercase tracking-eyebrow"
-        style={{ color: '#444' }}
+        style={{ color: 'var(--gf-fg-3)' }}
       >
         {label}
       </span>
-      <span className="flex-1 h-px" style={{ background: '#222' }} />
+      <span className="flex-1 h-px" style={{ background: 'var(--gf-border)' }} />
     </div>
   )
 }
@@ -196,7 +200,7 @@ export function Checkbox({
             background: checked ? 'var(--gf-primary)' : 'transparent',
             borderColor: checked
               ? 'var(--gf-primary)'
-              : 'rgb(255 255 255 / 0.2)',
+              : 'var(--gf-border)',
           }}
         />
         {checked && (

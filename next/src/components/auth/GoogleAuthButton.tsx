@@ -86,17 +86,17 @@ export function GoogleAuthButton({ label, withDivider = true }: Props) {
             margin: '20px 0',
           }}
         >
-          <div style={{ flex: 1, height: '1px', background: 'rgba(255,255,255,0.1)' }} />
+          <div style={{ flex: 1, height: '1px', background: 'var(--gf-border)' }} />
           <span
             style={{
               fontSize: '12px',
-              color: '#5c7262',
+              color: 'var(--gf-fg-3)',
               fontFamily: 'Inter, sans-serif',
             }}
           >
             {isAr ? 'أو' : 'or'}
           </span>
-          <div style={{ flex: 1, height: '1px', background: 'rgba(255,255,255,0.1)' }} />
+          <div style={{ flex: 1, height: '1px', background: 'var(--gf-border)' }} />
         </div>
       )}
 
@@ -112,10 +112,10 @@ export function GoogleAuthButton({ label, withDivider = true }: Props) {
           justifyContent: 'center',
           gap: '12px',
           padding: '12px',
-          background: '#111',
-          border: '1px solid #222',
+          background: 'var(--gf-surface-raised)',
+          border: '1px solid var(--gf-border)',
           borderRadius: '12px',
-          color: '#ffffff',
+          color: 'var(--gf-fg-1)',
           fontFamily: 'Inter, sans-serif',
           fontSize: '14px',
           fontWeight: 500,
@@ -124,10 +124,10 @@ export function GoogleAuthButton({ label, withDivider = true }: Props) {
           transition: 'background-color 0.2s ease, border-color 0.2s ease',
         }}
         onMouseOver={(e) => {
-          if (!pending) e.currentTarget.style.background = '#1a1a1a'
+          if (!pending) e.currentTarget.style.background = 'var(--gf-bg-deeper)'
         }}
         onMouseOut={(e) => {
-          e.currentTarget.style.background = '#111'
+          e.currentTarget.style.background = 'var(--gf-surface-raised)'
         }}
       >
         {pending ? (
