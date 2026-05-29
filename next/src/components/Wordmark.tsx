@@ -2,8 +2,11 @@ import Image from 'next/image'
 import { cn } from '@/lib/cn'
 
 /**
- * Greenofig wordmark. Logo image + Fraunces 700 text — "Greeno" cream,
- * "fig" in lime. Image fallback: `/logo.png` from public/.
+ * Greenofig wordmark. Logo image + Inter 700 text — "Greeno" in the
+ * theme foreground, "fig" in the theme lime accent. Colors are driven by
+ * CSS vars (--gf-fg-1 / --gf-lime-400) so the wordmark stays legible on
+ * both the light pistachio marketing site and the dark dashboard.
+ * Image fallback: `/logo.png` from public/.
  *
  * Three sizes:
  *   sm — GhostBar mobile, footer mobile (24px logo, base text)
@@ -47,14 +50,14 @@ export function Wordmark({
       />
       <span
         className={cn(
-          'font-display font-bold tracking-tight',
+          'font-sans font-bold tracking-tight',
           textSize,
           hideTextOnMobile && 'hidden sm:inline',
         )}
-        style={{ fontFamily: "var(--font-fraunces), Georgia, serif" }}
+        style={{ fontFamily: 'var(--font-inter), system-ui, sans-serif' }}
       >
-        <span style={{ color: '#f0ede6' }}>Greeno</span>
-        <span style={{ color: '#a3e635' }}>fig</span>
+        <span style={{ color: 'var(--gf-fg-1)' }}>Greeno</span>
+        <span style={{ color: 'var(--gf-lime-400)' }}>fig</span>
       </span>
     </span>
   )
