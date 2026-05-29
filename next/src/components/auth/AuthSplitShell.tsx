@@ -99,31 +99,14 @@ export function AuthSplitShell({
         </div>
 
         <div className="relative w-full max-w-md">
-          {/* Large prominent logo */}
+          {/* Large prominent logo — uses the shared Wordmark so font +
+              colors stay in sync with the rest of the site. */}
           <Link
             href="/"
             aria-label="Greenofig"
-            className="mb-10 flex items-center justify-center md:justify-start gap-3"
+            className="mb-10 flex items-center justify-center md:justify-start"
           >
-            <Image
-              src="/logo.png"
-              alt=""
-              width={40}
-              height={40}
-              priority
-              style={{ width: 40, height: 40 }}
-              className="object-contain"
-            />
-            <span
-              className="font-display font-bold tracking-tight"
-              style={{
-                fontSize: '1.6rem',
-                fontFamily: 'var(--font-fraunces), Georgia, serif',
-              }}
-            >
-              <span style={{ color: '#f0ede6' }}>Greeno</span>
-              <span style={{ color: '#a3e635' }}>fig</span>
-            </span>
+            <Wordmark size="lg" />
           </Link>
 
           {children}

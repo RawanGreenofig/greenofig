@@ -3,8 +3,7 @@ import { cn } from '@/lib/cn'
 
 /**
  * Greenofig wordmark. Logo image + Cormorant 700 serif text — "Greeno" in
- * the button lime (#a3e635), "fig" in deep plum (--gf-wordmark-fig,
- * which lifts to a brighter plum on the dark dashboard).
+ * turquoise (#40e0d0), "fig" in deep plum (--gf-wordmark-fig).
  * Image fallback: `/logo.png` from public/.
  *
  * Three sizes:
@@ -55,8 +54,7 @@ export function Wordmark({
         )}
         style={{ fontFamily: 'var(--font-cormorant), Georgia, serif' }}
       >
-        {/* "Greeno" matches the .btn-primary lime (#a3e635). */}
-        <span style={{ color: '#a3e635' }}>Greeno</span>
+        <span style={{ color: '#40e0d0' }}>Greeno</span>
         <span style={{ color: 'var(--gf-wordmark-fig)' }}>fig</span>
       </span>
     </span>

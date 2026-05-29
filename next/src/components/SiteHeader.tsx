@@ -314,12 +314,12 @@ export function SiteHeader() {
                 <Link
                   href="/sign-in"
                   className="hidden sm:inline-flex items-center text-sm transition-colors duration-200"
-                  style={{ color: 'rgba(255,255,255,0.8)' }}
+                  style={{ color: 'rgba(28,46,32,0.75)' }}
                   onMouseEnter={(e) =>
-                    (e.currentTarget.style.color = '#ffffff')
+                    (e.currentTarget.style.color = '#1c2e20')
                   }
                   onMouseLeave={(e) =>
-                    (e.currentTarget.style.color = 'rgba(255,255,255,0.8)')
+                    (e.currentTarget.style.color = 'rgba(28,46,32,0.75)')
                   }
                 >
                   {t('signIn')}
