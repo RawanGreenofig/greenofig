@@ -2,8 +2,10 @@ import Image from 'next/image'
 import { cn } from '@/lib/cn'
 
 /**
- * Greenofig wordmark. Logo image + Cormorant 700 serif text — "Greeno" in
- * turquoise (#40e0d0), "fig" in deep plum (--gf-wordmark-fig).
+ * Greenofig wordmark. Logo image + Fraunces 900 serif text (heavy/thick)
+ * — "Greeno" deep teal, "fig" deep plum. Colors are theme tokens
+ * (--gf-wordmark-greeno / --gf-wordmark-fig) so they stay legible on the
+ * light pistachio site and lift to bright teal/plum on the dark dashboard.
  * Image fallback: `/logo.png` from public/.
  *
  * Three sizes:
@@ -48,13 +50,13 @@ export function Wordmark({
       />
       <span
         className={cn(
-          'font-sans font-bold tracking-tight',
+          'tracking-tight',
           textSize,
           hideTextOnMobile && 'hidden sm:inline',
         )}
-        style={{ fontFamily: 'var(--font-cormorant), Georgia, serif' }}
+        style={{ fontFamily: 'var(--font-fraunces), Georgia, serif', fontWeight: 900 }}
       >
-        <span style={{ color: '#40e0d0' }}>Greeno</span>
+        <span style={{ color: 'var(--gf-wordmark-greeno)' }}>Greeno</span>
         <span style={{ color: 'var(--gf-wordmark-fig)' }}>fig</span>
       </span>
     </span>
