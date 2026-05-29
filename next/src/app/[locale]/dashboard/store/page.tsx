@@ -189,6 +189,13 @@ export default function StorePage() {
     [sourceProducts, category],
   )
 
+  // member_discount_percent is the single admin-controlled member
+  // discount applied at Stripe checkout. Must be read here, before any
+  // conditional return below, so the hook runs in the same order on
+  // every render (react-hooks/rules-of-hooks).
+  const { value: memberDiscountRaw } =
+    usePlatformSetting<number>('member_discount_percent')
+
   // Treat unknown loading state as "open" so the page renders during dev with
   // no Supabase env. The real toggle is wired in Cluster I.
   const offline = !isLoading && !isEnabled && (process.env.NODE_ENV === 'production')
@@ -223,12 +230,8 @@ export default function StorePage() {
     (acc, l) => acc + l.product.price * l.qty,
     0,
   )
-  // member_discount_percent is the single admin-controlled member
-  // discount applied at Stripe checkout. Premium/VIP both qualify;
-  // free/basic do not. Cap defensively at 100 so a misconfig can't
-  // run negative.
-  const { value: memberDiscountRaw } =
-    usePlatformSetting<number>('member_discount_percent')
+  // Premium/VIP both qualify for the member discount; free/basic do
+  // not. Cap defensively at 100 so a misconfig can't run negative.
   const memberDiscount = (() => {
     const n =
       typeof memberDiscountRaw === 'number'
