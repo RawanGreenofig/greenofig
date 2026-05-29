@@ -3,9 +3,8 @@ import { cn } from '@/lib/cn'
 
 /**
  * Greenofig wordmark. Logo image + Space Grotesk 700 text — "Greeno" in
- * the forest-green brand primary, "fig" in plum/berry. Both are theme
- * tokens (--gf-primary / --gf-wordmark-fig) so they stay on-palette and
- * legible on the light pistachio site and the dark dashboard.
+ * the button lime (#a3e635), "fig" in deep plum (--gf-wordmark-fig,
+ * which lifts to a brighter plum on the dark dashboard).
  * Image fallback: `/logo.png` from public/.
  *
  * Three sizes:
@@ -56,7 +55,8 @@ export function Wordmark({
         )}
         style={{ fontFamily: 'var(--font-space-grotesk), var(--font-inter), system-ui, sans-serif' }}
       >
-        <span style={{ color: 'var(--gf-primary)' }}>Greeno</span>
+        {/* "Greeno" matches the .btn-primary lime (#a3e635). */}
+        <span style={{ color: '#a3e635' }}>Greeno</span>
         <span style={{ color: 'var(--gf-wordmark-fig)' }}>fig</span>
       </span>
     </span>

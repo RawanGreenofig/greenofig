@@ -20,8 +20,8 @@
   --gf-primary-hover:  #3a8049;
   --gf-primary-active: #1e4f2a;
   --gf-brand-tint:     rgb(45 107 58 / 0.08);
-  /* Wordmark "fig" accent — plum/berry on the light site. */
-  --gf-wordmark-fig:   #6b3fa0;
+  /* Wordmark "fig" accent — deep plum/berry on the light site. */
+  --gf-wordmark-fig:   #56307f;
 
   /* Lime accent — darkened for readability on pistachio bg */
   --gf-lime-400: #4d7c0f;
