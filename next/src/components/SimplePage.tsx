@@ -15,7 +15,7 @@ interface SimplePageProps {
  */
 export function SimplePage({ title, subtitle, isAr, children }: SimplePageProps) {
   return (
-    <main className="min-h-screen" style={{ background: '#080808' }}>
+    <main className="min-h-screen bg-bg">
       <SiteHeader />
       {/* Spacer for the fixed navbar */}
       <div className="h-16" />

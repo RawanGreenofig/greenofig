@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { useUser } from '@/lib/hooks/useUser'
 import { getBrowserSupabase } from '@/lib/supabase/client'
@@ -42,6 +42,8 @@ import {
   Star,
   Sun,
   BookOpen,
+  ChevronDown,
+  Check,
 } from '@/icons'
 import type { LucideIcon } from 'lucide-react'
 
@@ -787,17 +789,14 @@ function RecipeForm({
               </FormField>
               <div className="grid grid-cols-2 gap-3">
                 <FormField label={t('form.category')}>
-                  <select
+                  <SelectField
                     value={r.category}
-                    onChange={(e) => update('category', e.target.value as Category)}
-                    className="w-full h-10 rounded-md bg-bg-deeper border border-border px-3 text-sm text-fg-1 focus:outline-none focus:border-primary appearance-none"
-                  >
-                    {CATEGORIES.map((c) => (
-                      <option key={c} value={c} className="bg-surface">
-                        {c}
-                      </option>
-                    ))}
-                  </select>
+                    options={CATEGORIES.map((c) => [
+                      c,
+                      t(`form.categoryLabels.${c}` as 'form.categoryLabels.lunch'),
+                    ])}
+                    onChange={(v) => update('category', v as Category)}
+                  />
                 </FormField>
                 <FormField label={t('form.servings')}>
                   <NumInput
@@ -811,7 +810,7 @@ function RecipeForm({
               {/* Icon picker — choose what shows up next to the recipe
                * across the meal-plan builder, store, etc. Defaults to
                * the category icon when nothing is picked. */}
-              <FormField label="Icon">
+              <FormField label={t('form.iconLabel')}>
                 <div className="flex flex-wrap gap-1.5">
                   {(Object.keys(RECIPE_ICON_CATALOG) as RecipeIconKey[]).map(
                     (key) => {
@@ -896,13 +895,39 @@ function RecipeForm({
                         key={tag}
                         type="button"
                         onClick={() => toggleTag(tag)}
-                        className={`rounded-pill h-7 px-3 text-[11px] font-medium transition-colors ${
-                          on
-                            ? 'bg-primary/20 text-lime-400 border border-primary/40'
-                            : 'bg-surface-raised border border-border text-fg-2 hover:border-primary/40'
-                        }`}
+                        aria-pressed={on}
+                        className="inline-flex items-center gap-1.5 rounded-pill h-8 ps-2.5 pe-3 text-[11px] font-medium transition-colors"
+                        style={{
+                          background: on
+                            ? 'rgba(132,217,61,0.12)'
+                            : 'var(--gf-input-bg)',
+                          border: `1px solid ${on ? 'rgba(132,217,61,0.4)' : 'var(--gf-border)'}`,
+                          color: on ? '#a3e635' : 'var(--gf-fg-2)',
+                        }}
+                        onMouseEnter={(e) => {
+                          if (!on)
+                            e.currentTarget.style.borderColor =
+                              'rgba(132,217,61,0.4)'
+                        }}
+                        onMouseLeave={(e) => {
+                          if (!on)
+                            e.currentTarget.style.borderColor = 'var(--gf-border)'
+                        }}
                       >
-                        {tag}
+                        {on ? (
+                          <Check
+                            className="w-3.5 h-3.5 shrink-0"
+                            strokeWidth={2.25}
+                            color="#a3e635"
+                          />
+                        ) : (
+                          <Plus
+                            className="w-3.5 h-3.5 shrink-0"
+                            strokeWidth={2}
+                            color="var(--gf-fg-3)"
+                          />
+                        )}
+                        {t(`form.tagLabels.${tag}` as 'form.tagLabels.vegan')}
                       </button>
                     )
                   })}
@@ -999,6 +1024,19 @@ function RecipeForm({
                   </p>
                 ) : (
                   <ul className="space-y-2">
+                    {/* Column headers — label the otherwise-cryptic
+                     * g / kcal / P / C / F inputs so the row reads
+                     * clearly. Matches the ingredient grid template. */}
+                    <li className="grid grid-cols-[18px_minmax(0,2.2fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_30px] items-center gap-1.5 px-2 pb-1 text-[10px] uppercase tracking-eyebrow text-fg-3 font-semibold">
+                      <span aria-hidden />
+                      <span className="ps-2 truncate">{t('form.colIngredient')}</span>
+                      <span className="text-center truncate">{t('form.ingredientGramsPh')}</span>
+                      <span className="text-center truncate">{t('form.ingredientKcalPh')}</span>
+                      <span className="text-center truncate">{t('form.colProtein')}</span>
+                      <span className="text-center truncate">{t('form.colCarbs')}</span>
+                      <span className="text-center truncate">{t('form.colFat')}</span>
+                      <span aria-hidden />
+                    </li>
                     {r.ingredients.map((ing) => (
                       <SortableIngredient
                         key={ing.id}
@@ -1122,6 +1160,117 @@ function FormField({
   )
 }
 
+/**
+ * Form select — custom dropdown matching the filter chrome used across
+ * the dashboard (admin/users, Clients, the meal-plan builder). Replaces
+ * the bare native <select> (which had appearance-none and so showed no
+ * dropdown affordance) with a styled trigger + floating listbox, so the
+ * recipe form reads consistently with the rest of the app.
+ */
+function SelectField({
+  value,
+  options,
+  onChange,
+}: {
+  value: string
+  options: [string, string][]
+  onChange: (v: string) => void
+}) {
+  const [open, setOpen] = useState(false)
+  const wrapRef = useRef<HTMLDivElement>(null)
+  const selected =
+    options.find(([v]) => v === value)?.[1] ?? options[0]?.[1] ?? ''
+
+  useEffect(() => {
+    if (!open) return
+    const onClick = (e: MouseEvent) => {
+      if (!wrapRef.current?.contains(e.target as Node)) setOpen(false)
+    }
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setOpen(false)
+    }
+    document.addEventListener('mousedown', onClick)
+    document.addEventListener('keydown', onKey)
+    return () => {
+      document.removeEventListener('mousedown', onClick)
+      document.removeEventListener('keydown', onKey)
+    }
+  }, [open])
+
+  return (
+    <div className="relative" ref={wrapRef}>
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        className="w-full h-10 rounded-md bg-bg-deeper border border-border px-3 inline-flex items-center gap-2 text-sm text-fg-1 focus:outline-none focus:border-primary"
+      >
+        <span className="font-medium truncate flex-1 text-start">
+          {selected}
+        </span>
+        <ChevronDown
+          className={`w-4 h-4 shrink-0 transition-transform ${open ? 'rotate-180' : ''}`}
+          strokeWidth={1.75}
+          color="var(--gf-fg-3)"
+        />
+      </button>
+
+      {open && (
+        <div
+          role="listbox"
+          className="absolute top-full mt-1 z-30 rounded-md py-1 overflow-hidden"
+          style={{
+            insetInlineStart: 0,
+            minWidth: '100%',
+            background: 'var(--gf-card)',
+            border: '1px solid var(--gf-border)',
+            boxShadow: '0 12px 32px rgba(0,0,0,0.45)',
+          }}
+        >
+          {options.map(([v, lbl]) => {
+            const active = v === value
+            return (
+              <button
+                key={v}
+                type="button"
+                role="option"
+                aria-selected={active}
+                onClick={() => {
+                  onChange(v)
+                  setOpen(false)
+                }}
+                className="w-full flex items-center gap-2 px-3 h-9 text-sm text-start transition-colors"
+                style={{
+                  background: active ? 'rgba(132,217,61,0.12)' : 'transparent',
+                  color: active ? '#a3e635' : 'var(--gf-fg-1)',
+                  fontWeight: active ? 600 : 500,
+                }}
+                onMouseEnter={(e) => {
+                  if (!active)
+                    e.currentTarget.style.background = 'var(--gf-card-hover)'
+                }}
+                onMouseLeave={(e) => {
+                  if (!active) e.currentTarget.style.background = 'transparent'
+                }}
+              >
+                <span className="flex-1 truncate">{lbl}</span>
+                {active && (
+                  <Check
+                    className="w-4 h-4 shrink-0"
+                    strokeWidth={2}
+                    color="#a3e635"
+                  />
+                )}
+              </button>
+            )
+          })}
+        </div>
+      )}
+    </div>
+  )
+}
+
 function NumInput({
   value,
   min = 0,
@@ -1180,7 +1329,7 @@ function SortableIngredient({
     <li
       ref={setNodeRef}
       style={style}
-      className="grid grid-cols-[24px_2fr_72px_72px_72px_72px_72px_36px] items-center gap-2 rounded-md bg-bg-deeper/50 border border-border p-2"
+      className="grid grid-cols-[18px_minmax(0,2.2fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_30px] items-center gap-1.5 rounded-md bg-bg-deeper/50 border border-border p-2"
     >
       <button
         type="button"
@@ -1198,36 +1347,16 @@ function SortableIngredient({
         placeholder={t('form.ingredientPh')}
         className="h-9 rounded bg-bg border border-transparent px-2 text-sm text-fg-1 placeholder-fg-3 focus:outline-none focus:border-primary min-w-0"
       />
-      <NumInputCompact
-        value={ing.grams}
-        onChange={(n) => onChange({ grams: n })}
-        suffix={t('form.ingredientGramsPh')}
-      />
-      <NumInputCompact
-        value={ing.calories}
-        onChange={(n) => onChange({ calories: n })}
-        suffix={t('form.ingredientKcalPh')}
-      />
-      <NumInputCompact
-        value={ing.protein}
-        onChange={(n) => onChange({ protein: n })}
-        suffix="P"
-      />
-      <NumInputCompact
-        value={ing.carbs}
-        onChange={(n) => onChange({ carbs: n })}
-        suffix="C"
-      />
-      <NumInputCompact
-        value={ing.fat}
-        onChange={(n) => onChange({ fat: n })}
-        suffix="F"
-      />
+      <NumInputCompact value={ing.grams} onChange={(n) => onChange({ grams: n })} />
+      <NumInputCompact value={ing.calories} onChange={(n) => onChange({ calories: n })} />
+      <NumInputCompact value={ing.protein} onChange={(n) => onChange({ protein: n })} />
+      <NumInputCompact value={ing.carbs} onChange={(n) => onChange({ carbs: n })} />
+      <NumInputCompact value={ing.fat} onChange={(n) => onChange({ fat: n })} />
       <button
         type="button"
         onClick={onRemove}
         aria-label="Remove"
-        className="w-8 h-8 rounded-md inline-flex items-center justify-center text-fg-3 hover:text-rose-400"
+        className="w-7 h-7 rounded-md inline-flex items-center justify-center text-fg-3 hover:text-rose-400"
       >
         <Trash2 className="w-3.5 h-3.5" strokeWidth={1.75} />
       </button>
@@ -1242,7 +1371,7 @@ function NumInputCompact({
 }: {
   value: number
   onChange: (n: number) => void
-  suffix: string
+  suffix?: string
 }) {
   return (
     <div className="relative">
@@ -1252,15 +1381,19 @@ function NumInputCompact({
         onChange={(e) =>
           onChange(e.target.value === '' ? 0 : Number(e.target.value))
         }
-        className="w-full h-9 rounded bg-bg border border-transparent px-2 pe-7 text-xs font-mono text-fg-1 focus:outline-none focus:border-primary"
+        className={`w-full h-9 rounded bg-bg border border-transparent text-xs font-mono text-fg-1 text-center focus:outline-none focus:border-primary ${
+          suffix ? 'px-2 pe-7 text-start' : 'px-1'
+        }`}
         dir="ltr"
       />
-      <span
-        className="absolute end-1.5 top-1/2 -translate-y-1/2 text-[10px] text-fg-3 font-mono"
-        aria-hidden
-      >
-        {suffix}
-      </span>
+      {suffix && (
+        <span
+          className="absolute end-1.5 top-1/2 -translate-y-1/2 text-[10px] text-fg-3 font-mono"
+          aria-hidden
+        >
+          {suffix}
+        </span>
+      )}
     </div>
   )
 }

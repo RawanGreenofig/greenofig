@@ -31,7 +31,8 @@ const TIER_RANK: Record<TierKey, number> = {
 }
 
 /** Per-tier visual identity. Each tier owns a single accent color used
- *  for the card border, badge tint, checkmark, and price. */
+ *  for the card border, badge tint, checkmark, and price.
+ *  Tuned for a warm beige-coffee (light) page background. */
 const TIER_THEME: Record<TierKey, {
   border: string
   hoverBorder: string
@@ -45,50 +46,50 @@ const TIER_THEME: Record<TierKey, {
   Icon: LucideIcon
 }> = {
   free: {
-    border: '#374151',
-    hoverBorder: '#4b5563',
-    badgeBg: '#1f2937',
-    badgeText: '#9ca3af',
-    check: '#9ca3af',
-    price: '#ffffff',
-    glow: '0 0 32px rgba(156,163,175,0.08)',
-    hoverGlow: '0 0 56px rgba(156,163,175,0.18)',
+    border: '#a8cc8c',
+    hoverBorder: '#7aab68',
+    badgeBg: 'rgba(100,170,80,0.12)',
+    badgeText: '#3d6b35',
+    check: '#5a9048',
+    price: '#1c2e20',
+    glow: '0 2px 20px rgba(100,170,80,0.08)',
+    hoverGlow: '0 4px 32px rgba(100,170,80,0.14)',
     ringWidth: 1,
     Icon: Sparkles,
   },
   basic: {
-    border: 'rgba(96,165,250,0.5)',
-    hoverBorder: 'rgba(96,165,250,0.85)',
-    badgeBg: 'rgba(96,165,250,0.1)',
-    badgeText: '#60a5fa',
-    check: '#60a5fa',
-    price: '#60a5fa',
-    glow: '0 0 48px rgba(96,165,250,0.28)',
-    hoverGlow: '0 0 80px rgba(96,165,250,0.55)',
+    border: 'rgba(59,130,246,0.35)',
+    hoverBorder: 'rgba(59,130,246,0.75)',
+    badgeBg: 'rgba(59,130,246,0.08)',
+    badgeText: '#1d4ed8',
+    check: '#2563eb',
+    price: '#1d4ed8',
+    glow: '0 2px 24px rgba(59,130,246,0.10)',
+    hoverGlow: '0 4px 40px rgba(59,130,246,0.20)',
     ringWidth: 1,
     Icon: Leaf,
   },
   premium: {
-    border: 'rgba(163,230,53,0.7)',
-    hoverBorder: 'rgba(163,230,53,1)',
-    badgeBg: 'rgba(163,230,53,0.1)',
-    badgeText: '#a3e635',
-    check: '#a3e635',
-    price: '#a3e635',
-    glow: '0 0 60px rgba(163,230,53,0.4)',
-    hoverGlow: '0 0 96px rgba(163,230,53,0.7)',
+    border: 'rgba(101,163,13,0.5)',
+    hoverBorder: 'rgba(101,163,13,0.9)',
+    badgeBg: 'rgba(101,163,13,0.10)',
+    badgeText: '#4d7c0f',
+    check: '#65a30d',
+    price: '#4d7c0f',
+    glow: '0 2px 32px rgba(101,163,13,0.18)',
+    hoverGlow: '0 4px 56px rgba(101,163,13,0.30)',
     ringWidth: 2,
     Icon: Star,
   },
   vip: {
-    border: 'rgba(251,191,36,0.5)',
-    hoverBorder: 'rgba(251,191,36,0.9)',
-    badgeBg: 'rgba(251,191,36,0.1)',
-    badgeText: '#fbbf24',
-    check: '#fbbf24',
-    price: '#fbbf24',
-    glow: '0 0 48px rgba(251,191,36,0.28)',
-    hoverGlow: '0 0 80px rgba(251,191,36,0.55)',
+    border: 'rgba(202,138,4,0.4)',
+    hoverBorder: 'rgba(202,138,4,0.8)',
+    badgeBg: 'rgba(202,138,4,0.08)',
+    badgeText: '#92400e',
+    check: '#b45309',
+    price: '#92400e',
+    glow: '0 2px 24px rgba(202,138,4,0.10)',
+    hoverGlow: '0 4px 40px rgba(202,138,4,0.20)',
     ringWidth: 1,
     Icon: Crown,
   },
@@ -505,7 +506,7 @@ export default function PricingPage() {
       : FAQS[locale]
 
   return (
-    <main className="min-h-screen" style={{ background: '#080808' }}>
+    <main className="min-h-screen bg-bg">
       <SiteHeader />
       {/* Spacer for the fixed navbar (h-16 = 64px) */}
       <div style={{ height: 'calc(64px + env(safe-area-inset-top))' }} />
@@ -519,7 +520,7 @@ export default function PricingPage() {
             </span>
           </span>
           <h1
-            className="font-display font-bold text-white tracking-tight text-3xl md:text-4xl lg:text-5xl"
+            className="font-display font-bold text-fg-1 tracking-tight text-3xl md:text-4xl lg:text-5xl"
             style={{
               lineHeight: 1.1,
               fontVariationSettings: "'opsz' 144, 'wght' 700, 'SOFT' 100, 'WONK' 1",
@@ -534,7 +535,7 @@ export default function PricingPage() {
           {/* Billing toggle */}
           <div
             className="mt-8 inline-flex items-center gap-1 rounded-full p-1"
-            style={{ background: '#122018', border: '1px solid #2a4a30' }}
+            style={{ background: '#d4eac6', border: '1px solid #a8cc8c' }}
           >
             <button
               type="button"
@@ -643,7 +644,7 @@ export default function PricingPage() {
         {/* Nutrition Coach Rawan guarantee */}
         <section
           className="max-w-xl mx-auto rounded-2xl p-10 text-center mt-16"
-          style={{ background: '#122018', border: '1px solid #2a4a30' }}
+          style={{ background: '#cce8b0', border: '1px solid #a8cc8c' }}
         >
           <div className="w-16 h-16 rounded-full overflow-hidden mx-auto border-2 border-primary mb-4">
             <Image
@@ -932,7 +933,7 @@ function PlanCard({
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       style={{
-        background: '#0d1117',
+        background: '#deefd0',
         border: `${theme.ringWidth}px solid ${
           hovered ? theme.hoverBorder : theme.border
         }`,
@@ -1012,7 +1013,7 @@ function PlanCard({
             style={{ color: theme.check }}
           />
         </span>
-        <h3 className="font-sans font-bold text-white text-2xl">
+        <h3 className="font-sans font-bold text-fg-1 text-2xl">
           {plan.name}
         </h3>
       </div>
@@ -1090,9 +1091,9 @@ function PlanCard({
           aria-disabled
           className="w-full inline-flex items-center justify-center font-semibold whitespace-nowrap"
           style={{
-            background: 'rgba(255,255,255,0.06)',
-            border: '1px solid rgba(255,255,255,0.15)',
-            color: 'rgba(255,255,255,0.5)',
+            background: '#d4eac6',
+            border: '1px solid #a8cc8c',
+            color: '#8a9e8f',
             cursor: 'not-allowed',
             borderRadius: 9999,
             height: 48,
@@ -1147,7 +1148,7 @@ function PlanCard({
       </div>
 
       {plan.tier !== 'free' && (
-        <hr className="my-6" style={{ borderColor: '#222' }} />
+        <hr className="my-6" style={{ borderColor: '#a8cc8c' }} />
       )}
 
       {/* Features — flat tier-colored icons, matches the rest of the site.
@@ -1157,7 +1158,7 @@ function PlanCard({
       <div
         className={
           plan.tier === 'free'
-            ? 'flex-1 md:border-s md:border-[#222] md:ps-10 md:flex md:items-center'
+            ? 'flex-1 md:border-s md:border-border md:ps-10 md:flex md:items-center'
             : ''
         }
       >
@@ -1176,7 +1177,7 @@ function PlanCard({
                   />
                   <span
                     className="text-sm leading-relaxed"
-                    style={{ color: '#d1d5db' }}
+                    style={{ color: '#1c2e20' }}
                   >
                     {text}
                   </span>
@@ -1191,11 +1192,11 @@ function PlanCard({
                   aria-hidden
                   className="shrink-0 w-5 h-5 mt-0.5"
                   strokeWidth={2}
-                  style={{ color: '#6b7280' }}
+                  style={{ color: '#8a9e8f' }}
                 />
                 <span
                   className="text-sm leading-relaxed line-through"
-                  style={{ color: '#6b7280' }}
+                  style={{ color: '#8a9e8f' }}
                 >
                   {f}
                 </span>
@@ -1217,7 +1218,7 @@ function PlanCard({
                 />
                 <span
                   className="text-sm leading-relaxed"
-                  style={{ color: '#d1d5db' }}
+                  style={{ color: '#1c2e20' }}
                 >
                   {text}
                 </span>
@@ -1230,7 +1231,7 @@ function PlanCard({
                 aria-hidden
                 className="shrink-0 w-5 h-5 mt-0.5"
                 strokeWidth={2}
-                style={{ color: '#6b7280' }}
+                style={{ color: '#8a9e8f' }}
               />
               <span
                 className="text-sm leading-relaxed line-through"

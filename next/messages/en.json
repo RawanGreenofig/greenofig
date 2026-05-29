@@ -1923,7 +1923,29 @@
         "macrosNote": "Auto-summed from ingredient kcal/macros — edit any ingredient to update.",
         "sectionDrNote": "Nutrition Coach Rawan's note",
         "drNotePh": "Optional — what should the client know about this dish?",
-        "perServing": "Per serving"
+        "perServing": "Per serving",
+        "iconLabel": "Icon",
+        "categoryLabels": {
+          "breakfast": "Breakfast",
+          "lunch": "Lunch",
+          "dinner": "Dinner",
+          "snack": "Snack",
+          "drink": "Drink"
+        },
+        "tagLabels": {
+          "vegan": "Vegan",
+          "vegetarian": "Vegetarian",
+          "glutenFree": "Gluten-free",
+          "dairyFree": "Dairy-free",
+          "keto": "Keto",
+          "halal": "Halal",
+          "highProtein": "High-protein",
+          "quick": "Quick"
+        },
+        "colIngredient": "Ingredient",
+        "colProtein": "Protein",
+        "colCarbs": "Carbs",
+        "colFat": "Fat"
       },
       "draftBadge": "Draft",
       "publishedBadge": "Published",

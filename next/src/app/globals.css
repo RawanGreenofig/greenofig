@@ -8,23 +8,23 @@
  */
 
 :root {
-  /* Page surfaces */
-  --gf-bg:            #0d1a12;
-  --gf-bg-deeper:     #060d09;
-  --gf-surface:       #132218;
-  --gf-surface-raised:#1a3320;
-  --gf-border:        #243d2a;
+  /* Page surfaces — pistachio light palette (no white, no dark) */
+  --gf-bg:            #e8f3de;
+  --gf-bg-deeper:     #d4eac6;
+  --gf-surface:       #deefd0;
+  --gf-surface-raised:#e8f3de;
+  --gf-border:        #a8cc8c;
 
-  /* Brand — primary forest green */
-  --gf-primary:        #3d7a4a;
-  --gf-primary-hover:  #4a9259;
-  --gf-primary-active: #2e5c37;
-  --gf-brand-tint:     rgb(61 122 74 / 0.1);
+  /* Brand — deep forest green (works on light bg) */
+  --gf-primary:        #2d6b3a;
+  --gf-primary-hover:  #3a8049;
+  --gf-primary-active: #1e4f2a;
+  --gf-brand-tint:     rgb(45 107 58 / 0.08);
 
-  /* Lime accent */
-  --gf-lime-400: #a3e635;
-  --gf-lime-500: #84cc16;
-  --gf-lime-600: #65a30d;
+  /* Lime accent — darkened for readability on pistachio bg */
+  --gf-lime-400: #4d7c0f;
+  --gf-lime-500: #3d6b0a;
+  --gf-lime-600: #2d5208;
 
   /* Other accents */
   --gf-amber:    #e8912a;
@@ -33,10 +33,10 @@
   --gf-fig-gold: #c9a84c;
   --gf-forest:   #16a34a;
 
-  /* Text levels */
-  --gf-fg-1: #f0ede6;
-  --gf-fg-2: #9baf9f;
-  --gf-fg-3: #5c7262;
+  /* Text levels — dark on light bg */
+  --gf-fg-1: #1c2e20;
+  --gf-fg-2: #4a6352;
+  --gf-fg-3: #8a9e8f;
 
   /* Semantic state */
   --gf-success: #4caf72;
@@ -77,10 +77,10 @@
   --shadow-sm:        0 1px 2px 0 rgb(0 0 0 / 0.05);
   --shadow-md:        0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
   --shadow-lg:        0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
-  --shadow-glow:      0 4px 20px rgb(61 122 74 / 0.35);
-  --shadow-glow-lg:   0 8px 40px rgb(61 122 74 / 0.45);
-  --shadow-lime-glow: 0 4px 20px rgb(163 230 53 / 0.3);
-  --shadow-glass:     0 10px 40px rgb(0 0 0 / 0.15);
+  --shadow-glow:      0 4px 20px rgb(45 107 58 / 0.18);
+  --shadow-glow-lg:   0 8px 40px rgb(45 107 58 / 0.25);
+  --shadow-lime-glow: 0 4px 20px rgb(101 163 13 / 0.3);
+  --shadow-glass:     0 10px 40px rgb(0 0 0 / 0.08);
 
   --space-1:  4px;
   --space-2:  8px;
@@ -751,9 +751,9 @@ html[dir='rtl'] .lucide-arrow-right {
   height: 48px;
   font-size: 15px;
   font-weight: 600;
-  color: #a3e635;
+  color: #3d6b0a;
   background: transparent;
-  border: 1px solid rgba(101, 163, 13, 0.4);
+  border: 1px solid rgba(77, 124, 15, 0.5);
   border-radius: 9999px;
   white-space: nowrap;
   cursor: pointer;
@@ -761,6 +761,16 @@ html[dir='rtl'] .lucide-arrow-right {
   transition: background-color 200ms ease, border-color 200ms ease;
 }
 .btn-secondary:hover {
+  background: rgba(77, 124, 15, 0.1);
+  border-color: rgba(77, 124, 15, 0.8);
+}
+
+/* Dashboard uses a dark bg — restore bright lime for btn-secondary there */
+[data-theme='dashboard'] .btn-secondary {
+  color: #a3e635;
+  border-color: rgba(101, 163, 13, 0.4);
+}
+[data-theme='dashboard'] .btn-secondary:hover {
   background: rgba(163, 230, 53, 0.1);
   border-color: rgba(101, 163, 13, 0.7);
 }
@@ -962,29 +972,25 @@ html[dir='rtl'] .lucide-arrow-right {
   box-shadow: 0 10px 40px rgb(0 0 0 / 0.06) !important;
 }
 
-/* ── Bilingual EN ⇄ ع toggle (rawan-nutrition-landing spec) ─────
- * Wrapper pill with backdrop-blur + 1px white/10 border + lime
- * outer ring shadow. Each <button> sits transparent with white/70
- * text; the active one fills with the primary lime + dark-on-lime
- * text. */
+/* ── Bilingual EN ⇄ ع toggle ─────────────────────────────────────
+ * Pistachio frosted-glass pill on marketing pages.
+ * Dashboard overrides below restore the dark pill for that context. */
 .lang-switcher {
   display: inline-flex;
   align-items: center;
-  background: rgba(20, 22, 28, 0.85);
+  background: rgba(168, 210, 138, 0.6);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(100, 160, 80, 0.45);
   border-radius: 9999px;
   padding: 0.3rem;
-  box-shadow:
-    0 4px 12px rgba(0, 0, 0, 0.25),
-    0 0 0 1px rgba(163, 230, 53, 0.15);
+  box-shadow: 0 2px 10px rgba(40, 90, 40, 0.12);
   flex-shrink: 0;
 }
 .lang-btn {
   background: transparent;
   border: none;
-  color: rgba(255, 255, 255, 0.7);
+  color: rgba(28, 46, 32, 0.75);
   padding: 0.4rem 0.85rem;
   border-radius: 9999px;
   font-size: 0.85rem;
@@ -995,17 +1001,30 @@ html[dir='rtl'] .lucide-arrow-right {
   user-select: none;
 }
 .lang-btn:hover {
-  color: #fff;
+  color: #1c2e20;
 }
 .lang-btn.active {
-  background: linear-gradient(to bottom, #a3e635, #65a30d);
-  border: 1px solid rgba(101, 163, 13, 0.6);
-  color: #0d1a12;
+  background: linear-gradient(to bottom, #5a9048, #3d6b2a);
+  border: 1px solid rgba(61, 107, 42, 0.6);
+  color: #e8f3de;
   cursor: default;
 }
 .lang-btn:focus-visible {
-  outline: 2px solid var(--gf-primary, #a3e635);
+  outline: 2px solid var(--gf-primary, #2d6b3a);
   outline-offset: 2px;
+}
+/* Dashboard — restore dark pill so it reads on the dark sidebar */
+[data-theme='dashboard'] .lang-switcher {
+  background: rgba(20, 22, 28, 0.85);
+  border-color: rgba(255, 255, 255, 0.1);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.25), 0 0 0 1px rgba(163,230,53,0.15);
+}
+[data-theme='dashboard'] .lang-btn { color: rgba(255,255,255,0.7); }
+[data-theme='dashboard'] .lang-btn:hover { color: #fff; }
+[data-theme='dashboard'] .lang-btn.active {
+  background: linear-gradient(to bottom, #a3e635, #65a30d);
+  border-color: rgba(101,163,13,0.6);
+  color: #0d1a12;
 }
 
 /* ── Sitewide input chrome ────────────────────────────────────────

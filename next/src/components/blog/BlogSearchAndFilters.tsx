@@ -30,7 +30,7 @@ export function BlogSearchAndFilters({ isAr }: Props) {
         <div className="relative w-72 max-w-full">
           <Search
             className="absolute start-3 top-1/2 -translate-y-1/2 w-5 h-5 pointer-events-none"
-            style={{ color: 'hsl(var(--muted-foreground))' }}
+            style={{ color: '#8a9e8f' }}
             strokeWidth={1.75}
             aria-hidden
           />
@@ -38,32 +38,30 @@ export function BlogSearchAndFilters({ isAr }: Props) {
             placeholder={isAr ? 'ابحث في المقالات…' : 'Search articles...'}
             className="h-11 w-full rounded-full ps-10 pe-4 text-sm transition-colors duration-200"
             style={{
-              background: 'rgba(8, 20, 10, 0.6)',
-              backdropFilter: 'blur(8px)',
-              WebkitBackdropFilter: 'blur(8px)',
+              background: '#d4eac6',
               borderWidth: 1,
               borderStyle: 'solid',
-              borderColor: 'rgba(255,255,255,0.14)',
-              color: 'hsl(var(--foreground))',
+              borderColor: '#a8cc8c',
+              color: '#1c2e20',
               outline: 'none',
             }}
             onFocus={(e) => {
-              e.currentTarget.style.borderColor = '#a3e635'
+              e.currentTarget.style.borderColor = '#4d7c0f'
               e.currentTarget.style.boxShadow =
-                '0 0 0 3px rgba(163,230,53,0.18)'
+                '0 0 0 3px rgba(61,107,42,0.18)'
             }}
             onBlur={(e) => {
-              e.currentTarget.style.borderColor = 'rgba(255,255,255,0.14)'
+              e.currentTarget.style.borderColor = '#a8cc8c'
               e.currentTarget.style.boxShadow = 'none'
             }}
             onMouseEnter={(e) => {
               if (document.activeElement !== e.currentTarget) {
-                e.currentTarget.style.borderColor = 'rgba(255,255,255,0.28)'
+                e.currentTarget.style.borderColor = 'rgba(61,107,42,0.55)'
               }
             }}
             onMouseLeave={(e) => {
               if (document.activeElement !== e.currentTarget) {
-                e.currentTarget.style.borderColor = 'rgba(255,255,255,0.14)'
+                e.currentTarget.style.borderColor = '#a8cc8c'
               }
             }}
           />
@@ -93,7 +91,7 @@ export function BlogSearchAndFilters({ isAr }: Props) {
               fontWeight: 500,
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.borderColor = 'rgba(255,255,255,0.14)'
+              e.currentTarget.style.borderColor = 'rgba(61,107,42,0.55)'
               e.currentTarget.style.color = 'var(--gf-fg-1)'
             }}
             onMouseLeave={(e) => {

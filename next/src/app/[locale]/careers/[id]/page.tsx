@@ -62,7 +62,7 @@ export default function JobDetailPage() {
   }, [params.id])
 
   return (
-    <main className="min-h-screen" style={{ background: '#080808' }}>
+    <main className="min-h-screen bg-bg">
       <SiteHeader />
       <div style={{ height: 'calc(64px + env(safe-area-inset-top))' }} />
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16">
@@ -172,7 +172,7 @@ function Bullets({ title, items }: { title: string; items: string[] }) {
             <CheckCircle2
               className="w-4 h-4 mt-0.5 shrink-0"
               strokeWidth={2}
-              color="#a3e635"
+              color="#3d6b0a"
             />
             <span className="leading-relaxed">{item}</span>
           </li>
@@ -239,7 +239,7 @@ function ApplyForm({ jobId, jobTitle }: { jobId: string; jobTitle: string }) {
   if (submitted) {
     return (
       <div className="mt-12 rounded-2xl border bg-surface p-8 text-center" style={{ borderColor: 'rgba(132,217,61,0.4)', background: 'rgba(132,217,61,0.04)' }}>
-        <CheckCircle2 className="w-10 h-10 mx-auto" strokeWidth={1.75} color="#a3e635" />
+        <CheckCircle2 className="w-10 h-10 mx-auto" strokeWidth={1.75} color="#3d6b0a" />
         <h3 className="mt-4 text-base font-semibold text-fg-1">
           Application received
         </h3>

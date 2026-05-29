@@ -55,8 +55,7 @@ export function CommunitySection() {
             background:
               'linear-gradient(135deg, rgba(132,217,61,0.06) 0%, var(--gf-surface) 60%)',
             border: '1px solid var(--gf-border)',
-            boxShadow:
-              '0 1px 0 rgba(255,255,255,0.04) inset, 0 18px 40px rgba(0,0,0,0.28)',
+            boxShadow: '0 8px 32px rgba(40,90,40,0.12)',
           }}
         >
           {isLoggedIn ? (

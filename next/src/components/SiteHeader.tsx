@@ -92,16 +92,16 @@ export function SiteHeader() {
 
   const headerStyle: React.CSSProperties = scrolled
     ? {
-        background: 'rgba(5, 20, 5, 0.75)',
+        background: 'rgba(168, 210, 138, 0.92)',
         backdropFilter: 'blur(20px)',
         WebkitBackdropFilter: 'blur(20px)',
-        borderBottom: '1px solid rgba(255,255,255,0.06)',
+        borderBottom: '1px solid rgba(100,160,80,0.3)',
       }
     : {
-        background: 'rgba(5, 20, 5, 0.4)',
-        backdropFilter: 'blur(12px)',
-        WebkitBackdropFilter: 'blur(12px)',
-        borderBottom: '1px solid rgba(255,255,255,0.04)',
+        background: 'rgba(168, 210, 138, 0.45)',
+        backdropFilter: 'blur(14px)',
+        WebkitBackdropFilter: 'blur(14px)',
+        borderBottom: '1px solid rgba(100,160,80,0.15)',
       }
 
   return (
@@ -126,12 +126,12 @@ export function SiteHeader() {
                 key={l.href}
                 href={l.href}
                 className="text-sm transition-colors duration-200"
-                style={{ color: 'rgba(255,255,255,0.8)' }}
+                style={{ color: 'rgba(28,46,32,0.75)' }}
                 onMouseEnter={(e) =>
-                  (e.currentTarget.style.color = '#ffffff')
+                  (e.currentTarget.style.color = '#1c2e20')
                 }
                 onMouseLeave={(e) =>
-                  (e.currentTarget.style.color = 'rgba(255,255,255,0.8)')
+                  (e.currentTarget.style.color = 'rgba(28,46,32,0.75)')
                 }
               >
                 {l.label}
@@ -157,21 +157,21 @@ export function SiteHeader() {
                     paddingInlineEnd: 14,
                     minWidth: 'fit-content',
                     whiteSpace: 'nowrap',
-                    background: scrolled ? '#1a1a1a' : 'rgba(255,255,255,0.08)',
+                    background: scrolled ? 'rgba(140,194,110,0.45)' : 'rgba(140,194,110,0.22)',
                     border: scrolled
-                      ? '1px solid #2a2a2a'
-                      : '1px solid rgba(255,255,255,0.15)',
-                    color: '#ffffff',
+                      ? '1px solid rgba(100,160,80,0.55)'
+                      : '1px solid rgba(100,160,80,0.28)',
+                    color: '#1c2e20',
                   }}
                   onMouseEnter={(e) => {
                     e.currentTarget.style.background = scrolled
-                      ? '#222'
-                      : 'rgba(255,255,255,0.15)'
+                      ? 'rgba(140,194,110,0.60)'
+                      : 'rgba(140,194,110,0.35)'
                   }}
                   onMouseLeave={(e) => {
                     e.currentTarget.style.background = scrolled
-                      ? '#1a1a1a'
-                      : 'rgba(255,255,255,0.08)'
+                      ? 'rgba(140,194,110,0.45)'
+                      : 'rgba(140,194,110,0.22)'
                   }}
                   aria-haspopup="menu"
                   aria-expanded={menuOpen}
@@ -214,17 +214,17 @@ export function SiteHeader() {
                       : 'opacity-0 scale-95 pointer-events-none'
                   }`}
                   style={{
-                    background: '#111',
-                    border: '1px solid #222',
+                    background: '#cce8b0',
+                    border: '1px solid #a8cc8c',
                     transformOrigin: 'top right',
                     minWidth: 220,
-                    boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
+                    boxShadow: '0 8px 32px rgba(30,60,20,0.18)',
                   }}
                 >
                     {user.email && (
                       <div
                         className="px-3 py-3 mb-1 flex items-center gap-3"
-                        style={{ borderBottom: '1px solid #222' }}
+                        style={{ borderBottom: '1px solid #a8cc8c' }}
                       >
                         <span
                           style={{
@@ -253,13 +253,13 @@ export function SiteHeader() {
                         <div className="min-w-0 flex-1">
                           <p
                             className="truncate"
-                            style={{ fontSize: 14, fontWeight: 700, color: '#fff' }}
+                            style={{ fontSize: 14, fontWeight: 700, color: '#1c2e20' }}
                           >
                             {profile?.full_name ?? t('dashboard')}
                           </p>
                           <p
                             className="truncate"
-                            style={{ fontSize: 11, color: '#666', marginTop: 2 }}
+                            style={{ fontSize: 11, color: '#7a9e80', marginTop: 2 }}
                             dir="ltr"
                           >
                             {user.email}
@@ -294,7 +294,7 @@ export function SiteHeader() {
                         minWidth: 180,
                         whiteSpace: 'nowrap',
                         marginTop: 4,
-                        borderTop: '1px solid #222',
+                        borderTop: '1px solid #a8cc8c',
                       }}
                       onMouseEnter={(e) =>
                         (e.currentTarget.style.background =
@@ -345,7 +345,7 @@ export function SiteHeader() {
               onClick={openDrawer}
               aria-label={t('openMenu')}
               className="md:hidden inline-flex items-center justify-center w-10 h-10 rounded-xl transition-colors"
-              style={{ background: 'transparent', border: 'none', color: '#fff' }}
+              style={{ background: 'transparent', border: 'none', color: '#1c2e20' }}
             >
               <Menu className="w-5 h-5" strokeWidth={1.75} />
             </button>
@@ -381,12 +381,12 @@ export function SiteHeader() {
               top: 'calc(64px + env(safe-area-inset-top) + 8px)',
               insetInlineEnd: 16,
               width: 'min(280px, calc(100vw - 32px))',
-              background: 'rgba(8, 20, 10, 0.92)',
+              background: 'rgba(204,232,176,0.97)',
               backdropFilter: 'blur(24px)',
               WebkitBackdropFilter: 'blur(24px)',
-              border: '1px solid rgba(255, 255, 255, 0.08)',
+              border: '1px solid rgba(100,160,80,0.35)',
               borderRadius: 16,
-              boxShadow: '0 16px 40px rgba(0,0,0,0.45)',
+              boxShadow: '0 16px 40px rgba(30,60,20,0.2)',
               transformOrigin: 'top right',
               transition:
                 'opacity 220ms cubic-bezier(0.16, 1, 0.3, 1), transform 220ms cubic-bezier(0.16, 1, 0.3, 1)',
@@ -409,14 +409,14 @@ export function SiteHeader() {
                   padding: '16px 0',
                   fontSize: 18,
                   fontWeight: 500,
-                  color: 'rgba(255,255,255,0.85)',
-                  borderBottom: '1px solid rgba(255,255,255,0.08)',
+                  color: 'rgba(28,46,32,0.85)',
+                  borderBottom: '1px solid rgba(100,160,80,0.25)',
                 }}
                 onMouseEnter={(e) =>
-                  (e.currentTarget.style.color = '#a3e635')
+                  (e.currentTarget.style.color = '#3d6b0a')
                 }
                 onMouseLeave={(e) =>
-                  (e.currentTarget.style.color = 'rgba(255,255,255,0.85)')
+                  (e.currentTarget.style.color = 'rgba(28,46,32,0.85)')
                 }
               >
                 {l.label}
@@ -431,8 +431,8 @@ export function SiteHeader() {
                   href="/sign-in"
                   className="text-center transition-colors"
                   style={{
-                    border: '1px solid rgba(255,255,255,0.2)',
-                    color: '#fff',
+                    border: '1px solid rgba(100,160,80,0.45)',
+                    color: '#1c2e20',
                     padding: '12px 0',
                     borderRadius: 12,
                     fontSize: 15,
@@ -488,14 +488,14 @@ function DropLink({
       role="menuitem"
       className="flex items-center rounded-[10px] text-sm font-medium transition-colors"
       style={{
-        color: '#fff',
+        color: '#1c2e20',
         gap: 12,
         padding: '10px 16px',
         minHeight: 44,
         minWidth: 180,
         whiteSpace: 'nowrap',
       }}
-      onMouseEnter={(e) => (e.currentTarget.style.background = '#1a1a1a')}
+      onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(100,160,80,0.2)')}
       onMouseLeave={(e) =>
         (e.currentTarget.style.background = 'transparent')
       }
@@ -503,7 +503,7 @@ function DropLink({
       <Icon
         className="w-4 h-4 shrink-0"
         strokeWidth={1.75}
-        style={{ color: '#888' }}
+        style={{ color: '#7a9e80' }}
       />
       <span>{label}</span>
     </Link>

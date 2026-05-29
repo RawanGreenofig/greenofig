@@ -136,9 +136,9 @@ export function ReviewsBrowser() {
               className="text-xs rounded-full px-3 py-1.5 transition-colors inline-flex items-center gap-1.5"
               style={{
                 background:
-                  filter === r ? 'rgba(163,230,53,0.15)' : 'rgba(255,255,255,0.04)',
-                color: filter === r ? '#a3e635' : 'var(--gf-fg-2)',
-                border: `1px solid ${filter === r ? 'rgba(163,230,53,0.4)' : 'var(--gf-border)'}`,
+                  filter === r ? 'rgba(61,107,42,0.15)' : 'rgba(61,107,42,0.06)',
+                color: filter === r ? '#3d6b0a' : 'var(--gf-fg-2)',
+                border: `1px solid ${filter === r ? 'rgba(61,107,42,0.4)' : 'var(--gf-border)'}`,
               }}
             >
               {r === 'all' ? (
@@ -147,8 +147,8 @@ export function ReviewsBrowser() {
                 <>
                   <Star
                     className="w-3 h-3"
-                    fill={filter === r ? '#a3e635' : 'currentColor'}
-                    stroke={filter === r ? '#a3e635' : 'currentColor'}
+                    fill={filter === r ? '#3d6b0a' : 'currentColor'}
+                    stroke={filter === r ? '#3d6b0a' : 'currentColor'}
                   />
                   {r}
                   <span className="opacity-70">
@@ -223,9 +223,9 @@ function ReviewCard({ review, isAr }: { review: Review; isAr: boolean }) {
         <span
           className="w-10 h-10 rounded-full flex items-center justify-center text-xs font-bold tracking-wide shrink-0"
           style={{
-            background: 'rgba(163,230,53,0.10)',
-            color: '#a3e635',
-            border: '1px solid rgba(163,230,53,0.35)',
+            background: 'rgba(61,107,42,0.12)',
+            color: '#3d6b0a',
+            border: '1px solid rgba(61,107,42,0.3)',
           }}
         >
           {review.author_initials}
@@ -294,7 +294,7 @@ function ReviewCard({ review, isAr }: { review: Review; isAr: boolean }) {
               key={t}
               className="text-[10px] uppercase tracking-wide rounded-full px-2 py-0.5"
               style={{
-                background: 'rgba(255,255,255,0.04)',
+                background: 'rgba(61,107,42,0.06)',
                 color: 'var(--gf-fg-3)',
                 border: '1px solid var(--gf-border)',
               }}

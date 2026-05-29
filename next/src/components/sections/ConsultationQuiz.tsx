@@ -340,10 +340,9 @@ export function ConsultationQuiz() {
         <div
           className="rounded-2xl font-sans"
           style={{
-            background: '#132218',
-            border: '1px solid #243d2a',
-            boxShadow:
-              '0 24px 60px rgba(0,0,0,0.55), 0 0 0 1px rgba(163,230,53,0.04)',
+            background: '#cce8b0',
+            border: '1px solid #a8cc8c',
+            boxShadow: '0 8px 32px rgba(40,90,40,0.12)',
             overflow: 'hidden',
           }}
         >
@@ -351,7 +350,7 @@ export function ConsultationQuiz() {
           <div
             style={{
               height: 4,
-              background: '#0d1a12',
+              background: '#b4d49e',
               overflow: 'hidden',
             }}
           >
@@ -360,8 +359,8 @@ export function ConsultationQuiz() {
                 height: '100%',
                 width: `${progress}%`,
                 background:
-                  'linear-gradient(90deg, #a3e635, #80d93d)',
-                boxShadow: '0 0 12px rgba(163,230,53,0.4)',
+                  'linear-gradient(90deg, #5a9048, #3d6b2a)',
+                boxShadow: '0 0 12px rgba(61,107,42,0.4)',
                 transition: 'width 280ms cubic-bezier(0.16,1,0.3,1)',
               }}
             />
@@ -429,21 +428,21 @@ function Intro({
           width: 56,
           height: 56,
           borderRadius: 16,
-          background: 'rgba(132,217,61,0.10)',
-          border: '1px solid rgba(132,217,61,0.25)',
-          boxShadow: '0 0 24px rgba(163,230,53,0.18)',
+          background: 'rgba(61,107,42,0.12)',
+          border: '1px solid rgba(61,107,42,0.25)',
+          boxShadow: '0 0 24px rgba(61,107,42,0.18)',
         }}
       >
         <Sparkles
           className="w-7 h-7"
           strokeWidth={1.6}
-          style={{ color: '#a3e635' }}
+          style={{ color: '#3d6b0a' }}
         />
       </div>
       <h3
         className="text-2xl md:text-[28px] mb-2 leading-tight"
         style={{
-          color: '#f8f9fa',
+          color: '#1c2e20',
           fontWeight: 700,
           letterSpacing: '-0.015em',
         }}
@@ -452,7 +451,7 @@ function Intro({
       </h3>
       <p
         className="text-sm leading-relaxed max-w-md mx-auto"
-        style={{ color: '#abafba', fontWeight: 400 }}
+        style={{ color: '#4a6352', fontWeight: 400 }}
       >
         {isAr
           ? `15 سؤالاً سريعاً (دقيقتان). يقرؤها ${drName} شخصياً وسيتواصل معك خلال يوم أو يومين. مجاناً تماماً وبدون التزام.`
@@ -500,7 +499,7 @@ function QuizStep({
         style={{
           letterSpacing: '0.18em',
           fontWeight: 700,
-          color: '#80d93d',
+          color: '#4d7c0f',
         }}
       >
         {isAr ? `سؤال ${idx + 1} من ${total}` : `Question ${idx + 1} of ${total}`}
@@ -508,7 +507,7 @@ function QuizStep({
       <h3
         className="text-[22px] md:text-[26px] mb-7 leading-tight"
         style={{
-          color: '#f8f9fa',
+          color: '#1c2e20',
           fontWeight: 600,
           letterSpacing: '-0.01em',
         }}
@@ -527,25 +526,25 @@ function QuizStep({
               className="text-start rounded-xl text-sm transition-all"
               style={{
                 padding: '14px 16px',
-                background: selected ? 'rgba(132,217,61,0.10)' : '#1a3320',
-                border: `1px solid ${selected ? '#80d93d' : '#243d2a'}`,
-                color: selected ? '#a3e635' : '#e8eaef',
+                background: selected ? 'rgba(61,107,42,0.12)' : '#d4eac6',
+                border: `1px solid ${selected ? '#4d7c0f' : '#a8cc8c'}`,
+                color: selected ? '#3d6b0a' : '#1c2e20',
                 fontWeight: selected ? 600 : 500,
                 letterSpacing: '-0.005em',
                 boxShadow: selected
-                  ? '0 0 0 3px rgba(132,217,61,0.12)'
+                  ? '0 0 0 3px rgba(61,107,42,0.12)'
                   : 'none',
               }}
               onMouseEnter={(e) => {
                 if (!selected) {
-                  e.currentTarget.style.background = '#234a2c'
-                  e.currentTarget.style.borderColor = '#3a6e44'
+                  e.currentTarget.style.background = '#c4dbb0'
+                  e.currentTarget.style.borderColor = '#90bc70'
                 }
               }}
               onMouseLeave={(e) => {
                 if (!selected) {
-                  e.currentTarget.style.background = '#1a3320'
-                  e.currentTarget.style.borderColor = '#243d2a'
+                  e.currentTarget.style.background = '#d4eac6'
+                  e.currentTarget.style.borderColor = '#a8cc8c'
                 }
               }}
             >
@@ -562,18 +561,18 @@ function QuizStep({
           className="text-xs inline-flex items-center gap-1.5 rounded-full transition-colors"
           style={{
             padding: '8px 14px',
-            background: '#1a3320',
-            color: '#abafba',
-            border: '1px solid #243d2a',
+            background: '#d4eac6',
+            color: '#4a6352',
+            border: '1px solid #a8cc8c',
             fontWeight: 500,
           }}
           onMouseEnter={(e) => {
-            e.currentTarget.style.background = '#234a2c'
-            e.currentTarget.style.color = '#f8f9fa'
+            e.currentTarget.style.background = '#c4dbb0'
+            e.currentTarget.style.color = '#1c2e20'
           }}
           onMouseLeave={(e) => {
-            e.currentTarget.style.background = '#1a3320'
-            e.currentTarget.style.color = '#abafba'
+            e.currentTarget.style.background = '#d4eac6'
+            e.currentTarget.style.color = '#4a6352'
           }}
         >
           <ArrowLeft
@@ -584,7 +583,7 @@ function QuizStep({
         </button>
         <span
           className="text-[11px]"
-          style={{ color: '#6f7480', fontWeight: 500 }}
+          style={{ color: '#8a9e8f', fontWeight: 500 }}
         >
           {isAr ? 'انقر إجابتك للمتابعة' : 'Tap an answer to continue'}
         </span>
@@ -621,7 +620,7 @@ function ContactStep({
         style={{
           letterSpacing: '0.18em',
           fontWeight: 700,
-          color: '#80d93d',
+          color: '#4d7c0f',
         }}
       >
         {isAr ? 'الخطوة الأخيرة' : 'Last step'}
@@ -629,7 +628,7 @@ function ContactStep({
       <h3
         className="text-[22px] md:text-[26px] mb-1 leading-tight"
         style={{
-          color: '#f8f9fa',
+          color: '#1c2e20',
           fontWeight: 600,
           letterSpacing: '-0.01em',
         }}
@@ -640,7 +639,7 @@ function ContactStep({
       </h3>
       <p
         className="text-sm mb-6 leading-relaxed"
-        style={{ color: '#abafba', fontWeight: 400 }}
+        style={{ color: '#4a6352', fontWeight: 400 }}
       >
         {isAr
           ? 'سترى تأكيداً خلال ثوانٍ، ويصلك الكتاب الإلكتروني والتعليمات على بريدك.'
@@ -709,7 +708,7 @@ function ContactStep({
 
       <p
         className="text-[11px] mt-5 leading-relaxed"
-        style={{ color: '#6f7480' }}
+        style={{ color: '#8a9e8f' }}
       >
         {isAr
           ? 'بإرسال هذا النموذج توافق على تواصلنا معك حول استشارتك المجانية. لن نشارك بياناتك مع أي طرف ثالث.'
@@ -724,9 +723,9 @@ function ContactStep({
           className="text-xs inline-flex items-center gap-1.5 rounded-full transition-colors disabled:opacity-40"
           style={{
             padding: '8px 14px',
-            background: '#1a3320',
-            color: '#abafba',
-            border: '1px solid #243d2a',
+            background: '#d4eac6',
+            color: '#4a6352',
+            border: '1px solid #a8cc8c',
             fontWeight: 500,
           }}
         >
@@ -768,21 +767,21 @@ function Done({
           width: 56,
           height: 56,
           borderRadius: 16,
-          background: 'rgba(132,217,61,0.12)',
-          border: '1px solid rgba(132,217,61,0.3)',
-          boxShadow: '0 0 28px rgba(163,230,53,0.22)',
+          background: 'rgba(61,107,42,0.12)',
+          border: '1px solid rgba(61,107,42,0.3)',
+          boxShadow: '0 0 28px rgba(61,107,42,0.22)',
         }}
       >
         <CheckCircle2
           className="w-7 h-7"
           strokeWidth={1.6}
-          style={{ color: '#a3e635' }}
+          style={{ color: '#3d6b0a' }}
         />
       </div>
       <h3
         className="text-2xl md:text-[28px] mb-2 leading-tight"
         style={{
-          color: '#f8f9fa',
+          color: '#1c2e20',
           fontWeight: 700,
           letterSpacing: '-0.015em',
         }}
@@ -791,7 +790,7 @@ function Done({
       </h3>
       <p
         className="text-sm leading-relaxed max-w-md mx-auto"
-        style={{ color: '#abafba', fontWeight: 400 }}
+        style={{ color: '#4a6352', fontWeight: 400 }}
       >
         {isAr
           ? `أرسلنا كتابك الإلكتروني إلى بريدك للتو. سيتواصل معك ${drName} شخصياً خلال يوم أو يومين لجدولة مكالمتك التعريفية المجانية.`
@@ -833,14 +832,14 @@ function Input({
       <label
         className="block text-[11px] mb-1.5"
         style={{
-          color: '#abafba',
+          color: '#4a6352',
           fontWeight: 600,
           letterSpacing: '0.02em',
         }}
       >
         {label}
         {required && (
-          <span style={{ color: '#80d93d', marginInlineStart: 4 }}>*</span>
+          <span style={{ color: '#4d7c0f', marginInlineStart: 4 }}>*</span>
         )}
       </label>
       <input
@@ -851,18 +850,18 @@ function Input({
         maxLength={maxLength}
         className="w-full h-11 rounded-lg px-3.5 text-sm transition-colors outline-none"
         style={{
-          background: '#1a3320',
-          border: '1px solid #243d2a',
-          color: '#f8f9fa',
+          background: '#d4eac6',
+          border: '1px solid #a8cc8c',
+          color: '#1c2e20',
           fontWeight: 500,
         }}
         onFocus={(e) => {
-          e.currentTarget.style.borderColor = '#80d93d'
+          e.currentTarget.style.borderColor = '#4d7c0f'
           e.currentTarget.style.boxShadow =
-            '0 0 0 3px rgba(132,217,61,0.15)'
+            '0 0 0 3px rgba(61,107,42,0.15)'
         }}
         onBlur={(e) => {
-          e.currentTarget.style.borderColor = '#243d2a'
+          e.currentTarget.style.borderColor = '#a8cc8c'
           e.currentTarget.style.boxShadow = 'none'
         }}
       />

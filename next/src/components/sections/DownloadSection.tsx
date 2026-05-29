@@ -23,7 +23,7 @@ interface DownloadSectionProps {
 }
 
 const DEFAULT_APK = 'https://greenofig.com/downloads/greenofig-latest.apk'
-const LIME = '#a3e635'
+const LIME = '#4d7c0f'
 const SKY = '#06b6d4'
 const AMBER = '#f59e0b'
 
@@ -48,8 +48,8 @@ export function DownloadSection({
           <span
             className="ms-2 inline-flex items-center font-mono text-[10px] rounded-pill px-2 py-0.5"
             style={{
-              background: 'rgba(132,217,61,0.12)',
-              border: '1px solid rgba(132,217,61,0.3)',
+              background: 'rgba(61,107,42,0.12)',
+              border: '1px solid rgba(61,107,42,0.3)',
               color: LIME,
             }}
             dir="ltr"
@@ -153,8 +153,7 @@ function Panel({
       className="rounded-2xl border border-border p-6 md:p-7"
       style={{
         background: 'var(--gf-surface)',
-        boxShadow:
-          '0 1px 0 rgba(255,255,255,0.03) inset, 0 8px 22px rgba(0,0,0,0.22)',
+        boxShadow: '0 4px 16px rgba(40,90,40,0.1)',
       }}
     >
       <header className="mb-5 flex items-start gap-2">
@@ -327,9 +326,9 @@ function SecTab({
       style={
         active
           ? {
-              background: 'rgba(132,217,61,0.18)',
+              background: 'rgba(61,107,42,0.15)',
               color: LIME,
-              boxShadow: '0 0 0 1px rgba(132,217,61,0.4) inset',
+              boxShadow: '0 0 0 1px rgba(61,107,42,0.4) inset',
             }
           : { background: 'transparent', color: 'var(--gf-fg-2)' }
       }

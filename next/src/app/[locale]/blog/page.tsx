@@ -81,7 +81,7 @@ export default function BlogIndexPage() {
             position: 'absolute',
             inset: 0,
             background:
-              'linear-gradient(to bottom, rgba(5,25,5,0.55) 0%, rgba(5,25,5,0.75) 100%)',
+              'linear-gradient(to bottom, rgba(200,230,180,0.62) 0%, rgba(190,225,165,0.78) 100%)',
             backdropFilter: 'blur(2px)',
             WebkitBackdropFilter: 'blur(2px)',
             zIndex: 1,
@@ -91,10 +91,10 @@ export default function BlogIndexPage() {
         <header
           className="text-center"
           style={{
-            background: 'rgba(255,255,255,0.04)',
+            background: 'rgba(168,210,138,0.65)',
             backdropFilter: 'blur(12px)',
             WebkitBackdropFilter: 'blur(12px)',
-            border: '1px solid rgba(255,255,255,0.1)',
+            border: '1px solid rgba(100,160,80,0.4)',
             borderRadius: 24,
             padding: '32px 48px',
             paddingTop: 32,
@@ -114,7 +114,7 @@ export default function BlogIndexPage() {
               fontSize: 'clamp(40px, 5vw, 60px)',
               lineHeight: 1.1,
               letterSpacing: '-0.02em',
-              color: '#ffffff',
+              color: '#1c2e20',
               marginTop: 16,
             }}
           >
@@ -124,7 +124,7 @@ export default function BlogIndexPage() {
           </h1>
           <p
             className="mt-5 text-base lg:text-lg leading-relaxed max-w-xl mx-auto"
-            style={{ color: 'rgba(255,255,255,0.85)' }}
+            style={{ color: '#4a6352' }}
           >
             {isAr
               ? 'مقالات قائمة على الأدلة لمساعدتك على الأكل بشكل أفضل وفهم جسمك.'

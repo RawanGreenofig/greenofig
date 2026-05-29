@@ -890,13 +890,20 @@ function SpecialtyInput({
       <ul className="flex flex-wrap items-center gap-1.5 mb-2">
         {values.map((v) => (
           <li key={v}>
-            <span className="inline-flex items-center gap-1 rounded-pill bg-surface-raised border border-border text-fg-1 text-xs h-7 ps-3 pe-1">
+            <span
+              className="inline-flex items-center gap-1 rounded-pill text-xs font-medium h-7 ps-3 pe-1"
+              style={{
+                background: 'rgba(132,217,61,0.12)',
+                border: '1px solid rgba(132,217,61,0.4)',
+                color: '#a3e635',
+              }}
+            >
               {v}
               <button
                 type="button"
                 onClick={() => onRemove(v)}
                 aria-label="Remove"
-                className="w-5 h-5 rounded-full inline-flex items-center justify-center text-fg-3 hover:text-rose-400"
+                className="w-5 h-5 rounded-full inline-flex items-center justify-center text-lime-400/70 hover:text-rose-400 transition-colors"
               >
                 <X className="w-3 h-3" strokeWidth={2} />
               </button>
@@ -914,10 +921,21 @@ function SpecialtyInput({
         />
         <button
           type="submit"
-          className="inline-flex items-center justify-center w-9 h-9 rounded-md bg-primary/15 text-lime-400 hover:bg-primary/25"
+          className="inline-flex items-center justify-center w-9 h-9 rounded-md transition-colors shrink-0"
+          style={{
+            background: 'rgba(132,217,61,0.12)',
+            border: '1px solid rgba(132,217,61,0.4)',
+            color: '#a3e635',
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = 'rgba(132,217,61,0.2)'
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = 'rgba(132,217,61,0.12)'
+          }}
           aria-label={addLabel}
         >
-          <Plus className="w-3.5 h-3.5" strokeWidth={2.25} />
+          <Plus className="w-3.5 h-3.5" strokeWidth={2.25} color="#a3e635" />
         </button>
       </form>
     </div>

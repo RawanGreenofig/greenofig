@@ -1923,7 +1923,29 @@
         "macrosNote": "تُجمع تلقائيًا من سعرات وماكروز المكوّنات — عدّل أي مكوّن للتحديث.",
         "sectionDrNote": "ملاحظة كوتش التغذية روان",
         "drNotePh": "اختياري — ما الذي يجب أن يعرفه العميل عن هذا الطبق؟",
-        "perServing": "لكل حصة"
+        "perServing": "لكل حصة",
+        "iconLabel": "الأيقونة",
+        "categoryLabels": {
+          "breakfast": "فطور",
+          "lunch": "غداء",
+          "dinner": "عشاء",
+          "snack": "وجبة خفيفة",
+          "drink": "مشروب"
+        },
+        "tagLabels": {
+          "vegan": "نباتي صرف",
+          "vegetarian": "نباتي",
+          "glutenFree": "خالٍ من الغلوتين",
+          "dairyFree": "خالٍ من الألبان",
+          "keto": "كيتو",
+          "halal": "حلال",
+          "highProtein": "عالي البروتين",
+          "quick": "سريع"
+        },
+        "colIngredient": "المكوّن",
+        "colProtein": "بروتين",
+        "colCarbs": "كربوهيدرات",
+        "colFat": "دهون"
       },
       "draftBadge": "مسودة",
       "publishedBadge": "منشورة",

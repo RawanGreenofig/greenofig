@@ -99,7 +99,7 @@ export function AboutSection() {
               fontWeight: 600,
               letterSpacing: '0.2em',
               textTransform: 'uppercase',
-              color: '#a3e635',
+              color: '#4d7c0f',
             }}
           >
             {t('aboutEyebrow')}
@@ -109,7 +109,7 @@ export function AboutSection() {
             style={{
               fontSize: 'clamp(28px, 4vw, 48px)',
               fontWeight: 700,
-              color: '#ffffff',
+              color: '#1c2e20',
               lineHeight: 1.1,
               letterSpacing: '-0.02em',
             }}
@@ -121,7 +121,7 @@ export function AboutSection() {
             style={{
               fontSize: '18px',
               fontStyle: 'italic',
-              color: '#9baf9f',
+              color: '#4a6352',
               lineHeight: 1.6,
               maxWidth: '520px',
             }}
@@ -132,7 +132,7 @@ export function AboutSection() {
           <p
             style={{
               fontSize: '16px',
-              color: '#aaaaaa',
+              color: '#4a6352',
               lineHeight: 1.7,
               maxWidth: '520px',
             }}
@@ -145,12 +145,12 @@ export function AboutSection() {
               <span
                 key={cred}
                 style={{
-                  background: 'rgba(163,230,53,0.1)',
-                  color: '#a3e635',
+                  background: 'rgba(61,107,58,0.1)',
+                  color: '#3d6b0a',
                   fontSize: '13px',
                   padding: '6px 16px',
                   borderRadius: '999px',
-                  border: '1px solid rgba(163,230,53,0.2)',
+                  border: '1px solid rgba(61,107,58,0.25)',
                   fontWeight: 500,
                   whiteSpace: 'nowrap',
                 }}

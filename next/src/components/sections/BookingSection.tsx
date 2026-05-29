@@ -125,16 +125,16 @@ export function BookingSection() {
             href="#booking"
             className="group inline-flex items-center gap-2 rounded-full px-8 py-4 text-base font-semibold text-bg transition-all duration-normal ease-out hover:scale-[1.02]"
             style={{
-              background: 'linear-gradient(135deg, #84cc16, #a3e635)',
-              boxShadow: '0 0 32px rgba(132, 204, 22, 0.35)',
+              background: 'linear-gradient(135deg, #5a9048, #3d6b2a)',
+              boxShadow: '0 0 32px rgba(90,144,72,0.35)',
             }}
             onMouseEnter={(e) => {
               e.currentTarget.style.boxShadow =
-                '0 0 48px rgba(132, 204, 22, 0.5)'
+                '0 0 48px rgba(90,144,72,0.5)'
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.boxShadow =
-                '0 0 32px rgba(132, 204, 22, 0.35)'
+                '0 0 32px rgba(90,144,72,0.35)'
             }}
           >
             {t('bookingCta')}

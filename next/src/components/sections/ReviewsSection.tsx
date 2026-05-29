@@ -101,7 +101,7 @@ export function ReviewsSection() {
                         key={i}
                         className="w-4 h-4"
                         fill={i < review.rating ? 'var(--gf-amber)' : 'transparent'}
-                        stroke={i < review.rating ? 'var(--gf-amber)' : 'rgba(255,255,255,0.30)'}
+                        stroke={i < review.rating ? 'var(--gf-amber)' : 'rgba(61,107,42,0.35)'}
                       />
                     ))}
                   </div>
@@ -115,9 +115,9 @@ export function ReviewsSection() {
                     <span
                       className="w-10 h-10 rounded-pill flex items-center justify-center text-xs font-bold tracking-wide"
                       style={{
-                        background: 'rgba(163,230,53,0.10)',
-                        color: '#a3e635',
-                        border: '1px solid rgba(163,230,53,0.35)',
+                        background: 'rgba(61,107,42,0.12)',
+                        color: '#3d6b0a',
+                        border: '1px solid rgba(61,107,42,0.3)',
                       }}
                     >
                       {review.author_initials}

@@ -6,23 +6,23 @@
  */
 
 export const colors = {
-  // Page surfaces
-  bg: '#0d1a12',
-  bgDeeper: '#060d09',
-  surface: '#132218',
-  surfaceRaised: '#1a3320',
-  border: '#243d2a',
+  // Page surfaces — pistachio (no white, no dark)
+  bg: '#e8f3de',
+  bgDeeper: '#d4eac6',
+  surface: '#deefd0',
+  surfaceRaised: '#e8f3de',
+  border: '#a8cc8c',
 
-  // Brand
-  primary: '#3d7a4a',
-  primaryHover: '#4a9259',
-  primaryActive: '#2e5c37',
-  brandTint: 'rgba(61,122,74,0.1)',
+  // Brand — deep forest green (works on light bg)
+  primary: '#2d6b3a',
+  primaryHover: '#3a8049',
+  primaryActive: '#1e4f2a',
+  brandTint: 'rgba(45,107,58,0.08)',
 
-  // Lime — accent (NOT primary)
-  lime400: '#a3e635',
-  lime500: '#84cc16',
-  lime600: '#65a30d',
+  // Lime — darkened for readability on pistachio bg
+  lime400: '#4d7c0f',
+  lime500: '#3d6b0a',
+  lime600: '#2d5208',
 
   // Other accents
   amber: '#e8912a',
@@ -31,10 +31,10 @@ export const colors = {
   figGold: '#c9a84c',
   forest: '#16a34a',
 
-  // Text levels
-  text1: '#f0ede6',
-  text2: '#9baf9f',
-  text3: '#5c7262',
+  // Text levels — dark on light bg
+  text1: '#1c2e20',
+  text2: '#4a6352',
+  text3: '#8a9e8f',
 
   // Semantic state
   success: '#4caf72',
@@ -142,8 +142,8 @@ export const shadow = {
   sm: '0 1px 2px 0 rgb(0 0 0 / 0.05)',
   md: '0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)',
   lg: '0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)',
-  glow: '0 4px 20px rgb(61 122 74 / 0.35)',
-  glowLg: '0 8px 40px rgb(61 122 74 / 0.45)',
+  glow: '0 4px 20px rgb(45 107 58 / 0.18)',
+  glowLg: '0 8px 40px rgb(45 107 58 / 0.25)',
   limeGlow: '0 4px 20px rgb(163 230 53 / 0.3)',
   limeGlowLg: '0 8px 40px rgb(163 230 53 / 0.4)',
   glass: '0 10px 40px rgb(0 0 0 / 0.15)',

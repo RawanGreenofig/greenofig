@@ -199,7 +199,7 @@ export function StoreSection() {
               disabled={!canScroll}
               className="w-11 h-11 rounded-full border border-border bg-surface text-fg-1 inline-flex items-center justify-center transition-all duration-200 hover:border-lime-400 hover:text-lime-400 disabled:opacity-40 disabled:cursor-not-allowed"
               style={{
-                boxShadow: '0 1px 0 rgba(255,255,255,0.04) inset, 0 6px 16px rgba(0,0,0,0.25)',
+                boxShadow: '0 4px 12px rgba(40,90,40,0.1)',
               }}
             >
               <ChevronLeft
@@ -214,7 +214,7 @@ export function StoreSection() {
               disabled={!canScroll}
               className="w-11 h-11 rounded-full border border-border bg-surface text-fg-1 inline-flex items-center justify-center transition-all duration-200 hover:border-lime-400 hover:text-lime-400 disabled:opacity-40 disabled:cursor-not-allowed"
               style={{
-                boxShadow: '0 1px 0 rgba(255,255,255,0.04) inset, 0 6px 16px rgba(0,0,0,0.25)',
+                boxShadow: '0 4px 12px rgba(40,90,40,0.1)',
               }}
             >
               <ChevronRight
@@ -267,15 +267,14 @@ export function StoreSection() {
                 className="snap-start shrink-0 rounded-2xl border border-border bg-surface overflow-hidden flex flex-col transition-colors duration-300 hover:border-lime-400/50"
                 style={{
                   width: CARD_W,
-                  boxShadow:
-                    '0 1px 0 rgba(255,255,255,0.03) inset, 0 14px 40px rgba(0,0,0,0.32)',
+                  boxShadow: '0 4px 20px rgba(40,90,40,0.12)',
                 }}
               >
                 <div
                   className="relative aspect-square flex items-center justify-center overflow-hidden"
                   style={{
                     background:
-                      'radial-gradient(circle at 50% 35%, rgba(163,230,53,0.07), rgba(13,26,18,0) 62%), #0d1a12',
+                      'radial-gradient(circle at 50% 35%, rgba(61,107,42,0.12), rgba(212,234,198,0) 62%), #c8e4b4',
                   }}
                 >
                   {/* Soft ring behind the icon — picks up product color */}
@@ -341,7 +340,7 @@ export function StoreSection() {
                 style={{
                   width: active ? 22 : 6,
                   height: 6,
-                  background: active ? 'var(--gf-lime-400)' : 'var(--gf-border-strong, rgba(255,255,255,0.18))',
+                  background: active ? 'var(--gf-lime-400)' : 'rgba(61,107,42,0.3)',
                 }}
               />
             )

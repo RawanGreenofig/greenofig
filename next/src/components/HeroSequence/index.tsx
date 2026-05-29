@@ -163,7 +163,7 @@ export function HeroSequence() {
       <section
         aria-label="Hero — Nourish Better."
         className="relative w-full overflow-hidden"
-        style={{ background: '#0d1a12' }}
+        style={{ background: '#d4eac6' }}
       >
         <div className="relative w-full" style={{ aspectRatio: '16 / 10' }}>
           <Image
@@ -180,7 +180,7 @@ export function HeroSequence() {
             className="absolute inset-0"
             style={{
               background:
-                'linear-gradient(to bottom, rgba(13,26,18,0) 35%, rgba(13,26,18,0.85) 100%)',
+                'linear-gradient(to bottom, rgba(212,234,198,0) 35%, rgba(212,234,198,0.88) 100%)',
             }}
           />
         </div>
@@ -209,7 +209,7 @@ export function HeroSequence() {
           <Link
             href="/#booking"
             className="mt-7 inline-flex items-center justify-center gap-2 rounded-pill bg-gradient-to-b from-lime-400 to-lime-600 text-bg font-semibold h-12 px-6 text-sm border border-lime-600/60"
-            style={{ boxShadow: '0 8px 28px rgba(132,217,61,0.32)' }}
+            style={{ boxShadow: '0 8px 28px rgba(61,107,42,0.32)' }}
           >
             {heroCta}
             <ArrowRight className={`w-4 h-4 ${isAr ? 'rotate-180' : ''}`} strokeWidth={2} />
@@ -333,7 +333,7 @@ export function HeroSequence() {
                 <p
                   className="inline-flex items-center justify-center font-sans font-medium"
                   style={{
-                    color: '#ffffff',
+                    color: '#1c2e20',
                     fontSize: 'clamp(15px, 2.2vw, 20px)',
                     fontWeight: 500,
                     letterSpacing: '0.04em',
@@ -341,11 +341,11 @@ export function HeroSequence() {
                     opacity: 1,
                     padding: '12px 24px',
                     borderRadius: 9999,
-                    background: 'rgba(8, 20, 10, 0.55)',
+                    background: 'rgba(168, 210, 138, 0.72)',
                     backdropFilter: 'blur(10px)',
                     WebkitBackdropFilter: 'blur(10px)',
-                    border: '1px solid rgba(255, 255, 255, 0.12)',
-                    boxShadow: '0 4px 20px rgba(0, 0, 0, 0.35)',
+                    border: '1px solid rgba(100, 160, 80, 0.4)',
+                    boxShadow: '0 4px 20px rgba(40, 90, 40, 0.12)',
                   }}
                 >
                   <WordReveal show={showSub} exit={exitInitial}>

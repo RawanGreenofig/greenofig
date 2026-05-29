@@ -20,17 +20,17 @@ const config: Config = {
       current: 'currentColor',
       inherit: 'inherit',
 
-      // Page surfaces
-      bg: { DEFAULT: '#0d1a12', deeper: '#060d09' },
-      surface: { DEFAULT: '#132218', raised: '#1a3320' },
-      border: '#243d2a',
+      // Page surfaces — pistachio (no white, no dark)
+      bg: { DEFAULT: '#e8f3de', deeper: '#d4eac6' },
+      surface: { DEFAULT: '#deefd0', raised: '#e8f3de' },
+      border: '#a8cc8c',
 
-      // Brand — primary forest green
-      primary: { DEFAULT: '#3d7a4a', hover: '#4a9259', active: '#2e5c37' },
-      'brand-tint': 'rgb(61 122 74 / 0.1)',
+      // Brand — deep forest green (works on light bg)
+      primary: { DEFAULT: '#2d6b3a', hover: '#3a8049', active: '#1e4f2a' },
+      'brand-tint': 'rgb(45 107 58 / 0.08)',
 
-      // Lime — accent only
-      lime: { 400: '#a3e635', 500: '#84cc16', 600: '#65a30d' },
+      // Lime — darkened for readability on pistachio bg
+      lime: { 400: '#4d7c0f', 500: '#3d6b0a', 600: '#2d5208' },
 
       // Other accents
       amber: '#e8912a',
@@ -39,8 +39,8 @@ const config: Config = {
       'fig-gold': '#c9a84c',
       forest: '#16a34a',
 
-      // Text levels
-      fg: { 1: '#f0ede6', 2: '#9baf9f', 3: '#5c7262' },
+      // Text levels — dark on light bg
+      fg: { 1: '#1c2e20', 2: '#4a6352', 3: '#8a9e8f' },
 
       // Semantic state
       success: '#4caf72',
@@ -124,8 +124,8 @@ const config: Config = {
       },
       keyframes: {
         'pulse-glow': {
-          '0%, 100%': { boxShadow: '0 4px 20px rgb(61 122 74 / 0.35)' },
-          '50%': { boxShadow: '0 8px 40px rgb(61 122 74 / 0.55)' },
+          '0%, 100%': { boxShadow: '0 4px 20px rgb(45 107 58 / 0.18)' },
+          '50%': { boxShadow: '0 8px 40px rgb(45 107 58 / 0.3)' },
         },
         float: {
           '0%, 100%': { transform: 'translateY(0)' },
