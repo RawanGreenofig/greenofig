@@ -114,6 +114,13 @@ async function handleCheckoutCompleted(
   service: ServiceClient,
 ) {
   const meta = session.metadata ?? {}
+
+  // Clinic walk-in pay link — mark the ledger row paid + notify the coach.
+  if (meta.kind === 'clinic_payment' && meta.clinic_payment_id) {
+    await handleClinicPaymentPaid(meta.clinic_payment_id, service)
+    return
+  }
+
   // Primary: userId is on the session metadata (set by /api/stripe/checkout).
   // Fallback: look the user up by email — covers sessions created without
   // metadata (Stripe Payment Links, one-off dashboard sessions, etc.).
@@ -258,6 +265,42 @@ async function handleCheckoutCompleted(
       } as never)
       .eq('id', meta.bookingId)
   }
+}
+
+/** Mark a clinic payment ledger row paid (Stripe pay-link) + notify coach. */
+async function handleClinicPaymentPaid(paymentId: string, service: ServiceClient) {
+  const { data } = await service
+    .from('clinic_payments')
+    .select('id, coach_id, clinic_client_id, amount_cents, currency, status')
+    .eq('id', paymentId)
+    .maybeSingle()
+  const p = data as
+    | { id: string; coach_id: string; clinic_client_id: string; amount_cents: number; currency: string; status: string }
+    | null
+  if (!p || p.status === 'paid') return
+
+  await service
+    .from('clinic_payments')
+    .update({ status: 'paid', paid_at: new Date().toISOString(), method: 'online' } as never)
+    .eq('id', p.id)
+
+  const { data: client } = await service
+    .from('clinic_clients')
+    .select('full_name')
+    .eq('id', p.clinic_client_id)
+    .maybeSingle()
+  const name = (client as { full_name?: string } | null)?.full_name ?? 'A clinic client'
+  const amount = `${(p.amount_cents / 100).toFixed(2)} ${p.currency}`
+  await service.from('notifications').insert({
+    user_id: p.coach_id,
+    title: 'Payment received',
+    title_ar: 'تم استلام الدفعة',
+    body: `${name} paid ${amount}.`,
+    body_ar: `${name} دفع ${amount}.`,
+    type: 'billing',
+    data: { url: `/nutritionist/clinic-clients/${p.clinic_client_id}` },
+    is_read: false,
+  } as never)
 }
 
 async function handleSubscriptionUpsert(

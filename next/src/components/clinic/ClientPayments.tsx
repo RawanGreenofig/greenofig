@@ -1,6 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useState } from 'react'
+import { useLocale } from 'next-intl'
 import {
   Plus,
   X,
@@ -10,6 +11,7 @@ import {
   Edit3,
   AlertTriangle,
   CreditCard,
+  Send,
 } from '@/icons'
 
 /**
@@ -61,6 +63,19 @@ export function ClientPayments({ clientId }: { clientId: string }) {
   const [payments, setPayments] = useState<Payment[]>([])
   const [loading, setLoading] = useState(true)
   const [editing, setEditing] = useState<Draft | null>(null)
+  const [copiedId, setCopiedId] = useState<string | null>(null)
+  const locale = useLocale()
+
+  const copyPayLink = async (p: Payment) => {
+    const url = `${window.location.origin}/${locale}/clinic-pay/${p.id}`
+    try {
+      await navigator.clipboard.writeText(url)
+      setCopiedId(p.id)
+      setTimeout(() => setCopiedId((c) => (c === p.id ? null : c)), 2000)
+    } catch {
+      window.prompt('Copy this pay link to send the client:', url)
+    }
+  }
 
   const refresh = useCallback(async () => {
     try {
@@ -192,14 +207,29 @@ export function ClientPayments({ clientId }: { clientId: string }) {
                 </div>
                 <div className="flex items-center gap-1.5 shrink-0">
                   {p.status === 'due' ? (
-                    <button
-                      type="button"
-                      onClick={() => void markPaid(p)}
-                      className="inline-flex items-center gap-1 rounded-pill bg-surface-raised border border-border h-8 px-3 text-[11px] font-semibold text-fg-2 hover:text-fg-1"
-                    >
-                      <Check className="w-3 h-3" strokeWidth={2} />
-                      Mark paid
-                    </button>
+                    <>
+                      <button
+                        type="button"
+                        onClick={() => void copyPayLink(p)}
+                        title="Copy a card / Zelle pay link to send the client"
+                        className="inline-flex items-center gap-1 rounded-pill bg-surface-raised border border-border h-8 px-3 text-[11px] font-semibold text-fg-2 hover:text-fg-1"
+                      >
+                        {copiedId === p.id ? (
+                          <Check className="w-3 h-3 text-lime-400" strokeWidth={2} />
+                        ) : (
+                          <Send className="w-3 h-3" strokeWidth={2} />
+                        )}
+                        {copiedId === p.id ? 'Copied!' : 'Pay link'}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => void markPaid(p)}
+                        className="inline-flex items-center gap-1 rounded-pill bg-surface-raised border border-border h-8 px-3 text-[11px] font-semibold text-fg-2 hover:text-fg-1"
+                      >
+                        <Check className="w-3 h-3" strokeWidth={2} />
+                        Mark paid
+                      </button>
+                    </>
                   ) : (
                     <button
                       type="button"

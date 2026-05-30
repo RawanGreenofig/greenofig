@@ -75,6 +75,7 @@ export default function AdminStorePage() {
   const [communityEnabled, setCommunityEnabled] = useState(true)
   const [researchEnabled, setResearchEnabled] = useState(true)
   const [pricingEnabled, setPricingEnabled] = useState(true)
+  const [zelleHandle, setZelleHandle] = useState('')
   const [announcement, setAnnouncement] = useState('')
   // Tier visibility for the marketing-page store section. Empty array =
   // visible to everyone. Non-empty array = only those tiers see the store.
@@ -140,6 +141,7 @@ export default function AdminStorePage() {
       'community_enabled',
       'research_desk_enabled',
       'pricing_page_enabled',
+      'clinic_zelle_handle',
       'site_announcement',
       'store_enabled_tiers',
       'free_tier_scanner_limit',
@@ -168,6 +170,8 @@ export default function AdminStorePage() {
         if (key === 'community_enabled')    setCommunityEnabled(!explicitFalse)
         if (key === 'research_desk_enabled') setResearchEnabled(!explicitFalse)
         if (key === 'pricing_page_enabled') setPricingEnabled(!explicitFalse)
+        if (key === 'clinic_zelle_handle')
+          setZelleHandle(typeof value === 'string' ? value : '')
         if (key === 'site_announcement')
           setAnnouncement(typeof value === 'string' ? value : '')
         if (key === 'store_enabled_tiers' && Array.isArray(value)) {
@@ -237,6 +241,7 @@ export default function AdminStorePage() {
   usePersistSetting('community_enabled',     communityEnabled)
   usePersistSetting('research_desk_enabled', researchEnabled)
   usePersistSetting('pricing_page_enabled',  pricingEnabled)
+  usePersistSetting('clinic_zelle_handle',   zelleHandle)
   usePersistSetting('store_enabled_tiers',   storeTiers)
   usePersistSetting('free_tier_scanner_limit', freeScannerLimit)
   usePersistSetting('booking_price_cents',   bookingPrices)
@@ -386,6 +391,23 @@ export default function AdminStorePage() {
             on={pricingEnabled}
             onChange={setPricingEnabled}
           />
+        </div>
+
+        <div className="pt-3 border-t border-border">
+          <label className="block">
+            <span className="text-sm font-semibold text-fg-1">Zelle handle (clinic pay links)</span>
+            <p className="text-xs text-fg-3 mt-0.5 mb-2">
+              Shown on the payment link so walk-in clients can pay by Zelle. Email or phone.
+            </p>
+            <input
+              type="text"
+              value={zelleHandle}
+              onChange={(e) => setZelleHandle(e.target.value)}
+              placeholder="e.g. coach@email.com or +1 404 555 0123"
+              dir="ltr"
+              className="w-full h-10 rounded-md bg-bg-deeper border border-border px-3 text-sm text-fg-1 placeholder-fg-3 focus:outline-none focus:border-primary"
+            />
+          </label>
         </div>
 
         <div className="pt-3 border-t border-border">

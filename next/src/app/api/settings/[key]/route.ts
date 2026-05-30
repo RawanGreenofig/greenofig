@@ -31,6 +31,7 @@ const ALLOWED_KEYS = [
   'ai_chat_enabled',
   'research_desk_enabled',
   'pricing_page_enabled',
+  'clinic_zelle_handle',
   'maintenance_mode',
   'free_tier_scanner_limit',
   'booking_price_cents',
