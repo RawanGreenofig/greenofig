@@ -8,7 +8,9 @@ import {
   ExternalLink,
   Linkedin,
   CheckCheck,
+  Plus,
 } from '@/icons'
+import { Link } from '@/i18n/navigation'
 import { getBrowserSupabase } from '@/lib/supabase/client'
 
 interface Application {
@@ -124,16 +126,25 @@ export default function HeadCoachCareersPage() {
 
   return (
     <div className="px-4 md:px-8 py-6 md:py-8 max-w-screen-xl mx-auto space-y-6">
-      <header>
-        <h1
-          className="font-display font-bold text-fg-1 tracking-tight"
-          style={{ fontSize: 'clamp(28px, 4vw, 40px)', lineHeight: 1.1 }}
+      <header className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h1
+            className="font-display font-bold text-fg-1 tracking-tight"
+            style={{ fontSize: 'clamp(28px, 4vw, 40px)', lineHeight: 1.1 }}
+          >
+            Hiring pipeline
+          </h1>
+          <p className="mt-2 text-sm md:text-base text-fg-2">
+            Review applications, schedule interviews, and move candidates through the funnel.
+          </p>
+        </div>
+        <Link
+          href="/nutritionist/careers/postings"
+          className="inline-flex items-center gap-1.5 rounded-pill bg-gradient-to-b from-lime-400 to-lime-600 text-bg font-semibold h-10 px-5 text-sm shadow-lime-glow border border-lime-600/60"
         >
-          Hiring pipeline
-        </h1>
-        <p className="mt-2 text-sm md:text-base text-fg-2">
-          Review applications, schedule interviews, and move candidates through the funnel.
-        </p>
+          <Plus className="w-3.5 h-3.5" strokeWidth={2} />
+          Post a job
+        </Link>
       </header>
 
       <div className="flex flex-wrap gap-2">

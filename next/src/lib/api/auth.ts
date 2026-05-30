@@ -35,7 +35,7 @@ export function withAuth<TParams extends Record<string, string> = Record<string,
     ctx: AuthedContext,
     routeCtx: { params: TParams },
   ) => HandlerResult,
-  opts?: { role?: UserRole[] },
+  opts?: { role?: UserRole[]; allow?: (profile: Profile) => boolean },
 ) {
   return async (
     req: NextRequest,
@@ -62,6 +62,9 @@ export function withAuth<TParams extends Record<string, string> = Record<string,
     if (opts?.role && !opts.role.includes(profile.role)) {
       return forbidden()
     }
+    if (opts?.allow && !opts.allow(profile)) {
+      return forbidden()
+    }
 
     const ctx: AuthedContext = {
       userId: user.id,
@@ -84,3 +87,15 @@ export const withNutritionistOrAdmin = <P extends Record<string, string> = Recor
 export const withAdmin = <P extends Record<string, string> = Record<string, string>>(
   handler: (req: NextRequest, ctx: AuthedContext, routeCtx: { params: P }) => HandlerResult,
 ) => withAuth<P>(handler, { role: ['admin'] })
+
+/**
+ * Shorthand: admin OR the head coach (owner-coach). Employee nutritionists
+ * are rejected. Used for owner-level business areas like careers/job postings.
+ */
+export const withHeadCoachOrAdmin = <P extends Record<string, string> = Record<string, string>>(
+  handler: (req: NextRequest, ctx: AuthedContext, routeCtx: { params: P }) => HandlerResult,
+) =>
+  withAuth<P>(handler, {
+    role: ['nutritionist', 'admin'],
+    allow: (p) => p.role === 'admin' || p.is_head_coach === true,
+  })

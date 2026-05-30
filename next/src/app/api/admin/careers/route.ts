@@ -1,5 +1,5 @@
 import type { NextRequest } from 'next/server'
-import { withAdmin, type AuthedContext } from '@/lib/api/auth'
+import { withHeadCoachOrAdmin, type AuthedContext } from '@/lib/api/auth'
 import { badRequest, json, serviceUnavailable } from '@/lib/api/response'
 import { ipFromRequest, logAudit } from '@/lib/api/audit'
 import { getServiceSupabase } from '@/lib/supabase/service'
@@ -40,7 +40,7 @@ const isUuid = (s: unknown): s is string =>
 const isJobType = (s: unknown): s is JobType =>
   typeof s === 'string' && (VALID_JOB_TYPES as readonly string[]).includes(s)
 
-export const POST = withAdmin(async (req: NextRequest, ctx: AuthedContext) => {
+export const POST = withHeadCoachOrAdmin(async (req: NextRequest, ctx: AuthedContext) => {
   let body: Body
   try {
     body = (await req.json()) as Body
@@ -73,7 +73,7 @@ export const POST = withAdmin(async (req: NextRequest, ctx: AuthedContext) => {
     await logAudit({
       action: 'job_postings.toggle_publish',
       actorId: ctx.userId,
-      actorRole: 'admin',
+      actorRole: ctx.profile.role,
       resourceType: 'job_postings',
       resourceId: body.id,
       newValue: { is_published: next },
@@ -115,7 +115,7 @@ export const POST = withAdmin(async (req: NextRequest, ctx: AuthedContext) => {
     await logAudit({
       action: 'job_postings.update',
       actorId: ctx.userId,
-      actorRole: 'admin',
+      actorRole: ctx.profile.role,
       resourceType: 'job_postings',
       resourceId: body.id,
       newValue: row,
@@ -133,7 +133,7 @@ export const POST = withAdmin(async (req: NextRequest, ctx: AuthedContext) => {
     await logAudit({
       action: 'job_postings.create',
       actorId: ctx.userId,
-      actorRole: 'admin',
+      actorRole: ctx.profile.role,
       resourceType: 'job_postings',
       resourceId: inserted?.id,
       newValue: row,
@@ -143,7 +143,7 @@ export const POST = withAdmin(async (req: NextRequest, ctx: AuthedContext) => {
   }
 })
 
-export const DELETE = withAdmin(async (req: NextRequest, ctx: AuthedContext) => {
+export const DELETE = withHeadCoachOrAdmin(async (req: NextRequest, ctx: AuthedContext) => {
   let body: Body
   try {
     body = (await req.json()) as Body
@@ -164,7 +164,7 @@ export const DELETE = withAdmin(async (req: NextRequest, ctx: AuthedContext) => 
   await logAudit({
     action: 'job_postings.delete',
     actorId: ctx.userId,
-    actorRole: 'admin',
+    actorRole: ctx.profile.role,
     resourceType: 'job_postings',
     resourceId: body.id,
     ip: ipFromRequest(req),
