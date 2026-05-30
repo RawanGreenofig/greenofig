@@ -52,7 +52,11 @@ export default function MessagesPage() {
 
 function MessagesInner() {
   const { user, profile, tier } = useUser()
-  const allowed = tierAtLeast(tier, 'premium')
+  // Premium unlocks coach chat — and so does being a linked walk-in
+  // clinic client (they pay in person, not online).
+  const allowed =
+    tierAtLeast(tier, 'premium') ||
+    (profile as { is_clinic_client?: boolean } | null)?.is_clinic_client === true
 
   const searchParams = useSearchParams()
   const pathname = usePathname()

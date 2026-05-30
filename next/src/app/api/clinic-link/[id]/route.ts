@@ -44,11 +44,45 @@ export const POST = withAuth<{ id: string }>(
       if (linkErr) return badRequest(linkErr.message)
     }
 
-    // Route this account's coach messaging to the owning coach.
+    // Route this account's coach messaging to the owning coach, and mark
+    // it a clinic client so it can message despite being free-tier.
     await service
       .from('profiles')
-      .update({ assigned_coach_id: cc.coach_id } as never)
+      .update({ assigned_coach_id: cc.coach_id, is_clinic_client: true } as never)
       .eq('id', ctx.userId)
+
+    // Open the chat thread with the coach right away (idempotent) so both
+    // sides see it the moment the client connects.
+    const { data: convo } = await service
+      .from('conversations')
+      .select('id')
+      .eq('user_id', ctx.userId)
+      .eq('nutritionist_id', cc.coach_id)
+      .maybeSingle()
+    let conversationId = (convo as { id?: string } | null)?.id ?? null
+    if (!conversationId) {
+      const { data: createdConvo } = await service
+        .from('conversations')
+        .insert({ user_id: ctx.userId, nutritionist_id: cc.coach_id } as never)
+        .select('id')
+        .maybeSingle()
+      conversationId = (createdConvo as { id?: string } | null)?.id ?? null
+    }
+    if (conversationId) {
+      const { count } = await service
+        .from('messages')
+        .select('id', { count: 'exact', head: true })
+        .eq('conversation_id', conversationId)
+      if ((count ?? 0) === 0) {
+        await service.from('messages').insert({
+          conversation_id: conversationId,
+          sender_id: cc.coach_id,
+          recipient_id: ctx.userId,
+          content:
+            'Welcome! This is your private line with your coach. Message me here anytime about your plan, progress, or anything else.',
+        } as never)
+      }
+    }
 
     if (!alreadyLinked) {
       const secret = process.env.OPENCLAW_WEBHOOK_SECRET

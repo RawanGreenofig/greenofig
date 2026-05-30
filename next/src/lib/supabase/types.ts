@@ -46,6 +46,9 @@ export interface Profile {
   // who owns that client.
   is_head_coach?: boolean
   assigned_coach_id?: string | null
+  // True when this account belongs to a linked walk-in clinic client
+  // (migration 036). Lets them message their coach despite free tier.
+  is_clinic_client?: boolean
   // Settings → Notifications + Account, migration 029. Shape is
   // intentionally loose (jsonb in Postgres) so the dashboard can
   // ship new topics without a schema bump.

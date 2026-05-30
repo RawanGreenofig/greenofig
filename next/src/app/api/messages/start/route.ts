@@ -44,7 +44,8 @@ export const POST = withAuth(async (_req, ctx: AuthedContext) => {
   // initiate threads on behalf of clients.
   if (
     ctx.profile.role === 'user' &&
-    !tierAtLeast(ctx.profile.tier, 'premium')
+    !tierAtLeast(ctx.profile.tier, 'premium') &&
+    !ctx.profile.is_clinic_client
   ) {
     return forbidden('Messaging your coach is included with the Premium plan.')
   }
