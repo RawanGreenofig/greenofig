@@ -15,6 +15,10 @@ export interface ParsedClient {
   phone: string | null
   email: string | null
   date_of_birth: string | null // YYYY-MM-DD
+  start_date: string | null // YYYY-MM-DD — when they started at the clinic
+  end_date: string | null // YYYY-MM-DD — when their program ends
+  insured: boolean
+  insurance_provider: string | null
   gender: string | null // 'female' | 'male' | 'other' | null
   notes: string | null
 }
@@ -24,6 +28,10 @@ export const EMPTY_PARSED: ParsedClient = {
   phone: null,
   email: null,
   date_of_birth: null,
+  start_date: null,
+  end_date: null,
+  insured: false,
+  insurance_provider: null,
   gender: null,
   notes: null,
 }
@@ -71,6 +79,30 @@ const HEADER_TO_FIELD: Record<string, keyof ParsedClient> = {
   birthdate: 'date_of_birth',
   birthday: 'date_of_birth',
   born: 'date_of_birth',
+  startdate: 'start_date',
+  start: 'start_date',
+  datestarted: 'start_date',
+  joindate: 'start_date',
+  joined: 'start_date',
+  joiningdate: 'start_date',
+  since: 'start_date',
+  firstvisit: 'start_date',
+  membersince: 'start_date',
+  enrolled: 'start_date',
+  enddate: 'end_date',
+  end: 'end_date',
+  finishdate: 'end_date',
+  completiondate: 'end_date',
+  expiry: 'end_date',
+  expirydate: 'end_date',
+  insured: 'insured',
+  insurance: 'insured',
+  hasinsurance: 'insured',
+  covered: 'insured',
+  insuranceprovider: 'insurance_provider',
+  insurer: 'insurance_provider',
+  insurancecompany: 'insurance_provider',
+  provider: 'insurance_provider',
   gender: 'gender',
   sex: 'gender',
   notes: 'notes',
@@ -124,6 +156,12 @@ function str(v: unknown): string {
   return String(v).trim()
 }
 
+function normalizeBool(v: unknown): boolean {
+  if (typeof v === 'boolean') return v
+  const s = String(v ?? '').trim().toLowerCase()
+  return ['1', 'true', 'yes', 'y', 'insured', 'covered', 'نعم', 'مؤمن'].includes(s)
+}
+
 /** Map one raw spreadsheet row (header→value) into a ParsedClient. */
 export function mapRow(row: Record<string, unknown>): ParsedClient {
   const out: ParsedClient = { ...EMPTY_PARSED }
@@ -131,9 +169,14 @@ export function mapRow(row: Record<string, unknown>): ParsedClient {
     const field = HEADER_TO_FIELD[normKey(header)]
     if (!field || value == null || value === '') continue
     if (field === 'date_of_birth') out.date_of_birth = normalizeDate(value)
+    else if (field === 'start_date') out.start_date = normalizeDate(value)
+    else if (field === 'end_date') out.end_date = normalizeDate(value)
+    else if (field === 'insured') out.insured = normalizeBool(value)
+    else if (field === 'insurance_provider') out.insurance_provider = str(value) || null
     else if (field === 'gender') out.gender = normalizeGender(str(value))
     else if (field === 'full_name') out.full_name = str(value)
-    else out[field] = str(value) || null
+    else if (field === 'phone') out.phone = str(value) || null
+    else if (field === 'email') out.email = str(value) || null
   }
   return out
 }
@@ -150,6 +193,23 @@ export async function parseSpreadsheet(file: File): Promise<ParsedClient[]> {
     raw: true,
   })
   return rows.map(mapRow).filter((c) => c.full_name.trim().length > 0)
+}
+
+/**
+ * Flatten a spreadsheet/CSV File to plain CSV text (all sheets) so it
+ * can be handed to the AI extractor as a text part. Robust to any
+ * column names / layout — the model reads the literal cells. Capped so
+ * a huge sheet can't blow the request size.
+ */
+export async function spreadsheetToCsv(file: File): Promise<string> {
+  const buf = await file.arrayBuffer()
+  const wb = XLSX.read(buf, { type: 'array', cellDates: true })
+  return wb.SheetNames.map((name) => {
+    const csv = XLSX.utils.sheet_to_csv(wb.Sheets[name], { blankrows: false })
+    return wb.SheetNames.length > 1 ? `# Sheet: ${name}\n${csv}` : csv
+  })
+    .join('\n\n')
+    .slice(0, 200000)
 }
 
 /** Server-side sanitizer — clamp lengths, coerce shape, drop empty names. */
@@ -172,6 +232,10 @@ export function sanitizeParsed(input: unknown): ParsedClient[] {
       phone: clamp(r.phone, 40),
       email: clamp(r.email, 200),
       date_of_birth: normalizeDate(r.date_of_birth),
+      start_date: normalizeDate(r.start_date),
+      end_date: normalizeDate(r.end_date),
+      insured: normalizeBool(r.insured),
+      insurance_provider: clamp(r.insurance_provider, 120),
       gender,
       notes: clamp(r.notes, 2000),
     })

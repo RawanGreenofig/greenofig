@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'
+import { useLocale } from 'next-intl'
 import { Link } from '@/i18n/navigation'
 import {
   ArrowLeft,
@@ -14,8 +15,10 @@ import {
   Loader2,
   Edit3,
   Trash2,
+  Share2,
 } from '@/icons'
 import { ClientPayments } from '@/components/clinic/ClientPayments'
+import { ClientPlanLog } from '@/components/clinic/ClientPlanLog'
 
 /**
  * /nutritionist/clinic-clients/[id]
@@ -32,6 +35,10 @@ interface ClinicClient {
   phone: string | null
   email: string | null
   date_of_birth: string | null
+  start_date: string | null
+  end_date: string | null
+  insured: boolean
+  insurance_provider: string | null
   gender: string | null
   notes: string | null
   is_active: boolean
@@ -53,6 +60,19 @@ interface Visit {
 export default function ClinicClientDetailPage() {
   const params = useParams<{ id: string }>()
   const id = params.id
+  const locale = useLocale()
+  const [updateCopied, setUpdateCopied] = useState(false)
+
+  const shareUpdateLink = async () => {
+    const url = `${window.location.origin}/${locale}/clinic-update/${id}`
+    try {
+      await navigator.clipboard.writeText(url)
+      setUpdateCopied(true)
+      setTimeout(() => setUpdateCopied(false), 2500)
+    } catch {
+      window.prompt('Copy this progress-update link to send the client:', url)
+    }
+  }
 
   const [client, setClient] = useState<ClinicClient | null>(null)
   const [visits, setVisits] = useState<Visit[]>([])
@@ -160,10 +180,30 @@ export default function ClinicClientDetailPage() {
               </a>
             )}
             {client.date_of_birth && <span>DOB: {client.date_of_birth}</span>}
+            {client.start_date && <span>Started: {client.start_date}</span>}
+            {client.end_date && <span>Ends: {client.end_date}</span>}
             {client.gender && <span>{client.gender}</span>}
+            <span
+              className="inline-flex items-center rounded-pill px-2 py-0.5 text-[10px] font-semibold uppercase tracking-eyebrow"
+              style={{
+                background: client.insured ? 'rgba(74,154,196,0.16)' : 'rgba(155,175,159,0.14)',
+                color: client.insured ? '#4a9ac4' : 'var(--gf-fg-3)',
+              }}
+            >
+              {client.insured ? `Insured${client.insurance_provider ? ` · ${client.insurance_provider}` : ''}` : 'Not insured'}
+            </span>
           </div>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
+          <button
+            type="button"
+            onClick={() => void shareUpdateLink()}
+            className="inline-flex items-center gap-1.5 rounded-pill bg-surface-raised border border-border h-9 px-4 text-xs font-semibold text-fg-1 hover:border-primary/40"
+            title="Copy a link the client uses to send you a progress update"
+          >
+            {updateCopied ? <Check className="w-3.5 h-3.5 text-lime-400" strokeWidth={2} /> : <Share2 className="w-3.5 h-3.5" strokeWidth={1.75} />}
+            {updateCopied ? 'Copied!' : 'Send update link'}
+          </button>
           <button
             type="button"
             onClick={() => setEditOpen(true)}
@@ -196,6 +236,8 @@ export default function ClinicClientDetailPage() {
       )}
 
       <ClientPayments clientId={client.id} />
+
+      <ClientPlanLog clientId={client.id} />
 
       <section>
         <h2 className="text-base font-semibold text-fg-1 mb-3">
@@ -647,6 +689,10 @@ function EditClientModal({
   const [fullName, setFullName] = useState(client.full_name)
   const [phone, setPhone] = useState(client.phone ?? '')
   const [email, setEmail] = useState(client.email ?? '')
+  const [startDate, setStartDate] = useState(client.start_date ?? '')
+  const [endDate, setEndDate] = useState(client.end_date ?? '')
+  const [insured, setInsured] = useState(client.insured)
+  const [insuranceProvider, setInsuranceProvider] = useState(client.insurance_provider ?? '')
   const [notes, setNotes] = useState(client.notes ?? '')
   const [isActive, setIsActive] = useState(client.is_active)
   const [busy, setBusy] = useState(false)
@@ -665,6 +711,10 @@ function EditClientModal({
           full_name: fullName.trim(),
           phone: phone.trim() || null,
           email: email.trim() || null,
+          start_date: startDate || null,
+          end_date: endDate || null,
+          insured,
+          insurance_provider: insuranceProvider.trim() || null,
           notes: notes.trim() || null,
           is_active: isActive,
         }),
@@ -740,6 +790,48 @@ function EditClientModal({
               className="w-full h-10 rounded-md bg-bg-deeper border border-border px-3 text-sm text-fg-1 focus:outline-none focus:border-primary"
             />
           </label>
+          <label className="block">
+            <span className="block text-[10px] uppercase tracking-eyebrow text-fg-3 font-semibold mb-1.5">
+              Start date
+            </span>
+            <input
+              type="date"
+              value={startDate}
+              onChange={(e) => setStartDate(e.target.value)}
+              className="w-full h-10 rounded-md bg-bg-deeper border border-border px-3 text-sm text-fg-1 focus:outline-none focus:border-primary"
+            />
+          </label>
+          <label className="block">
+            <span className="block text-[10px] uppercase tracking-eyebrow text-fg-3 font-semibold mb-1.5">
+              End date
+            </span>
+            <input
+              type="date"
+              value={endDate}
+              onChange={(e) => setEndDate(e.target.value)}
+              className="w-full h-10 rounded-md bg-bg-deeper border border-border px-3 text-sm text-fg-1 focus:outline-none focus:border-primary"
+            />
+          </label>
+        </div>
+        <div className="flex items-center gap-3 flex-wrap">
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={insured}
+              onChange={(e) => setInsured(e.target.checked)}
+              className="w-4 h-4 rounded accent-lime-500"
+            />
+            <span className="text-xs text-fg-1">Insured</span>
+          </label>
+          {insured && (
+            <input
+              type="text"
+              value={insuranceProvider}
+              onChange={(e) => setInsuranceProvider(e.target.value)}
+              placeholder="Insurance provider"
+              className="flex-1 min-w-[140px] h-9 rounded-md bg-bg-deeper border border-border px-3 text-sm text-fg-1 placeholder-fg-3 focus:outline-none focus:border-primary"
+            />
+          )}
         </div>
         <label className="block">
           <span className="block text-[10px] uppercase tracking-eyebrow text-fg-3 font-semibold mb-1.5">

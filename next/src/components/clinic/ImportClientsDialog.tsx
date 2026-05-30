@@ -3,7 +3,6 @@
 import { useRef, useState } from 'react'
 import {
   Upload,
-  FileSpreadsheet,
   Sparkles,
   Loader2,
   Trash2,
@@ -11,21 +10,22 @@ import {
   X,
   Check,
   AlertTriangle,
+  FileText,
 } from '@/icons'
 import {
-  parseSpreadsheet,
   fileKind,
+  spreadsheetToCsv,
   EMPTY_PARSED,
   type ParsedClient,
 } from '@/lib/clinic-import'
 
 /**
- * Bulk-import walk-in clients. The coach drops in an Excel/CSV sheet, a
- * PDF, or a photo (a handwritten list, an intake form, a business card).
- * Spreadsheets parse in the browser; photos/PDFs go to the AI extract
- * route (Gemini vision). Everything lands in one editable review table
- * so the coach can fix anything before it's saved — then Add (new rows)
- * or Replace (match existing walk-ins by phone).
+ * Bulk-import walk-in clients. The coach attaches one or more inputs —
+ * an Excel/CSV sheet, a PDF, and/or a photo (handwritten/printed list,
+ * intake form, business card) — and the AI reads them ALL TOGETHER,
+ * reconciling a file + a photo of the same people into one accurate
+ * set, reproduced exactly. Everything lands in an editable review table
+ * to fix before saving, then add (or update existing by phone).
  */
 
 type ImportResult = { added: number; updated: number; skipped: number; errors: string[] }
@@ -48,10 +48,11 @@ export function ImportClientsDialog({
   onClose: () => void
   onImported: () => void | Promise<void>
 }) {
+  const [attached, setAttached] = useState<File[]>([])
   const [rows, setRows] = useState<ParsedClient[]>([])
-  const [stage, setStage] = useState<'upload' | 'review'>('upload')
+  const [extracted, setExtracted] = useState(false)
   const [working, setWorking] = useState<string | null>(null)
-  const [mode, setMode] = useState<'add' | 'replace'>('add')
+  const [updateByPhone, setUpdateByPhone] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [result, setResult] = useState<ImportResult | null>(null)
   const [importing, setImporting] = useState(false)
@@ -59,58 +60,70 @@ export function ImportClientsDialog({
 
   const validCount = rows.filter((r) => r.full_name.trim()).length
 
-  async function handleFiles(files: FileList | null) {
-    if (!files || files.length === 0) return
+  function addFiles(list: FileList | null) {
+    if (!list || list.length === 0) return
+    setError(null)
+    const accepted: File[] = []
+    for (const f of Array.from(list)) {
+      if (fileKind(f) === 'unknown') {
+        setError(`Unsupported file "${f.name}". Use Excel, CSV, PDF, or an image.`)
+        continue
+      }
+      accepted.push(f)
+    }
+    setAttached((cur) => [...cur, ...accepted])
+  }
+
+  async function extractAll() {
+    if (attached.length === 0 || working) return
     setError(null)
     setResult(null)
-    let collected: ParsedClient[] = []
-    for (const file of Array.from(files)) {
-      const kind = fileKind(file)
-      try {
+    setWorking(`AI reading ${attached.length} file${attached.length === 1 ? '' : 's'}…`)
+    try {
+      const parts: Array<Record<string, unknown>> = []
+      for (const file of attached) {
+        const kind = fileKind(file)
         if (kind === 'spreadsheet') {
-          setWorking(`Reading ${file.name}…`)
-          collected = collected.concat(await parseSpreadsheet(file))
+          parts.push({ type: 'text', text: await spreadsheetToCsv(file), label: file.name })
         } else if (kind === 'image' || kind === 'pdf') {
-          setWorking(`AI reading ${file.name}…`)
           const dataUrl = await readAsDataURL(file)
-          const base64 = dataUrl.split(',')[1] ?? ''
-          const res = await fetch('/api/nutritionist/clinic-clients/extract', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              fileBase64: base64,
-              mimeType: file.type || (kind === 'pdf' ? 'application/pdf' : 'image/jpeg'),
-            }),
+          parts.push({
+            type: kind,
+            data: dataUrl.split(',')[1] ?? '',
+            mimeType: file.type || (kind === 'pdf' ? 'application/pdf' : 'image/jpeg'),
           })
-          const data = (await res.json().catch(() => ({}))) as {
-            clients?: ParsedClient[]
-            error?: string
-          }
-          if (!res.ok) {
-            setError(data.error ?? `AI extraction failed (${res.status}).`)
-          } else {
-            collected = collected.concat(data.clients ?? [])
-          }
-        } else {
-          setError(`Unsupported file "${file.name}". Use Excel, CSV, PDF, or an image.`)
         }
-      } catch (e) {
-        setError(e instanceof Error ? e.message : 'Failed to read that file.')
       }
+      const res = await fetch('/api/nutritionist/clinic-clients/extract', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ parts }),
+      })
+      const data = (await res.json().catch(() => ({}))) as { clients?: ParsedClient[]; error?: string }
+      if (!res.ok) {
+        setError(data.error ?? `AI extraction failed (${res.status}).`)
+      } else {
+        setRows(data.clients ?? [])
+        setExtracted(true)
+        if ((data.clients ?? []).length === 0) {
+          setError('The AI found no clients in those files. You can add rows manually below.')
+          setExtracted(true)
+        }
+      }
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Failed to read the files.')
+    } finally {
+      setWorking(null)
     }
-    setWorking(null)
-    if (collected.length > 0) setRows((curr) => [...curr, ...collected])
-    setStage('review')
   }
 
   function updateRow(i: number, patch: Partial<ParsedClient>) {
     setRows((curr) => curr.map((r, idx) => (idx === i ? { ...r, ...patch } : r)))
   }
-  function removeRow(i: number) {
-    setRows((curr) => curr.filter((_, idx) => idx !== i))
-  }
-  function addEmptyRow() {
+  const removeRow = (i: number) => setRows((curr) => curr.filter((_, idx) => idx !== i))
+  const addEmptyRow = () => {
     setRows((curr) => [...curr, { ...EMPTY_PARSED }])
+    setExtracted(true)
   }
 
   async function doImport() {
@@ -126,7 +139,7 @@ export function ImportClientsDialog({
       const res = await fetch('/api/nutritionist/clinic-clients/import', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ rows: payload, mode }),
+        body: JSON.stringify({ rows: payload, mode: updateByPhone ? 'replace' : 'add' }),
       })
       const data = (await res.json().catch(() => ({}))) as ImportResult & { error?: string }
       if (!res.ok) {
@@ -155,7 +168,6 @@ export function ImportClientsDialog({
       onClick={(e) => e.target === e.currentTarget && !importing && !working && onClose()}
     >
       <div className="w-full max-w-5xl max-h-[92dvh] flex flex-col rounded-2xl border border-border bg-surface overflow-hidden">
-        {/* Header */}
         <header className="flex items-start justify-between gap-3 px-5 md:px-6 py-4 border-b border-border">
           <div className="min-w-0">
             <h2 className="text-lg font-bold text-fg-1 inline-flex items-center gap-2">
@@ -163,8 +175,8 @@ export function ImportClientsDialog({
               Import clinic clients
             </h2>
             <p className="mt-1 text-xs text-fg-3">
-              Upload an Excel/CSV sheet, a PDF, or a photo — AI pulls each client&apos;s details,
-              then you review and edit before saving.
+              Attach an Excel/CSV, a PDF, and/or a photo — even a file <b>and</b> a photo of the
+              same list. The AI reads them together, reproduces them exactly, then you review &amp; edit.
             </p>
           </div>
           <button
@@ -177,15 +189,9 @@ export function ImportClientsDialog({
           </button>
         </header>
 
-        {/* Body */}
         <div className="flex-1 overflow-y-auto px-5 md:px-6 py-5 space-y-4">
-          {/* Dropzone / uploader (always available — lets them add more files) */}
-          <button
-            type="button"
-            onClick={() => fileInput.current?.click()}
-            disabled={!!working}
-            className="w-full rounded-xl border border-dashed border-border hover:border-lime-400/50 bg-bg-deeper/50 px-4 py-6 text-center transition-colors disabled:opacity-60"
-          >
+          {/* Attach + extract */}
+          <div className="rounded-xl border border-dashed border-border bg-bg-deeper/50 p-4 space-y-3">
             <input
               ref={fileInput}
               type="file"
@@ -193,28 +199,63 @@ export function ImportClientsDialog({
               multiple
               className="hidden"
               onChange={(e) => {
-                void handleFiles(e.target.files)
+                addFiles(e.target.files)
                 e.target.value = ''
               }}
             />
-            {working ? (
-              <span className="inline-flex items-center gap-2 text-sm text-fg-2">
-                <Loader2 className="w-4 h-4 animate-spin" strokeWidth={1.75} />
-                {working}
-              </span>
-            ) : (
-              <span className="inline-flex flex-col items-center gap-1.5 text-fg-2">
-                <span className="inline-flex items-center gap-2 text-sm font-semibold text-fg-1">
-                  <Upload className="w-4 h-4 text-lime-400" strokeWidth={1.75} />
-                  Choose file(s)
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                onClick={() => fileInput.current?.click()}
+                disabled={!!working}
+                className="inline-flex items-center gap-1.5 rounded-pill bg-surface border border-border h-9 px-4 text-xs font-semibold text-fg-1 hover:border-primary/40 disabled:opacity-60"
+              >
+                <Upload className="w-4 h-4 text-lime-400" strokeWidth={1.75} />
+                Attach file(s) / photo
+              </button>
+              {attached.length > 0 && !working && (
+                <button
+                  type="button"
+                  onClick={() => void extractAll()}
+                  className="inline-flex items-center gap-1.5 rounded-pill bg-gradient-to-b from-lime-400 to-lime-600 text-bg font-semibold h-9 px-4 text-xs shadow-lime-glow border border-lime-600/60"
+                >
+                  <Sparkles className="w-3.5 h-3.5" strokeWidth={2} />
+                  Read {attached.length} with AI
+                </button>
+              )}
+              {working && (
+                <span className="inline-flex items-center gap-2 text-xs text-fg-2">
+                  <Loader2 className="w-4 h-4 animate-spin" strokeWidth={1.75} />
+                  {working}
                 </span>
-                <span className="inline-flex items-center gap-2 text-[11px] text-fg-3">
-                  <FileSpreadsheet className="w-3 h-3" strokeWidth={1.75} />
-                  Excel / CSV parsed instantly · PDF &amp; photos read by AI
-                </span>
-              </span>
+              )}
+            </div>
+            {attached.length > 0 && (
+              <ul className="flex flex-wrap gap-2">
+                {attached.map((f, i) => (
+                  <li
+                    key={i}
+                    className="inline-flex items-center gap-1.5 rounded-pill bg-surface border border-border ps-3 pe-1.5 h-7 text-[11px] text-fg-2"
+                  >
+                    <FileText className="w-3 h-3 text-fg-3" strokeWidth={1.75} />
+                    <span className="max-w-[160px] truncate">{f.name}</span>
+                    <button
+                      type="button"
+                      onClick={() => setAttached((cur) => cur.filter((_, idx) => idx !== i))}
+                      className="w-4 h-4 rounded-full inline-flex items-center justify-center text-fg-3 hover:text-rose-400"
+                      aria-label="Remove"
+                    >
+                      <X className="w-3 h-3" strokeWidth={2} />
+                    </button>
+                  </li>
+                ))}
+              </ul>
             )}
-          </button>
+            <p className="text-[11px] text-fg-3">
+              Excel, CSV, PDF, or images (jpg/png/heic). Tip: attach the spreadsheet AND a photo
+              of the same list — the AI cross-checks both.
+            </p>
+          </div>
 
           {error && (
             <p className="text-xs inline-flex items-center gap-1.5" style={{ color: '#fca5a5' }}>
@@ -241,13 +282,13 @@ export function ImportClientsDialog({
             </div>
           )}
 
-          {stage === 'review' && !result && (
+          {extracted && !result && (
             <>
               <div className="flex items-center justify-between gap-3 flex-wrap">
                 <p className="text-xs text-fg-3">
                   {rows.length === 0
-                    ? 'Nothing detected yet — add rows manually or upload a file.'
-                    : `${validCount} client${validCount === 1 ? '' : 's'} ready${rows.length !== validCount ? ` · ${rows.length - validCount} missing a name` : ''}.`}
+                    ? 'Add rows manually below, or attach files and read them.'
+                    : `${validCount} client${validCount === 1 ? '' : 's'} ready${rows.length !== validCount ? ` · ${rows.length - validCount} missing a name` : ''}. Edit anything the AI got wrong.`}
                 </p>
                 <button
                   type="button"
@@ -261,14 +302,17 @@ export function ImportClientsDialog({
 
               {rows.length > 0 && (
                 <div className="overflow-x-auto rounded-xl border border-border">
-                  <table className="w-full text-sm" style={{ minWidth: 760 }}>
+                  <table className="w-full text-sm" style={{ minWidth: 1040 }}>
                     <thead>
                       <tr className="text-[10px] uppercase tracking-eyebrow text-fg-3 bg-bg-deeper">
                         <Th>Name *</Th>
                         <Th>Phone</Th>
                         <Th>Email</Th>
                         <Th>Date of birth</Th>
+                        <Th>Start date</Th>
+                        <Th>End date</Th>
                         <Th>Gender</Th>
+                        <Th>Insured</Th>
                         <Th>Notes</Th>
                         <th className="w-9" />
                       </tr>
@@ -276,26 +320,12 @@ export function ImportClientsDialog({
                     <tbody>
                       {rows.map((r, i) => (
                         <tr key={i} className="border-t border-border align-top">
-                          <Td>
-                            <Cell
-                              value={r.full_name}
-                              onChange={(v) => updateRow(i, { full_name: v })}
-                              invalid={!r.full_name.trim()}
-                            />
-                          </Td>
-                          <Td>
-                            <Cell value={r.phone ?? ''} onChange={(v) => updateRow(i, { phone: v || null })} dir="ltr" />
-                          </Td>
-                          <Td>
-                            <Cell value={r.email ?? ''} onChange={(v) => updateRow(i, { email: v || null })} dir="ltr" />
-                          </Td>
-                          <Td>
-                            <Cell
-                              type="date"
-                              value={r.date_of_birth ?? ''}
-                              onChange={(v) => updateRow(i, { date_of_birth: v || null })}
-                            />
-                          </Td>
+                          <Td><Cell value={r.full_name} onChange={(v) => updateRow(i, { full_name: v })} invalid={!r.full_name.trim()} /></Td>
+                          <Td><Cell value={r.phone ?? ''} onChange={(v) => updateRow(i, { phone: v || null })} dir="ltr" /></Td>
+                          <Td><Cell value={r.email ?? ''} onChange={(v) => updateRow(i, { email: v || null })} dir="ltr" /></Td>
+                          <Td><Cell type="date" value={r.date_of_birth ?? ''} onChange={(v) => updateRow(i, { date_of_birth: v || null })} /></Td>
+                          <Td><Cell type="date" value={r.start_date ?? ''} onChange={(v) => updateRow(i, { start_date: v || null })} /></Td>
+                          <Td><Cell type="date" value={r.end_date ?? ''} onChange={(v) => updateRow(i, { end_date: v || null })} /></Td>
                           <Td>
                             <select
                               value={r.gender ?? ''}
@@ -309,8 +339,15 @@ export function ImportClientsDialog({
                             </select>
                           </Td>
                           <Td>
-                            <Cell value={r.notes ?? ''} onChange={(v) => updateRow(i, { notes: v || null })} />
+                            <input
+                              type="checkbox"
+                              checked={r.insured}
+                              onChange={(e) => updateRow(i, { insured: e.target.checked })}
+                              className="w-4 h-4 rounded accent-lime-500"
+                              aria-label="Insured"
+                            />
                           </Td>
+                          <Td><Cell value={r.notes ?? ''} onChange={(v) => updateRow(i, { notes: v || null })} /></Td>
                           <td className="px-1 py-1.5">
                             <button
                               type="button"
@@ -331,34 +368,21 @@ export function ImportClientsDialog({
           )}
         </div>
 
-        {/* Footer */}
         {!result && (
           <footer className="flex flex-wrap items-center justify-between gap-3 px-5 md:px-6 py-4 border-t border-border">
-            <fieldset className="flex items-center gap-3 text-xs text-fg-2">
-              <span className="font-semibold text-fg-3 uppercase tracking-eyebrow text-[10px]">
-                On import
+            <label className="inline-flex items-start gap-2 text-xs text-fg-2 cursor-pointer max-w-md">
+              <input
+                type="checkbox"
+                checked={updateByPhone}
+                onChange={(e) => setUpdateByPhone(e.target.checked)}
+                className="mt-0.5 w-4 h-4 rounded accent-lime-500 shrink-0"
+              />
+              <span>
+                <b className="text-fg-1">Update existing clients instead of duplicating.</b>{' '}
+                If a phone number here matches a client you already have, update that client.
+                Otherwise everyone is added as new.
               </span>
-              <label className="inline-flex items-center gap-1.5 cursor-pointer">
-                <input
-                  type="radio"
-                  name="import-mode"
-                  checked={mode === 'add'}
-                  onChange={() => setMode('add')}
-                  className="accent-lime-500"
-                />
-                Add as new
-              </label>
-              <label className="inline-flex items-center gap-1.5 cursor-pointer">
-                <input
-                  type="radio"
-                  name="import-mode"
-                  checked={mode === 'replace'}
-                  onChange={() => setMode('replace')}
-                  className="accent-lime-500"
-                />
-                Replace by phone
-              </label>
-            </fieldset>
+            </label>
             <div className="flex items-center gap-2 ms-auto">
               <button
                 type="button"
@@ -374,11 +398,7 @@ export function ImportClientsDialog({
                 disabled={importing || validCount === 0}
                 className="inline-flex items-center gap-1.5 rounded-pill bg-gradient-to-b from-lime-400 to-lime-600 text-bg font-semibold h-9 px-4 text-xs shadow-lime-glow border border-lime-600/60 disabled:opacity-50"
               >
-                {importing ? (
-                  <Loader2 className="w-3.5 h-3.5 animate-spin" strokeWidth={2.25} />
-                ) : (
-                  <Check className="w-3.5 h-3.5" strokeWidth={2.25} />
-                )}
+                {importing ? <Loader2 className="w-3.5 h-3.5 animate-spin" strokeWidth={2.25} /> : <Check className="w-3.5 h-3.5" strokeWidth={2.25} />}
                 {importing ? 'Importing…' : `Import ${validCount || ''}`.trim()}
               </button>
             </div>
@@ -406,7 +426,6 @@ function Th({ children }: { children: React.ReactNode }) {
 function Td({ children }: { children: React.ReactNode }) {
   return <td className="px-1.5 py-1.5">{children}</td>
 }
-
 function Cell({
   value,
   onChange,

@@ -23,6 +23,10 @@ interface PatchBody {
   phone?: string | null
   email?: string | null
   date_of_birth?: string | null
+  start_date?: string | null
+  end_date?: string | null
+  insured?: boolean
+  insurance_provider?: string | null
   gender?: string | null
   notes?: string | null
   is_active?: boolean
@@ -37,7 +41,7 @@ async function loadOwned(
   const { data } = await service
     .from('clinic_clients')
     .select(
-      'id, coach_id, full_name, phone, email, date_of_birth, gender, notes, is_active, created_at, updated_at',
+      'id, coach_id, full_name, phone, email, date_of_birth, start_date, end_date, insured, insurance_provider, gender, notes, is_active, source, created_at, updated_at',
     )
     .eq('id', id)
     .maybeSingle()
@@ -48,9 +52,14 @@ async function loadOwned(
     phone: string | null
     email: string | null
     date_of_birth: string | null
+    start_date: string | null
+    end_date: string | null
+    insured: boolean
+    insurance_provider: string | null
     gender: string | null
     notes: string | null
     is_active: boolean
+    source: string | null
     created_at: string
     updated_at: string
   }
@@ -111,6 +120,11 @@ export const PATCH = withNutritionistOrAdmin<{ id: string }>(
     if (body.email !== undefined) patch.email = body.email?.trim() || null
     if (body.date_of_birth !== undefined)
       patch.date_of_birth = body.date_of_birth || null
+    if (body.start_date !== undefined) patch.start_date = body.start_date || null
+    if (body.end_date !== undefined) patch.end_date = body.end_date || null
+    if (body.insured !== undefined) patch.insured = !!body.insured
+    if (body.insurance_provider !== undefined)
+      patch.insurance_provider = body.insurance_provider?.trim() || null
     if (body.gender !== undefined) patch.gender = body.gender?.trim() || null
     if (body.notes !== undefined) patch.notes = body.notes?.trim() || null
     if (body.is_active !== undefined) patch.is_active = !!body.is_active

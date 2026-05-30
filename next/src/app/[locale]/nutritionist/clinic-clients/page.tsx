@@ -3,8 +3,9 @@
 import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { useLocale } from 'next-intl'
-import { Plus, Search, Phone, X, Loader2, Upload } from '@/icons'
+import { Plus, Search, Phone, X, Loader2, Upload, Share2, Check } from '@/icons'
 import { ImportClientsDialog } from '@/components/clinic/ImportClientsDialog'
+import { useAuth } from '@/context/AuthContext'
 
 /**
  * /nutritionist/clinic-clients
@@ -39,6 +40,20 @@ export default function ClinicClientsPage() {
   const [search, setSearch] = useState('')
   const [showAdd, setShowAdd] = useState(false)
   const [showImport, setShowImport] = useState(false)
+  const [copied, setCopied] = useState(false)
+  const { user } = useAuth()
+
+  const shareIntakeLink = async () => {
+    if (!user?.id) return
+    const url = `${window.location.origin}/${locale}/clinic-intake/${user.id}`
+    try {
+      await navigator.clipboard.writeText(url)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2500)
+    } catch {
+      window.prompt('Copy this intake link to share with new clients:', url)
+    }
+  }
 
   const refresh = async () => {
     try {
@@ -88,7 +103,17 @@ export default function ClinicClientsPage() {
             track payments, keep notes — no online account required.
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
+          <button
+            type="button"
+            onClick={() => void shareIntakeLink()}
+            className="inline-flex items-center gap-1.5 rounded-pill bg-surface-raised border border-border text-fg-1 hover:border-primary/40 font-semibold text-sm"
+            style={{ height: 40, padding: '0 16px' }}
+            title="Copy a link new clients can use to register themselves"
+          >
+            {copied ? <Check className="w-4 h-4 text-lime-400" strokeWidth={2} /> : <Share2 className="w-4 h-4" strokeWidth={2} />}
+            {copied ? 'Link copied!' : 'Share intake link'}
+          </button>
           <button
             type="button"
             onClick={() => setShowImport(true)}
@@ -244,6 +269,10 @@ function AddWalkInModal({
   const [phone, setPhone] = useState('')
   const [email, setEmail] = useState('')
   const [dob, setDob] = useState('')
+  const [startDate, setStartDate] = useState('')
+  const [endDate, setEndDate] = useState('')
+  const [insured, setInsured] = useState(false)
+  const [insuranceProvider, setInsuranceProvider] = useState('')
   const [gender, setGender] = useState('')
   const [notes, setNotes] = useState('')
   const [busy, setBusy] = useState(false)
@@ -267,6 +296,10 @@ function AddWalkInModal({
           phone: phone.trim() || null,
           email: email.trim() || null,
           date_of_birth: dob || null,
+          start_date: startDate || null,
+          end_date: endDate || null,
+          insured,
+          insurance_provider: insuranceProvider.trim() || null,
           gender: gender || null,
           notes: notes.trim() || null,
         }),
@@ -349,6 +382,22 @@ function AddWalkInModal({
               className="w-full h-10 rounded-md bg-bg-deeper border border-border px-3 text-sm text-fg-1 focus:outline-none focus:border-primary"
             />
           </Field>
+          <Field label="Start date">
+            <input
+              type="date"
+              value={startDate}
+              onChange={(e) => setStartDate(e.target.value)}
+              className="w-full h-10 rounded-md bg-bg-deeper border border-border px-3 text-sm text-fg-1 focus:outline-none focus:border-primary"
+            />
+          </Field>
+          <Field label="End date">
+            <input
+              type="date"
+              value={endDate}
+              onChange={(e) => setEndDate(e.target.value)}
+              className="w-full h-10 rounded-md bg-bg-deeper border border-border px-3 text-sm text-fg-1 focus:outline-none focus:border-primary"
+            />
+          </Field>
           <Field label="Gender">
             <select
               value={gender}
@@ -361,6 +410,27 @@ function AddWalkInModal({
               <option value="other">Other</option>
             </select>
           </Field>
+        </div>
+
+        <div className="flex items-center gap-3 flex-wrap">
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={insured}
+              onChange={(e) => setInsured(e.target.checked)}
+              className="w-4 h-4 rounded accent-lime-500"
+            />
+            <span className="text-xs text-fg-1">Insured</span>
+          </label>
+          {insured && (
+            <input
+              type="text"
+              value={insuranceProvider}
+              onChange={(e) => setInsuranceProvider(e.target.value)}
+              placeholder="Insurance provider"
+              className="flex-1 min-w-[140px] h-9 rounded-md bg-bg-deeper border border-border px-3 text-sm text-fg-1 placeholder-fg-3 focus:outline-none focus:border-primary"
+            />
+          )}
         </div>
 
         <Field label="Notes">

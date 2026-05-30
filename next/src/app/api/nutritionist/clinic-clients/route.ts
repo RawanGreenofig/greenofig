@@ -23,6 +23,10 @@ interface CreateBody {
   phone?: string | null
   email?: string | null
   date_of_birth?: string | null
+  start_date?: string | null
+  end_date?: string | null
+  insured?: boolean
+  insurance_provider?: string | null
   gender?: string | null
   notes?: string | null
 }
@@ -38,7 +42,7 @@ export const GET = withNutritionistOrAdmin(
     const baseQuery = service
       .from('clinic_clients')
       .select(
-        'id, coach_id, full_name, phone, email, date_of_birth, gender, notes, is_active, created_at, updated_at',
+        'id, coach_id, full_name, phone, email, date_of_birth, start_date, end_date, insured, insurance_provider, gender, notes, is_active, source, created_at, updated_at',
       )
       .order('updated_at', { ascending: false })
       .limit(500)
@@ -123,8 +127,13 @@ export const POST = withNutritionistOrAdmin(
         phone: body.phone?.trim() || null,
         email: body.email?.trim() || null,
         date_of_birth: body.date_of_birth || null,
+        start_date: body.start_date || null,
+        end_date: body.end_date || null,
+        insured: body.insured === true,
+        insurance_provider: body.insurance_provider?.trim() || null,
         gender: body.gender?.trim() || null,
         notes: body.notes?.trim() || null,
+        source: 'manual',
       } as never)
       .select('id')
       .maybeSingle()

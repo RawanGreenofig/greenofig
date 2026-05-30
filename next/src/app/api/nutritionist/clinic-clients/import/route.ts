@@ -52,6 +52,10 @@ export const POST = withNutritionistOrAdmin(
         phone: r.phone,
         email: r.email,
         date_of_birth: r.date_of_birth,
+        start_date: r.start_date,
+        end_date: r.end_date,
+        insured: r.insured,
+        insurance_provider: r.insurance_provider,
         gender: r.gender,
         notes: r.notes,
       }
@@ -83,7 +87,7 @@ export const POST = withNutritionistOrAdmin(
 
       const { error } = await service
         .from('clinic_clients')
-        .insert({ coach_id: ctx.userId, ...fields } as never)
+        .insert({ coach_id: ctx.userId, source: 'import', ...fields } as never)
       if (error) {
         skipped++
         errors.push(`${r.full_name}: ${error.message}`)
