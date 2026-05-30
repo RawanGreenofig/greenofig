@@ -236,7 +236,7 @@ function Colors() {
 
 function Typography() {
   const rows = [
-    { sample: 'Nourish Better.', cls: 'display', font: 'Fraunces 700', size: 'clamp(48–88px) / 1.05', token: '--text-display' },
+    { sample: 'Nourish Better.', cls: 'display', font: 'Inter 700', size: 'clamp(48–88px) / 1.05', token: '--text-display' },
     { sample: 'Section Title H1', cls: 'text-[40px] leading-[44px] font-bold tracking-tight font-sans', font: 'Inter 700', size: '40 / 44', token: '--text-h1' },
     { sample: 'Section Title H2', cls: 'text-[32px] leading-[37px] font-bold tracking-tight font-sans', font: 'Inter 700', size: '32 / 37', token: '--text-h2' },
     { sample: 'Card title H3', cls: 'text-[24px] leading-[30px] font-semibold font-sans', font: 'Inter 600', size: '24 / 30', token: '--text-h3' },
@@ -254,7 +254,7 @@ function Typography() {
     <Section
       id="typography"
       title="Typography"
-      description="Fraunces for display only. Inter is the workhorse. JetBrains Mono for stats. Noto Sans Arabic for RTL. Three families — never introduce a fourth."
+      description="Inter is the single typeface across the whole site — display through caption. JetBrains Mono for stats. Noto Sans Arabic for RTL."
     >
       <div className="space-y-6">
         {rows.map((r) => (

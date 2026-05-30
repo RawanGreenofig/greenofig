@@ -28,6 +28,8 @@
   --gf-lime-400: #4d7c0f;
   --gf-lime-500: #3d6b0a;
   --gf-lime-600: #2d5208;
+  /* Single source-of-truth lime accent gradient (design-system) for headings/underlines */
+  --gf-lime-gradient: linear-gradient(135deg, var(--gf-lime-400), #65a30d);
 
   /* Other accents */
   --gf-amber:    #e8912a;
@@ -49,7 +51,8 @@
 
   /* Type families — values populated by next/font */
   --font-sans:    var(--font-inter), system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  --font-display: var(--font-fraunces), Georgia, serif;
+  /* Design system: Inter is the single typeface — display role now uses Inter too (no serif). */
+  --font-display: var(--font-inter), -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --font-mono:    var(--font-jetbrains-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
   --font-arabic:  var(--font-noto-arabic), 'Tajawal', system-ui, sans-serif;
 

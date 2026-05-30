@@ -2,7 +2,7 @@ import Image from 'next/image'
 import { cn } from '@/lib/cn'
 
 /**
- * Greenofig wordmark. Logo image + Fraunces 900 serif text (heavy/thick)
+ * Greenofig wordmark. Logo image + Inter 700 text (design-system typeface)
  * — "Greeno" deep teal, "fig" deep plum. Colors are theme tokens
  * (--gf-wordmark-greeno / --gf-wordmark-fig) so they stay legible on the
  * light pistachio site and lift to bright teal/plum on the dark dashboard.
@@ -54,7 +54,7 @@ export function Wordmark({
           textSize,
           hideTextOnMobile && 'hidden sm:inline',
         )}
-        style={{ fontFamily: 'var(--font-fraunces), Georgia, serif', fontWeight: 900 }}
+        style={{ fontFamily: 'var(--font-inter), -apple-system, BlinkMacSystemFont, sans-serif', fontWeight: 700 }}
       >
         <span style={{ color: 'var(--gf-wordmark-greeno)' }}>Greeno</span>
         <span style={{ color: 'var(--gf-wordmark-fig)' }}>fig</span>

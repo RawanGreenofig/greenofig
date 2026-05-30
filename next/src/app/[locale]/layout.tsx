@@ -1,6 +1,5 @@
 import type { Metadata, Viewport } from 'next'
 import { Inter, JetBrains_Mono, Noto_Sans_Arabic } from 'next/font/google'
-import localFont from 'next/font/local'
 import { notFound } from 'next/navigation'
 import { NextIntlClientProvider, hasLocale } from 'next-intl'
 import { getMessages, setRequestLocale } from 'next-intl/server'
@@ -22,26 +21,10 @@ import { MaintenanceBanner } from '@/components/MaintenanceBanner'
 import { routing } from '@/i18n/routing'
 
 // ── Fonts ────────────────────────────────────────────────────────────
-const fraunces = localFont({
-  variable: '--font-fraunces',
-  display: 'swap',
-  src: [
-    {
-      path: '../fonts/Fraunces-VariableFont_SOFT_WONK_opsz_wght.ttf',
-      weight: '100 900',
-      style: 'normal',
-    },
-    {
-      path: '../fonts/Fraunces-Italic-VariableFont_SOFT_WONK_opsz_wght.ttf',
-      weight: '100 900',
-      style: 'italic',
-    },
-  ],
-})
-
+// Inter is the single typeface across the whole site (design-system spec).
 const inter = Inter({
   subsets: ['latin'],
-  weight: ['400', '500', '600'],
+  weight: ['300', '400', '500', '600', '700'],
   variable: '--font-inter',
   display: 'swap',
 })
@@ -238,7 +221,7 @@ export default async function LocaleLayout({ children, params }: LayoutProps) {
     <html
       lang={locale}
       dir={dir}
-      className={`${fraunces.variable} ${inter.variable} ${jetBrainsMono.variable} ${notoArabic.variable}`}
+      className={`${inter.variable} ${jetBrainsMono.variable} ${notoArabic.variable}`}
     >
       <body className="bg-bg text-fg-1 antialiased">
         <NextIntlClientProvider locale={locale} messages={messages}>
