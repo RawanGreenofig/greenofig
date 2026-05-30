@@ -9,13 +9,15 @@ interface Props {
   label?: string
   /** Pre-styled "or" divider above the button. Defaults to true. */
   withDivider?: boolean
+  /** Safe in-app path to return to after sign-in (e.g. a walk-in invite page). */
+  next?: string
 }
 
 /**
  * Google OAuth button shared by sign-in and sign-up pages.
  * Triggers Supabase OAuth flow with redirectTo = /<locale>/auth/callback.
  */
-export function GoogleAuthButton({ label, withDivider = true }: Props) {
+export function GoogleAuthButton({ label, withDivider = true, next }: Props) {
   const locale = useLocale()
   const isAr = locale === 'ar'
   const [pending, setPending] = useState(false)
@@ -54,7 +56,7 @@ export function GoogleAuthButton({ label, withDivider = true }: Props) {
       window.location.origin
     const redirectTo = isInsideCapacitor()
       ? 'com.greenofig.app://login-callback'
-      : `${baseUrl}/${locale}/auth/callback`
+      : `${baseUrl}/${locale}/auth/callback${next ? `?next=${encodeURIComponent(next)}` : ''}`
     const { error: oauthError } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: { redirectTo },

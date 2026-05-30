@@ -16,6 +16,7 @@ export async function GET(request: NextRequest) {
   const { searchParams, origin: requestOrigin } = new URL(request.url)
   const code = searchParams.get('code')
   const from = searchParams.get('from')
+  const next = searchParams.get('next')
   const locale = request.nextUrl.pathname.split('/')[1] || 'en'
 
   // Always send the user back to the canonical app URL when configured —
@@ -131,6 +132,13 @@ export async function GET(request: NextRequest) {
       } as never,
       { onConflict: 'id', ignoreDuplicates: true },
     )
+
+  // Honor a safe in-app ?next= path (e.g. the walk-in invite page that
+  // links the account). Must be a local absolute path, never an
+  // open redirect.
+  if (next && next.startsWith('/') && !next.startsWith('//')) {
+    return NextResponse.redirect(new URL(next, origin))
+  }
 
   // Read the role to decide redirect
   const { data: profile } = await supabase

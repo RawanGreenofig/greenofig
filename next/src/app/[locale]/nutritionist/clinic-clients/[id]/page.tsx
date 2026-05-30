@@ -62,6 +62,7 @@ export default function ClinicClientDetailPage() {
   const id = params.id
   const locale = useLocale()
   const [updateCopied, setUpdateCopied] = useState(false)
+  const [inviteCopied, setInviteCopied] = useState(false)
 
   const shareUpdateLink = async () => {
     const url = `${window.location.origin}/${locale}/clinic-update/${id}`
@@ -71,6 +72,17 @@ export default function ClinicClientDetailPage() {
       setTimeout(() => setUpdateCopied(false), 2500)
     } catch {
       window.prompt('Copy this progress-update link to send the client:', url)
+    }
+  }
+
+  const shareInviteLink = async () => {
+    const url = `${window.location.origin}/${locale}/clinic-link/${id}`
+    try {
+      await navigator.clipboard.writeText(url)
+      setInviteCopied(true)
+      setTimeout(() => setInviteCopied(false), 2500)
+    } catch {
+      window.prompt('Copy this app-invite link to send the client:', url)
     }
   }
 
@@ -195,6 +207,15 @@ export default function ClinicClientDetailPage() {
           </div>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
+          <button
+            type="button"
+            onClick={() => void shareInviteLink()}
+            className="inline-flex items-center gap-1.5 rounded-pill bg-surface-raised border border-border h-9 px-4 text-xs font-semibold text-fg-1 hover:border-primary/40"
+            title="Copy an invite link — the client signs in with Google and you can message them in-app"
+          >
+            {inviteCopied ? <Check className="w-3.5 h-3.5 text-lime-400" strokeWidth={2} /> : <Share2 className="w-3.5 h-3.5" strokeWidth={1.75} />}
+            {inviteCopied ? 'Copied!' : 'Invite to app'}
+          </button>
           <button
             type="button"
             onClick={() => void shareUpdateLink()}
