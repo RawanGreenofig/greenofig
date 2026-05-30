@@ -30,6 +30,7 @@ const ALLOWED_KEYS = [
   'community_enabled',
   'ai_chat_enabled',
   'research_desk_enabled',
+  'pricing_page_enabled',
   'maintenance_mode',
   'free_tier_scanner_limit',
   'booking_price_cents',

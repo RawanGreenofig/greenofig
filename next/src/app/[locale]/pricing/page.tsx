@@ -505,6 +505,49 @@ export default function PricingPage() {
           .map((r) => ({ q: r.question, a: r.answer }))
       : FAQS[locale]
 
+  // Pricing page can be switched off (so walk-in clients never see
+  // online prices). Gate on the flag; hide while it loads so prices
+  // never flash before we know the setting.
+  const { value: pricingFlag, isLoading: pricingFlagLoading } =
+    usePlatformSetting('pricing_page_enabled')
+  const pricingOff =
+    pricingFlag === false ||
+    (typeof pricingFlag === 'object' &&
+      pricingFlag !== null &&
+      (pricingFlag as { enabled?: unknown }).enabled === false)
+
+  if (pricingFlagLoading) {
+    return (
+      <main className="min-h-screen bg-bg">
+        <SiteHeader />
+        <div className="pt-28 flex items-center justify-center text-sm text-fg-3">
+          Loading…
+        </div>
+      </main>
+    )
+  }
+  if (pricingOff) {
+    return (
+      <main className="min-h-screen bg-bg">
+        <SiteHeader />
+        <div className="pt-28 px-4 max-w-lg mx-auto text-center">
+          <h1
+            className="font-display font-bold text-fg-1"
+            style={{ fontSize: 'clamp(24px,5vw,34px)', lineHeight: 1.1 }}
+          >
+            Pricing isn&rsquo;t available online
+          </h1>
+          <p className="mt-3 text-sm text-fg-2">
+            Please contact your coach for plan and pricing details.
+          </p>
+          <Link href="/" className="mt-5 inline-block text-sm text-lime-600 hover:underline">
+            &larr; Back to home
+          </Link>
+        </div>
+      </main>
+    )
+  }
+
   return (
     <main className="min-h-screen bg-bg">
       <SiteHeader />

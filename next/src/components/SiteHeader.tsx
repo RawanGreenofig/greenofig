@@ -7,6 +7,7 @@ import { Link, usePathname } from '@/i18n/navigation'
 import { LanguageSwitcher } from '@/components/LanguageSwitcher'
 import { Wordmark } from '@/components/Wordmark'
 import { useAuth } from '@/context/AuthContext'
+import { usePlatformSetting } from '@/lib/hooks/usePlatformSetting'
 
 /**
  * Premium marketing navbar.
@@ -83,8 +84,17 @@ export function SiteHeader() {
       .slice(0, 2)
       .toUpperCase() || '?'
 
+  // Hide the Pricing link when the pricing page is switched off (so
+  // walk-in clients don't see online prices).
+  const { value: pricingFlag } = usePlatformSetting('pricing_page_enabled')
+  const pricingOff =
+    pricingFlag === false ||
+    (typeof pricingFlag === 'object' &&
+      pricingFlag !== null &&
+      (pricingFlag as { enabled?: unknown }).enabled === false)
+
   const navLinks: { href: string; label: string }[] = [
-    { href: '/pricing', label: t('pricing') },
+    ...(pricingOff ? [] : [{ href: '/pricing', label: t('pricing') }]),
     { href: '/blog', label: t('blog') },
     { href: '/download', label: t('download') },
     { href: '/contact', label: t('contact') },

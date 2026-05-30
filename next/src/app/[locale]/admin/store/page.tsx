@@ -74,6 +74,7 @@ export default function AdminStorePage() {
   const [scannerEnabled, setScannerEnabled] = useState(true)
   const [communityEnabled, setCommunityEnabled] = useState(true)
   const [researchEnabled, setResearchEnabled] = useState(true)
+  const [pricingEnabled, setPricingEnabled] = useState(true)
   const [announcement, setAnnouncement] = useState('')
   // Tier visibility for the marketing-page store section. Empty array =
   // visible to everyone. Non-empty array = only those tiers see the store.
@@ -138,6 +139,7 @@ export default function AdminStorePage() {
       'scanner_enabled',
       'community_enabled',
       'research_desk_enabled',
+      'pricing_page_enabled',
       'site_announcement',
       'store_enabled_tiers',
       'free_tier_scanner_limit',
@@ -165,6 +167,7 @@ export default function AdminStorePage() {
         if (key === 'scanner_enabled')      setScannerEnabled(!explicitFalse)
         if (key === 'community_enabled')    setCommunityEnabled(!explicitFalse)
         if (key === 'research_desk_enabled') setResearchEnabled(!explicitFalse)
+        if (key === 'pricing_page_enabled') setPricingEnabled(!explicitFalse)
         if (key === 'site_announcement')
           setAnnouncement(typeof value === 'string' ? value : '')
         if (key === 'store_enabled_tiers' && Array.isArray(value)) {
@@ -233,6 +236,7 @@ export default function AdminStorePage() {
   usePersistSetting('scanner_enabled',       scannerEnabled)
   usePersistSetting('community_enabled',     communityEnabled)
   usePersistSetting('research_desk_enabled', researchEnabled)
+  usePersistSetting('pricing_page_enabled',  pricingEnabled)
   usePersistSetting('store_enabled_tiers',   storeTiers)
   usePersistSetting('free_tier_scanner_limit', freeScannerLimit)
   usePersistSetting('booking_price_cents',   bookingPrices)
@@ -375,6 +379,12 @@ export default function AdminStorePage() {
             body="Nutritionist research page and document library."
             on={researchEnabled}
             onChange={setResearchEnabled}
+          />
+          <PlatformToggle
+            label="Pricing page"
+            body="Public pricing page + its nav link. Turn OFF so walk-in clients don't see online prices."
+            on={pricingEnabled}
+            onChange={setPricingEnabled}
           />
         </div>
 
