@@ -3,7 +3,8 @@
 import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { useLocale } from 'next-intl'
-import { Plus, Search, Phone, X, Loader2 } from '@/icons'
+import { Plus, Search, Phone, X, Loader2, Upload } from '@/icons'
+import { ImportClientsDialog } from '@/components/clinic/ImportClientsDialog'
 
 /**
  * /nutritionist/clinic-clients
@@ -37,6 +38,7 @@ export default function ClinicClientsPage() {
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
   const [showAdd, setShowAdd] = useState(false)
+  const [showImport, setShowImport] = useState(false)
 
   const refresh = async () => {
     try {
@@ -80,15 +82,26 @@ export default function ClinicClientsPage() {
             track payments, keep notes — no online account required.
           </p>
         </div>
-        <button
-          type="button"
-          onClick={() => setShowAdd(true)}
-          className="btn-primary inline-flex items-center gap-1.5"
-          style={{ height: 40, padding: '0 18px' }}
-        >
-          <Plus className="w-4 h-4" strokeWidth={2} />
-          Add walk-in
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setShowImport(true)}
+            className="inline-flex items-center gap-1.5 rounded-pill bg-surface-raised border border-border text-fg-1 hover:border-primary/40 font-semibold text-sm"
+            style={{ height: 40, padding: '0 16px' }}
+          >
+            <Upload className="w-4 h-4" strokeWidth={2} />
+            Import
+          </button>
+          <button
+            type="button"
+            onClick={() => setShowAdd(true)}
+            className="btn-primary inline-flex items-center gap-1.5"
+            style={{ height: 40, padding: '0 18px' }}
+          >
+            <Plus className="w-4 h-4" strokeWidth={2} />
+            Add walk-in
+          </button>
+        </div>
       </header>
 
       <div className="relative">
@@ -175,6 +188,15 @@ export default function ClinicClientsPage() {
           onClose={() => setShowAdd(false)}
           onCreated={async () => {
             setShowAdd(false)
+            await refresh()
+          }}
+        />
+      )}
+
+      {showImport && (
+        <ImportClientsDialog
+          onClose={() => setShowImport(false)}
+          onImported={async () => {
             await refresh()
           }}
         />
