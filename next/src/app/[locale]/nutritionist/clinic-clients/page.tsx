@@ -54,6 +54,12 @@ export default function ClinicClientsPage() {
   }
   useEffect(() => {
     void refresh()
+    // Surface any newly-due/overdue payments into the notification bell.
+    // Fire-and-forget; there's no cron, so this runs when the coach
+    // opens the clinic area. The route is idempotent per payment.
+    void fetch('/api/nutritionist/clinic-clients/due-check', {
+      method: 'POST',
+    }).catch(() => {})
   }, [])
 
   const filtered = useMemo(() => {

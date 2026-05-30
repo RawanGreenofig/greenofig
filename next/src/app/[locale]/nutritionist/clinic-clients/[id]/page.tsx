@@ -15,6 +15,7 @@ import {
   Edit3,
   Trash2,
 } from '@/icons'
+import { ClientPayments } from '@/components/clinic/ClientPayments'
 
 /**
  * /nutritionist/clinic-clients/[id]
@@ -193,6 +194,8 @@ export default function ClinicClientDetailPage() {
           </p>
         </section>
       )}
+
+      <ClientPayments clientId={client.id} />
 
       <section>
         <h2 className="text-base font-semibold text-fg-1 mb-3">
