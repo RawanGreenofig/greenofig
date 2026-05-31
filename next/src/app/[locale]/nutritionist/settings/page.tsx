@@ -5,6 +5,7 @@ import { useTranslations } from 'next-intl'
 import { useUser } from '@/lib/hooks/useUser'
 import { getBrowserSupabase } from '@/lib/supabase/client'
 import { TimeOffManager } from '@/components/nutritionist/TimeOffManager'
+import { ClinicControls } from '@/components/nutritionist/ClinicControls'
 import { Switch } from '@/components/Switch'
 import {
   User,
@@ -296,6 +297,10 @@ export default function NutritionistSettingsPage() {
           {tab === 'account' && <AccountPane t={t} />}
         </div>
       </div>
+
+      {/* Owner-coach controls (pricing toggle + Zelle). Self-hides for
+          employee coaches. Persists instantly, independent of the tab SaveBar. */}
+      <ClinicControls />
 
       {tab !== 'account' && (dirty || saveState === 'saved') && (
         <SaveBar t={t} state={saveState} onSave={save} />

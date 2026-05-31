@@ -1,6 +1,6 @@
 import type { NextRequest } from 'next/server'
-import { withAdmin, type AuthedContext } from '@/lib/api/auth'
-import { badRequest, json, notFound, serviceUnavailable } from '@/lib/api/response'
+import { withHeadCoachOrAdmin, type AuthedContext } from '@/lib/api/auth'
+import { badRequest, forbidden, json, notFound, serviceUnavailable } from '@/lib/api/response'
 import { ipFromRequest, logAudit } from '@/lib/api/audit'
 import { invalidateFeatureCache } from '@/lib/api/features'
 import { getServiceSupabase } from '@/lib/supabase/service'
@@ -55,16 +55,25 @@ const ALLOWED_KEYS = [
 const isAllowed = (k: string): boolean =>
   (ALLOWED_KEYS as readonly string[]).includes(k)
 
+// Keys the head coach (owner-coach) may manage directly from her own
+// settings — she's not a full admin, so everything else stays admin-only.
+const HEAD_COACH_KEYS = ['pricing_page_enabled', 'clinic_zelle_handle'] as const
+const headCoachMayEdit = (k: string): boolean =>
+  (HEAD_COACH_KEYS as readonly string[]).includes(k)
+
 interface Body {
   value: unknown
   valueAr?: unknown
 }
 
-export const GET = withAdmin<{ key: string }>(
-  async (_req: NextRequest, _ctx: AuthedContext, { params }) => {
+export const GET = withHeadCoachOrAdmin<{ key: string }>(
+  async (_req: NextRequest, ctx: AuthedContext, { params }) => {
     const key = params.key
     if (!isAllowed(key)) {
       return badRequest(`Setting "${key}" is not editable.`)
+    }
+    if (ctx.profile.role !== 'admin' && !headCoachMayEdit(key)) {
+      return forbidden('You can only view your own settings.')
     }
 
     const service = getServiceSupabase()
@@ -81,11 +90,14 @@ export const GET = withAdmin<{ key: string }>(
   },
 )
 
-export const POST = withAdmin<{ key: string }>(
+export const POST = withHeadCoachOrAdmin<{ key: string }>(
   async (req: NextRequest, ctx: AuthedContext, { params }) => {
     const key = params.key
     if (!isAllowed(key)) {
       return badRequest(`Setting "${key}" is not editable.`)
+    }
+    if (ctx.profile.role !== 'admin' && !headCoachMayEdit(key)) {
+      return forbidden('You can only change your own settings.')
     }
 
     let body: Body
@@ -126,7 +138,7 @@ export const POST = withAdmin<{ key: string }>(
     await logAudit({
       action: 'platform_settings.update',
       actorId: ctx.userId,
-      actorRole: 'admin',
+      actorRole: ctx.profile.role,
       resourceType: 'platform_settings',
       resourceId: key,
       oldValue: prev,

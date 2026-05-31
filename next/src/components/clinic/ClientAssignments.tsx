@@ -20,12 +20,22 @@ interface Assignment {
   created_at: string
 }
 
+interface LibItem {
+  id: string
+  title: string
+  summary: string
+}
+
 export function ClientAssignments({ clientId }: { clientId: string }) {
   const [items, setItems] = useState<Assignment[]>([])
   const [loading, setLoading] = useState(true)
   const [adding, setAdding] = useState(false)
   const [busy, setBusy] = useState(false)
   const [form, setForm] = useState({ kind: 'meal_plan', title: '', details: '', link: '', due_date: '' })
+
+  // The coach's existing recipes + meal plans, so she picks instead of retyping.
+  const [lib, setLib] = useState<{ recipes: LibItem[]; mealPlans: LibItem[] } | null>(null)
+  const [picked, setPicked] = useState('') // "recipe:<id>" | "plan:<id>" | "" (custom)
 
   const refresh = useCallback(async () => {
     try {
@@ -39,6 +49,29 @@ export function ClientAssignments({ clientId }: { clientId: string }) {
     void refresh()
   }, [refresh])
 
+  // Load the library lazily, the first time she opens the assign form.
+  useEffect(() => {
+    if (!adding || lib) return
+    void (async () => {
+      const res = await fetch('/api/nutritionist/assignable', { cache: 'no-store' })
+      if (res.ok) setLib((await res.json()) as { recipes: LibItem[]; mealPlans: LibItem[] })
+    })()
+  }, [adding, lib])
+
+  function choosePicked(value: string) {
+    setPicked(value)
+    if (!value) return // "Write a custom one" — leave fields as-is
+    const [type, id] = value.split(':')
+    const item = (type === 'recipe' ? lib?.recipes : lib?.mealPlans)?.find((x) => x.id === id)
+    if (!item) return
+    setForm((f) => ({
+      ...f,
+      kind: type === 'recipe' ? 'recipe' : 'meal_plan',
+      title: item.title,
+      details: item.summary,
+    }))
+  }
+
   async function add() {
     if (busy || !form.title.trim()) return
     setBusy(true)
@@ -50,6 +83,7 @@ export function ClientAssignments({ clientId }: { clientId: string }) {
       })
       if (res.ok) {
         setForm({ kind: 'meal_plan', title: '', details: '', link: '', due_date: '' })
+        setPicked('')
         setAdding(false)
         await refresh()
       }
@@ -87,6 +121,39 @@ export function ClientAssignments({ clientId }: { clientId: string }) {
 
       {adding && (
         <div className="rounded-xl border border-border bg-surface p-4 mb-3 space-y-3">
+          {/* Pick from her existing recipes / meal plans — no re-authoring. */}
+          <label className="block">
+            <span className="block text-[11px] uppercase tracking-eyebrow text-fg-3 font-semibold mb-1">
+              Pick from your library
+            </span>
+            <select
+              value={picked}
+              onChange={(e) => choosePicked(e.target.value)}
+              className="w-full h-10 rounded-md bg-bg-deeper border border-border px-3 text-sm text-fg-1 focus:outline-none focus:border-primary"
+            >
+              <option value="">{lib ? '— Write a custom one —' : 'Loading your library…'}</option>
+              {lib && lib.recipes.length > 0 && (
+                <optgroup label="Recipes">
+                  {lib.recipes.map((r) => (
+                    <option key={r.id} value={`recipe:${r.id}`}>{r.title}</option>
+                  ))}
+                </optgroup>
+              )}
+              {lib && lib.mealPlans.length > 0 && (
+                <optgroup label="Meal plans">
+                  {lib.mealPlans.map((p) => (
+                    <option key={p.id} value={`plan:${p.id}`}>{p.title}</option>
+                  ))}
+                </optgroup>
+              )}
+            </select>
+            {picked && (
+              <p className="mt-1 text-[11px] text-fg-3">
+                Filled from your library — edit anything below before assigning.
+              </p>
+            )}
+          </label>
+
           <div className="flex gap-2">
             {(['meal_plan', 'recipe'] as const).map((k) => {
               const on = form.kind === k
@@ -114,7 +181,7 @@ export function ClientAssignments({ clientId }: { clientId: string }) {
               className="w-full h-9 rounded-md bg-bg-deeper border border-border px-3 text-sm text-fg-1 focus:outline-none focus:border-primary" />
           </div>
           <div className="flex justify-end gap-2">
-            <button type="button" onClick={() => setAdding(false)} className="rounded-pill bg-surface-raised border border-border h-8 px-3 text-xs font-semibold text-fg-1">Cancel</button>
+            <button type="button" onClick={() => { setAdding(false); setPicked('') }} className="rounded-pill bg-surface-raised border border-border h-8 px-3 text-xs font-semibold text-fg-1">Cancel</button>
             <button type="button" onClick={() => void add()} disabled={busy || !form.title.trim()}
               className="inline-flex items-center gap-1.5 rounded-pill bg-gradient-to-b from-lime-400 to-lime-600 text-bg font-semibold h-8 px-4 text-xs border border-lime-600/60 disabled:opacity-50">
               {busy ? 'Assigning…' : 'Assign'}

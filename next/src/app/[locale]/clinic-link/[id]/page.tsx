@@ -26,6 +26,15 @@ export default function ClinicLinkPage() {
   const tried = useRef(false)
   const ar = locale === 'ar'
 
+  // Safety net: never sit on "Loading…" forever. If auth is still
+  // resolving after a few seconds, fall through to the sign-in options
+  // (worst case a signed-in visitor just taps a button to link).
+  const [waited, setWaited] = useState(false)
+  useEffect(() => {
+    const t = setTimeout(() => setWaited(true), 3000)
+    return () => clearTimeout(t)
+  }, [])
+
   // Email/password fallback (in addition to Google).
   const [mode, setMode] = useState<'signup' | 'signin'>('signup')
   const [fullName, setFullName] = useState('')
@@ -77,7 +86,7 @@ export default function ClinicLinkPage() {
   }
 
   useEffect(() => {
-    if (isLoading || !user || tried.current) return
+    if ((isLoading && !waited) || !user || tried.current) return
     tried.current = true
     setState('linking')
     void (async () => {
@@ -95,7 +104,7 @@ export default function ClinicLinkPage() {
         setState('error')
       }
     })()
-  }, [id, user, isLoading])
+  }, [id, user, isLoading, waited])
 
   return (
     <main className="min-h-screen flex items-center justify-center px-4 py-10" style={{ background: 'var(--gf-bg-deeper)' }}>
@@ -104,7 +113,7 @@ export default function ClinicLinkPage() {
           Connect with your coach
         </h1>
 
-        {isLoading || state === 'linking' ? (
+        {(isLoading && !waited) || state === 'linking' ? (
           <div className="mt-6 flex flex-col items-center gap-3 text-sm text-fg-2">
             <Loader2 className="w-6 h-6 animate-spin text-lime-400" strokeWidth={1.75} />
             {state === 'linking' ? 'Connecting your account…' : 'Loading…'}
