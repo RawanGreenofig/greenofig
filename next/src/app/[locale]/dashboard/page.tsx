@@ -23,6 +23,7 @@ import { useSupabaseQuery } from '@/lib/hooks/useSupabaseQuery'
 import { usePushNotifications } from '@/lib/hooks/usePushNotifications'
 import { resolveFirstName } from '@/lib/displayName'
 import { resolveMacroTargets } from '@/lib/macros-defaults'
+import { ClinicHome } from '@/components/dashboard/ClinicHome'
 import { useState } from 'react'
 
 const containerVariants = {
@@ -36,7 +37,20 @@ interface TodayQueryResult {
   nextBooking: { scheduled_at: string; type: string } | null
 }
 
+/**
+ * Dashboard root. Linked walk-in clinic clients get a clinic-specific home
+ * (ClinicHome) instead of the online calorie/water tracker. Branching in a
+ * thin wrapper keeps the heavy tracker's hooks from running for them and
+ * avoids any rules-of-hooks issue.
+ */
 export default function DashboardTodayPage() {
+  const { profile } = useUser()
+  const isClinicClient = !!(profile as { is_clinic_client?: boolean } | null)?.is_clinic_client
+  if (isClinicClient) return <ClinicHome />
+  return <OnlineTodayPage />
+}
+
+function OnlineTodayPage() {
   const t = useTranslations('dashboard')
   const tCommon = useTranslations('common')
   const { user, profile, tier } = useUser()

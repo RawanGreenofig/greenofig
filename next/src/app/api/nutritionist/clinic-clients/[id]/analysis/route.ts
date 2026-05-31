@@ -49,7 +49,7 @@ export const GET = withNutritionistOrAdmin<{ id: string }>(
     if (!service) return serviceUnavailable('Supabase service role')
     let q = service
       .from('clinic_analysis')
-      .select('improvements, needs_improvement, summary, recommendations, updated_at')
+      .select('improvements, needs_improvement, summary, recommendations, shared_with_client, updated_at')
       .eq('clinic_client_id', params.id)
     if (ctx.profile.role !== 'admin') q = q.eq('coach_id', ctx.userId)
     const { data } = await q.maybeSingle()
@@ -59,7 +59,7 @@ export const GET = withNutritionistOrAdmin<{ id: string }>(
 
 export const PATCH = withNutritionistOrAdmin<{ id: string }>(
   async (req: NextRequest, ctx: AuthedContext, { params }) => {
-    let body: { improvements?: string; needs_improvement?: string; summary?: string; recommendations?: string }
+    let body: { improvements?: string; needs_improvement?: string; summary?: string; recommendations?: string; shared_with_client?: boolean }
     try {
       body = (await req.json()) as typeof body
     } catch {
@@ -79,6 +79,7 @@ export const PATCH = withNutritionistOrAdmin<{ id: string }>(
         needs_improvement: body.needs_improvement?.slice(0, 4000) ?? null,
         summary: body.summary?.slice(0, 4000) ?? null,
         recommendations: body.recommendations?.slice(0, 4000) ?? null,
+        ...(typeof body.shared_with_client === 'boolean' ? { shared_with_client: body.shared_with_client } : {}),
         updated_at: new Date().toISOString(),
       } as never,
       { onConflict: 'clinic_client_id' },

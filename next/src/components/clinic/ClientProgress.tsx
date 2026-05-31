@@ -11,6 +11,7 @@ import {
   Edit3,
   X,
 } from '@/icons'
+import { Switch } from '@/components/Switch'
 
 /**
  * Structured progress for one clinic client: check-in history (body
@@ -40,6 +41,7 @@ interface Analysis {
   improvements: string | null
   needs_improvement: string | null
   recommendations: string | null
+  shared_with_client?: boolean
   updated_at?: string
 }
 
@@ -131,6 +133,14 @@ export function ClientProgress({ clientId }: { clientId: string }) {
     setEditing(false)
     await refresh()
   }
+  async function toggleShare(next: boolean) {
+    setAnalysis((a) => (a ? { ...a, shared_with_client: next } : a))
+    await fetch(`/api/nutritionist/clinic-clients/${clientId}/analysis`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ shared_with_client: next }),
+    })
+  }
 
   const setF = <K extends keyof typeof form>(k: K, v: (typeof form)[K]) => setForm((c) => ({ ...c, [k]: v }))
 
@@ -196,6 +206,13 @@ export function ClientProgress({ clientId }: { clientId: string }) {
             {analysis.recommendations && (
               <AnalysisCol title="Recommendations — what to do next" color="#4a9ac4" bg="rgba(74,154,196,0.08)" text={analysis.recommendations} />
             )}
+            <div className="flex items-center justify-between gap-3 pt-3 border-t border-border">
+              <div className="min-w-0">
+                <p className="text-xs font-semibold text-fg-1">Share with client</p>
+                <p className="text-[11px] text-fg-3">Shows the summary &amp; recommendations on their dashboard as a &ldquo;From your coach&rdquo; card.</p>
+              </div>
+              <Switch on={!!analysis.shared_with_client} onChange={(v) => void toggleShare(v)} ariaLabel="Share analysis with client" />
+            </div>
           </div>
         ) : (
           <p className="text-sm text-fg-2">
