@@ -5,33 +5,43 @@ import { getServiceSupabase } from '@/lib/supabase/service'
 /**
  * POST /api/clinic-update/[id]   (PUBLIC — no auth)
  *
- * Behind a per-client "progress update" link the coach shares with an
- * EXISTING walk-in client. `[id]` is the clinic_clients id. The client
- * reports how they're doing; we append a 'progress' entry to that
- * client's Plan & Progress log and notify the owning coach so she can
- * adjust/rebuild the plan. Service role; no visitor session needed.
+ * Behind the per-client "send update link". The client fills a
+ * structured check-in (weight, measurements, energy/sleep/adherence/
+ * appetite ratings, wins, challenges) which is saved as a
+ * clinic_assessments row (source 'client') and the coach is notified.
  */
 
 export const dynamic = 'force-dynamic'
 
+const num = (v: unknown): number | null => {
+  if (v == null || v === '') return null
+  const n = Number(v)
+  return Number.isFinite(n) ? n : null
+}
+const rating = (v: unknown): number | null => {
+  const n = num(v)
+  if (n == null) return null
+  return n >= 1 && n <= 5 ? Math.round(n) : null
+}
+const txt = (v: unknown, max = 2000): string | null => {
+  if (v == null) return null
+  const t = String(v).trim()
+  return t ? t.slice(0, max) : null
+}
+
 interface Body {
-  weight?: string | null
-  measurements?: string | null
-  trend?: string | null // 'improved' | 'same' | 'worse'
-  notes?: string | null
-  hp?: string // honeypot
-}
-
-const clamp = (s: unknown, n: number): string | null => {
-  if (s == null) return null
-  const t = String(s).trim()
-  return t ? t.slice(0, n) : null
-}
-
-const TREND_LABEL: Record<string, string> = {
-  improved: 'Improving',
-  same: 'About the same',
-  worse: 'Struggling / worse',
+  weight_kg?: unknown
+  waist_cm?: unknown
+  hip_cm?: unknown
+  arm_cm?: unknown
+  thigh_cm?: unknown
+  energy?: unknown
+  sleep?: unknown
+  adherence?: unknown
+  appetite?: unknown
+  wins?: unknown
+  challenges?: unknown
+  hp?: string
 }
 
 export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
@@ -41,7 +51,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
   } catch {
     return badRequest('Invalid form submission.')
   }
-  if (body.hp && body.hp.trim()) return json({ ok: true }) // honeypot
+  if (typeof body.hp === 'string' && body.hp.trim()) return json({ ok: true }) // honeypot
 
   const service = getServiceSupabase()
   if (!service) return serviceUnavailable('Supabase service role')
@@ -54,24 +64,28 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
   const c = client as { id: string; coach_id: string; full_name: string } | null
   if (!c) return notFound('This update link is not valid.')
 
-  // Compose a readable progress entry.
-  const weight = clamp(body.weight, 40)
-  const measurements = clamp(body.measurements, 400)
-  const trend = body.trend && TREND_LABEL[body.trend] ? TREND_LABEL[body.trend] : null
-  const notes = clamp(body.notes, 2000)
-  const lines = ['Client update:']
-  if (trend) lines.push(`• Overall: ${trend}`)
-  if (weight) lines.push(`• Weight: ${weight}`)
-  if (measurements) lines.push(`• Measurements: ${measurements}`)
-  if (notes) lines.push(`• Notes: ${notes}`)
-  if (lines.length === 1) return badRequest('Please fill in at least one field.')
-
-  const { error } = await service.from('clinic_client_log').insert({
+  const row = {
     clinic_client_id: c.id,
     coach_id: c.coach_id,
-    kind: 'progress',
-    body: lines.join('\n'),
-  } as never)
+    source: 'client',
+    weight_kg: num(body.weight_kg),
+    waist_cm: num(body.waist_cm),
+    hip_cm: num(body.hip_cm),
+    arm_cm: num(body.arm_cm),
+    thigh_cm: num(body.thigh_cm),
+    energy: rating(body.energy),
+    sleep: rating(body.sleep),
+    adherence: rating(body.adherence),
+    appetite: rating(body.appetite),
+    wins: txt(body.wins),
+    challenges: txt(body.challenges),
+  }
+  const hasData = Object.entries(row).some(
+    ([k, v]) => !['clinic_client_id', 'coach_id', 'source'].includes(k) && v != null,
+  )
+  if (!hasData) return badRequest('Please fill in at least one field.')
+
+  const { error } = await service.from('clinic_assessments').insert(row as never)
   if (error) return badRequest(error.message)
 
   // Notify the coach (bell + push).
@@ -80,7 +94,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
   const payload = {
     title: 'Client progress update',
     title_ar: 'تحديث تقدّم العميل',
-    body: `${c.full_name} sent a progress update${trend ? ` — ${trend}` : ''}.`,
+    body: `${c.full_name} submitted a check-in.`,
     body_ar: `${c.full_name} أرسل تحديثاً عن تقدّمه.`,
     type: 'system',
     url: `/nutritionist/clinic-clients/${c.id}`,

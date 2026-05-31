@@ -18,6 +18,7 @@ import {
   Share2,
 } from '@/icons'
 import { ClientPayments } from '@/components/clinic/ClientPayments'
+import { ClientProgress } from '@/components/clinic/ClientProgress'
 import { ClientPlanLog } from '@/components/clinic/ClientPlanLog'
 
 /**
@@ -257,6 +258,8 @@ export default function ClinicClientDetailPage() {
       )}
 
       <ClientPayments clientId={client.id} />
+
+      <ClientProgress clientId={client.id} />
 
       <ClientPlanLog clientId={client.id} />
 
