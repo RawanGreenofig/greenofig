@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useTranslations } from 'next-intl'
-import { LogOut, Settings, ArrowLeft, Sun, Moon } from 'lucide-react'
+import { LogOut, Settings, ArrowLeft, Sun, Moon, ClipboardList } from 'lucide-react'
 import { Link, usePathname } from '@/i18n/navigation'
 import { Wordmark } from '@/components/Wordmark'
 import { useAuth } from '@/context/AuthContext'
@@ -33,7 +33,7 @@ const USER_SECTIONS: SectionDef[] = [
   {
     key: 'main',
     label: 'MAIN',
-    hrefs: ['/dashboard', '/dashboard/scanner', '/dashboard/track', '/dashboard/progress'],
+    hrefs: ['/dashboard', '/dashboard/my-plan', '/dashboard/scanner', '/dashboard/track', '/dashboard/progress'],
   },
   {
     key: 'nutrition',
@@ -57,6 +57,7 @@ const USER_SECTIONS: SectionDef[] = [
  * against the sidebar surface without being a pure flat circle. */
 const ICON_TINT: Record<string, { color: string; bg: string }> = {
   '/dashboard':           { color: '#a3e635', bg: 'rgba(132,204,22,0.15)' },
+  '/dashboard/my-plan':   { color: '#34d399', bg: 'rgba(52,211,153,0.15)' },
   '/dashboard/scanner':   { color: '#a78bfa', bg: 'rgba(167,139,250,0.15)' },
   '/dashboard/track':     { color: '#fbbf24', bg: 'rgba(251,191,36,0.15)' },
   '/dashboard/progress':  { color: '#60a5fa', bg: 'rgba(96,165,250,0.15)' },
@@ -144,9 +145,21 @@ export function Sidebar({
   // Hide head-coach-only links (earnings, store curation, analytics)
   // from employee nutritionists. The head coach has is_head_coach=true.
   const isHeadCoach = !!profile?.is_head_coach
-  const visibleNavItems = navItems.filter(
+  let visibleNavItems = navItems.filter(
     (n) => !n.headCoachOnly || isHeadCoach,
   )
+
+  // Walk-in clinic clients (linked to a coach) get a "My plan" link where
+  // they see and check off the meal plans / recipes their coach assigned.
+  const isClinicClient = !!(profile as { is_clinic_client?: boolean } | null)?.is_clinic_client
+  if (isClinicClient && visibleNavItems.some((n) => n.href === '/dashboard')) {
+    const homeIdx = visibleNavItems.findIndex((n) => n.href === '/dashboard')
+    visibleNavItems = [
+      ...visibleNavItems.slice(0, homeIdx + 1),
+      { href: '/dashboard/my-plan', labelKey: 'dashboard.tabs.myPlan', Icon: ClipboardList },
+      ...visibleNavItems.slice(homeIdx + 1),
+    ]
+  }
 
   // Group nav items by URL prefix (only for the user role; nutritionist /
   // admin nav lists are smaller and stay flat).

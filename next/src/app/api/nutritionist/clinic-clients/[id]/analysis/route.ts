@@ -49,7 +49,7 @@ export const GET = withNutritionistOrAdmin<{ id: string }>(
     if (!service) return serviceUnavailable('Supabase service role')
     let q = service
       .from('clinic_analysis')
-      .select('improvements, needs_improvement, summary, updated_at')
+      .select('improvements, needs_improvement, summary, recommendations, updated_at')
       .eq('clinic_client_id', params.id)
     if (ctx.profile.role !== 'admin') q = q.eq('coach_id', ctx.userId)
     const { data } = await q.maybeSingle()
@@ -59,7 +59,7 @@ export const GET = withNutritionistOrAdmin<{ id: string }>(
 
 export const PATCH = withNutritionistOrAdmin<{ id: string }>(
   async (req: NextRequest, ctx: AuthedContext, { params }) => {
-    let body: { improvements?: string; needs_improvement?: string; summary?: string }
+    let body: { improvements?: string; needs_improvement?: string; summary?: string; recommendations?: string }
     try {
       body = (await req.json()) as typeof body
     } catch {
@@ -78,6 +78,7 @@ export const PATCH = withNutritionistOrAdmin<{ id: string }>(
         improvements: body.improvements?.slice(0, 4000) ?? null,
         needs_improvement: body.needs_improvement?.slice(0, 4000) ?? null,
         summary: body.summary?.slice(0, 4000) ?? null,
+        recommendations: body.recommendations?.slice(0, 4000) ?? null,
         updated_at: new Date().toISOString(),
       } as never,
       { onConflict: 'clinic_client_id' },
@@ -105,8 +106,19 @@ export const POST = withNutritionistOrAdmin<{ id: string }>(
       .order('created_at', { ascending: true })
       .limit(40)
     const rows = (data as AssessmentRow[] | null) ?? []
-    if (rows.length === 0) {
-      return badRequest('No check-ins yet — record at least one to analyze.')
+
+    // Adherence: how many assigned meal plans / recipes the client actually did.
+    const { data: asgData } = await service
+      .from('clinic_assignments')
+      .select('kind, title, status, due_date, completed_at')
+      .eq('clinic_client_id', c.id)
+      .order('created_at', { ascending: true })
+      .limit(100)
+    const asg = (asgData as { kind: string; title: string; status: string; due_date: string | null; completed_at: string | null }[] | null) ?? []
+    const doneCount = asg.filter((a) => a.status === 'done').length
+
+    if (rows.length === 0 && asg.length === 0) {
+      return badRequest('No check-ins or assignments yet — add at least one to analyze.')
     }
 
     const lines = rows.map((r) => {
@@ -132,18 +144,27 @@ export const POST = withNutritionistOrAdmin<{ id: string }>(
       return `- (${r.source}) ${parts.join(' · ')}`
     })
 
-    const prompt = `You are a clinical nutrition coach reviewing a client's check-in history (oldest first).${c.start_date ? ` They started on ${c.start_date}.` : ''}
+    const asgLines = asg.map(
+      (a) =>
+        `- [${a.status === 'done' ? 'DONE' : 'not done'}] ${a.kind === 'recipe' ? 'recipe' : 'meal plan'}: ${a.title}${a.completed_at ? ` (done ${a.completed_at.slice(0, 10)})` : a.due_date ? ` (due ${a.due_date})` : ''}`,
+    )
+    const adherencePct = asg.length ? Math.round((doneCount / asg.length) * 100) : null
 
-CHECK-INS:
-${lines.join('\n')}
+    const prompt = `You are a clinical nutrition coach reviewing a client's progress (oldest first).${c.start_date ? ` They started on ${c.start_date}.` : ''}
 
-Analyze the trend and reply with ONLY this JSON (no prose, no fences):
+${rows.length ? `CHECK-INS:\n${lines.join('\n')}` : 'CHECK-INS: none recorded yet.'}
+
+ASSIGNED PLANS & RECIPES (adherence — did they follow what the coach gave them?):
+${asg.length ? `${asgLines.join('\n')}\n\nOverall adherence: ${doneCount}/${asg.length} completed (${adherencePct}%).` : 'Nothing assigned yet.'}
+
+Analyze the trend AND the adherence, then reply with ONLY this JSON (no prose, no fences):
 {
-  "summary": string,            // 1-2 sentences on overall trajectory
-  "improvements": string,       // bullet lines ("- ...") of what's clearly improving (weight/measurements down, ratings up, wins)
-  "needs_improvement": string   // bullet lines ("- ...") of what's stalling/worsening + concrete next steps to adjust the plan
+  "summary": string,            // 1-2 sentences on overall trajectory + whether they're following the plan
+  "improvements": string,       // bullet lines ("- ...") of what's clearly improving (weight/measurements down, ratings up, wins, plans completed)
+  "needs_improvement": string,  // bullet lines ("- ...") of what's stalling/worsening or being skipped (low adherence, missed plans)
+  "recommendations": string     // bullet lines ("- ...") of concrete next steps: what to assign next, what to adjust, what to reinforce given their adherence and trend
 }
-Be specific and reference the numbers. If data is thin, say so honestly.`
+Be specific and reference the numbers and adherence. If data is thin, say so honestly.`
 
     let raw: string
     try {
@@ -151,7 +172,7 @@ Be specific and reference the numbers. If data is thin, say so honestly.`
     } catch (e) {
       return badRequest(e instanceof Error ? `AI failed: ${e.message}` : 'AI failed.')
     }
-    const parsed = safeJson<{ summary?: string; improvements?: string; needs_improvement?: string }>(raw)
+    const parsed = safeJson<{ summary?: string; improvements?: string; needs_improvement?: string; recommendations?: string }>(raw)
     if (!parsed) return badRequest('Could not parse the AI analysis. Try again.')
 
     const analysis = {
@@ -160,6 +181,7 @@ Be specific and reference the numbers. If data is thin, say so honestly.`
       summary: (parsed.summary ?? '').slice(0, 4000) || null,
       improvements: (parsed.improvements ?? '').slice(0, 4000) || null,
       needs_improvement: (parsed.needs_improvement ?? '').slice(0, 4000) || null,
+      recommendations: (parsed.recommendations ?? '').slice(0, 4000) || null,
       updated_at: new Date().toISOString(),
     }
     const { error } = await service
@@ -171,6 +193,7 @@ Be specific and reference the numbers. If data is thin, say so honestly.`
         summary: analysis.summary,
         improvements: analysis.improvements,
         needs_improvement: analysis.needs_improvement,
+        recommendations: analysis.recommendations,
         updated_at: analysis.updated_at,
       },
     })

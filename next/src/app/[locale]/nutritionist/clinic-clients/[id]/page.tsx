@@ -19,6 +19,7 @@ import {
 } from '@/icons'
 import { ClientPayments } from '@/components/clinic/ClientPayments'
 import { ClientProgress } from '@/components/clinic/ClientProgress'
+import { ClientAssignments } from '@/components/clinic/ClientAssignments'
 import { ClientPlanLog } from '@/components/clinic/ClientPlanLog'
 
 /**
@@ -258,6 +259,8 @@ export default function ClinicClientDetailPage() {
       )}
 
       <ClientPayments clientId={client.id} />
+
+      <ClientAssignments clientId={client.id} />
 
       <ClientProgress clientId={client.id} />
 

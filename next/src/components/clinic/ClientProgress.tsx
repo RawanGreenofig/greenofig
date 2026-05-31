@@ -39,6 +39,7 @@ interface Analysis {
   summary: string | null
   improvements: string | null
   needs_improvement: string | null
+  recommendations: string | null
   updated_at?: string
 }
 
@@ -58,7 +59,7 @@ export function ClientProgress({ clientId }: { clientId: string }) {
   const [busy, setBusy] = useState(false)
   const [generating, setGenerating] = useState(false)
   const [editing, setEditing] = useState(false)
-  const [draft, setDraft] = useState<Analysis>({ summary: '', improvements: '', needs_improvement: '' })
+  const [draft, setDraft] = useState<Analysis>({ summary: '', improvements: '', needs_improvement: '', recommendations: '' })
 
   const refresh = useCallback(async () => {
     try {
@@ -117,6 +118,7 @@ export function ClientProgress({ clientId }: { clientId: string }) {
       summary: analysis?.summary ?? '',
       improvements: analysis?.improvements ?? '',
       needs_improvement: analysis?.needs_improvement ?? '',
+      recommendations: analysis?.recommendations ?? '',
     })
     setEditing(true)
   }
@@ -182,14 +184,18 @@ export function ClientProgress({ clientId }: { clientId: string }) {
             <EditArea label="Summary" value={draft.summary ?? ''} onChange={(v) => setDraft((d) => ({ ...d, summary: v }))} rows={2} />
             <EditArea label="What's improving" value={draft.improvements ?? ''} onChange={(v) => setDraft((d) => ({ ...d, improvements: v }))} rows={4} />
             <EditArea label="What needs to improve" value={draft.needs_improvement ?? ''} onChange={(v) => setDraft((d) => ({ ...d, needs_improvement: v }))} rows={4} />
+            <EditArea label="Recommendations (what to do next)" value={draft.recommendations ?? ''} onChange={(v) => setDraft((d) => ({ ...d, recommendations: v }))} rows={4} />
           </div>
-        ) : analysis && (analysis.summary || analysis.improvements || analysis.needs_improvement) ? (
+        ) : analysis && (analysis.summary || analysis.improvements || analysis.needs_improvement || analysis.recommendations) ? (
           <div className="space-y-3">
             {analysis.summary && <p className="text-sm text-fg-1 leading-relaxed">{analysis.summary}</p>}
             <div className="grid md:grid-cols-2 gap-3">
               <AnalysisCol title="Improving" color="#a3e635" bg="rgba(163,230,53,0.08)" text={analysis.improvements} />
               <AnalysisCol title="Needs work" color="#e8912a" bg="rgba(232,145,42,0.08)" text={analysis.needs_improvement} />
             </div>
+            {analysis.recommendations && (
+              <AnalysisCol title="Recommendations — what to do next" color="#4a9ac4" bg="rgba(74,154,196,0.08)" text={analysis.recommendations} />
+            )}
           </div>
         ) : (
           <p className="text-sm text-fg-2">
