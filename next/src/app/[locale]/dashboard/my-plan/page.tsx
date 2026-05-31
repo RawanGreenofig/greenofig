@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react'
 import { Check, Loader2, UtensilsCrossed, BookOpen, ExternalLink } from '@/icons'
+import { MyProgress } from '@/components/dashboard/MyProgress'
 
 /**
  * /dashboard/my-plan — a linked walk-in client sees the meal plans /
@@ -113,6 +114,9 @@ export default function MyPlanPage() {
           })}
         </ul>
       )}
+
+      <div className="pt-1" />
+      <MyProgress />
     </div>
   )
 }

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useTranslations } from 'next-intl'
-import { LogOut, Settings, ArrowLeft, Sun, Moon, ClipboardList } from 'lucide-react'
+import { LogOut, Settings, ArrowLeft, Sun, Moon, ClipboardList, CalendarClock, Wallet } from 'lucide-react'
 import { Link, usePathname } from '@/i18n/navigation'
 import { Wordmark } from '@/components/Wordmark'
 import { useAuth } from '@/context/AuthContext'
@@ -21,7 +21,7 @@ const INACTIVE_TEXT = 'var(--gf-fg-2)'
 const HOVER_TEXT = 'var(--gf-fg-1)'
 const GROUP_LABEL = 'var(--gf-fg-3)'
 
-type SectionKey = 'main' | 'nutrition' | 'connect' | 'manage'
+type SectionKey = 'clinic' | 'main' | 'nutrition' | 'connect' | 'manage'
 
 interface SectionDef {
   key: SectionKey
@@ -31,9 +31,16 @@ interface SectionDef {
 
 const USER_SECTIONS: SectionDef[] = [
   {
+    // Only populated for linked walk-in clinic clients (the items are
+    // injected below). Empty → filtered out for everyone else.
+    key: 'clinic',
+    label: 'MY CLINIC',
+    hrefs: ['/dashboard/my-plan', '/dashboard/appointments', '/dashboard/my-payments'],
+  },
+  {
     key: 'main',
     label: 'MAIN',
-    hrefs: ['/dashboard', '/dashboard/my-plan', '/dashboard/scanner', '/dashboard/track', '/dashboard/progress'],
+    hrefs: ['/dashboard', '/dashboard/scanner', '/dashboard/track', '/dashboard/progress'],
   },
   {
     key: 'nutrition',
@@ -56,8 +63,10 @@ const USER_SECTIONS: SectionDef[] = [
  * rgba(...,0.15) shade of the matching colour so the icon reads
  * against the sidebar surface without being a pure flat circle. */
 const ICON_TINT: Record<string, { color: string; bg: string }> = {
-  '/dashboard':           { color: '#a3e635', bg: 'rgba(132,204,22,0.15)' },
-  '/dashboard/my-plan':   { color: '#34d399', bg: 'rgba(52,211,153,0.15)' },
+  '/dashboard':              { color: '#a3e635', bg: 'rgba(132,204,22,0.15)' },
+  '/dashboard/my-plan':      { color: '#34d399', bg: 'rgba(52,211,153,0.15)' },
+  '/dashboard/appointments': { color: '#4ade80', bg: 'rgba(74,222,128,0.15)' },
+  '/dashboard/my-payments':  { color: '#fbbf24', bg: 'rgba(251,191,36,0.15)' },
   '/dashboard/scanner':   { color: '#a78bfa', bg: 'rgba(167,139,250,0.15)' },
   '/dashboard/track':     { color: '#fbbf24', bg: 'rgba(251,191,36,0.15)' },
   '/dashboard/progress':  { color: '#60a5fa', bg: 'rgba(96,165,250,0.15)' },
@@ -149,14 +158,17 @@ export function Sidebar({
     (n) => !n.headCoachOnly || isHeadCoach,
   )
 
-  // Walk-in clinic clients (linked to a coach) get a "My plan" link where
-  // they see and check off the meal plans / recipes their coach assigned.
+  // Walk-in clinic clients (linked to a coach) get their own "My clinic"
+  // group: their assigned plan/recipes, their appointments, and their
+  // payments. Injected here and grouped by the 'clinic' section above.
   const isClinicClient = !!(profile as { is_clinic_client?: boolean } | null)?.is_clinic_client
   if (isClinicClient && visibleNavItems.some((n) => n.href === '/dashboard')) {
     const homeIdx = visibleNavItems.findIndex((n) => n.href === '/dashboard')
     visibleNavItems = [
       ...visibleNavItems.slice(0, homeIdx + 1),
       { href: '/dashboard/my-plan', labelKey: 'dashboard.tabs.myPlan', Icon: ClipboardList },
+      { href: '/dashboard/appointments', labelKey: 'dashboard.tabs.appointments', Icon: CalendarClock },
+      { href: '/dashboard/my-payments', labelKey: 'dashboard.tabs.payments', Icon: Wallet },
       ...visibleNavItems.slice(homeIdx + 1),
     ]
   }

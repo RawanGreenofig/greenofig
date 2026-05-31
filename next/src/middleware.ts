@@ -28,6 +28,19 @@ const PROTECTED = [
 
 type Allowed = (typeof PROTECTED)[number]['allowed'][number]
 
+// Linked walk-in clinic clients are confined to /dashboard — they're
+// clinic patients, not online shoppers, so we keep them out of the
+// marketing site / store / pricing. These non-dashboard paths stay
+// reachable (auth + the clinic invite/update/pay links).
+const CLINIC_ALLOWED = [
+  '/sign-in',
+  '/sign-out',
+  '/onboarding',
+  '/clinic-link',
+  '/clinic-update',
+  '/clinic-pay',
+]
+
 /** Strip the `/ar` (or other) locale prefix and return the rest. */
 function stripLocale(pathname: string): { locale: string; rest: string } {
   for (const locale of routing.locales) {
@@ -90,7 +103,17 @@ export async function middleware(request: NextRequest) {
   const { locale, rest } = stripLocale(pathname)
 
   const protectedRoute = PROTECTED.find((p) => rest.startsWith(p.prefix))
-  if (!protectedRoute) return intlResponse
+
+  // Clinic-client confinement only needs to run on NON-protected page
+  // routes, and only when a session cookie is present (so anonymous
+  // public traffic — the vast majority — pays nothing) and the path isn't
+  // one a clinic client legitimately needs outside the dashboard.
+  const clinicConfinementCandidate =
+    !protectedRoute &&
+    !CLINIC_ALLOWED.some((p) => rest === p || rest.startsWith(`${p}/`)) &&
+    request.cookies.getAll().some((c) => c.name.startsWith('sb-'))
+
+  if (!protectedRoute && !clinicConfinementCandidate) return intlResponse
 
   // Inside Capacitor: skip edge auth/role bounces. See isCapacitorRequest
   // for the full justification.
@@ -122,7 +145,9 @@ export async function middleware(request: NextRequest) {
   const supabase = getMiddlewareSupabase(request, response)
   if (!supabase) {
     // Env missing: redirect any protected hit to sign-in so we never
-    // accidentally render a protected screen unauthenticated.
+    // accidentally render a protected screen unauthenticated. A
+    // non-protected confinement candidate just passes through.
+    if (!protectedRoute) return intlResponse
     return NextResponse.redirect(
       new URL(localePath(locale, '/sign-in'), request.url),
     )
@@ -133,6 +158,9 @@ export async function middleware(request: NextRequest) {
   } = await supabase.auth.getUser()
 
   if (!user) {
+    // Non-protected confinement check with a stale/expired cookie → just
+    // let them browse the public page; don't force a sign-in.
+    if (!protectedRoute) return response
     const url = new URL(localePath(locale, '/sign-in'), request.url)
     url.searchParams.set('redirectTo', pathname)
     return NextResponse.redirect(url)
@@ -145,12 +173,12 @@ export async function middleware(request: NextRequest) {
   // it's a 2-letter ISO code or absent.
   const { data: profile } = await supabase
     .from('profiles')
-    .select('role, country')
+    .select('role, country, is_clinic_client')
     .eq('id', user.id)
     .maybeSingle()
 
   const profileRow = profile as
-    | { role?: string; country?: string | null }
+    | { role?: string; country?: string | null; is_clinic_client?: boolean | null }
     | null
   const role = (profileRow?.role ?? 'user') as Allowed
 
@@ -164,6 +192,18 @@ export async function middleware(request: NextRequest) {
         .eq('id', user.id)
     }
   }
+  // Confinement: a linked walk-in clinic client on a non-dashboard public
+  // page is sent to their dashboard. (Protected routes fall through to the
+  // role check below.)
+  if (!protectedRoute) {
+    if (profileRow?.is_clinic_client) {
+      return NextResponse.redirect(
+        new URL(localePath(locale, '/dashboard'), request.url),
+      )
+    }
+    return response
+  }
+
   if (!(protectedRoute.allowed as readonly string[]).includes(role)) {
     // Send each role to its own home, not a generic /dashboard. A
     // nutritionist who hits /admin should land on /nutritionist (their
