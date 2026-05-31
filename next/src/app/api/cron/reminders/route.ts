@@ -1,6 +1,7 @@
 import type { NextRequest } from 'next/server'
 import { json, serviceUnavailable, unauthorized } from '@/lib/api/response'
 import { getServiceSupabase } from '@/lib/supabase/service'
+import { notifyUsers } from '@/lib/server/notify'
 
 /**
  * POST /api/cron/reminders
@@ -227,31 +228,41 @@ export async function POST(req: NextRequest) {
   const due = (dueRows as { id: string; coach_id: string; clinic_client_id: string; amount_cents: number; currency: string; due_date: string }[] | null) ?? []
   if (due.length > 0) {
     const clientIds = Array.from(new Set(due.map((d) => d.clinic_client_id)))
-    const { data: clients } = await service.from('clinic_clients').select('id, full_name').in('id', clientIds)
+    const { data: clients } = await service.from('clinic_clients').select('id, full_name, user_id').in('id', clientIds)
     const nameById = new Map<string, string>()
-    for (const r of (clients as { id: string; full_name: string }[] | null) ?? []) nameById.set(r.id, r.full_name)
+    const userById = new Map<string, string | null>()
+    for (const r of (clients as { id: string; full_name: string; user_id: string | null }[] | null) ?? []) {
+      nameById.set(r.id, r.full_name)
+      userById.set(r.id, r.user_id)
+    }
 
     for (const d of due) {
       const name = nameById.get(d.clinic_client_id) ?? 'A clinic client'
       const amount = `${(d.amount_cents / 100).toFixed(2)} ${d.currency}`
       const overdue = d.due_date < todayUTC
-      try {
-        const res = await fetch(`${appUrl}/api/notifications/send`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'x-secret': secret },
-          body: JSON.stringify({
-            userIds: [d.coach_id],
-            title: overdue ? 'Payment overdue' : 'Payment due',
-            titleAr: overdue ? 'دفعة متأخرة' : 'دفعة مستحقة',
-            body: `${name} — ${amount} due ${d.due_date}.`,
-            bodyAr: `${name} — ${amount} — تاريخ الاستحقاق ${d.due_date}.`,
-            type: 'billing',
-            url: `/nutritionist/clinic-clients/${d.clinic_client_id}`,
-          }),
+      // Coach bell.
+      const coachOk = await notifyUsers({
+        userIds: [d.coach_id],
+        title: overdue ? 'Payment overdue' : 'Payment due',
+        titleAr: overdue ? 'دفعة متأخرة' : 'دفعة مستحقة',
+        body: `${name} — ${amount} due ${d.due_date}.`,
+        bodyAr: `${name} — ${amount} — تاريخ الاستحقاق ${d.due_date}.`,
+        type: 'billing',
+        url: `/nutritionist/clinic-clients/${d.clinic_client_id}`,
+      })
+      if (coachOk) paymentPushes += 1
+      // Client reminder + pay-now (only if they've linked an account).
+      const clientUser = userById.get(d.clinic_client_id)
+      if (clientUser) {
+        await notifyUsers({
+          userIds: [clientUser],
+          title: overdue ? 'Payment overdue' : 'Payment due',
+          titleAr: overdue ? 'دفعة متأخرة' : 'دفعة مستحقة',
+          body: `You have ${amount} due. Tap to pay.`,
+          bodyAr: `لديك ${amount} مستحقة. اضغط للدفع.`,
+          type: 'billing',
+          url: '/dashboard/my-payments',
         })
-        if (res.ok) paymentPushes += 1
-      } catch {
-        continue
       }
     }
     await service

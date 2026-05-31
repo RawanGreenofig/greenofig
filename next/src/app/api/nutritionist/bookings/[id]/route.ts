@@ -2,6 +2,7 @@ import type { NextRequest } from 'next/server'
 import { withNutritionistOrAdmin, type AuthedContext } from '@/lib/api/auth'
 import { badRequest, forbidden, json, notFound, serviceUnavailable } from '@/lib/api/response'
 import { getServiceSupabase } from '@/lib/supabase/service'
+import { notifyUsers } from '@/lib/server/notify'
 
 /**
  * /api/nutritionist/bookings/[id]
@@ -92,6 +93,38 @@ export const PATCH = withNutritionistOrAdmin<{ id: string }>(
       }
       return badRequest(error.message)
     }
+
+    // Tell the client when their appointment moved or was cancelled.
+    const cancelled = update.status === 'cancelled'
+    const rescheduled = update.scheduled_at != null
+    if (cancelled || rescheduled) {
+      // Recipient: online booking → client_id is the user; walk-in → resolve
+      // the clinic_clients.user_id (null if they never linked an account).
+      let recipient = booking.client_id
+      if (!recipient && booking.clinic_client_id) {
+        const { data: cc } = await service
+          .from('clinic_clients')
+          .select('user_id')
+          .eq('id', booking.clinic_client_id)
+          .maybeSingle()
+        recipient = (cc as { user_id: string | null } | null)?.user_id ?? null
+      }
+      if (recipient) {
+        const when = update.scheduled_at
+          ? new Date(update.scheduled_at as string).toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' })
+          : ''
+        await notifyUsers({
+          userIds: [recipient],
+          title: cancelled ? 'Appointment cancelled' : 'Appointment rescheduled 📅',
+          titleAr: cancelled ? 'تم إلغاء الموعد' : 'تم تغيير الموعد 📅',
+          body: cancelled ? 'Your coach cancelled an appointment.' : `New time: ${when}.`,
+          bodyAr: cancelled ? 'ألغت مدربتك أحد المواعيد.' : `الموعد الجديد: ${when}.`,
+          type: 'system',
+          url: '/dashboard/appointments',
+        })
+      }
+    }
+
     return json({ ok: true })
   },
 )

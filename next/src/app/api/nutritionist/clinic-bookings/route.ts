@@ -2,6 +2,7 @@ import type { NextRequest } from 'next/server'
 import { withNutritionistOrAdmin, type AuthedContext } from '@/lib/api/auth'
 import { badRequest, json, notFound, serviceUnavailable } from '@/lib/api/response'
 import { getServiceSupabase } from '@/lib/supabase/service'
+import { notifyUsers } from '@/lib/server/notify'
 
 /**
  * POST /api/nutritionist/clinic-bookings
@@ -90,10 +91,10 @@ export const POST = withNutritionistOrAdmin(
     // booking.
     const { data: ccRow } = await service
       .from('clinic_clients')
-      .select('coach_id')
+      .select('coach_id, user_id')
       .eq('id', body.clinic_client_id)
       .maybeSingle()
-    const cc = ccRow as { coach_id: string } | null
+    const cc = ccRow as { coach_id: string; user_id: string | null } | null
     if (!cc) return notFound('Clinic client not found.')
     if (cc.coach_id !== ctx.userId && ctx.profile.role !== 'admin') {
       return notFound('Clinic client not found.')
@@ -127,6 +128,21 @@ export const POST = withNutritionistOrAdmin(
       }
       return badRequest(error.message)
     }
+
+    // Notify the linked client about their new appointment.
+    if (cc.user_id) {
+      const when = scheduled.toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' })
+      await notifyUsers({
+        userIds: [cc.user_id],
+        title: 'Appointment booked 📅',
+        titleAr: 'تم حجز موعد 📅',
+        body: `Your coach scheduled a visit: ${when}.`,
+        bodyAr: `حجزت لك مدربتك موعداً: ${when}.`,
+        type: 'system',
+        url: '/dashboard/appointments',
+      })
+    }
+
     return json({ id: (data as { id?: string } | null)?.id })
   },
 )

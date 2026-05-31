@@ -2,6 +2,7 @@ import type { NextRequest } from 'next/server'
 import { withNutritionistOrAdmin, type AuthedContext } from '@/lib/api/auth'
 import { badRequest, forbidden, json, serviceUnavailable } from '@/lib/api/response'
 import { getServiceSupabase } from '@/lib/supabase/service'
+import { notifyUsers } from '@/lib/server/notify'
 
 /**
  * /api/nutritionist/clinic-clients/[id]/payments
@@ -65,10 +66,10 @@ export const POST = withNutritionistOrAdmin<{ id: string }>(
     // Ownership: the payment's coach_id mirrors the client's.
     const { data: client } = await service
       .from('clinic_clients')
-      .select('id, coach_id')
+      .select('id, coach_id, user_id')
       .eq('id', params.id)
       .maybeSingle()
-    const c = client as { id: string; coach_id: string } | null
+    const c = client as { id: string; coach_id: string; user_id: string | null } | null
     if (!c) return badRequest('Client not found.')
     if (ctx.profile.role !== 'admin' && c.coach_id !== ctx.userId) return forbidden()
 
@@ -92,6 +93,23 @@ export const POST = withNutritionistOrAdmin<{ id: string }>(
       .maybeSingle()
 
     if (error) return badRequest(error.message)
+
+    // Tell the linked client a charge landed (only for unpaid charges —
+    // a 'paid' row is just a record of money already collected).
+    if (status === 'due' && c.user_id) {
+      const cur = (body.currency || 'USD').toUpperCase()
+      const amt = (Math.round(amount) / 100).toFixed(2)
+      await notifyUsers({
+        userIds: [c.user_id],
+        title: 'New charge added',
+        titleAr: 'تمت إضافة دفعة',
+        body: `${amt} ${cur}${body.due_date ? ` due ${body.due_date}` : ''}. Tap to pay.`,
+        bodyAr: `${amt} ${cur}${body.due_date ? ` — تاريخ الاستحقاق ${body.due_date}` : ''}. اضغط للدفع.`,
+        type: 'billing',
+        url: '/dashboard/my-payments',
+      })
+    }
+
     return json({ id: (data as { id?: string } | null)?.id })
   },
 )
