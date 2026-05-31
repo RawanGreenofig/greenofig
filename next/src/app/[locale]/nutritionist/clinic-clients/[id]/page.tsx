@@ -14,9 +14,11 @@ import {
   Check,
   Loader2,
   Edit3,
+  Pencil,
   Trash2,
   Share2,
 } from '@/icons'
+import ManageSessionModal, { type ManageSession } from '@/app/[locale]/nutritionist/calendar/ManageSessionModal'
 import { ClientPayments } from '@/components/clinic/ClientPayments'
 import { ClientProgress } from '@/components/clinic/ClientProgress'
 import { ClientAssignments } from '@/components/clinic/ClientAssignments'
@@ -59,6 +61,27 @@ interface Visit {
   amount_paid_cents: number | null
 }
 
+/** Map a clinic Visit row to the shape the shared ManageSessionModal wants,
+ *  deriving the local date/time from the stored UTC instant. */
+function visitToManageSession(v: Visit, clientName: string): ManageSession {
+  const d = new Date(v.scheduled_at)
+  const pad = (n: number) => String(n).padStart(2, '0')
+  const allowed = ['introCall', 'followUp', 'deepDive', 'inClinicVisit'] as const
+  const type = (allowed as readonly string[]).includes(v.type ?? '')
+    ? (v.type as ManageSession['type'])
+    : 'inClinicVisit'
+  return {
+    id: v.id,
+    date: `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`,
+    start: `${pad(d.getHours())}:${pad(d.getMinutes())}`,
+    durationMin: v.duration_min,
+    type,
+    clientName,
+    isClinic: true,
+    status: v.status,
+  }
+}
+
 export default function ClinicClientDetailPage() {
   const params = useParams<{ id: string }>()
   const id = params.id
@@ -94,6 +117,7 @@ export default function ClinicClientDetailPage() {
   const [scheduleOpen, setScheduleOpen] = useState(false)
   const [editOpen, setEditOpen] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
+  const [manageVisit, setManageVisit] = useState<Visit | null>(null)
 
   const refresh = async () => {
     try {
@@ -281,7 +305,7 @@ export default function ClinicClientDetailPage() {
         ) : (
           <ul className="space-y-3">
             {visits.map((v) => (
-              <VisitRow key={v.id} visit={v} onChange={refresh} />
+              <VisitRow key={v.id} visit={v} onChange={refresh} onManage={() => setManageVisit(v)} />
             ))}
           </ul>
         )}
@@ -310,6 +334,14 @@ export default function ClinicClientDetailPage() {
             setScheduleOpen(false)
             await refresh()
           }}
+        />
+      )}
+
+      {manageVisit && (
+        <ManageSessionModal
+          session={visitToManageSession(manageVisit, client.full_name)}
+          onClose={() => setManageVisit(null)}
+          onUpdated={() => void refresh()}
         />
       )}
 
@@ -361,9 +393,11 @@ export default function ClinicClientDetailPage() {
 function VisitRow({
   visit,
   onChange,
+  onManage,
 }: {
   visit: Visit
   onChange: () => void | Promise<void>
+  onManage: () => void
 }) {
   const [busy, setBusy] = useState(false)
   const [method, setMethod] = useState<
@@ -438,25 +472,35 @@ function VisitRow({
             </p>
           )}
         </div>
-        <button
-          type="button"
-          onClick={() => void togglePaid()}
-          disabled={busy}
-          className={`inline-flex items-center gap-1.5 rounded-pill h-8 px-3 text-[11px] font-semibold ${
-            visit.is_paid
-              ? 'bg-primary/15 text-lime-400'
-              : 'bg-surface-raised border border-border text-fg-2 hover:text-fg-1'
-          }`}
-        >
-          {visit.is_paid ? (
-            <>
-              <Check className="w-3 h-3" strokeWidth={2} />
-              Paid
-            </>
-          ) : (
-            'Mark paid'
-          )}
-        </button>
+        <div className="flex items-center gap-2 shrink-0">
+          <button
+            type="button"
+            onClick={onManage}
+            className="inline-flex items-center gap-1.5 rounded-pill bg-surface-raised border border-border h-8 px-3 text-[11px] font-semibold text-fg-2 hover:text-fg-1 hover:border-primary/40"
+          >
+            <Pencil className="w-3 h-3" strokeWidth={2} />
+            Manage
+          </button>
+          <button
+            type="button"
+            onClick={() => void togglePaid()}
+            disabled={busy}
+            className={`inline-flex items-center gap-1.5 rounded-pill h-8 px-3 text-[11px] font-semibold ${
+              visit.is_paid
+                ? 'bg-primary/15 text-lime-400'
+                : 'bg-surface-raised border border-border text-fg-2 hover:text-fg-1'
+            }`}
+          >
+            {visit.is_paid ? (
+              <>
+                <Check className="w-3 h-3" strokeWidth={2} />
+                Paid
+              </>
+            ) : (
+              'Mark paid'
+            )}
+          </button>
+        </div>
       </div>
 
       <div className="mt-3 pt-3 border-t border-border grid grid-cols-2 gap-3">
