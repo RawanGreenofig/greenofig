@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react'
 import { Calendar, Loader2, Clock } from '@/icons'
+import { FetchError } from '@/components/dashboard/FetchError'
 
 /**
  * /dashboard/appointments — a linked walk-in client's clinic visits
@@ -31,11 +32,16 @@ const STATUS_STYLE: Record<string, { bg: string; color: string; label: string }>
 export default function AppointmentsPage() {
   const [items, setItems] = useState<Appointment[]>([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(false)
 
   const refresh = useCallback(async () => {
+    setError(false)
     try {
       const res = await fetch('/api/my-appointments', { cache: 'no-store' })
       if (res.ok) setItems(((await res.json()) as { appointments: Appointment[] }).appointments ?? [])
+      else setError(true)
+    } catch {
+      setError(true)
     } finally {
       setLoading(false)
     }
@@ -61,6 +67,8 @@ export default function AppointmentsPage() {
         <div className="rounded-xl border border-border bg-surface p-10 text-center">
           <Loader2 className="w-6 h-6 mx-auto animate-spin text-fg-3" strokeWidth={1.75} />
         </div>
+      ) : error ? (
+        <FetchError onRetry={() => { setLoading(true); void refresh() }} />
       ) : items.length === 0 ? (
         <div className="rounded-xl border border-dashed border-border bg-surface/50 p-10 text-center">
           <p className="text-sm text-fg-2">No appointments yet. Your coach will schedule visits here.</p>

@@ -20,6 +20,8 @@ import {
   ADMIN_NAV,
   ADMIN_MOBILE_TABS,
   ADMIN_MOBILE_FAB,
+  CLINIC_MOBILE_TABS,
+  CLINIC_MOBILE_FAB,
 } from './nav'
 
 export type DashboardRole = 'user' | 'nutritionist' | 'admin'
@@ -53,11 +55,19 @@ export function DashboardShell({
   children,
   role = 'user',
 }: DashboardShellProps) {
-  const { nav: navItems, tabs: mobileTabs, fab: mobileFab } = NAV_BY_ROLE[role]
+  const { nav: navItems, tabs: roleTabs, fab: roleFab } = NAV_BY_ROLE[role]
   const t = useTranslations('dashboard')
   const [drawerOpen, setDrawerOpen] = useState(false)
   const pathname = usePathname()
-  const { tier } = useAuth()
+  const { tier, profile } = useAuth()
+  // Linked walk-in clinic clients get a clinic-specific mobile bottom bar
+  // (Home + My Plan + Appointments + Payments, Messages FAB) so their own
+  // pages are reachable on a phone — not the online-product tabs.
+  const isClinicClient =
+    role === 'user' &&
+    !!(profile as { is_clinic_client?: boolean } | null)?.is_clinic_client
+  const mobileTabs = isClinicClient ? CLINIC_MOBILE_TABS : roleTabs
+  const mobileFab = isClinicClient ? CLINIC_MOBILE_FAB : roleFab
   // Gate the real tier behind a mount flag. SSR + first client render
   // both emit data-tier="free" so React's reconciler is happy; the
   // tier-driven CSS tokens swap on the next paint after mount. Using

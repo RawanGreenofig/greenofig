@@ -1,7 +1,9 @@
 'use client'
 
 import { useCallback, useEffect, useState } from 'react'
+import toast from 'react-hot-toast'
 import { Plus, Loader2, Check, TrendingUp } from '@/icons'
+import { FetchError } from '@/components/dashboard/FetchError'
 
 /**
  * Walk-in client's own progress check-ins, right inside their dashboard —
@@ -31,7 +33,7 @@ const EMPTY = {
   weight_kg: '', waist_cm: '', hip_cm: '', arm_cm: '', thigh_cm: '',
   energy: null as number | null, sleep: null as number | null,
   adherence: null as number | null, appetite: null as number | null,
-  wins: '', notes: '',
+  wins: '', challenges: '', notes: '',
 }
 
 const LABELS: Record<string, string> = {
@@ -42,14 +44,19 @@ const LABELS: Record<string, string> = {
 export function MyProgress() {
   const [items, setItems] = useState<Checkin[]>([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(false)
   const [adding, setAdding] = useState(false)
   const [busy, setBusy] = useState(false)
   const [form, setForm] = useState(EMPTY)
 
   const refresh = useCallback(async () => {
+    setError(false)
     try {
       const res = await fetch('/api/my-progress', { cache: 'no-store' })
       if (res.ok) setItems(((await res.json()) as { checkins: Checkin[] }).checkins ?? [])
+      else setError(true)
+    } catch {
+      setError(true)
     } finally {
       setLoading(false)
     }
@@ -72,8 +79,13 @@ export function MyProgress() {
       if (res.ok) {
         setForm(EMPTY)
         setAdding(false)
+        toast.success('Sent — your coach will see this.')
         await refresh()
+      } else {
+        toast.error('Could not save your check-in. Please retry.')
       }
+    } catch {
+      toast.error('Network error — please retry.')
     } finally {
       setBusy(false)
     }
@@ -111,7 +123,9 @@ export function MyProgress() {
           </div>
           <textarea value={form.wins} onChange={(e) => setF('wins', e.target.value)} rows={2} placeholder="Wins this week"
             className="w-full rounded-md bg-bg-deeper border border-border px-3 py-2 text-sm text-fg-1 placeholder-fg-3 focus:outline-none focus:border-primary" />
-          <textarea value={form.notes} onChange={(e) => setF('notes', e.target.value)} rows={2} placeholder="Anything you struggled with / notes for your coach"
+          <textarea value={form.challenges} onChange={(e) => setF('challenges', e.target.value)} rows={2} placeholder="What did you struggle with?"
+            className="w-full rounded-md bg-bg-deeper border border-border px-3 py-2 text-sm text-fg-1 placeholder-fg-3 focus:outline-none focus:border-primary" />
+          <textarea value={form.notes} onChange={(e) => setF('notes', e.target.value)} rows={2} placeholder="Anything else for your coach"
             className="w-full rounded-md bg-bg-deeper border border-border px-3 py-2 text-sm text-fg-1 placeholder-fg-3 focus:outline-none focus:border-primary" />
           <div className="flex justify-end gap-2">
             <button type="button" onClick={() => { setAdding(false); setForm(EMPTY) }}
@@ -128,6 +142,8 @@ export function MyProgress() {
         <div className="rounded-xl border border-border bg-surface p-6 text-center">
           <Loader2 className="w-5 h-5 mx-auto animate-spin text-fg-3" strokeWidth={1.75} />
         </div>
+      ) : error ? (
+        <FetchError onRetry={() => { setLoading(true); void refresh() }} />
       ) : items.length === 0 ? (
         <div className="rounded-xl border border-dashed border-border bg-surface/50 p-6 text-center">
           <p className="text-sm text-fg-2">No check-ins yet. Log your weight, measurements and how you&rsquo;re feeling — your coach sees it and adjusts your plan.</p>

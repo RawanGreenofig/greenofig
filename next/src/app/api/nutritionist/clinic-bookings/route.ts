@@ -119,7 +119,14 @@ export const POST = withNutritionistOrAdmin(
       } as never)
       .select('id')
       .maybeSingle()
-    if (error) return badRequest(error.message)
+    if (error) {
+      // Overlap exclusion constraint → clean 409 so the UI shows the
+      // "slot taken" toast instead of a raw Postgres error.
+      if ((error as { code?: string }).code === '23P01' || /overlap|exclu/i.test(error.message)) {
+        return json({ error: 'slot_taken' }, 409)
+      }
+      return badRequest(error.message)
+    }
     return json({ id: (data as { id?: string } | null)?.id })
   },
 )

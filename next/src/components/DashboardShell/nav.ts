@@ -34,6 +34,8 @@ import {
   Bot,
   Gift,
   Briefcase,
+  ClipboardList,
+  CalendarClock,
   type LucideIcon,
 } from 'lucide-react'
 import type { Tier } from '@/lib/constants'
@@ -66,6 +68,31 @@ export const USER_NAV: DashboardNavItem[] = [
   { href: '/dashboard/bookings',  labelKey: 'dashboard.tabs.bookings',  Icon: Calendar },
   { href: '/dashboard/settings',  labelKey: 'dashboard.tabs.settings',  Icon: Settings },
 ]
+
+/**
+ * Linked walk-in clinic clients get these extra items, injected into the
+ * sidebar (Sidebar.tsx) and used as their mobile tab bar below. Shared
+ * here so the two never drift.
+ */
+export const CLINIC_NAV_ITEMS: DashboardNavItem[] = [
+  { href: '/dashboard/my-plan',      labelKey: 'dashboard.tabs.myPlan',       Icon: ClipboardList },
+  { href: '/dashboard/appointments', labelKey: 'dashboard.tabs.appointments', Icon: CalendarClock },
+  { href: '/dashboard/my-payments',  labelKey: 'dashboard.tabs.payments',     Icon: Wallet },
+]
+
+/** Mobile bottom bar for clinic clients: Home + their 3 clinic pages,
+ *  with Messages as the center FAB (chatting the coach is a core action). */
+export const CLINIC_MOBILE_TABS: DashboardNavItem[] = [
+  USER_NAV[0],          // Home / Today
+  CLINIC_NAV_ITEMS[0],  // My Plan
+  CLINIC_NAV_ITEMS[1],  // Appointments
+  CLINIC_NAV_ITEMS[2],  // Payments
+]
+export const CLINIC_MOBILE_FAB: DashboardNavItem = {
+  href: '/dashboard/messages',
+  labelKey: 'dashboard.tabs.messages',
+  Icon: MessageSquare,
+}
 
 /** Nutritionist-role sidebar. */
 export const NUTRITIONIST_NAV: DashboardNavItem[] = [

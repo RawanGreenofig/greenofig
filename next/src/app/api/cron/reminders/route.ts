@@ -52,6 +52,7 @@ const COPY: Record<string, { title: string; titleAr: string; body: string; bodyA
   workout: { title: 'Workout reminder 🏋️', titleAr: 'تذكير التمرين 🏋️', body: 'Time to move — your workout is due.', bodyAr: 'حان وقت الحركة — تمرينك مستحق.', url: '/dashboard' },
   hydration: { title: 'Time to hydrate 💧', titleAr: 'وقت شرب الماء 💧', body: 'Drink a glass of water.', bodyAr: 'اشرب كوباً من الماء.', url: '/dashboard' },
   progress: { title: 'Weekly check-in 📈', titleAr: 'مراجعة أسبوعية 📈', body: 'Log this week’s weight & measurements.', bodyAr: 'سجّل وزنك وقياساتك لهذا الأسبوع.', url: '/dashboard/progress' },
+  clinic_checkin: { title: 'Time for a check-in 📝', titleAr: 'حان وقت التحديث 📝', body: 'Log how this week went so your coach can adjust your plan.', bodyAr: 'سجّل كيف سار أسبوعك حتى تعدّل مدربتك خطتك.', url: '/dashboard/my-plan' },
 }
 
 function toMin(hhmmss: string | null): number | null {
@@ -119,9 +120,10 @@ export async function POST(req: NextRequest) {
   const batches = new Map<string, string[]>()
   const logRows: { user_id: string; kind: string; sent_on: string }[] = []
 
-  // What's already been sent today, in one query.
+  // What's already been sent today, in one query (covers prefs users AND
+  // clinic clients — no user filter).
   const sentToday = new Set<string>()
-  if (prefs.length > 0) {
+  {
     const { data: logs } = await service
       .from('reminder_log')
       .select('user_id, kind')
@@ -138,7 +140,9 @@ export async function POST(req: NextRequest) {
     const arr = batches.get(bk) ?? []
     arr.push(userId)
     batches.set(bk, arr)
-    logRows.push({ user_id: userId, kind, sent_on: todayUTC })
+    // NB: we DON'T log here — only after a batch actually sends (below),
+    // so a failed delivery isn't recorded as "sent" (which would suppress
+    // every retry for the rest of the day).
   }
 
   for (const p of prefs) {
@@ -169,6 +173,21 @@ export async function POST(req: NextRequest) {
     if (weekday === 'Mon' && inWindow(9 * 60, nowMin)) queue(p.user_id, 'progress', 'progress')
   }
 
+  // ── 1b. Clinic check-in nudge ─────────────────────────────────────
+  // Linked walk-in clients have NO notification_preferences row, so the
+  // loop above never reaches them. Nudge them directly (Monday ~09:00
+  // local) to log a check-in. De-duped via reminder_log like everything else.
+  const { data: clinicProfs } = await service
+    .from('profiles')
+    .select('id, timezone')
+    .eq('is_clinic_client', true)
+    .limit(5000)
+  for (const r of (clinicProfs as { id: string; timezone: string | null }[] | null) ?? []) {
+    const tz = r.timezone || DEFAULT_TZ
+    const { minutes: nowMin, weekday } = localNow(tz)
+    if (weekday === 'Mon' && inWindow(9 * 60, nowMin)) queue(r.id, 'clinic_checkin', 'clinic_checkin')
+  }
+
   // Dispatch each batch via /api/notifications/send (web push + FCM + bell row).
   let reminderPushes = 0
   for (const [bk, userIds] of Array.from(batches.entries())) {
@@ -181,12 +200,16 @@ export async function POST(req: NextRequest) {
         headers: { 'Content-Type': 'application/json', 'x-secret': secret },
         body: JSON.stringify({ userIds, title: c.title, titleAr: c.titleAr, body: c.body, bodyAr: c.bodyAr, type: 'meal_plan', url: c.url }),
       })
-      if (res.ok) reminderPushes += userIds.length
+      if (res.ok) {
+        reminderPushes += userIds.length
+        // Log ONLY on a successful send so failures retry next run.
+        const kind = bk.split('|')[1]
+        for (const uid of userIds) logRows.push({ user_id: uid, kind, sent_on: todayUTC })
+      }
     } catch {
-      /* keep going; unsent rows simply aren't logged below */
+      /* keep going; unsent rows simply aren't logged */
     }
   }
-  // Only log the kinds we actually attempted to send (all batches were attempted).
   if (logRows.length > 0) {
     await service.from('reminder_log').insert(logRows as never)
   }

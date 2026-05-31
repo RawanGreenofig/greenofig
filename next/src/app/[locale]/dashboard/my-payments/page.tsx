@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useLocale } from 'next-intl'
 import { Wallet, Loader2, Check, ExternalLink } from '@/icons'
+import { FetchError } from '@/components/dashboard/FetchError'
 
 /**
  * /dashboard/my-payments — a linked walk-in client's clinic payment
@@ -34,17 +35,29 @@ export default function MyPaymentsPage() {
   const locale = useLocale()
   const [items, setItems] = useState<Payment[]>([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(false)
 
   const refresh = useCallback(async () => {
+    setError(false)
     try {
       const res = await fetch('/api/my-payments', { cache: 'no-store' })
       if (res.ok) setItems(((await res.json()) as { payments: Payment[] }).payments ?? [])
+      else setError(true)
+    } catch {
+      setError(true)
     } finally {
       setLoading(false)
     }
   }, [])
   useEffect(() => {
     void refresh()
+  }, [refresh])
+  // After paying on the standalone pay page (or another tab), reflect the
+  // new "paid" status when the user returns instead of showing stale "due".
+  useEffect(() => {
+    const onFocus = () => void refresh()
+    window.addEventListener('focus', onFocus)
+    return () => window.removeEventListener('focus', onFocus)
   }, [refresh])
 
   const due = items.filter((p) => p.status === 'due')
@@ -67,6 +80,8 @@ export default function MyPaymentsPage() {
         <div className="rounded-xl border border-border bg-surface p-10 text-center">
           <Loader2 className="w-6 h-6 mx-auto animate-spin text-fg-3" strokeWidth={1.75} />
         </div>
+      ) : error ? (
+        <FetchError onRetry={() => { setLoading(true); void refresh() }} />
       ) : items.length === 0 ? (
         <div className="rounded-xl border border-dashed border-border bg-surface/50 p-10 text-center">
           <p className="text-sm text-fg-2">No payments yet.</p>

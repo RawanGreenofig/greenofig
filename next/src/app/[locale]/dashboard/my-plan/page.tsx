@@ -1,8 +1,10 @@
 'use client'
 
 import { useCallback, useEffect, useState } from 'react'
+import toast from 'react-hot-toast'
 import { Check, Loader2, UtensilsCrossed, BookOpen, ExternalLink } from '@/icons'
 import { MyProgress } from '@/components/dashboard/MyProgress'
+import { FetchError } from '@/components/dashboard/FetchError'
 
 /**
  * /dashboard/my-plan — a linked walk-in client sees the meal plans /
@@ -23,12 +25,20 @@ interface Assignment {
 export default function MyPlanPage() {
   const [items, setItems] = useState<Assignment[]>([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(false)
   const [pending, setPending] = useState<string | null>(null)
 
   const refresh = useCallback(async () => {
+    setError(false)
     try {
       const res = await fetch('/api/my-plan', { cache: 'no-store' })
-      if (res.ok) setItems(((await res.json()) as { assignments: Assignment[] }).assignments ?? [])
+      if (res.ok) {
+        setItems(((await res.json()) as { assignments: Assignment[] }).assignments ?? [])
+      } else {
+        setError(true)
+      }
+    } catch {
+      setError(true)
     } finally {
       setLoading(false)
     }
@@ -43,8 +53,17 @@ export default function MyPlanPage() {
     // optimistic
     setItems((cur) => cur.map((x) => (x.id === a.id ? { ...x, status: x.status === 'done' ? 'assigned' : 'done' } : x)))
     try {
-      await fetch(`/api/clinic-assignments/${a.id}/toggle`, { method: 'POST' })
-      await refresh()
+      const res = await fetch(`/api/clinic-assignments/${a.id}/toggle`, { method: 'POST' })
+      if (!res.ok) {
+        // revert the optimistic flip
+        setItems((cur) => cur.map((x) => (x.id === a.id ? { ...x, status: x.status === 'done' ? 'assigned' : 'done' } : x)))
+        toast.error("Couldn't update — please retry.")
+      } else {
+        await refresh()
+      }
+    } catch {
+      setItems((cur) => cur.map((x) => (x.id === a.id ? { ...x, status: x.status === 'done' ? 'assigned' : 'done' } : x)))
+      toast.error('Network error — please retry.')
     } finally {
       setPending(null)
     }
@@ -68,6 +87,8 @@ export default function MyPlanPage() {
         <div className="rounded-xl border border-border bg-surface p-10 text-center">
           <Loader2 className="w-6 h-6 mx-auto animate-spin text-fg-3" strokeWidth={1.75} />
         </div>
+      ) : error ? (
+        <FetchError onRetry={() => { setLoading(true); void refresh() }} />
       ) : items.length === 0 ? (
         <div className="rounded-xl border border-dashed border-border bg-surface/50 p-10 text-center">
           <p className="text-sm text-fg-2">Nothing assigned yet. Your coach will add meal plans and recipes here.</p>

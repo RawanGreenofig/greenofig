@@ -2,13 +2,13 @@
 
 import { useEffect, useState } from 'react'
 import { useTranslations } from 'next-intl'
-import { LogOut, Settings, ArrowLeft, Sun, Moon, ClipboardList, CalendarClock, Wallet } from 'lucide-react'
+import { LogOut, Settings, ArrowLeft, Sun, Moon } from 'lucide-react'
 import { Link, usePathname } from '@/i18n/navigation'
 import { Wordmark } from '@/components/Wordmark'
 import { useAuth } from '@/context/AuthContext'
 import { useTheme } from '@/components/ThemeProvider'
 import { resolveDisplayName } from '@/lib/displayName'
-import type { DashboardNavItem } from './nav'
+import { CLINIC_NAV_ITEMS, type DashboardNavItem } from './nav'
 
 // Use CSS vars so the theme toggle (dark/light) flips the sidebar
 // alongside the rest of the dashboard. Each ref reads `var(--gf-...)`
@@ -166,9 +166,7 @@ export function Sidebar({
     const homeIdx = visibleNavItems.findIndex((n) => n.href === '/dashboard')
     visibleNavItems = [
       ...visibleNavItems.slice(0, homeIdx + 1),
-      { href: '/dashboard/my-plan', labelKey: 'dashboard.tabs.myPlan', Icon: ClipboardList },
-      { href: '/dashboard/appointments', labelKey: 'dashboard.tabs.appointments', Icon: CalendarClock },
-      { href: '/dashboard/my-payments', labelKey: 'dashboard.tabs.payments', Icon: Wallet },
+      ...CLINIC_NAV_ITEMS,
       ...visibleNavItems.slice(homeIdx + 1),
     ]
   }
