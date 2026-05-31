@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { useLocale } from 'next-intl'
 import { Plus, Search, Phone, X, Loader2, Upload, Share2, Check } from '@/icons'
 import { ImportClientsDialog } from '@/components/clinic/ImportClientsDialog'
+import { ClinicOverview } from '@/components/clinic/ClinicOverview'
 import { useAuth } from '@/context/AuthContext'
 
 /**
@@ -134,6 +135,8 @@ export default function ClinicClientsPage() {
           </button>
         </div>
       </header>
+
+      <ClinicOverview />
 
       <div className="relative">
         <Search
