@@ -85,9 +85,14 @@ export function SiteHeader() {
       .toUpperCase() || '?'
 
   // Hide the Pricing link when the pricing page is switched off (so
-  // walk-in clients don't see online prices).
-  const { value: pricingFlag } = usePlatformSetting('pricing_page_enabled')
+  // walk-in clients don't see online prices). While the flag is still
+  // loading, treat it as hidden — otherwise the link flashes on for a
+  // beat before the "off" value arrives. Net effect: OFF never shows;
+  // ON appears once the setting resolves.
+  const { value: pricingFlag, isLoading: pricingFlagLoading } =
+    usePlatformSetting('pricing_page_enabled')
   const pricingOff =
+    pricingFlagLoading ||
     pricingFlag === false ||
     (typeof pricingFlag === 'object' &&
       pricingFlag !== null &&

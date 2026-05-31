@@ -76,8 +76,10 @@ const containerVariants = {
 
 export default function MealPlanPage() {
   const t = useTranslations('mealPlan')
-  const { tier } = useUser()
-  const allowed = tierAtLeast(tier, 'premium')
+  const { tier, profile } = useUser()
+  // Walk-in clinic clients get the full client dashboard regardless of tier.
+  const isClinicClient = !!(profile as { is_clinic_client?: boolean } | null)?.is_clinic_client
+  const allowed = tierAtLeast(tier, 'premium') || isClinicClient
 
   if (!allowed) {
     return <UpgradeGate t={t} />

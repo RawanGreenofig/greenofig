@@ -56,8 +56,10 @@ const containerVariants = {
 
 export default function RecipesPage() {
   const t = useTranslations('recipes')
-  const { tier } = useUser()
-  const allowed = tierAtLeast(tier, 'basic')
+  const { tier, profile } = useUser()
+  // Walk-in clinic clients get the full client dashboard regardless of tier.
+  const isClinicClient = !!(profile as { is_clinic_client?: boolean } | null)?.is_clinic_client
+  const allowed = tierAtLeast(tier, 'basic') || isClinicClient
 
   if (!allowed) return <UpgradeGate t={t} />
 

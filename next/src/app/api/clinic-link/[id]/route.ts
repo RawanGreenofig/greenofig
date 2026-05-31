@@ -19,6 +19,16 @@ export const POST = withAuth<{ id: string }>(
     const service = getServiceSupabase()
     if (!service) return serviceUnavailable('Supabase service role')
 
+    // This invite is for CLIENTS. A coach/admin account must not be turned
+    // into a walk-in client — it would corrupt their profile and the
+    // role-based routing would bounce them off /dashboard. Tell them to use
+    // the client's own account (or a separate browser).
+    if (ctx.profile.role !== 'user') {
+      return forbidden(
+        "This invite is for clients. You're signed in as staff — open it in a private window and sign in with the client's own account.",
+      )
+    }
+
     const { data } = await service
       .from('clinic_clients')
       .select('id, coach_id, user_id, full_name')
