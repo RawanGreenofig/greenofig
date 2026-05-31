@@ -7,11 +7,13 @@ import {
   ChevronRight,
   Plus,
   Video,
+  Pencil,
   Calendar as CalIcon,
 } from '@/icons'
 import { useUser } from '@/lib/hooks/useUser'
 import { useSupabaseQuery } from '@/lib/hooks/useSupabaseQuery'
 import NewSessionModal from './NewSessionModal'
+import ManageSessionModal from './ManageSessionModal'
 
 function initialsOf(name: string): string {
   return name
@@ -42,6 +44,8 @@ interface Session {
   /** Meeting URL set by the Stripe webhook (or admin override) once
    *  the booking is paid. Null while the session isn't joinable yet. */
   meetingUrl?: string | null
+  /** scheduled / completed / cancelled / noShow */
+  status: string
 }
 
 const TYPE_TINT: Record<SessionType, string> = {
@@ -74,6 +78,7 @@ export default function CalendarPage() {
     new Date().toISOString().slice(0, 10),
   )
   const [showNew, setShowNew] = useState(false)
+  const [manage, setManage] = useState<Session | null>(null)
 
   // Pull bookings inside the visible month window so both week + month
   // views have everything they need without re-fetching on view toggle.
@@ -154,6 +159,7 @@ export default function CalendarPage() {
         type: r.type,
         isClinic,
         meetingUrl: r.meeting_url,
+        status: r.status,
       }
     })
   }, [profile?.id, anchor.getMonth(), anchor.getFullYear()])
@@ -284,6 +290,7 @@ export default function CalendarPage() {
           tBookings={tBookings}
           dayISO={selectedDay}
           sessions={sessions.filter((s) => s.date === selectedDay)}
+          onManage={(s) => setManage(s)}
         />
       </section>
 
@@ -294,6 +301,23 @@ export default function CalendarPage() {
           defaultDate={selectedDay}
           onClose={() => setShowNew(false)}
           onCreated={() => live.reload()}
+        />
+      )}
+
+      {manage && (
+        <ManageSessionModal
+          session={{
+            id: manage.id,
+            date: manage.date,
+            start: manage.start,
+            durationMin: manage.durationMin,
+            type: manage.type,
+            clientName: manage.clientName,
+            isClinic: !!manage.isClinic,
+            status: manage.status,
+          }}
+          onClose={() => setManage(null)}
+          onUpdated={() => live.reload()}
         />
       )}
     </div>
@@ -541,11 +565,13 @@ function DayPanel({
   tBookings,
   dayISO,
   sessions,
+  onManage,
 }: {
   tPage: ReturnType<typeof useTranslations>
   tBookings: ReturnType<typeof useTranslations>
   dayISO: string | null
   sessions: Session[]
+  onManage: (s: Session) => void
 }) {
   if (!dayISO) {
     return (
@@ -585,11 +611,17 @@ function DayPanel({
               <li
                 key={s.id}
                 className="rounded-lg border border-border bg-bg-deeper/40 p-3"
-                style={{ borderInlineStart: `3px solid ${TYPE_TINT[s.type]}` }}
+                style={{
+                  borderInlineStart: `3px solid ${TYPE_TINT[s.type]}`,
+                  opacity: s.status === 'cancelled' ? 0.55 : 1,
+                }}
               >
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">
-                    <p className="text-sm font-semibold text-fg-1 truncate">
+                    <p
+                      className="text-sm font-semibold text-fg-1 truncate"
+                      style={{ textDecoration: s.status === 'cancelled' ? 'line-through' : 'none' }}
+                    >
                       {s.clientName}
                     </p>
                     <p
@@ -597,26 +629,39 @@ function DayPanel({
                       style={{ color: TYPE_TINT[s.type] }}
                     >
                       {s.isClinic ? 'In-clinic visit' : tBookings(s.type)}
+                      {s.status === 'completed' && <span className="ms-1 text-fg-3 normal-case tracking-normal">· done</span>}
+                      {s.status === 'cancelled' && <span className="ms-1 text-rose-400 normal-case tracking-normal">· cancelled</span>}
+                      {s.status === 'noShow' && <span className="ms-1 normal-case tracking-normal" style={{ color: '#e8912a' }}>· no-show</span>}
                     </p>
                   </div>
                   <p className="font-mono text-xs text-fg-2 shrink-0" dir="ltr">
                     {s.start} · {s.durationMin}m
                   </p>
                 </div>
-                {!s.isClinic && (
+                <div className="mt-3 flex items-center gap-2">
+                  {!s.isClinic && (
+                    <button
+                      type="button"
+                      disabled={!s.meetingUrl}
+                      title={s.meetingUrl ? undefined : 'Meeting link not yet generated'}
+                      onClick={() => {
+                        if (s.meetingUrl) window.open(s.meetingUrl, '_blank')
+                      }}
+                      className="inline-flex items-center gap-1 rounded-pill bg-primary/15 text-lime-400 h-8 px-3 text-[11px] font-semibold hover:bg-primary/25 disabled:opacity-40 disabled:cursor-not-allowed"
+                    >
+                      <Video className="w-3 h-3" strokeWidth={2} />
+                      {tBookings('joinSession')}
+                    </button>
+                  )}
                   <button
                     type="button"
-                    disabled={!s.meetingUrl}
-                    title={s.meetingUrl ? undefined : 'Meeting link not yet generated'}
-                    onClick={() => {
-                      if (s.meetingUrl) window.open(s.meetingUrl, '_blank')
-                    }}
-                    className="mt-3 inline-flex items-center gap-1 rounded-pill bg-primary/15 text-lime-400 h-8 px-3 text-[11px] font-semibold hover:bg-primary/25 disabled:opacity-40 disabled:cursor-not-allowed"
+                    onClick={() => onManage(s)}
+                    className="inline-flex items-center gap-1 rounded-pill bg-surface-raised border border-border h-8 px-3 text-[11px] font-semibold text-fg-1 hover:border-primary/40"
                   >
-                    <Video className="w-3 h-3" strokeWidth={2} />
-                    {tBookings('joinSession')}
+                    <Pencil className="w-3 h-3" strokeWidth={2} />
+                    Manage
                   </button>
-                )}
+                </div>
               </li>
             ))}
         </ul>
