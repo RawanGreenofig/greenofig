@@ -105,3 +105,17 @@ export function formatHmInTz(d: Date, tz: string): string {
     hour12: false,
   }).format(d)
 }
+
+/**
+ * Format an absolute UTC instant as `YYYY-MM-DD` in a specific timezone —
+ * the calendar groups bookings by the coach's LOCAL day (a 11pm-Amman
+ * booking must not land on the next UTC day). `en-CA` yields ISO order.
+ */
+export function formatYmdInTz(d: Date, tz: string): string {
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone: tz,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(d)
+}

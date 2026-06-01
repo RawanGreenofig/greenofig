@@ -130,14 +130,15 @@ export default function NewSessionModal({
           }),
         })
       } else {
-        // Walk-in: combine the local date + time into an absolute instant.
-        const scheduledAt = new Date(`${date}T${time}:00`)
+        // Walk-in: send the local date + time; the server interprets it in
+        // the coach's timezone (consistent with online bookings).
         res = await fetch('/api/nutritionist/clinic-bookings', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             clinic_client_id: clientId,
-            scheduled_at: scheduledAt.toISOString(),
+            date,
+            time,
             duration_minutes: duration,
             type: 'inClinicVisit',
             notes: notes || null,

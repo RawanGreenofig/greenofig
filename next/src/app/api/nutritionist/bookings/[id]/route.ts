@@ -3,6 +3,7 @@ import { withNutritionistOrAdmin, type AuthedContext } from '@/lib/api/auth'
 import { badRequest, forbidden, json, notFound, serviceUnavailable } from '@/lib/api/response'
 import { getServiceSupabase } from '@/lib/supabase/service'
 import { notifyUsers } from '@/lib/server/notify'
+import { localDateTimeInTzToUtc } from '@/lib/timezone'
 
 /**
  * /api/nutritionist/bookings/[id]
@@ -43,6 +44,8 @@ async function loadOwned(
 export const PATCH = withNutritionistOrAdmin<{ id: string }>(
   async (req: NextRequest, ctx: AuthedContext, { params }) => {
     let body: {
+      date?: string
+      time?: string
       scheduled_at?: string
       duration_min?: number
       type?: string
@@ -62,7 +65,25 @@ export const PATCH = withNutritionistOrAdmin<{ id: string }>(
     if (!allowed) return forbidden('This is not your appointment.')
 
     const update: Record<string, unknown> = {}
-    if (typeof body.scheduled_at === 'string') {
+    // Reschedule: prefer {date,time} interpreted in the coach's timezone
+    // (so it matches how the slot was created and how the calendar shows
+    // it); fall back to a pre-computed scheduled_at.
+    if (body.date && body.time) {
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(body.date) || !/^\d{2}:\d{2}$/.test(body.time)) {
+        return badRequest('Invalid date/time.')
+      }
+      const { data: prof } = await service
+        .from('profiles')
+        .select('timezone')
+        .eq('id', booking.nutritionist_id ?? '')
+        .maybeSingle()
+      const tz = (prof as { timezone: string | null } | null)?.timezone || 'Asia/Amman'
+      try {
+        update.scheduled_at = localDateTimeInTzToUtc(body.date, body.time, tz).toISOString()
+      } catch {
+        return badRequest('Could not interpret date/time in the coach timezone.')
+      }
+    } else if (typeof body.scheduled_at === 'string') {
       const d = new Date(body.scheduled_at)
       if (Number.isNaN(d.getTime())) return badRequest('Invalid date/time.')
       update.scheduled_at = d.toISOString()

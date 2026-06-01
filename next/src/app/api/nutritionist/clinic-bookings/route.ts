@@ -3,6 +3,7 @@ import { withNutritionistOrAdmin, type AuthedContext } from '@/lib/api/auth'
 import { badRequest, json, notFound, serviceUnavailable } from '@/lib/api/response'
 import { getServiceSupabase } from '@/lib/supabase/service'
 import { notifyUsers } from '@/lib/server/notify'
+import { localDateTimeInTzToUtc } from '@/lib/timezone'
 
 /**
  * POST /api/nutritionist/clinic-bookings
@@ -27,6 +28,10 @@ import { notifyUsers } from '@/lib/server/notify'
 
 interface Body {
   clinic_client_id?: string
+  /** Preferred: local calendar moment, interpreted in the coach's timezone. */
+  date?: string
+  time?: string
+  /** Legacy fallback: pre-computed absolute instant. */
   scheduled_at?: string
   duration_minutes?: number
   type?: string
@@ -54,10 +59,12 @@ export const POST = withNutritionistOrAdmin(
     }
 
     if (!body.clinic_client_id) return badRequest('clinic_client_id is required.')
-    if (!body.scheduled_at) return badRequest('scheduled_at is required.')
-    const scheduled = new Date(body.scheduled_at)
-    if (Number.isNaN(scheduled.getTime())) {
-      return badRequest('scheduled_at must be a valid datetime.')
+    const hasDateTime = !!(body.date && body.time)
+    if (!hasDateTime && !body.scheduled_at) {
+      return badRequest('date + time (or scheduled_at) is required.')
+    }
+    if (hasDateTime && (!/^\d{4}-\d{2}-\d{2}$/.test(body.date!) || !/^\d{2}:\d{2}$/.test(body.time!))) {
+      return badRequest('date (YYYY-MM-DD) and time (HH:MM) must be valid.')
     }
     const duration = body.duration_minutes ?? 30
     if (
@@ -98,6 +105,26 @@ export const POST = withNutritionistOrAdmin(
     if (!cc) return notFound('Clinic client not found.')
     if (cc.coach_id !== ctx.userId && ctx.profile.role !== 'admin') {
       return notFound('Clinic client not found.')
+    }
+
+    // Interpret date + time in the COACH's timezone (matching online
+    // bookings), so the calendar and the stored instant always agree.
+    let scheduled: Date
+    if (hasDateTime) {
+      const { data: prof } = await service
+        .from('profiles')
+        .select('timezone')
+        .eq('id', cc.coach_id)
+        .maybeSingle()
+      const tz = (prof as { timezone: string | null } | null)?.timezone || 'Asia/Amman'
+      try {
+        scheduled = localDateTimeInTzToUtc(body.date!, body.time!, tz)
+      } catch {
+        return badRequest('Could not interpret date/time in the coach timezone.')
+      }
+    } else {
+      scheduled = new Date(body.scheduled_at!)
+      if (Number.isNaN(scheduled.getTime())) return badRequest('scheduled_at must be a valid datetime.')
     }
 
     const { data, error } = await service

@@ -19,6 +19,8 @@ import {
   Share2,
 } from '@/icons'
 import ManageSessionModal, { type ManageSession } from '@/app/[locale]/nutritionist/calendar/ManageSessionModal'
+import { formatHmInTz, formatYmdInTz } from '@/lib/timezone'
+import { useUser } from '@/lib/hooks/useUser'
 import { ClientPayments } from '@/components/clinic/ClientPayments'
 import { ClientProgress } from '@/components/clinic/ClientProgress'
 import { ClientAssignments } from '@/components/clinic/ClientAssignments'
@@ -62,18 +64,18 @@ interface Visit {
 }
 
 /** Map a clinic Visit row to the shape the shared ManageSessionModal wants,
- *  deriving the local date/time from the stored UTC instant. */
-function visitToManageSession(v: Visit, clientName: string): ManageSession {
+ *  deriving the date/time in the COACH's timezone (so the prefilled values
+ *  match the calendar and round-trip correctly through the reschedule API). */
+function visitToManageSession(v: Visit, clientName: string, tz: string): ManageSession {
   const d = new Date(v.scheduled_at)
-  const pad = (n: number) => String(n).padStart(2, '0')
   const allowed = ['introCall', 'followUp', 'deepDive', 'inClinicVisit'] as const
   const type = (allowed as readonly string[]).includes(v.type ?? '')
     ? (v.type as ManageSession['type'])
     : 'inClinicVisit'
   return {
     id: v.id,
-    date: `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`,
-    start: `${pad(d.getHours())}:${pad(d.getMinutes())}`,
+    date: formatYmdInTz(d, tz),
+    start: formatHmInTz(d, tz),
     durationMin: v.duration_min,
     type,
     clientName,
@@ -86,6 +88,8 @@ export default function ClinicClientDetailPage() {
   const params = useParams<{ id: string }>()
   const id = params.id
   const locale = useLocale()
+  const { profile } = useUser()
+  const coachTz = (profile as { timezone?: string | null } | null)?.timezone || 'Asia/Amman'
   const [updateCopied, setUpdateCopied] = useState(false)
   const [inviteCopied, setInviteCopied] = useState(false)
 
@@ -353,7 +357,7 @@ export default function ClinicClientDetailPage() {
 
       {manageVisit && (
         <ManageSessionModal
-          session={visitToManageSession(manageVisit, client.full_name)}
+          session={visitToManageSession(manageVisit, client.full_name, coachTz)}
           onClose={() => setManageVisit(null)}
           onUpdated={() => void refresh()}
         />
@@ -593,7 +597,10 @@ function ScheduleVisitModal({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           clinic_client_id: clientId,
-          scheduled_at: new Date(scheduledAt).toISOString(),
+          // Send the local calendar moment; the server interprets it in the
+          // coach's timezone (consistent with the calendar's New Session).
+          date: scheduledAt.slice(0, 10),
+          time: scheduledAt.slice(11, 16),
           duration_minutes: Number(duration) || 30,
           type,
           notes: notes.trim() || undefined,

@@ -12,6 +12,7 @@ import {
 } from '@/icons'
 import { useUser } from '@/lib/hooks/useUser'
 import { useSupabaseQuery } from '@/lib/hooks/useSupabaseQuery'
+import { formatHmInTz, formatYmdInTz } from '@/lib/timezone'
 import NewSessionModal from './NewSessionModal'
 import ManageSessionModal from './ManageSessionModal'
 
@@ -63,6 +64,10 @@ export default function CalendarPage() {
   const tPage = useTranslations('nutritionist.calendarPage')
   const tBookings = useTranslations('bookings')
   const { profile } = useUser()
+  // Render + group bookings in the coach's own timezone so a 11pm-local
+  // visit doesn't slide onto the next UTC day and times always match what
+  // was entered.
+  const coachTz = (profile as { timezone?: string | null } | null)?.timezone || 'Asia/Amman'
 
   const [view, setView] = useState<View>('week')
   // Anchor the calendar on today, not a hardcoded 2026-05-04 (which
@@ -149,10 +154,8 @@ export default function CalendarPage() {
         : nameOf.get(r.client_id!) ?? 'Client'
       return {
         id: r.id,
-        date: dt.toISOString().slice(0, 10),
-        start: dt.toLocaleTimeString('en-US', {
-          hour: '2-digit', minute: '2-digit', hour12: false,
-        }).slice(0, 5),
+        date: formatYmdInTz(dt, coachTz),
+        start: formatHmInTz(dt, coachTz),
         durationMin: r.duration_min,
         clientName: name,
         clientInitials: initialsOf(name),
@@ -162,7 +165,7 @@ export default function CalendarPage() {
         status: r.status,
       }
     })
-  }, [profile?.id, anchor.getMonth(), anchor.getFullYear()])
+  }, [profile?.id, coachTz, anchor.getMonth(), anchor.getFullYear()])
 
   const sessions = live.data ?? []
 

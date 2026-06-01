@@ -61,14 +61,15 @@ export default function ManageSessionModal({ session, onClose, onUpdated }: Prop
 
   function saveReschedule(e: React.FormEvent) {
     e.preventDefault()
-    const scheduledAt = new Date(`${date}T${time}:00`)
-    if (Number.isNaN(scheduledAt.getTime())) {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || !/^\d{2}:\d{2}$/.test(time)) {
       toast.error('Pick a valid date and time.')
       return
     }
     void patch(
       {
-        scheduled_at: scheduledAt.toISOString(),
+        // date+time interpreted server-side in the coach's timezone.
+        date,
+        time,
         duration_min: duration,
         ...(session.isClinic ? {} : { type }),
       },
