@@ -144,33 +144,39 @@ export default function MealPlanBuilderPage() {
   const [saveState, setSaveState] = useState<'idle' | 'saving' | 'saved'>('idle')
   const [assignedClient, setAssignedClient] = useState<{ id: string; name: string } | null>(null)
   const [assignOpen, setAssignOpen] = useState(false)
+  // Saved plans / templates the coach can load to edit or re-assign.
+  const [savedPlans, setSavedPlans] = useState<{ id: string; title: string }[]>([])
+  const [loadingPlan, setLoadingPlan] = useState(false)
 
   // Pull the published recipe library from Supabase. Falls back to the
   // 12-card seed when env unset.
   const liveLibrary = useSupabaseQuery<RecipeRef[]>(async (supabase) => {
+    // Real recipes schema: title / calories_per_serving / *_g / is_published
+    // (the old query used name/calories/status which don't exist, so the
+    // builder silently fell back to a hardcoded sample library).
     const { data } = await supabase
       .from('recipes')
-      .select('id, name, category, calories, protein, carbs, fat, hue')
-      .eq('status', 'published')
+      .select('id, title, category, calories_per_serving, protein_g, carbs_g, fat_g, hue')
+      .eq('is_published', true)
       .order('created_at', { ascending: false })
-      .limit(80)
+      .limit(200)
     type Row = {
-      id: string; name: string; category: string
-      calories: number | null; protein: number | null
-      carbs: number | null;    fat: number | null
+      id: string; title: string; category: string | null
+      calories_per_serving: number | null; protein_g: number | null
+      carbs_g: number | null;               fat_g: number | null
       hue: string | null
     }
     return ((data as Row[] | null) ?? []).map((r) => ({
       id: r.id,
-      name: r.name,
+      name: r.title,
       category: (
-        ['breakfast','lunch','dinner','snack','drink'].includes(r.category)
+        ['breakfast','lunch','dinner','snack','drink'].includes(r.category ?? '')
           ? r.category : 'lunch'
       ) as RecipeRef['category'],
-      calories: r.calories ?? 0,
-      protein: r.protein ?? 0,
-      carbs: r.carbs ?? 0,
-      fat: r.fat ?? 0,
+      calories: r.calories_per_serving ?? 0,
+      protein: r.protein_g ?? 0,
+      carbs: r.carbs_g ?? 0,
+      fat: r.fat_g ?? 0,
       hue: r.hue ?? 'rgb(132 204 22 / 0.16)',
     }))
   }, [])
@@ -301,21 +307,32 @@ export default function MealPlanBuilderPage() {
         meal_type: string
         recipe_id: string | null
         custom_name: string | null
-        notes: null
+        notes: string | null
       }[] = []
+      // The grid has 5 slots (breakfast, morningSnack, lunch, afternoonSnack,
+      // dinner) but the API only accepts breakfast/lunch/dinner/snack — map
+      // the two snack slots to 'snack' (and remember which, via notes, so we
+      // can restore the slot on load).
+      const mealToDb = (m: Meal): { meal_type: string; slotNote: string | null } =>
+        m === 'morningSnack'
+          ? { meal_type: 'snack', slotNote: 'slot:morningSnack' }
+          : m === 'afternoonSnack'
+            ? { meal_type: 'snack', slotNote: 'slot:afternoonSnack' }
+            : { meal_type: m, slotNote: null }
       Object.entries(assignments).forEach(([weekKey, week]) => {
         const weekIdx = Number(weekKey)
         DAYS.forEach((day, dayIdx) => {
           MEALS.forEach((meal) => {
+            const { meal_type, slotNote } = mealToDb(meal)
             for (const placed of week[day][meal]) {
               const isUuid = /^[0-9a-f-]{32,}$/i.test(placed.recipe.id)
               items.push({
                 week_idx: weekIdx,
                 day_idx: dayIdx,
-                meal_type: meal,
+                meal_type,
                 recipe_id: isUuid ? placed.recipe.id : null,
                 custom_name: isUuid ? null : placed.recipe.name,
-                notes: null,
+                notes: slotNote,
               })
             }
           })
@@ -355,6 +372,65 @@ export default function MealPlanBuilderPage() {
     })()
   }
 
+  // List the coach's saved plans (templates + others she authored) so she
+  // can re-open one to edit or assign.
+  useEffect(() => {
+    void (async () => {
+      const res = await fetch('/api/nutritionist/assignable', { cache: 'no-store' })
+      if (res.ok) {
+        const data = (await res.json()) as { mealPlans?: { id: string; title: string }[] }
+        setSavedPlans(data.mealPlans ?? [])
+      }
+    })()
+  }, [])
+
+  const loadPlan = async (planId: string) => {
+    if (!planId || loadingPlan) return
+    setLoadingPlan(true)
+    try {
+      const res = await fetch(`/api/nutritionist/meal-plans/${planId}`, { cache: 'no-store' })
+      if (!res.ok) return
+      const data = (await res.json()) as {
+        plan: { id: string; title: string; weeks: number }
+        items: { week_idx: number; day_idx: number; meal_type: string; recipe_id: string | null; custom_name: string | null; notes: string | null }[]
+      }
+      const slotOf = (it: { meal_type: string; notes: string | null }): Meal => {
+        if (it.meal_type === 'breakfast') return 'breakfast'
+        if (it.meal_type === 'lunch') return 'lunch'
+        if (it.meal_type === 'dinner') return 'dinner'
+        return it.notes === 'slot:afternoonSnack' ? 'afternoonSnack' : 'morningSnack'
+      }
+      const catOf = (meal: string): RecipeRef['category'] =>
+        (['breakfast', 'lunch', 'dinner', 'snack'].includes(meal) ? meal : 'lunch') as RecipeRef['category']
+      const weeks = Math.max(1, ...data.items.map((i) => i.week_idx + 1), data.plan.weeks || 1)
+      const next: Assignments = {}
+      for (let w = 0; w < weeks; w++) next[w] = emptyWeek()
+      let n = 0
+      for (const it of data.items) {
+        const day = DAYS[it.day_idx]
+        if (!day) continue
+        const slot = slotOf(it)
+        const fromLib = it.recipe_id ? sourceLibrary.find((r) => r.id === it.recipe_id) : null
+        const recipe: RecipeRef =
+          fromLib ?? {
+            id: it.recipe_id ?? `custom-${n}`,
+            name: it.custom_name ?? 'Recipe',
+            category: catOf(it.meal_type),
+            calories: 0, protein: 0, carbs: 0, fat: 0,
+            hue: 'rgb(132 204 22 / 0.16)',
+          }
+        next[it.week_idx]?.[day]?.[slot].push({ uid: `u-load-${n++}`, recipe })
+      }
+      setAssignments(next)
+      setWeekCount(weeks)
+      setActiveWeek(0)
+      setPlanName(data.plan.title)
+      setAssignedClient(null) // loaded as a template; pick a client to assign
+    } finally {
+      setLoadingPlan(false)
+    }
+  }
+
   const week = assignments[activeWeek] ?? emptyWeek()
 
   return (
@@ -386,6 +462,24 @@ export default function MealPlanBuilderPage() {
                 placeholder={t('planNamePh')}
                 className="w-full h-10 rounded-md bg-bg-deeper border border-border px-3 text-sm font-semibold text-fg-1 placeholder-fg-3 focus:outline-none focus:border-primary"
               />
+              {savedPlans.length > 0 && (
+                <div className="mt-2">
+                  <label className="block text-[10px] uppercase tracking-eyebrow text-fg-3 font-semibold mb-1.5">
+                    Load a saved plan / template
+                  </label>
+                  <select
+                    value=""
+                    disabled={loadingPlan}
+                    onChange={(e) => { if (e.target.value) void loadPlan(e.target.value) }}
+                    className="w-full h-10 rounded-md bg-bg-deeper border border-border px-3 text-sm text-fg-1 focus:outline-none focus:border-primary"
+                  >
+                    <option value="">{loadingPlan ? 'Loading…' : `Open one of ${savedPlans.length} saved plans…`}</option>
+                    {savedPlans.map((p) => (
+                      <option key={p.id} value={p.id}>{p.title}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
             </div>
           </div>
           <div className="flex flex-wrap items-center gap-2">
