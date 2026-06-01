@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { useLocale } from 'next-intl'
-import { Plus, Search, Phone, X, Loader2, Upload, Share2, Check } from '@/icons'
+import { Plus, Search, Phone, X, Loader2, Upload, Download, Share2, Check } from '@/icons'
 import { ImportClientsDialog } from '@/components/clinic/ImportClientsDialog'
 import { ClinicOverview } from '@/components/clinic/ClinicOverview'
 import { useAuth } from '@/context/AuthContext'
@@ -89,6 +89,44 @@ export default function ClinicClientsPage() {
     )
   }, [clients, search])
 
+  // Export the CURRENTLY FILTERED clients to CSV (so the search box doubles
+  // as the export filter). Excel-safe quoting.
+  const exportCsv = () => {
+    if (filtered.length === 0) return
+    const esc = (v: unknown) => {
+      const s = v == null ? '' : String(v)
+      return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s
+    }
+    const headers = ['Name', 'Phone', 'Email', 'Date of birth', 'Gender', 'Active', 'Total visits', 'Last visit', 'Notes', 'Added']
+    const lines = [headers.join(',')]
+    for (const c of filtered) {
+      lines.push(
+        [
+          c.full_name,
+          c.phone,
+          c.email,
+          c.date_of_birth,
+          c.gender,
+          c.is_active ? 'yes' : 'no',
+          c.total_visits,
+          c.last_visit_at ? c.last_visit_at.slice(0, 10) : '',
+          c.notes,
+          c.created_at ? c.created_at.slice(0, 10) : '',
+        ].map(esc).join(','),
+      )
+    }
+    // BOM so Excel reads UTF-8 (Arabic names) correctly.
+    const blob = new Blob(['﻿' + lines.join('\r\n')], { type: 'text/csv;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `clinic-clients-${new Date().toISOString().slice(0, 10)}.csv`
+    document.body.appendChild(a)
+    a.click()
+    a.remove()
+    URL.revokeObjectURL(url)
+  }
+
   return (
     <div className="px-4 md:px-8 py-6 md:py-8 max-w-screen-xl mx-auto space-y-6">
       <header className="flex flex-wrap items-end justify-between gap-4">
@@ -121,8 +159,19 @@ export default function ClinicClientsPage() {
             className="inline-flex items-center gap-1.5 rounded-pill bg-surface-raised border border-border text-fg-1 hover:border-primary/40 font-semibold text-sm"
             style={{ height: 40, padding: '0 16px' }}
           >
-            <Upload className="w-4 h-4" strokeWidth={2} />
+            <Download className="w-4 h-4" strokeWidth={2} />
             Import
+          </button>
+          <button
+            type="button"
+            onClick={exportCsv}
+            disabled={filtered.length === 0}
+            title={search.trim() ? 'Export the filtered clients to CSV' : 'Export all clients to CSV'}
+            className="inline-flex items-center gap-1.5 rounded-pill bg-surface-raised border border-border text-fg-1 hover:border-primary/40 font-semibold text-sm disabled:opacity-50"
+            style={{ height: 40, padding: '0 16px' }}
+          >
+            <Upload className="w-4 h-4" strokeWidth={2} />
+            Export{search.trim() ? ` (${filtered.length})` : ''}
           </button>
           <button
             type="button"
@@ -151,6 +200,14 @@ export default function ClinicClientsPage() {
           className="w-full h-10 ps-10 pe-3 rounded-pill bg-surface border border-border text-sm text-fg-1 placeholder-fg-3 focus:outline-none focus:border-primary"
         />
       </div>
+
+      {!loading && clients.length > 0 && (
+        <p className="-mt-3 text-xs font-medium text-fg-3">
+          {search.trim()
+            ? `${filtered.length} of ${clients.length} ${clients.length === 1 ? 'client' : 'clients'}`
+            : `${clients.length} ${clients.length === 1 ? 'client' : 'clients'}`}
+        </p>
+      )}
 
       {loading ? (
         <div className="rounded-xl border border-border bg-surface p-12 text-center">
