@@ -299,8 +299,6 @@ export default function CalendarPage() {
 
       {showNew && profile?.id && (
         <NewSessionModal
-          coachId={profile.id}
-          isHeadCoach={!!profile.is_head_coach}
           defaultDate={selectedDay}
           onClose={() => setShowNew(false)}
           onCreated={() => live.reload()}

@@ -4,7 +4,6 @@ import { useEffect, useMemo, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import toast from 'react-hot-toast'
 import { X, Plus } from '@/icons'
-import { getBrowserSupabase } from '@/lib/supabase/client'
 
 type ClientKind = 'online' | 'walkin'
 type OnlineType = 'introCall' | 'followUp' | 'deepDive'
@@ -20,8 +19,6 @@ interface WalkInClient {
 }
 
 export interface NewSessionModalProps {
-  coachId: string
-  isHeadCoach: boolean
   /** Pre-selected day `YYYY-MM-DD` from the calendar, if any. */
   defaultDate: string | null
   onClose: () => void
@@ -30,8 +27,6 @@ export interface NewSessionModalProps {
 }
 
 export default function NewSessionModal({
-  coachId,
-  isHeadCoach,
   defaultDate,
   onClose,
   onCreated,
@@ -58,36 +53,21 @@ export default function NewSessionModal({
 
   const [busy, setBusy] = useState(false)
 
-  // Load both client lists once on mount.
+  // Load both client lists once on mount — from a single server endpoint
+  // (service role, head-coach-aware) so the picker doesn't depend on
+  // browser RLS or a missing is_head_coach flag.
   useEffect(() => {
     let cancelled = false
     void (async () => {
       try {
-        const supabase = getBrowserSupabase()
-        const onlineP = supabase
-          ? (async () => {
-              await supabase.auth.getSession()
-              let q = supabase
-                .from('profiles')
-                .select('id, full_name')
-                .eq('role', 'user')
-                .order('full_name', { ascending: true })
-                .limit(200)
-              if (!isHeadCoach) q = q.eq('assigned_coach_id', coachId)
-              const { data } = await q
-              return (data as OnlineClient[] | null) ?? []
-            })()
-          : Promise.resolve<OnlineClient[]>([])
-
-        const walkP = fetch('/api/nutritionist/clinic-clients')
-          .then((r) => (r.ok ? r.json() : { clients: [] }))
-          .then((j) => (j.clients as WalkInClient[] | undefined) ?? [])
-          .catch(() => [] as WalkInClient[])
-
-        const [on, wk] = await Promise.all([onlineP, walkP])
+        const res = await fetch('/api/nutritionist/bookable-clients', { cache: 'no-store' })
+        const data = (await res.json().catch(() => ({}))) as {
+          online?: OnlineClient[]
+          walkIns?: WalkInClient[]
+        }
         if (cancelled) return
-        setOnline(on)
-        setWalkIns(wk)
+        setOnline(data.online ?? [])
+        setWalkIns(data.walkIns ?? [])
       } finally {
         if (!cancelled) setLoadingClients(false)
       }
@@ -95,7 +75,7 @@ export default function NewSessionModal({
     return () => {
       cancelled = true
     }
-  }, [coachId, isHeadCoach])
+  }, [])
 
   // Keep the client dropdown valid when switching client type.
   useEffect(() => {
