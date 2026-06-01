@@ -1,4 +1,5 @@
 import type { NextRequest } from 'next/server'
+import crypto from 'crypto'
 import webpush from 'web-push'
 import { withAuth, type AuthedContext } from '@/lib/api/auth'
 import {
@@ -270,9 +271,19 @@ async function handleSend(
 
 /* ── Server-to-server entry: x-secret header bypasses session auth ── */
 
+/** Constant-time secret comparison — avoids leaking the secret via response
+ *  timing. Returns false on length mismatch (timingSafeEqual would throw). */
+function secretsMatch(provided: string | null, expected: string | undefined): boolean {
+  if (!provided || !expected) return false
+  const a = Buffer.from(provided)
+  const b = Buffer.from(expected)
+  if (a.length !== b.length) return false
+  return crypto.timingSafeEqual(a, b)
+}
+
 export async function POST(req: NextRequest) {
   const secret = req.headers.get('x-secret')
-  if (secret && secret === process.env.OPENCLAW_WEBHOOK_SECRET) {
+  if (secretsMatch(secret, process.env.OPENCLAW_WEBHOOK_SECRET)) {
     let body: Body
     try {
       body = (await req.json()) as Body
