@@ -8,6 +8,7 @@ import {
 } from '@/lib/api/response'
 import { getServiceSupabase } from '@/lib/supabase/service'
 import { localDateTimeInTzToUtc } from '@/lib/timezone'
+import { notifyUsers } from '@/lib/server/notify'
 
 /**
  * POST /api/nutritionist/bookings
@@ -139,6 +140,20 @@ export const POST = withNutritionistOrAdmin(
     }
 
     const id = (row as { id?: string } | null)?.id
+
+    // Notify the online client their coach booked a session (client_id is
+    // their own user id). Mirrors the walk-in booking notification.
+    const when = new Date(scheduledAtIso).toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' })
+    await notifyUsers({
+      userIds: [client_id],
+      title: 'Session booked 📅',
+      titleAr: 'تم حجز جلسة 📅',
+      body: `Your coach scheduled a session: ${when}.`,
+      bodyAr: `حجزت لك مدربتك جلسة: ${when}.`,
+      type: 'system',
+      url: '/dashboard/bookings',
+    })
+
     return json({ booking: { id } }, 201)
   },
 )
