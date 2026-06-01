@@ -1,6 +1,8 @@
 import type { NextRequest } from 'next/server'
 import { badRequest, json, notFound, serviceUnavailable } from '@/lib/api/response'
 import { getServiceSupabase } from '@/lib/supabase/service'
+import { rateLimit } from '@/lib/server/rateLimit'
+import { ipFromRequest } from '@/lib/api/audit'
 
 /**
  * POST /api/clinic-update/[id]   (PUBLIC — no auth)
@@ -45,6 +47,10 @@ interface Body {
 }
 
 export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
+  const ip = ipFromRequest(req) ?? 'unknown'
+  if (!(await rateLimit(`clinic-update:${ip}`, { limit: 12, windowSec: 600 }))) {
+    return json({ error: 'Too many submissions. Please wait a few minutes.' }, 429)
+  }
   let body: Body
   try {
     body = (await req.json()) as Body

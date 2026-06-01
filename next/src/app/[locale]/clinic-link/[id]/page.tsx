@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { useParams } from 'next/navigation'
+import { useParams, useSearchParams } from 'next/navigation'
 import { useLocale } from 'next-intl'
 import { Link } from '@/i18n/navigation'
 import { Check, Loader2, MessageCircle } from '@/icons'
@@ -18,6 +18,8 @@ import { getBrowserSupabase } from '@/lib/supabase/client'
 export default function ClinicLinkPage() {
   const params = useParams<{ id: string }>()
   const id = params.id
+  const searchParams = useSearchParams()
+  const token = searchParams.get('t') ?? ''
   const locale = useLocale()
   const { user, isLoading } = useAuth()
 
@@ -91,7 +93,11 @@ export default function ClinicLinkPage() {
     setState('linking')
     void (async () => {
       try {
-        const res = await fetch(`/api/clinic-link/${id}`, { method: 'POST' })
+        const res = await fetch(`/api/clinic-link/${id}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ token }),
+        })
         const data = (await res.json().catch(() => ({}))) as { ok?: boolean; error?: string }
         if (!res.ok || !data.ok) {
           setError(data.error ?? `Could not connect (${res.status}).`)
@@ -104,7 +110,7 @@ export default function ClinicLinkPage() {
         setState('error')
       }
     })()
-  }, [id, user, isLoading, waited])
+  }, [id, user, isLoading, waited, token])
 
   return (
     <main className="min-h-screen flex items-center justify-center px-4 py-10" style={{ background: 'var(--gf-bg-deeper)' }}>
@@ -147,7 +153,7 @@ export default function ClinicLinkPage() {
                 : 'Sign in to connect your account so your coach can chat with you and send your plan and payments here.'}
             </p>
 
-            <GoogleAuthButton withDivider={false} next={`/${locale}/clinic-link/${id}`} />
+            <GoogleAuthButton withDivider={false} next={`/${locale}/clinic-link/${id}${token ? `?t=${encodeURIComponent(token)}` : ''}`} />
 
             <div className="my-4 flex items-center gap-3">
               <span className="h-px flex-1 bg-border" />

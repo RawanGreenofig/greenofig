@@ -1,7 +1,10 @@
 import type { NextRequest } from 'next/server'
+import crypto from 'crypto'
 import { withAuth, type AuthedContext } from '@/lib/api/auth'
 import { badRequest, forbidden, json, notFound, serviceUnavailable } from '@/lib/api/response'
 import { getServiceSupabase } from '@/lib/supabase/service'
+import { rateLimit } from '@/lib/server/rateLimit'
+import { ipFromRequest } from '@/lib/api/audit'
 
 /**
  * POST /api/clinic-link/[id]
@@ -15,9 +18,16 @@ import { getServiceSupabase } from '@/lib/supabase/service'
  * again when already linked to this same account just succeeds.
  */
 export const POST = withAuth<{ id: string }>(
-  async (_req: NextRequest, ctx: AuthedContext, { params }) => {
+  async (req: NextRequest, ctx: AuthedContext, { params }) => {
     const service = getServiceSupabase()
     if (!service) return serviceUnavailable('Supabase service role')
+
+    // Throttle claim attempts per account + per IP (token guessing / abuse).
+    const ip = ipFromRequest(req) ?? 'unknown'
+    if (!(await rateLimit(`clinic-link:${ctx.userId}`, { limit: 20, windowSec: 600 })) ||
+        !(await rateLimit(`clinic-link-ip:${ip}`, { limit: 40, windowSec: 600 }))) {
+      return json({ error: 'Too many attempts. Please wait a few minutes.' }, 429)
+    }
 
     // This invite is for CLIENTS. A coach/admin account must not be turned
     // into a walk-in client — it would corrupt their profile and the
@@ -29,13 +39,30 @@ export const POST = withAuth<{ id: string }>(
       )
     }
 
+    // The invite token (from the URL the coach shared). Read from body or
+    // query so it survives the OAuth round-trip.
+    let token: string | null = null
+    try {
+      token = ((await req.json()) as { token?: string })?.token ?? null
+    } catch {
+      /* no body */
+    }
+    if (!token) token = req.nextUrl.searchParams.get('t')
+
     const { data } = await service
       .from('clinic_clients')
-      .select('id, coach_id, user_id, full_name')
+      .select('id, coach_id, user_id, full_name, invite_token_hash, invite_token_expires_at')
       .eq('id', params.id)
       .maybeSingle()
     const cc = data as
-      | { id: string; coach_id: string; user_id: string | null; full_name: string }
+      | {
+          id: string
+          coach_id: string
+          user_id: string | null
+          full_name: string
+          invite_token_hash: string | null
+          invite_token_expires_at: string | null
+        }
       | null
     if (!cc) return notFound('This invite link is not valid.')
 
@@ -46,10 +73,21 @@ export const POST = withAuth<{ id: string }>(
 
     const alreadyLinked = cc.user_id === ctx.userId
 
+    // Token gate — required to CLAIM an unlinked client (re-confirming an
+    // already-linked one to oneself stays allowed without a token).
+    if (!alreadyLinked) {
+      const hash = token ? crypto.createHash('sha256').update(token).digest('hex') : null
+      const expired = cc.invite_token_expires_at ? new Date(cc.invite_token_expires_at).getTime() < Date.now() : true
+      if (!cc.invite_token_hash || !hash || hash !== cc.invite_token_hash || expired) {
+        return forbidden('This invite link is invalid or has expired. Ask your coach to send a new one.')
+      }
+    }
+
     if (!alreadyLinked) {
       const { error: linkErr } = await service
         .from('clinic_clients')
-        .update({ user_id: ctx.userId } as never)
+        // Clear the token — single use.
+        .update({ user_id: ctx.userId, invite_token_hash: null, invite_token_expires_at: null } as never)
         .eq('id', cc.id)
       if (linkErr) return badRequest(linkErr.message)
     }

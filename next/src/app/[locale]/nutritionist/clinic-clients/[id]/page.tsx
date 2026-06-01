@@ -101,7 +101,21 @@ export default function ClinicClientDetailPage() {
   }
 
   const shareInviteLink = async () => {
-    const url = `${window.location.origin}/${locale}/clinic-link/${id}`
+    // Mint a fresh single-use token server-side, then build the tokenized
+    // invite URL. (The bare clinic_clients id is no longer enough to claim.)
+    let url = `${window.location.origin}/${locale}/clinic-link/${id}`
+    try {
+      const res = await fetch(`/api/nutritionist/clinic-clients/${id}/invite`, { method: 'POST' })
+      const data = (await res.json().catch(() => ({}))) as { token?: string; error?: string }
+      if (!res.ok || !data.token) {
+        window.prompt('Could not create an invite link', data.error ?? 'Please try again.')
+        return
+      }
+      url += `?t=${encodeURIComponent(data.token)}`
+    } catch {
+      window.prompt('Could not create an invite link', 'Network error — please try again.')
+      return
+    }
     try {
       await navigator.clipboard.writeText(url)
       setInviteCopied(true)
