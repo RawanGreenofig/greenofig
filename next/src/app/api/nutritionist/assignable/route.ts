@@ -25,8 +25,7 @@ interface RecipeRow {
 interface PlanRow {
   id: string
   title: string
-  week_start: string | null
-  week_end: string | null
+  weeks: number | null
 }
 
 function asStrings(v: unknown): string[] {
@@ -83,23 +82,19 @@ export const GET = withNutritionistOrAdmin(
       summary: recipeSummary(r),
     }))
 
-    // Meal plans she authored. (Real schema: created_by + week_start/week_end,
-    // NOT nutritionist_id/weeks.)
+    // Meal plans she authored (nutritionist_id is the author; migration 043).
     let planQ = service
       .from('meal_plans')
-      .select('id, title, week_start, week_end')
+      .select('id, title, weeks')
       .order('created_at', { ascending: false })
       .limit(100)
-    if (!isAdmin) planQ = planQ.eq('created_by', ctx.userId)
+    if (!isAdmin) planQ = planQ.eq('nutritionist_id', ctx.userId)
     const { data: planData } = await planQ
     const seen = new Set<string>()
     const mealPlans = ((planData as PlanRow[] | null) ?? [])
       .map((p) => {
-        const span =
-          p.week_start && p.week_end
-            ? `${p.week_start} → ${p.week_end}`
-            : p.week_start || ''
-        return { id: p.id, title: p.title, summary: span ? `Meal plan · ${span}` : 'Meal plan' }
+        const wk = typeof p.weeks === 'number' && p.weeks > 0 ? p.weeks : 0
+        return { id: p.id, title: p.title, summary: wk ? `${wk}-week meal plan` : 'Meal plan' }
       })
       // collapse the many per-client copies that share a title into one entry
       .filter((p) => {

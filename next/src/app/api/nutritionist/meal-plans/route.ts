@@ -112,6 +112,9 @@ export const POST = withNutritionistOrAdmin(
       .from('meal_plans')
       .insert({
         client_id: ownerId,
+        // Legacy NOT-NULL column that the table's RLS (mp_select) reads — keep
+        // it in sync with client_id so the client viewer can read their plan.
+        user_id: ownerId,
         nutritionist_id: ctx.userId,
         title: body.title.trim(),
         start_date: new Date().toISOString().slice(0, 10),
@@ -141,6 +144,7 @@ export const POST = withNutritionistOrAdmin(
     // single bad row doesn't half-write a plan.
     const itemRows: {
       plan_id: string
+      meal_plan_id: string
       week_idx: number
       day_idx: number
       meal_type: string
@@ -162,6 +166,8 @@ export const POST = withNutritionistOrAdmin(
       }
       itemRows.push({
         plan_id: planId,
+        // Legacy NOT-NULL column + the column RLS (mpi_select) joins on.
+        meal_plan_id: planId,
         week_idx: item.week_idx,
         day_idx: item.day_idx,
         meal_type: item.meal_type,
