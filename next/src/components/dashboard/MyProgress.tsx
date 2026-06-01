@@ -1,6 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useState } from 'react'
+import { useTranslations } from 'next-intl'
 import toast from 'react-hot-toast'
 import { Plus, Loader2, Check, TrendingUp } from '@/icons'
 import { FetchError } from '@/components/dashboard/FetchError'
@@ -36,12 +37,13 @@ const EMPTY = {
   wins: '', challenges: '', notes: '',
 }
 
-const LABELS: Record<string, string> = {
-  weight_kg: 'Weight (kg)', waist_cm: 'Waist (cm)', hip_cm: 'Hips (cm)', arm_cm: 'Arm (cm)', thigh_cm: 'Thigh (cm)',
-  energy: 'Energy', sleep: 'Sleep', adherence: 'Stuck to plan', appetite: 'Appetite',
+const LABEL_KEYS: Record<string, string> = {
+  weight_kg: 'fieldWeight', waist_cm: 'fieldWaist', hip_cm: 'fieldHips', arm_cm: 'fieldArm', thigh_cm: 'fieldThigh',
+  energy: 'fieldEnergy', sleep: 'fieldSleep', adherence: 'fieldAdherence', appetite: 'fieldAppetite',
 }
 
 export function MyProgress() {
+  const t = useTranslations('clinic')
   const [items, setItems] = useState<Checkin[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(false)
@@ -79,13 +81,13 @@ export function MyProgress() {
       if (res.ok) {
         setForm(EMPTY)
         setAdding(false)
-        toast.success('Sent — your coach will see this.')
+        toast.success(t('checkinSent'))
         await refresh()
       } else {
-        toast.error('Could not save your check-in. Please retry.')
+        toast.error(t('checkinSaveError'))
       }
     } catch {
-      toast.error('Network error — please retry.')
+      toast.error(t('networkError'))
     } finally {
       setBusy(false)
     }
@@ -96,12 +98,12 @@ export function MyProgress() {
       <div className="flex items-center justify-between gap-3 mb-3">
         <h2 className="text-base font-semibold text-fg-1 inline-flex items-center gap-2">
           <TrendingUp className="w-4 h-4 text-lime-400" strokeWidth={1.75} />
-          My progress
+          {t('myProgressTitle')}
         </h2>
         <button type="button" onClick={() => setAdding((v) => !v)}
           className="inline-flex items-center gap-1.5 rounded-pill bg-surface-raised border border-border h-8 px-3 text-xs font-semibold text-fg-1 hover:border-primary/40">
           <Plus className="w-3.5 h-3.5" strokeWidth={2} />
-          Log a check-in
+          {t('logCheckin')}
         </button>
       </div>
 
@@ -110,7 +112,7 @@ export function MyProgress() {
           <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
             {(['weight_kg', 'waist_cm', 'hip_cm', 'arm_cm', 'thigh_cm'] as const).map((k) => (
               <label key={k} className="block">
-                <span className="block text-[10px] text-fg-3 mb-1">{LABELS[k]}</span>
+                <span className="block text-[10px] text-fg-3 mb-1">{t(LABEL_KEYS[k])}</span>
                 <input type="number" step="0.1" min="0" value={form[k]} onChange={(e) => setF(k, e.target.value)}
                   dir="ltr" className="w-full h-9 rounded-md bg-bg-deeper border border-border px-2 text-sm text-fg-1 font-mono focus:outline-none focus:border-primary" />
               </label>
@@ -118,21 +120,21 @@ export function MyProgress() {
           </div>
           <div className="grid grid-cols-2 gap-x-4 gap-y-1.5">
             {(['energy', 'sleep', 'adherence', 'appetite'] as const).map((k) => (
-              <MiniRating key={k} label={LABELS[k]} value={form[k]} onChange={(v) => setF(k, v)} />
+              <MiniRating key={k} label={t(LABEL_KEYS[k])} value={form[k]} onChange={(v) => setF(k, v)} />
             ))}
           </div>
-          <textarea value={form.wins} onChange={(e) => setF('wins', e.target.value)} rows={2} placeholder="Wins this week"
+          <textarea value={form.wins} onChange={(e) => setF('wins', e.target.value)} rows={2} placeholder={t('winsPlaceholder')}
             className="w-full rounded-md bg-bg-deeper border border-border px-3 py-2 text-sm text-fg-1 placeholder-fg-3 focus:outline-none focus:border-primary" />
-          <textarea value={form.challenges} onChange={(e) => setF('challenges', e.target.value)} rows={2} placeholder="What did you struggle with?"
+          <textarea value={form.challenges} onChange={(e) => setF('challenges', e.target.value)} rows={2} placeholder={t('challengesPlaceholder')}
             className="w-full rounded-md bg-bg-deeper border border-border px-3 py-2 text-sm text-fg-1 placeholder-fg-3 focus:outline-none focus:border-primary" />
-          <textarea value={form.notes} onChange={(e) => setF('notes', e.target.value)} rows={2} placeholder="Anything else for your coach"
+          <textarea value={form.notes} onChange={(e) => setF('notes', e.target.value)} rows={2} placeholder={t('notesPlaceholder')}
             className="w-full rounded-md bg-bg-deeper border border-border px-3 py-2 text-sm text-fg-1 placeholder-fg-3 focus:outline-none focus:border-primary" />
           <div className="flex justify-end gap-2">
             <button type="button" onClick={() => { setAdding(false); setForm(EMPTY) }}
-              className="rounded-pill bg-surface-raised border border-border h-8 px-3 text-xs font-semibold text-fg-1">Cancel</button>
+              className="rounded-pill bg-surface-raised border border-border h-8 px-3 text-xs font-semibold text-fg-1">{t('cancel')}</button>
             <button type="button" onClick={() => void submit()} disabled={busy}
               className="inline-flex items-center gap-1.5 rounded-pill bg-gradient-to-b from-lime-400 to-lime-600 text-bg font-semibold h-8 px-4 text-xs border border-lime-600/60 disabled:opacity-50">
-              {busy ? 'Saving…' : 'Send to coach'}
+              {busy ? t('saving') : t('sendToCoach')}
             </button>
           </div>
         </div>
@@ -146,7 +148,7 @@ export function MyProgress() {
         <FetchError onRetry={() => { setLoading(true); void refresh() }} />
       ) : items.length === 0 ? (
         <div className="rounded-xl border border-dashed border-border bg-surface/50 p-6 text-center">
-          <p className="text-sm text-fg-2">No check-ins yet. Log your weight, measurements and how you&rsquo;re feeling — your coach sees it and adjusts your plan.</p>
+          <p className="text-sm text-fg-2">{t('noCheckins')}</p>
         </div>
       ) : (
         <ul className="space-y-2">
@@ -156,7 +158,7 @@ export function MyProgress() {
                 <span className="text-fg-3">{new Date(a.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</span>
                 <span className="inline-flex items-center rounded-pill px-2 py-0.5 text-[9px] font-bold uppercase tracking-eyebrow"
                   style={{ background: a.source === 'client' ? 'rgba(163,230,53,0.16)' : 'rgba(74,154,196,0.16)', color: a.source === 'client' ? '#65a30d' : '#4a9ac4' }}>
-                  {a.source === 'client' ? 'You' : 'Coach'}
+                  {a.source === 'client' ? t('you') : t('coach')}
                 </span>
               </div>
               <div className="mt-1.5 flex flex-wrap gap-x-3 gap-y-1 text-xs text-fg-2 font-mono" dir="ltr">
@@ -170,8 +172,8 @@ export function MyProgress() {
                 {a.adherence != null && <span>plan {a.adherence}/5</span>}
                 {a.appetite != null && <span>appetite {a.appetite}/5</span>}
               </div>
-              {a.wins && <p className="mt-1.5 text-xs text-fg-1"><b className="text-lime-500">Wins:</b> {a.wins}</p>}
-              {a.challenges && <p className="mt-1 text-xs text-fg-1"><b style={{ color: '#e8912a' }}>Struggles:</b> {a.challenges}</p>}
+              {a.wins && <p className="mt-1.5 text-xs text-fg-1"><b className="text-lime-500">{t('winsLabel')}</b> {a.wins}</p>}
+              {a.challenges && <p className="mt-1 text-xs text-fg-1"><b style={{ color: '#e8912a' }}>{t('strugglesLabel')}</b> {a.challenges}</p>}
               {a.notes && <p className="mt-1 text-xs text-fg-2 whitespace-pre-wrap">{a.notes}</p>}
             </li>
           ))}

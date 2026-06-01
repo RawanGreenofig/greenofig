@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { useTranslations } from 'next-intl'
 import { Link } from '@/i18n/navigation'
 import { useUser } from '@/lib/hooks/useUser'
 import { resolveFirstName } from '@/lib/displayName'
@@ -37,6 +38,7 @@ function money(cents: number, currency: string) {
 }
 
 export function ClinicHome() {
+  const t = useTranslations('clinic')
   const { user, profile } = useUser()
   const firstName = resolveFirstName(profile, user, 'there')
   const [data, setData] = useState<Overview | null>(null)
@@ -66,9 +68,9 @@ export function ClinicHome() {
     <div className="px-4 md:px-8 py-6 md:py-8 max-w-screen-md mx-auto space-y-5">
       <header>
         <h1 className="font-display font-bold text-fg-1 tracking-tight" style={{ fontSize: 'clamp(24px,4vw,34px)', lineHeight: 1.1 }}>
-          Hi {firstName} 👋
+          {t('greeting', { name: firstName })}
         </h1>
-        <p className="mt-2 text-sm text-fg-2">Your clinic, in one place.</p>
+        <p className="mt-2 text-sm text-fg-2">{t('tagline')}</p>
       </header>
 
       {loading ? (
@@ -81,7 +83,7 @@ export function ClinicHome() {
           {data?.coachCard && (
             <div className="rounded-2xl border border-border p-5" style={{ background: 'rgba(74,154,196,0.06)' }}>
               <p className="text-[11px] uppercase tracking-eyebrow font-bold mb-2 inline-flex items-center gap-1.5" style={{ color: '#4a9ac4' }}>
-                <Sparkles className="w-3.5 h-3.5" strokeWidth={2} /> From your coach
+                <Sparkles className="w-3.5 h-3.5" strokeWidth={2} /> {t('fromCoach')}
               </p>
               {data.coachCard.summary && <p className="text-sm text-fg-1 leading-relaxed">{data.coachCard.summary}</p>}
               {data.coachCard.recommendations && (
@@ -96,22 +98,22 @@ export function ClinicHome() {
               href="/dashboard/appointments"
               Icon={CalendarClock}
               tint="#4ade80"
-              label="Next appointment"
-              value={apptLabel ?? 'None scheduled'}
+              label={t('nextAppointment')}
+              value={apptLabel ?? t('noneScheduled')}
             />
             <StatTile
               href="/dashboard/my-plan"
               Icon={ClipboardList}
               tint="#34d399"
-              label="Plan progress"
-              value={plan && plan.total > 0 ? `${plan.done}/${plan.total} done` : 'Nothing assigned'}
+              label={t('planProgress')}
+              value={plan && plan.total > 0 ? t('planDone', { done: plan.done, total: plan.total }) : t('nothingAssignedShort')}
             />
             <StatTile
               href="/dashboard/my-payments"
               Icon={Wallet}
               tint="#fbbf24"
-              label="Amount due"
-              value={due && due.cents > 0 ? money(due.cents, due.currency) : 'All settled'}
+              label={t('amountDue')}
+              value={due && due.cents > 0 ? money(due.cents, due.currency) : t('allSettled')}
               alert={!!due && due.cents > 0}
             />
           </div>
@@ -120,13 +122,13 @@ export function ClinicHome() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <Link href="/dashboard/my-plan" className="rounded-xl border border-border bg-surface p-4 flex items-center justify-between hover:border-primary/40">
               <span className="text-sm font-semibold text-fg-1 inline-flex items-center gap-2">
-                <ClipboardList className="w-4 h-4 text-lime-400" strokeWidth={1.75} /> Log a check-in
+                <ClipboardList className="w-4 h-4 text-lime-400" strokeWidth={1.75} /> {t('logCheckin')}
               </span>
               <ArrowRight className="w-4 h-4 text-fg-3" strokeWidth={1.75} />
             </Link>
             <Link href="/dashboard/messages" className="rounded-xl border border-border bg-surface p-4 flex items-center justify-between hover:border-primary/40">
               <span className="text-sm font-semibold text-fg-1 inline-flex items-center gap-2">
-                <MessageSquare className="w-4 h-4 text-lime-400" strokeWidth={1.75} /> Message your coach
+                <MessageSquare className="w-4 h-4 text-lime-400" strokeWidth={1.75} /> {t('messageCoach')}
               </span>
               <ArrowRight className="w-4 h-4 text-fg-3" strokeWidth={1.75} />
             </Link>

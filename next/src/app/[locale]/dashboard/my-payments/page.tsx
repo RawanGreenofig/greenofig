@@ -1,7 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useState } from 'react'
-import { useLocale } from 'next-intl'
+import { useLocale, useTranslations } from 'next-intl'
 import { Wallet, Loader2, Check, ExternalLink } from '@/icons'
 import { FetchError } from '@/components/dashboard/FetchError'
 
@@ -32,6 +32,7 @@ function money(cents: number, currency: string | null) {
 }
 
 export default function MyPaymentsPage() {
+  const t = useTranslations('clinic')
   const locale = useLocale()
   const [items, setItems] = useState<Payment[]>([])
   const [loading, setLoading] = useState(true)
@@ -68,11 +69,11 @@ export default function MyPaymentsPage() {
     <div className="px-4 md:px-8 py-6 md:py-8 max-w-screen-md mx-auto space-y-5">
       <header>
         <h1 className="font-display font-bold text-fg-1 tracking-tight" style={{ fontSize: 'clamp(24px,4vw,34px)', lineHeight: 1.1 }}>
-          Payments
+          {t('paymentsTitle')}
         </h1>
         <p className="mt-2 text-sm text-fg-2">
-          What you&rsquo;ve paid and anything still due.
-          {due.length > 0 && <b className="ms-1" style={{ color: '#e8912a' }}>{money(totalDue, dueCurrency)} due.</b>}
+          {t('paymentsSubtitle')}
+          {due.length > 0 && <b className="ms-1" style={{ color: '#e8912a' }}>{t('paymentsDue', { amount: money(totalDue, dueCurrency) })}</b>}
         </p>
       </header>
 
@@ -84,7 +85,7 @@ export default function MyPaymentsPage() {
         <FetchError onRetry={() => { setLoading(true); void refresh() }} />
       ) : items.length === 0 ? (
         <div className="rounded-xl border border-dashed border-border bg-surface/50 p-10 text-center">
-          <p className="text-sm text-fg-2">No payments yet.</p>
+          <p className="text-sm text-fg-2">{t('paymentsEmpty')}</p>
         </div>
       ) : (
         <ul className="space-y-2.5">
@@ -100,8 +101,8 @@ export default function MyPaymentsPage() {
                   <p className="text-sm font-semibold text-fg-1">{money(p.amount_cents, p.currency)}</p>
                   <p className="mt-0.5 text-[11px] text-fg-3">
                     {isPaid
-                      ? `Paid${p.paid_at ? ` ${new Date(p.paid_at).toLocaleDateString()}` : ''}${p.method ? ` · ${p.method}` : ''}`
-                      : p.due_date ? `Due ${p.due_date}` : 'Due'}
+                      ? `${p.paid_at ? t('paidWithDate', { date: new Date(p.paid_at).toLocaleDateString() }) : t('paid')}${p.method ? ` · ${p.method}` : ''}`
+                      : p.due_date ? t('paymentDueDate', { date: p.due_date }) : t('paymentDue')}
                   </p>
                   {p.notes && <p className="mt-1 text-xs text-fg-2">{p.notes}</p>}
                 </div>
@@ -111,7 +112,7 @@ export default function MyPaymentsPage() {
                     className="inline-flex items-center gap-1.5 rounded-pill bg-gradient-to-b from-lime-400 to-lime-600 text-bg font-semibold h-9 px-4 text-xs border border-lime-600/60 shrink-0"
                   >
                     <ExternalLink className="w-3.5 h-3.5" strokeWidth={2} />
-                    Pay now
+                    {t('payNow')}
                   </a>
                 )}
               </li>

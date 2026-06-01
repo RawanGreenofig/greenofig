@@ -1,6 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useState } from 'react'
+import { useTranslations } from 'next-intl'
 import toast from 'react-hot-toast'
 import { Check, Loader2, UtensilsCrossed, BookOpen, ExternalLink } from '@/icons'
 import { MyProgress } from '@/components/dashboard/MyProgress'
@@ -23,6 +24,7 @@ interface Assignment {
 }
 
 export default function MyPlanPage() {
+  const t = useTranslations('clinic')
   const [items, setItems] = useState<Assignment[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(false)
@@ -57,13 +59,13 @@ export default function MyPlanPage() {
       if (!res.ok) {
         // revert the optimistic flip
         setItems((cur) => cur.map((x) => (x.id === a.id ? { ...x, status: x.status === 'done' ? 'assigned' : 'done' } : x)))
-        toast.error("Couldn't update — please retry.")
+        toast.error(t('updateError'))
       } else {
         await refresh()
       }
     } catch {
       setItems((cur) => cur.map((x) => (x.id === a.id ? { ...x, status: x.status === 'done' ? 'assigned' : 'done' } : x)))
-      toast.error('Network error — please retry.')
+      toast.error(t('networkError'))
     } finally {
       setPending(null)
     }
@@ -75,11 +77,11 @@ export default function MyPlanPage() {
     <div className="px-4 md:px-8 py-6 md:py-8 max-w-screen-md mx-auto space-y-5">
       <header>
         <h1 className="font-display font-bold text-fg-1 tracking-tight" style={{ fontSize: 'clamp(24px,4vw,34px)', lineHeight: 1.1 }}>
-          My plan
+          {t('myPlanTitle')}
         </h1>
         <p className="mt-2 text-sm text-fg-2">
-          What your coach assigned. Tap the circle when you&rsquo;ve done it — she&rsquo;ll see your progress.
-          {items.length > 0 && <b className="ms-1 text-fg-1">{done}/{items.length} done.</b>}
+          {t('myPlanSubtitle')}
+          {items.length > 0 && <b className="ms-1 text-fg-1">{t('myPlanDoneCount', { done, total: items.length })}</b>}
         </p>
       </header>
 
@@ -91,7 +93,7 @@ export default function MyPlanPage() {
         <FetchError onRetry={() => { setLoading(true); void refresh() }} />
       ) : items.length === 0 ? (
         <div className="rounded-xl border border-dashed border-border bg-surface/50 p-10 text-center">
-          <p className="text-sm text-fg-2">Nothing assigned yet. Your coach will add meal plans and recipes here.</p>
+          <p className="text-sm text-fg-2">{t('myPlanEmpty')}</p>
         </div>
       ) : (
         <ul className="space-y-2.5">
@@ -103,7 +105,7 @@ export default function MyPlanPage() {
                   type="button"
                   onClick={() => void toggle(a)}
                   disabled={pending === a.id}
-                  aria-label={isDone ? 'Mark not done' : 'Mark done'}
+                  aria-label={isDone ? t('markNotDone') : t('markDone')}
                   className="mt-0.5 inline-flex items-center justify-center w-8 h-8 rounded-full shrink-0 transition-colors"
                   style={{
                     background: isDone ? 'var(--gf-lime-400)' : 'transparent',
@@ -119,14 +121,14 @@ export default function MyPlanPage() {
                   </p>
                   <p className="mt-0.5 text-[11px] uppercase tracking-eyebrow text-fg-3 inline-flex items-center gap-1">
                     {a.kind === 'recipe' ? <BookOpen className="w-3 h-3" strokeWidth={1.75} /> : <UtensilsCrossed className="w-3 h-3" strokeWidth={1.75} />}
-                    {a.kind === 'recipe' ? 'Recipe' : 'Meal plan'}
-                    {a.due_date && !isDone && <span className="normal-case tracking-normal">· due {a.due_date}</span>}
+                    {a.kind === 'recipe' ? t('recipe') : t('mealPlan')}
+                    {a.due_date && !isDone && <span className="normal-case tracking-normal">· {t('due', { date: a.due_date })}</span>}
                   </p>
                   {a.details && <p className="mt-1.5 text-xs text-fg-2 whitespace-pre-wrap leading-relaxed">{a.details}</p>}
                   {a.link && (
                     <a href={a.link} target="_blank" rel="noopener noreferrer" className="mt-1.5 inline-flex items-center gap-1 text-xs text-lime-500 hover:underline">
                       <ExternalLink className="w-3 h-3" strokeWidth={1.75} />
-                      Open
+                      {t('open')}
                     </a>
                   )}
                 </div>
