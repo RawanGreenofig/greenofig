@@ -783,6 +783,7 @@ function EditClientModal({
   const [email, setEmail] = useState(client.email ?? '')
   const [startDate, setStartDate] = useState(client.start_date ?? '')
   const [endDate, setEndDate] = useState(client.end_date ?? '')
+  const [hasEndDate, setHasEndDate] = useState(!!client.end_date)
   const [insured, setInsured] = useState(client.insured)
   const [insuranceProvider, setInsuranceProvider] = useState(client.insurance_provider ?? '')
   const [notes, setNotes] = useState(client.notes ?? '')
@@ -893,17 +894,31 @@ function EditClientModal({
               className="w-full h-10 rounded-md bg-bg-deeper border border-border px-3 text-sm text-fg-1 focus:outline-none focus:border-primary"
             />
           </label>
-          <label className="block">
+          <div className="block">
             <span className="block text-[10px] uppercase tracking-eyebrow text-fg-3 font-semibold mb-1.5">
               End date
             </span>
-            <input
-              type="date"
-              value={endDate}
-              onChange={(e) => setEndDate(e.target.value)}
-              className="w-full h-10 rounded-md bg-bg-deeper border border-border px-3 text-sm text-fg-1 focus:outline-none focus:border-primary"
-            />
-          </label>
+            <label className="flex items-center gap-2 cursor-pointer h-10">
+              <input
+                type="checkbox"
+                checked={hasEndDate}
+                onChange={(e) => {
+                  setHasEndDate(e.target.checked)
+                  if (!e.target.checked) setEndDate('')
+                }}
+                className="w-4 h-4 rounded accent-lime-500"
+              />
+              <span className="text-xs text-fg-2">Set an end date</span>
+            </label>
+            {hasEndDate && (
+              <input
+                type="date"
+                value={endDate}
+                onChange={(e) => setEndDate(e.target.value)}
+                className="w-full h-10 rounded-md bg-bg-deeper border border-border px-3 text-sm text-fg-1 focus:outline-none focus:border-primary mt-1.5"
+              />
+            )}
+          </div>
         </div>
         <div className="flex items-center gap-3 flex-wrap">
           <label className="flex items-center gap-2 cursor-pointer">

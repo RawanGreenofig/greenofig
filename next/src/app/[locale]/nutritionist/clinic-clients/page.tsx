@@ -274,6 +274,7 @@ function AddWalkInModal({
   const [dob, setDob] = useState('')
   const [startDate, setStartDate] = useState('')
   const [endDate, setEndDate] = useState('')
+  const [hasEndDate, setHasEndDate] = useState(false)
   const [insured, setInsured] = useState(false)
   const [insuranceProvider, setInsuranceProvider] = useState('')
   const [gender, setGender] = useState('')
@@ -393,14 +394,31 @@ function AddWalkInModal({
               className="w-full h-10 rounded-md bg-bg-deeper border border-border px-3 text-sm text-fg-1 focus:outline-none focus:border-primary"
             />
           </Field>
-          <Field label="End date">
-            <input
-              type="date"
-              value={endDate}
-              onChange={(e) => setEndDate(e.target.value)}
-              className="w-full h-10 rounded-md bg-bg-deeper border border-border px-3 text-sm text-fg-1 focus:outline-none focus:border-primary"
-            />
-          </Field>
+          <div className="block">
+            <span className="block text-[10px] uppercase tracking-eyebrow text-fg-3 font-semibold mb-1.5">
+              End date
+            </span>
+            <label className="flex items-center gap-2 cursor-pointer h-10">
+              <input
+                type="checkbox"
+                checked={hasEndDate}
+                onChange={(e) => {
+                  setHasEndDate(e.target.checked)
+                  if (!e.target.checked) setEndDate('')
+                }}
+                className="w-4 h-4 rounded accent-lime-500"
+              />
+              <span className="text-xs text-fg-2">Set an end date</span>
+            </label>
+            {hasEndDate && (
+              <input
+                type="date"
+                value={endDate}
+                onChange={(e) => setEndDate(e.target.value)}
+                className="w-full h-10 rounded-md bg-bg-deeper border border-border px-3 text-sm text-fg-1 focus:outline-none focus:border-primary mt-1.5"
+              />
+            )}
+          </div>
           <Field label="Gender">
             <select
               value={gender}
