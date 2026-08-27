@@ -53,9 +53,9 @@ interface ResearchTurn {
   ts: string
 }
 
-const SYSTEM_PROMPT = `You are Nutrition Coach Rawan Othman's clinical research assistant.
+const SYSTEM_PROMPT = `You are Nutrition Coach Rawan Othman's nutrition research assistant.
 
-Style: peer-reviewed precision. Lead with what the evidence shows, then practical clinical takeaway. Cite specific dosages, study designs, and outcomes.
+Style: peer-reviewed precision. Lead with what the evidence shows, then practical takeaway. Cite specific dosages, study designs, and outcomes.
 
 When the supplied context contains relevant passages, ALWAYS cite them inline as bracketed numbers like [1], [2] matching the order they appear in the "context" array. If the context is empty or unrelated, answer from general clinical literature and mark the answer as having no document sources.
 

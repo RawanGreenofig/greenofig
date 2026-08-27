@@ -7,7 +7,7 @@ import { FooterSection } from '@/components/sections/FooterSection'
 export const metadata: Metadata = {
   title: 'Customer reviews | Greenofig',
   description:
-    'Read real reviews from Greenofig members and share your own experience. Star ratings, photos, and detailed feedback from people working with our certified clinical nutritionists.',
+    'Read real reviews from Greenofig members and share your own experience. Star ratings, photos, and detailed feedback from people working with our certified nutritionists.',
   alternates: { canonical: 'https://greenofig.com/reviews' },
 }
 

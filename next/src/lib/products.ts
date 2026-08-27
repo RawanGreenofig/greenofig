@@ -228,7 +228,7 @@ export const PRODUCTS: Product[] = [
     badges: ['drPick', 'newBadge'],
     hue: 'rgb(61 122 74 / 0.22)',
     description:
-      'Nutrition Coach Rawan’s clinical-but-warm guide to eating in the Mediterranean style without turning food into a stressful project. 240 pages, 60 recipes, no calorie math.',
+      'Nutrition Coach Rawan’s expert-but-warm guide to eating in the Mediterranean style without turning food into a stressful project. 240 pages, 60 recipes, no calorie math.',
     benefits: [
       '240 pages, 60 recipes',
       'Mediterranean-style framework',

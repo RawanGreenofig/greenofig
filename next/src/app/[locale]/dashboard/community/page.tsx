@@ -177,7 +177,7 @@ function CommunityPageInner() {
         setCoach({
           id: coachRow.id,
           name: coachRow.full_name ?? 'Greenofig coach',
-          role: 'Certified Clinical Nutritionist',
+          role: 'Certified Nutritionist',
           avatarUrl: coachRow.avatar_url,
           postsCount: postsCnt.count ?? 0,
           articlesCount: articlesCnt.count ?? 0,
@@ -437,7 +437,7 @@ function CommunityPageInner() {
               <p
                 style={{ fontSize: 12, color: 'var(--gf-fg-3)', marginTop: 2 }}
               >
-                {coach?.role ?? 'Certified Clinical Nutritionist'}
+                {coach?.role ?? 'Certified Nutritionist'}
               </p>
               {coach && (
                 <div

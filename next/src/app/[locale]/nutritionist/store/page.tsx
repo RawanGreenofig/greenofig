@@ -636,7 +636,7 @@ function ProductRow({
 }
 
 /**
- * Ghost icon toggle for Dr. pick / Visible columns. No tile chrome —
+ * Ghost icon toggle for Coach pick / Visible columns. No tile chrome —
  * just the icon. State is communicated by colour: brand-tinted when
  * active, muted when not. A subtle bg appears on hover so the click
  * affordance stays. Reads the same as Linear / Stripe row actions

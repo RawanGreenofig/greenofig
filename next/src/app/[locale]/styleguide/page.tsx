@@ -550,7 +550,7 @@ function Cards() {
             </div>
             <div>
               <p className="text-sm font-semibold">Nutrition Coach Rawan Othman</p>
-              <p className="text-xs text-fg-2">Registered Dietitian · 3h ago</p>
+              <p className="text-xs text-fg-2">Certified Nutritionist · 3h ago</p>
             </div>
           </div>
           <p className="text-sm text-fg-1/80 leading-relaxed">

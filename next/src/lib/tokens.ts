@@ -96,27 +96,27 @@ export const NUTRITIONIST = {
   firstName: 'Rawan',
   title: 'Nutrition Coach',
   shortName: 'Nutrition Coach Rawan',
-  role: 'Certified Clinical Nutritionist · Head Coach',
-  roleAr: 'أخصائية التغذية الإكلينيكية · المدرّبة الرئيسية',
+  role: 'Certified Nutritionist · Head Coach',
+  roleAr: 'أخصائية التغذية · المدرّبة الرئيسية',
   initials: 'RO',
   experience: '3 years',
   credentials: [
-    'Certified Clinical Nutritionist',
+    'Certified Nutritionist',
     '3 Years of Specialized Practice',
     '500+ Clients Transformed',
   ],
   credentialsAr: [
-    'أخصائية تغذية إكلينيكية معتمدة',
+    'أخصائية تغذية معتمدة',
     '3 سنوات من الممارسة المتخصصة',
     '+500 عميل تم تحويلهم',
   ],
   bio: {
     short:
-      'Nutrition Coach Rawan Othman is a certified clinical nutritionist and head coach of the Greenofig team, dedicated to helping people achieve lasting health through science-backed, personalized nutrition.',
+      'Nutrition Coach Rawan Othman is a certified nutritionist and head coach of the Greenofig team, dedicated to helping people achieve lasting health through science-backed, personalized nutrition.',
     long:
       'Nutrition Coach Rawan Othman leads the Greenofig coaching team. She brings an evidence-based approach to nutrition that goes beyond generic diets. In her 3 years of specialized practice, she — along with the nutritionist coaches she trains — has helped hundreds of clients transform their relationship with food, building sustainable habits that fit real life, not just theory.',
     shortAr:
-      'كوتش التغذية روان عثمان أخصائية تغذية إكلينيكية معتمدة ومدرّبة رئيسية في فريق Greenofig، تكرّس جهودها لمساعدة الناس على تحقيق صحة دائمة من خلال تغذية شخصية قائمة على العلم.',
+      'كوتش التغذية روان عثمان أخصائية تغذية معتمدة ومدرّبة رئيسية في فريق Greenofig، تكرّس جهودها لمساعدة الناس على تحقيق صحة دائمة من خلال تغذية شخصية قائمة على العلم.',
     longAr:
       'تقود كوتش التغذية روان عثمان فريق Greenofig. تقدّم نهجاً حديثاً قائماً على الأدلة العلمية في التغذية، يتجاوز الأنظمة العامة. في سنواتها الثلاث من الممارسة، ساعدت — مع أخصائيي التغذية المدرّبين الذين تدرّبهم — مئات العملاء على تغيير علاقتهم بالطعام وبناء عادات صحية مستدامة تناسب الحياة الواقعية.',
   },

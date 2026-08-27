@@ -94,11 +94,11 @@ export default function AdminSiteEditorPage() {
   // copy on first open.
   const [about, setAbout] = useState<AboutDraft>({
     name: 'Nutrition Coach Rawan Othman',
-    role: 'Certified Clinical Nutritionist · Head Coach',
+    role: 'Certified Nutritionist · Head Coach',
     bio:
       'Nutrition Coach Rawan Othman leads the Greenofig coaching team. She brings an evidence-based approach to nutrition that goes beyond generic diets. In her 3 years of specialized practice, she — along with the nutritionist coaches she trains — has helped hundreds of clients transform their relationship with food, building sustainable habits that fit real life, not just theory.',
     credentials:
-      'Certified Clinical Nutritionist\n3 Years of Specialized Practice\n500+ Clients Transformed',
+      'Certified Nutritionist\n3 Years of Specialized Practice\n500+ Clients Transformed',
   })
   const [pricing, setPricing] = useState<PricingTier[]>([
     {

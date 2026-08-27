@@ -75,7 +75,7 @@ export default async function ArticlePage({ params }: RouteParams) {
     author: {
       '@type': 'Person',
       name: NUTRITIONIST.name,
-      jobTitle: 'Certified Clinical Nutritionist',
+      jobTitle: 'Certified Nutritionist',
       url: 'https://greenofig.com/coach-rawan-othman',
     },
     publisher: {

@@ -10,13 +10,13 @@ import { SiteHeader } from '@/components/SiteHeader'
 export const metadata: Metadata = {
   title: 'Nutrition Blog | Nutrition Coach Rawan Othman | Greenofig',
   description:
-    'Evidence-based nutrition articles by Nutrition Coach Rawan Othman, certified clinical nutritionist. Learn about healthy eating, weight loss, supplements, and more.',
+    'Evidence-based nutrition articles by Nutrition Coach Rawan Othman, certified nutritionist. Learn about healthy eating, weight loss, supplements, and more.',
   alternates: { canonical: 'https://greenofig.com/blog' },
   openGraph: {
     url: 'https://greenofig.com/blog',
     title: 'Nutrition Blog | Nutrition Coach Rawan Othman | Greenofig',
     description:
-      'Evidence-based nutrition articles by Nutrition Coach Rawan Othman, certified clinical nutritionist.',
+      'Evidence-based nutrition articles by Nutrition Coach Rawan Othman, certified nutritionist.',
     type: 'website',
   },
 }

@@ -9,13 +9,13 @@ import { FooterSection } from '@/components/sections/FooterSection'
 import { BLOG_ARTICLES } from '@/lib/blog-seed'
 
 export const metadata: Metadata = {
-  title: 'Nutrition Coach Rawan Othman | Certified Clinical Nutritionist | Greenofig',
+  title: 'Nutrition Coach Rawan Othman | Certified Nutritionist | Greenofig',
   description:
-    'Meet Nutrition Coach Rawan Othman, head coach at Greenofig and certified clinical nutritionist. 3 years of practice, 500+ clients, evidence-based personalized nutrition.',
+    'Meet Nutrition Coach Rawan Othman, head coach at Greenofig and certified nutritionist. 3 years of practice, 500+ clients, evidence-based personalized nutrition.',
   alternates: { canonical: 'https://greenofig.com/coach-rawan-othman' },
   openGraph: {
     url: 'https://greenofig.com/coach-rawan-othman',
-    title: 'Nutrition Coach Rawan Othman | Certified Clinical Nutritionist',
+    title: 'Nutrition Coach Rawan Othman | Certified Nutritionist',
     description:
       '3 years of practice, 500+ clients, evidence-based personalized nutrition. Head coach of the Greenofig team.',
     type: 'profile',
@@ -24,7 +24,7 @@ export const metadata: Metadata = {
         url: '/images/dr-rawan-othman.jpg',
         width: 1200,
         height: 630,
-        alt: 'Nutrition Coach Rawan Othman — Certified Clinical Nutritionist',
+        alt: 'Nutrition Coach Rawan Othman — Certified Nutritionist',
       },
     ],
   },
@@ -66,7 +66,7 @@ export default async function CoachRawanPage({ params }: PageProps) {
       name: c,
     })),
     knowsAbout: [
-      'Clinical nutrition',
+      'Personalized nutrition',
       'Personalized meal planning',
       'Weight management',
       'Sports nutrition',
@@ -189,14 +189,14 @@ export default async function CoachRawanPage({ params }: PageProps) {
           <div className="flex flex-wrap gap-2">
             {(isAr
               ? [
-                  'التغذية الإكلينيكية',
+                  'التغذية',
                   'تخطيط الوجبات الشخصية',
                   'إدارة الوزن',
                   'تغذية الرياضيين',
                   'العادات الغذائية المستدامة',
                 ]
               : [
-                  'Clinical nutrition',
+                  'Personalized nutrition',
                   'Personalized meal planning',
                   'Weight management',
                   'Sports nutrition',

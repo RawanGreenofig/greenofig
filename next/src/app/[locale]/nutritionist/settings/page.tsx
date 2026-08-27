@@ -81,12 +81,12 @@ export default function NutritionistSettingsPage() {
 
   const [profile, setProfile] = useState<ProfileForm>({
     displayName: 'Nutrition Coach Rawan Othman',
-    title: 'Clinical Nutritionist · MSc, RD',
+    title: 'Certified Nutritionist',
     bio:
       "I help women in the Levant rebuild their relationship with food. Mediterranean-rooted, evidence-led, no shame. Five years in clinic, four in private practice.",
     credentials: [
-      'MSc Clinical Nutrition — University of Jordan',
-      'Registered Dietitian — Jordanian MoH',
+      'MSc Nutrition — University of Jordan',
+      'Certified Nutritionist — Jordanian MoH',
       'Certified Functional Nutrition Practitioner',
     ],
     languages: 'Arabic, English',

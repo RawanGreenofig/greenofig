@@ -5,13 +5,13 @@ import { SimplePage, H2, P } from '@/components/SimplePage'
 export const metadata: Metadata = {
   title: 'About Greenofig | Personalized Nutrition Coaching',
   description:
-    "Greenofig is a personalized nutrition coaching platform combining certified clinical nutritionists with AI-powered tools — meal plans, food tracking, and 1-on-1 consultations.",
+    "Greenofig is a personalized nutrition coaching platform combining certified nutritionists with AI-powered tools — meal plans, food tracking, and 1-on-1 consultations.",
   alternates: { canonical: 'https://greenofig.com/about' },
   openGraph: {
     url: 'https://greenofig.com/about',
     title: 'About Greenofig | Personalized Nutrition Coaching',
     description:
-      'Greenofig combines certified clinical nutritionists with AI-powered tools — meal plans, food tracking, and 1-on-1 consultations.',
+      'Greenofig combines certified nutritionists with AI-powered tools — meal plans, food tracking, and 1-on-1 consultations.',
     type: 'website',
   },
 }
@@ -24,7 +24,7 @@ export default function AboutPage() {
     return (
       <SimplePage
         title="عن غرينوفيغ"
-        subtitle="منصة تغذية شخصية تجمع بين الخبرة السريرية والذكاء الاصطناعي — مصممة لتساعدك على بناء عادات صحية تدوم."
+        subtitle="منصة تغذية شخصية تجمع بين الخبرة والذكاء الاصطناعي — مصممة لتساعدك على بناء عادات صحية تدوم."
         isAr
       >
         <section>
@@ -38,8 +38,8 @@ export default function AboutPage() {
         <section>
           <H2>كيف نعمل</H2>
           <P>
-            نجمع بين أخصائيي تغذية إكلينيكيين معتمدين وذكاء اصطناعي متطور. تحصل على استشارات
-            فردية، خطط وجبات مخصصة، ماسح طعام بالذكاء الاصطناعي، ومكمّلات مفحوصة سريرياً —
+            نجمع بين أخصائيي تغذية معتمدين وذكاء اصطناعي متطور. تحصل على استشارات
+            فردية، خطط وجبات مخصصة، ماسح طعام بالذكاء الاصطناعي، ومكمّلات مفحوصة بعناية —
             كل ذلك في مكان واحد.
           </P>
         </section>
@@ -47,7 +47,7 @@ export default function AboutPage() {
         <section>
           <H2>فريقنا</H2>
           <P>
-            يقود فريق التغذية لدينا كوتش التغذية روان عثمان — أخصائية تغذية إكلينيكية معتمدة بثلاث
+            يقود فريق التغذية لدينا كوتش التغذية روان عثمان — أخصائية تغذية معتمدة بثلاث
             سنوات من الخبرة المتخصصة. تعمل كوتش التغذية روان مع فريق من الأخصائيين والمستشارين لضمان
             أن كل خطة وكل توصية مبنية على آخر الأدلة العلمية.
           </P>
@@ -80,7 +80,7 @@ export default function AboutPage() {
   return (
     <SimplePage
       title="About Greenofig"
-      subtitle="A personalized nutrition coaching platform that combines clinical expertise with AI — built to help you create habits that actually stick."
+      subtitle="A personalized nutrition coaching platform that combines nutrition expertise with AI — built to help you create habits that actually stick."
     >
       <section>
         <H2>Our mission</H2>
@@ -94,9 +94,9 @@ export default function AboutPage() {
       <section>
         <H2>How we work</H2>
         <P>
-          We pair certified clinical nutritionists with AI-powered tools. You get
+          We pair certified nutritionists with AI-powered tools. You get
           1-on-1 consultations, custom meal plans, an AI food scanner that tracks
-          nutrition in seconds, and clinically-vetted supplements — all in one place,
+          nutrition in seconds, and carefully vetted supplements — all in one place,
           all working together.
         </P>
       </section>
@@ -105,7 +105,7 @@ export default function AboutPage() {
         <H2>The team</H2>
         <P>
           Our nutrition team is led by <strong>Nutrition Coach Rawan Othman</strong> — a certified
-          clinical nutritionist with three years of specialized practice. Nutrition Coach Rawan
+          nutrition coach with three years of specialized practice. Nutrition Coach Rawan
           works alongside a team of nutritionists and advisors to make sure every plan
           and every recommendation is grounded in the latest peer-reviewed evidence.
         </P>

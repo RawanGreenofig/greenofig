@@ -116,7 +116,7 @@ function renderHtml({
           What happens next
         </h2>
         <p style="margin:0 0 16px;font-size:15px;line-height:1.6;">
-          <strong>Nutrition Coach Rawan Othman</strong>, our lead clinical nutritionist,
+          <strong>Nutrition Coach Rawan Othman</strong>, our lead nutrition coach,
           will personally review your answers and reach out within
           1&ndash;2 business days to schedule your free 20-minute intro
           call. No pressure, no commitment — just a real conversation
@@ -153,7 +153,7 @@ Download your free copy of "The Greenofig Guide to Healthy Habits":
 ${ebookUrl}
 
 What happens next
-Nutrition Coach Rawan Othman, our lead clinical nutritionist, will personally review your answers and reach out within 1-2 business days to schedule your free 20-minute intro call. No pressure, no commitment.
+Nutrition Coach Rawan Othman, our lead nutrition coach, will personally review your answers and reach out within 1-2 business days to schedule your free 20-minute intro call. No pressure, no commitment.
 
 Questions in the meantime? Reply to this email or write to health@greenofig.com.
 

@@ -45,7 +45,7 @@ const article1: BlogArticle = {
   keywords: ['how to eat healthy', 'healthy eating guide', 'nutrition for beginners', 'Nutrition Coach Rawan Othman'],
   readTimeMinutes: 7,
   publishedAt: PUBLISHED,
-  content: `Most people don't fail at healthy eating because they lack willpower. They fail because the advice they've been given is either too vague ("eat clean") or too punishing ("never touch sugar again"). After three years of clinical practice and 500+ clients, I can tell you the truth: the people who succeed long-term aren't the strictest. They're the most consistent.
+  content: `Most people don't fail at healthy eating because they lack willpower. They fail because the advice they've been given is either too vague ("eat clean") or too punishing ("never touch sugar again"). After three years of coaching practice and 500+ clients, I can tell you the truth: the people who succeed long-term aren't the strictest. They're the most consistent.
 
 This guide is the conversation I have with every new client in their first session — distilled into something you can read in seven minutes and act on tomorrow.
 
@@ -106,7 +106,7 @@ Pick one thing from this article. Just one. Maybe it's adding protein to breakfa
 If you want a plan built specifically for your body, your goals, and your kitchen, [book a personalized consultation](/bookings) with me. We'll cover everything from your current habits to a meal plan you'll actually follow.
 
 Next in the series: [15 best foods for weight loss, science-backed](/blog/best-foods-for-weight-loss-science-backed).`,
-  contentAr: `معظم الناس لا يفشلون في الأكل الصحي بسبب ضعف الإرادة. يفشلون لأن النصائح التي يسمعونها إما مبهمة جداً ("كل صحي") أو قاسية جداً ("لا تلمس السكر أبداً"). بعد ثلاث سنوات من الممارسة الإكلينيكية وأكثر من 500 عميل، أستطيع أن أخبرك الحقيقة: الذين ينجحون على المدى الطويل ليسوا الأكثر صرامة. بل الأكثر التزاماً.
+  contentAr: `معظم الناس لا يفشلون في الأكل الصحي بسبب ضعف الإرادة. يفشلون لأن النصائح التي يسمعونها إما مبهمة جداً ("كل صحي") أو قاسية جداً ("لا تلمس السكر أبداً"). بعد ثلاث سنوات من الممارسة وأكثر من 500 عميل، أستطيع أن أخبرك الحقيقة: الذين ينجحون على المدى الطويل ليسوا الأكثر صرامة. بل الأكثر التزاماً.
 
 هذا الدليل هو المحادثة التي أجريها مع كل عميل جديد في جلسته الأولى — مختصرة في شيء تستطيع قراءته في سبع دقائق والعمل به غداً.
 
@@ -547,7 +547,7 @@ const article4: BlogArticle = {
   publishedAt: PUBLISHED,
   content: `Intermittent fasting (IF) isn't a diet. It's a schedule. You don't change *what* you eat — you change *when*. That distinction is why so many of my clients have success with it where every other "diet" failed.
 
-But IF is also massively misunderstood, and the wrong people are doing it. Here's the clinical reality.
+But IF is also massively misunderstood, and the wrong people are doing it. Here's the honest reality.
 
 ## What intermittent fasting actually is
 
@@ -567,7 +567,7 @@ That's it. It's not magic. It's not "starvation mode" (that doesn't exist short 
 
 **18:6.** Eat 1 PM to 7 PM. More aggressive — better for stubborn fat loss but harder long-term.
 
-I rarely recommend anything stricter (24-hour fasts, OMAD/one-meal-a-day) outside of specific clinical situations. The downside risk on hormones outweighs the upside.
+I rarely recommend anything stricter (24-hour fasts, OMAD/one-meal-a-day) outside of specific situations. The downside risk on hormones outweighs the upside.
 
 ## What happens in your body during a fast
 
@@ -653,7 +653,7 @@ Intermittent fasting is a powerful tool when used correctly, by the right person
 Next in the series: [Gut health diet — 10 foods that heal your gut naturally](/blog/gut-health-diet-foods-that-heal-your-gut).`,
   contentAr: `الصيام المتقطع ليس حمية. إنه جدول. لا تغيّر *ماذا* تأكل — تغيّر *متى*. هذا الفرق هو سبب نجاح كثير من عميلاتي معه بعد فشل كل "حمية" أخرى.
 
-لكن الصيام المتقطع يُساء فهمه بشكل ضخم، والأشخاص الخطأ يطبّقونه. إليك الواقع الإكلينيكي.
+لكن الصيام المتقطع يُساء فهمه بشكل ضخم، والأشخاص الخطأ يطبّقونه. إليك الواقع الصادق.
 
 ## ما هو الصيام المتقطع فعلاً
 
@@ -673,7 +673,7 @@ Next in the series: [Gut health diet — 10 foods that heal your gut naturally](
 
 **18:6.** كل من الواحدة ظهراً إلى السابعة مساءً. أكثر صرامة — أفضل للدهون العنيدة لكن أصعب طويل المدى.
 
-نادراً ما أنصح بأي شيء أصرم (صيام 24 ساعة، وجبة واحدة يومياً) خارج حالات إكلينيكية محددة. مخاطر الجانب الهرموني تفوق الفائدة.
+نادراً ما أنصح بأي شيء أصرم (صيام 24 ساعة، وجبة واحدة يومياً) خارج حالات محددة. مخاطر الجانب الهرموني تفوق الفائدة.
 
 ## ما يحدث في جسمك أثناء الصيام
 
@@ -719,7 +719,7 @@ Next in the series: [Gut health diet — 10 foods that heal your gut naturally](
 
 **الأسبوع 3:** صيام 16 ساعة. كل من الظهر إلى 8 مساءً. أول 3–4 أيام ستشعر بجوع حوالي العاشرة. اشرب ماءً وقهوة سادة. سيمرّ.
 
-**الأسبوع 4:** استقر على 16:8 كإيقاع مستدام. لا تذهب أكثر صرامة إلا بإشراف إكلينيكي.
+**الأسبوع 4:** استقر على 16:8 كإيقاع مستدام. لا تذهب أكثر صرامة إلا بإشراف متخصص.
 
 ## ماذا تأكل في نافذة الأكل
 
@@ -764,9 +764,9 @@ const article5: BlogArticle = {
   title: 'Gut Health Diet: 10 Foods That Heal Your Gut Naturally',
   titleAr: 'نظام صحة الأمعاء: 10 أطعمة تعالج أمعاءك طبيعياً',
   metaDescription:
-    'Bloating, fatigue, and skin issues often start in the gut. Here are the 10 foods a clinical nutritionist uses to repair gut health, naturally.',
+    'Bloating, fatigue, and skin issues often start in the gut. Here are the 10 foods a nutrition coach uses to repair gut health, naturally.',
   metaDescriptionAr:
-    'الانتفاخ والتعب ومشاكل البشرة غالباً تبدأ من الأمعاء. إليك 10 أطعمة تستخدمها أخصائية تغذية إكلينيكية لإصلاح صحة الأمعاء طبيعياً.',
+    'الانتفاخ والتعب ومشاكل البشرة غالباً تبدأ من الأمعاء. إليك 10 أطعمة تستخدمها أخصائية تغذية لإصلاح صحة الأمعاء طبيعياً.',
   imageUrl: 'https://images.unsplash.com/photo-1606914501449-5a96b6ce24ca?w=1200&q=80',
   imageAlt: 'Fermented foods and fresh vegetables arranged for gut health',
   imageAltAr: 'أطعمة مخمّرة وخضروات طازجة مرتّبة لصحة الأمعاء',
@@ -785,7 +785,7 @@ Your large intestine houses around 38 trillion bacteria — collectively called 
 
 You can rebuild diversity with the right foods. You don't need expensive supplements. You need patience and these 10 foods, regularly.
 
-## The 10 foods I use clinically
+## The 10 foods I use with clients
 
 **1. Plain yogurt with live cultures.** The simplest probiotic. Look for "live and active cultures" on the label. One small bowl daily.
 
@@ -858,7 +858,7 @@ Next in the series: [Meal prep guide — save time and eat healthy every week](/
 
 تستطيع إعادة بناء التنوع بالطعام الصحيح. لا تحتاج مكملات باهظة. تحتاج صبراً وهذه الأطعمة العشرة، بانتظام.
 
-## الأطعمة العشرة التي أستخدمها إكلينيكياً
+## الأطعمة العشرة التي أستخدمها مع عملائي
 
 **1. زبادي سادة بمزارع حية.** أبسط بروبيوتيك. ابحث عن "مزارع حية ونشطة" على الملصق. صحن صغير يومياً.
 
@@ -1162,9 +1162,9 @@ const article7: BlogArticle = {
   title: 'Sugar Addiction: How to Quit Sugar and Feel Amazing',
   titleAr: 'إدمان السكر: كيف تتوقف وتشعر بتحسن ملحوظ',
   metaDescription:
-    'Sugar lights up the same brain pathways as drugs. Here is the 7-day clinical detox plan a nutritionist uses with clients to end the cycle.',
+    'Sugar lights up the same brain pathways as drugs. Here is the 7-day reset plan a nutritionist uses with clients to end the cycle.',
   metaDescriptionAr:
-    'السكر يضيء نفس مسارات الدماغ التي تُضيئها المخدرات. إليك خطة الإزالة الإكلينيكية لـ7 أيام التي تستخدمها أخصائية تغذية مع عملائها لإنهاء الدائرة.',
+    'السكر يضيء نفس مسارات الدماغ التي تُضيئها المخدرات. إليك خطة إعادة الضبط لـ7 أيام التي تستخدمها أخصائية تغذية مع عملائها لإنهاء الدائرة.',
   imageUrl: 'https://images.unsplash.com/photo-1476224203421-9ac39bcb3327?w=1200&q=80',
   imageAlt: 'Healthy alternatives to sugar including fresh fruit and natural sweeteners',
   imageAltAr: 'بدائل صحية للسكر تشمل الفواكه الطازجة والمحلّيات الطبيعية',
@@ -1378,9 +1378,9 @@ const article8: BlogArticle = {
   title: "Vitamins and Supplements: What You Actually Need vs What's Overhyped",
   titleAr: 'الفيتامينات والمكملات: ما تحتاجه فعلاً وما هو مبالغ فيه',
   metaDescription:
-    'A clinical nutritionist cuts through the supplement marketing. The 4 essentials worth taking, what to skip, and how to choose quality.',
+    'A nutrition coach cuts through the supplement marketing. The 4 essentials worth taking, what to skip, and how to choose quality.',
   metaDescriptionAr:
-    'أخصائية تغذية إكلينيكية تقطع خلال تسويق المكملات. الأربعة الأساسية التي تستحق الأخذ، ما يُتخطى، وكيف تختار الجودة.',
+    'أخصائية تغذية تقطع خلال تسويق المكملات. الأربعة الأساسية التي تستحق الأخذ، ما يُتخطى، وكيف تختار الجودة.',
   imageUrl: 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=1200&q=80',
   imageAlt: 'Various vitamin and supplement bottles arranged on a clean white background',
   imageAltAr: 'عبوات فيتامينات ومكملات متنوعة مرتّبة على خلفية بيضاء نظيفة',
@@ -1391,7 +1391,7 @@ const article8: BlogArticle = {
   publishedAt: PUBLISHED,
   content: `The global supplement industry is worth $170 billion. About 90% of that is wasted. Most people are taking pills they don't need, in doses that don't matter, of qualities that won't be absorbed. Meanwhile, the four that actually move the needle are widely under-supplemented.
 
-Here's the honest clinical view — what to take, what to skip, and how to know the difference.
+Here's the honest view — what to take, what to skip, and how to know the difference.
 
 ## Who actually needs supplements
 
@@ -1479,7 +1479,7 @@ Vitamin D is the supplement I'd take if I could only take one. It's the most com
 2. **Test, don't guess.** Blood tests for vitamin D, B12, ferritin, magnesium RBC, and omega-3 index cost less than 6 months of unnecessary supplements.
 3. **One at a time.** Start one new supplement at a time so you know what's working. Adding 5 at once = no idea what helped.
 
-## When you actually need clinical guidance
+## When you actually need professional guidance
 
 If you have hypothyroidism, PCOS, autoimmune conditions, anemia, fatigue that won't lift, or hair loss — supplement protocols need to be personalized to your bloodwork. [Get personalized advice from Nutrition Coach Rawan](/bookings) before spending hundreds on the wrong stack.
 
@@ -1488,7 +1488,7 @@ If you have hypothyroidism, PCOS, autoimmune conditions, anemia, fatigue that wo
 Most adults need 4 supplements. Most adults are taking 12. Cut the noise, dose what matters, get the form right, and test to confirm it's working. That's the entire game.`,
   contentAr: `صناعة المكملات العالمية تساوي 170 مليار دولار. حوالي 90% منها مهدور. معظم الناس يأخذون حبوباً لا يحتاجونها، بجرعات لا تهم، بجودات لن تُمتص. في الوقت ذاته، الأربعة التي تحدث فرقاً فعلياً هي الأكثر نقصاً في التزويد.
 
-إليك الرأي الإكلينيكي الصادق — ماذا تأخذ، ماذا تتخطى، وكيف تعرف الفرق.
+إليك الرأي الصادق — ماذا تأخذ، ماذا تتخطى، وكيف تعرف الفرق.
 
 ## من يحتاج المكملات فعلاً
 
@@ -1576,7 +1576,7 @@ Most adults need 4 supplements. Most adults are taking 12. Cut the noise, dose w
 2. **افحص، لا تخمّن.** فحوصات دم لفيتامين د، B12، فيريتين، RBC للمغنيسيوم، ومؤشر أوميغا-3 تكلّف أقل من 6 أشهر من المكملات غير الضرورية.
 3. **واحد في المرة.** ابدأ مكملاً جديداً واحداً في المرة لتعرف ما الذي ينجح. إضافة 5 دفعة واحدة = لا فكرة عمّا ساعد.
 
-## حين تحتاج إرشاداً إكلينيكياً فعلاً
+## حين تحتاج إرشاداً متخصصاً فعلاً
 
 إن كان لديك خمول الغدة الدرقية، PCOS، حالات مناعة ذاتية، فقر دم، تعب لا يرتفع، أو تساقط شعر — بروتوكولات المكملات تحتاج للتخصيص حسب فحوصاتك. [احصل على نصيحة شخصية من كوتش التغذية روان](/bookings) قبل صرف مئات على الكومة الخطأ.
 
@@ -1590,9 +1590,9 @@ const article9: BlogArticle = {
   title: 'The Complete Hydration Guide: How Much Water Should You Drink?',
   titleAr: 'دليل الترطيب الكامل: كم كمية الماء التي يجب شربها؟',
   metaDescription:
-    'A clinical formula for your daily water needs, the silent signs of dehydration, and why "8 glasses a day" is wrong for most people.',
+    'A simple formula for your daily water needs, the silent signs of dehydration, and why "8 glasses a day" is wrong for most people.',
   metaDescriptionAr:
-    'صيغة إكلينيكية لاحتياجك اليومي من الماء، علامات الجفاف الصامتة، ولماذا "8 أكواب يومياً" خطأ لمعظم الناس.',
+    'صيغة بسيطة لاحتياجك اليومي من الماء، علامات الجفاف الصامتة، ولماذا "8 أكواب يومياً" خطأ لمعظم الناس.',
   imageUrl: 'https://images.unsplash.com/photo-1548839140-29a749e1cf4d?w=1200&q=80',
   imageAlt: 'Glass of water with lemon slices for healthy hydration',
   imageAltAr: 'كوب ماء مع شرائح ليمون للترطيب الصحي',
@@ -1848,9 +1848,9 @@ const article10: BlogArticle = {
   title: '10 Nutrition Myths Debunked by a Certified Nutritionist',
   titleAr: '10 خرافات غذائية يدحضها أخصائي تغذية معتمد',
   metaDescription:
-    'Carbs, fat, breakfast, late eating, detox — a clinical nutritionist debunks the 10 nutrition myths still ruining your relationship with food.',
+    'Carbs, fat, breakfast, late eating, detox — a nutrition coach debunks the 10 nutrition myths still ruining your relationship with food.',
   metaDescriptionAr:
-    'الكربوهيدرات، الدهون، الإفطار، الأكل المتأخر، الديتوكس — أخصائية تغذية إكلينيكية تدحض 10 خرافات غذائية ما زالت تخرّب علاقتك بالطعام.',
+    'الكربوهيدرات، الدهون، الإفطار، الأكل المتأخر، الديتوكس — أخصائية تغذية تدحض 10 خرافات غذائية ما زالت تخرّب علاقتك بالطعام.',
   imageUrl: 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=1200&q=80',
   imageAlt: 'Colorful spread of healthy whole foods showing real nutrition',
   imageAltAr: 'تشكيلة ملوّنة من الأطعمة الكاملة الصحية تُظهر التغذية الحقيقية',

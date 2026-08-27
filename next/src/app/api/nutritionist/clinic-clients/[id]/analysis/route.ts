@@ -151,7 +151,7 @@ export const POST = withNutritionistOrAdmin<{ id: string }>(
     )
     const adherencePct = asg.length ? Math.round((doneCount / asg.length) * 100) : null
 
-    const prompt = `You are a clinical nutrition coach reviewing a client's progress (oldest first).${c.start_date ? ` They started on ${c.start_date}.` : ''}
+    const prompt = `You are a nutrition coach reviewing a client's progress (oldest first).${c.start_date ? ` They started on ${c.start_date}.` : ''}
 
 ${rows.length ? `CHECK-INS:\n${lines.join('\n')}` : 'CHECK-INS: none recorded yet.'}
 

@@ -52,7 +52,7 @@ export const metadata: Metadata = {
   metadataBase: new URL('https://greenofig.com'),
   title: 'Greenofig | Personalized Nutrition Plans — Nutrition Coach Rawan Othman',
   description:
-    'Get a personalized nutrition plan from Nutrition Coach Rawan Othman, certified clinical nutritionist. Science-backed meal plans, AI food scanning, and one-on-one consultations designed specifically for your body and goals.',
+    'Get a personalized nutrition plan from Nutrition Coach Rawan Othman, certified nutritionist. Science-backed meal plans, AI food scanning, and one-on-one consultations designed specifically for your body and goals.',
   applicationName: 'Greenofig',
   keywords: [
     'personalized nutrition plan',
@@ -101,14 +101,14 @@ export const metadata: Metadata = {
     url: 'https://greenofig.com/',
     title: 'Greenofig | Personalized Nutrition Plans — Nutrition Coach Rawan Othman',
     description:
-      'Science-backed nutrition coaching from Nutrition Coach Rawan Othman, certified clinical nutritionist. Personalized meal plans, AI food scanning, 1-on-1 consultations.',
+      'Science-backed nutrition coaching from Nutrition Coach Rawan Othman, certified nutritionist. Personalized meal plans, AI food scanning, 1-on-1 consultations.',
     locale: 'en_US',
     images: [
       {
         url: '/images/dr-rawan-othman.jpg',
         width: 1200,
         height: 630,
-        alt: 'Nutrition Coach Rawan Othman — Certified Clinical Nutritionist',
+        alt: 'Nutrition Coach Rawan Othman — Certified Nutritionist',
       },
     ],
   },
@@ -200,7 +200,7 @@ const SITE_JSON_LD = {
       '@type': 'Person',
       '@id': 'https://greenofig.com/#coach-rawan',
       name: 'Nutrition Coach Rawan Othman',
-      jobTitle: 'Certified Clinical Nutritionist',
+      jobTitle: 'Certified Nutritionist',
       worksFor: { '@id': 'https://greenofig.com/#organization' },
       url: 'https://greenofig.com',
       image: 'https://greenofig.com/images/dr-rawan-othman.jpg',
