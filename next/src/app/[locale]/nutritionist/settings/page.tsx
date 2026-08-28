@@ -1,6 +1,8 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import Image from 'next/image'
+import toast from 'react-hot-toast'
 import { useTranslations } from 'next-intl'
 import { useUser } from '@/lib/hooks/useUser'
 import { getBrowserSupabase } from '@/lib/supabase/client'
@@ -36,6 +38,7 @@ interface ProfileForm {
   credentials: string[]
   languages: string
   specialties: string[]
+  avatarUrl: string | null
 }
 
 interface SessionPricing {
@@ -83,7 +86,7 @@ export default function NutritionistSettingsPage() {
     displayName: 'Nutrition Coach Rawan Othman',
     title: 'Certified Nutritionist',
     bio:
-      "I help women in the Levant rebuild their relationship with food. Mediterranean-rooted, evidence-led, no shame. Five years in clinic, four in private practice.",
+      "I help women in the Levant rebuild their relationship with food. Mediterranean-rooted, evidence-led, no shame. Nearly a decade coaching clients toward habits that actually last.",
     credentials: [
       'MSc Nutrition — University of Jordan',
       'Certified Nutritionist — Jordanian MoH',
@@ -91,6 +94,7 @@ export default function NutritionistSettingsPage() {
     ],
     languages: 'Arabic, English',
     specialties: ['PCOS', 'Insulin resistance', 'Mediterranean nutrition', 'Women\'s health'],
+    avatarUrl: null,
   })
 
   const [schedule, setSchedule] = useState<Record<Day, DaySchedule>>({
@@ -143,6 +147,57 @@ export default function NutritionistSettingsPage() {
       })
       const firstBuffer = rows[0]?.buffer_min
       if (typeof firstBuffer === 'number') setBufferMin(firstBuffer)
+    })()
+    return () => { cancelled = true }
+  }, [currentUserId])
+
+  // Hydrate the profile fields (name, photo, bio, credentials, …) from the
+  // saved row so the current photo shows and edits persist visibly across
+  // reloads. medical_notes is a JSON bag written by the profile-tab save.
+  useEffect(() => {
+    if (!currentUserId) return
+    let cancelled = false
+    void (async () => {
+      const supabase = getBrowserSupabase()
+      if (!supabase) return
+      const { data } = await supabase
+        .from('profiles')
+        .select('full_name, avatar_url, medical_notes')
+        .eq('id', currentUserId)
+        .maybeSingle()
+      if (cancelled || !data) return
+      const row = data as {
+        full_name: string | null
+        avatar_url: string | null
+        medical_notes: string | null
+      }
+      let bag: Record<string, unknown> = {}
+      try {
+        bag = row.medical_notes ? (JSON.parse(row.medical_notes) as Record<string, unknown>) : {}
+      } catch {
+        bag = {}
+      }
+      setProfile((prev) => ({
+        ...prev,
+        displayName: row.full_name ?? prev.displayName,
+        avatarUrl: row.avatar_url ?? null,
+        title: typeof bag.title === 'string' && bag.title ? bag.title : prev.title,
+        bio: typeof bag.bio === 'string' && bag.bio ? bag.bio : prev.bio,
+        credentials:
+          Array.isArray(bag.credentials) && bag.credentials.length
+            ? (bag.credentials as string[])
+            : prev.credentials,
+        languages:
+          typeof bag.languages === 'string' && bag.languages
+            ? bag.languages
+            : Array.isArray(bag.languages)
+              ? (bag.languages as string[]).join(', ')
+              : prev.languages,
+        specialties:
+          Array.isArray(bag.specialties) && bag.specialties.length
+            ? (bag.specialties as string[])
+            : prev.specialties,
+      }))
     })()
     return () => { cancelled = true }
   }, [currentUserId])
@@ -252,10 +307,12 @@ export default function NutritionistSettingsPage() {
             <ProfilePane
               t={t}
               form={profile}
+              userId={currentUserId}
               onChange={(f) => {
                 setProfile(f)
                 markDirty()
               }}
+              onAvatar={(url) => setProfile((p) => ({ ...p, avatarUrl: url }))}
             />
           )}
 
@@ -314,14 +371,68 @@ export default function NutritionistSettingsPage() {
 function ProfilePane({
   t,
   form,
+  userId,
   onChange,
+  onAvatar,
 }: {
   t: ReturnType<typeof useTranslations>
   form: ProfileForm
+  userId: string | null
   onChange: (f: ProfileForm) => void
+  onAvatar: (url: string | null) => void
 }) {
   const set = <K extends keyof ProfileForm>(k: K, v: ProfileForm[K]) =>
     onChange({ ...form, [k]: v })
+
+  const fileRef = useRef<HTMLInputElement>(null)
+  const [uploading, setUploading] = useState(false)
+
+  // Upload → avatars bucket → persist profiles.avatar_url immediately (same
+  // pattern as the member dashboard). The photo saves on pick, independent of
+  // the SaveBar, so it can never silently no-op like the old dead buttons.
+  const onPickFile = async (file: File | null) => {
+    if (!file) return
+    if (!userId) { toast.error('Not signed in'); return }
+    if (!file.type.startsWith('image/')) { toast.error('Please choose an image file'); return }
+    if (file.size > 5 * 1024 * 1024) { toast.error('Image must be under 5 MB'); return }
+    const supabase = getBrowserSupabase()
+    if (!supabase) { toast.error('Storage unavailable'); return }
+    setUploading(true)
+    try {
+      const ext = file.name.split('.').pop()?.toLowerCase() ?? 'jpg'
+      const path = `${userId}/avatar.${ext}`
+      const { error: upErr } = await supabase.storage
+        .from('avatars')
+        .upload(path, file, { upsert: true, cacheControl: '3600' })
+      if (upErr) { toast.error(upErr.message || 'Upload failed'); return }
+      const { data: pub } = supabase.storage.from('avatars').getPublicUrl(path)
+      // cache-bust so the freshly-replaced object shows immediately
+      const url = `${pub.publicUrl}?v=${Date.now()}`
+      const { error: updErr } = await supabase
+        .from('profiles')
+        .update({ avatar_url: url } as never)
+        .eq('id', userId)
+      if (updErr) { toast.error('Saved the file but could not update the profile'); return }
+      onAvatar(url)
+      toast.success('Photo updated')
+    } finally {
+      setUploading(false)
+      if (fileRef.current) fileRef.current.value = ''
+    }
+  }
+
+  const removeAvatar = async () => {
+    if (!userId) return
+    const supabase = getBrowserSupabase()
+    if (!supabase) return
+    const { error } = await supabase
+      .from('profiles')
+      .update({ avatar_url: null } as never)
+      .eq('id', userId)
+    if (error) { toast.error('Could not remove the photo'); return }
+    onAvatar(null)
+    toast.success('Photo removed')
+  }
 
   const addSpecialty = (v: string) => {
     const t = v.trim()
@@ -335,22 +446,42 @@ function ProfilePane({
     <div className="space-y-6">
       <Section title={t('profile.sectionPhoto')}>
         <div className="flex flex-wrap items-center gap-5">
-          <span
-            className="w-24 h-24 rounded-full bg-gradient-to-br from-lime-400 to-lime-600 text-bg inline-flex items-center justify-center font-display text-3xl font-bold"
-          >
-            {initialsOf(form.displayName)}
-          </span>
+          {form.avatarUrl ? (
+            <Image
+              src={form.avatarUrl}
+              alt={form.displayName}
+              width={96}
+              height={96}
+              unoptimized
+              className="w-24 h-24 rounded-full object-cover object-top border border-border"
+            />
+          ) : (
+            <span className="w-24 h-24 rounded-full bg-gradient-to-br from-lime-400 to-lime-600 text-bg inline-flex items-center justify-center font-display text-3xl font-bold">
+              {initialsOf(form.displayName)}
+            </span>
+          )}
+          <input
+            ref={fileRef}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={(e) => onPickFile(e.target.files?.[0] ?? null)}
+          />
           <div className="flex flex-wrap items-center gap-2">
             <button
               type="button"
-              className="inline-flex items-center gap-1.5 rounded-pill bg-primary/15 text-lime-400 h-9 px-4 text-xs font-semibold hover:bg-primary/25"
+              onClick={() => fileRef.current?.click()}
+              disabled={uploading}
+              className="inline-flex items-center gap-1.5 rounded-pill bg-primary/15 text-lime-400 h-9 px-4 text-xs font-semibold hover:bg-primary/25 disabled:opacity-60"
             >
               <Camera className="w-3.5 h-3.5" strokeWidth={1.75} />
-              {t('profile.uploadPhoto')}
+              {uploading ? t('saving') : t('profile.uploadPhoto')}
             </button>
             <button
               type="button"
-              className="inline-flex items-center gap-1.5 rounded-pill bg-surface-raised border border-border h-9 px-4 text-xs font-medium text-fg-2 hover:text-fg-1"
+              onClick={removeAvatar}
+              disabled={uploading || !form.avatarUrl}
+              className="inline-flex items-center gap-1.5 rounded-pill bg-surface-raised border border-border h-9 px-4 text-xs font-medium text-fg-2 hover:text-fg-1 disabled:opacity-50"
             >
               {t('profile.removePhoto')}
             </button>
